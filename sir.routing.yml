@@ -1,0 +1,7 @@
+sir.admin_settings:
+  path: '/admin/config/content/sir'
+  defaults:
+    _form: '\Drupal\sir\Form\SettingsForm'
+    _title: 'Semantic Instrument Repository Settings'
+  requirements:
+    _permission: 'access content'
