@@ -1,7 +1,25 @@
-sir.admin_settings:
-  path: '/admin/config/content/sir'
+sir.index:
+  path: '/sir/public/instruments'
   defaults:
-    _form: '\Drupal\sir\Form\SettingsForm'
-    _title: 'Semantic Instrument Repository Settings'
+    _controller: '\Drupal\sir\Controller\InstrumentController::index'
   requirements:
     _permission: 'access content'
+
+sir.addinstrument:
+  path: '/sir/manage/instrument'
+  defaults:
+    _form: '\Drupal\sir\Form\AddInstrumentForm'
+    _title: 'Add new Questionnarie'    
+  requirements:
+    _permission: 'access content'
+
+
+sir.admin_settings.custom:
+  path: '/admin/config/sir'
+  defaults:
+    _form: '\Drupal\sir\Form\SIRSettingsForm'
+    _title: 'SIR Settings Form'
+  requirements:
+    _permission: 'administer site configuration'
+  options:
+    _admin_route: TRUE
