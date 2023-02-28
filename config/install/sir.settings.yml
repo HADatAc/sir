@@ -1,0 +1,7 @@
+sir_home: 0
+repository_abbreviation: 
+repository_iri: 
+api_url: "http://192.168.50.30:3030"
+api_add_instrument: "/api/addinstrument"
+api_get_instrument: "/api/getinstrument"
+api_del_instrument: "/api/delinstrument"

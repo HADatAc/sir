@@ -1,0 +1,4 @@
+services:
+  sir.api_connector:
+    class: Drupal\sir\FusekiAPIConnector
+    arguments: ['@http_client_factory']
