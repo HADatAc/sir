@@ -1,0 +1,30 @@
+{{ attach_library('sir/sir_js_css') }}
+{{ attach_library('sir/fontawesome5') }}
+<div class="row justify-content-end">
+  <div class="col-8"></div>
+  <div class="col-4">  <a href="/sir/manage/addinstrument"> <i class="fas fa-plus"></i> Add New Questionnarie</a></div>
+</div>
+<div class="content">
+<table class="table table-mobile-responsive table-mobile-striped">
+  <thead class="teste">
+    <tr>
+        <th scope="col">Name</th>
+        <th scope="col">Abbreviature</th>
+        <th scope="col">Add Itens</th>
+        <th scope="col">Edit</th>
+        <th scope="col">Delete</th>
+    </tr>
+  </thead>
+  <tbody>
+ {%if content.instruments is not empty %}
+    {% for instrument in content.instruments %}
+        {{instrument}} 
+    {% endfor %}  
+ {% endif %}
+ </tbody>
+</table>
+</div>
+
+<div class="pagination">
+ pagination
+</div>

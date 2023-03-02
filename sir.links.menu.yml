@@ -1,0 +1,27 @@
+sir.edit_instruments:
+  title: Manage Questionnaires
+  description: edit you questionnaries
+  route_name: sir.edit_instruments
+  menu_name: main
+  weight: 1
+
+sir.edit_symptoms :
+  title: Manage Symptoms 
+  description: edit Symptoms
+  route_name: sir.edit_symptoms
+  menu_name: main
+  weight: 2
+
+sir.edit_scales:
+  title: Manage Scales 
+  description: edit Scales
+  route_name: sir.edit_scales
+  menu_name: main
+  weight: 3
+
+sir.admin_settings_link:
+ title: Configuration
+ description: SIR Settings
+ menu_name: main 
+ route_name: sir.admin_settings_custom
+ weight: 4

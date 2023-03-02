@@ -1,7 +1,81 @@
-sir.admin_settings:
-  path: '/admin/config/content/sir'
+sir.index:
+  path: '/sir/public/instruments'
   defaults:
-    _form: '\Drupal\sir\Form\SettingsForm'
-    _title: 'Semantic Instrument Repository Settings'
+    _controller: '\Drupal\sir\Controller\InstrumentController::index'
   requirements:
     _permission: 'access content'
+  options:
+    no_cache: 'TRUE'
+
+sir.add_instrument:
+  path: '/sir/manage/addinstrument'
+  defaults:
+    _form: '\Drupal\sir\Form\AddInstrumentForm'
+    _title: 'Add new Questionnarie'    
+  requirements:
+    _permission: 'access content'
+  options:
+    no_cache: 'TRUE'
+
+sir.edit_instruments:
+  path: '/sir/manage/editinstruments'
+  defaults:
+    _controller: '\Drupal\sir\Controller\EditInstrumentsController::index'
+    _title: 'Manage Questionnaries'    
+  requirements:
+    _permission: 'access content'
+  options:
+    no_cache: 'TRUE'
+
+sir.edit_scales:
+  path: '/sir/manage/editscales'
+  defaults:
+    _controller: '\Drupal\sir\Controller\EditInstrumentsController::index'
+    _title: 'Edit Scales'    
+  requirements:
+    _permission: 'access content'
+  options:
+    no_cache: 'TRUE'
+
+sir.edit_symptoms:
+  path: '/sir/manage/editsymptoms'
+  defaults:
+    _controller: '\Drupal\sir\Controller\EditInstrumentsController::index'
+    _title: 'Edit Symptoms'    
+  requirements:
+    _permission: 'access content'
+  options:
+    no_cache: 'TRUE'
+
+sir.edit_instrument:
+  path: '/sir/manage/editinstrument'
+  defaults:
+    _form: '\Drupal\sir\Form\EditInstrumentForm'
+    _title: 'Edit a Questionnarie'    
+  requirements:
+    _permission: 'access content'    
+  options:
+    no_cache: 'TRUE'
+
+sir.searchinstruments_ajax:
+  path: '/sir/ajax/searchinstruments'
+  defaults:
+    _controller: '\Drupal\sir\Controller\InstrumentController::searchinstrumentsAjax'
+    _title: 'search instruments Ajax'
+  methods: [POST]
+  requirements:
+    _permission: 'access content' 
+  options:
+    _csrf_token: 'FALSE'
+    no_cache: 'TRUE'
+
+sir.admin_settings_custom:
+  path: '/admin/config/sir'
+  defaults:
+    _form: '\Drupal\sir\Form\SIRSettingsForm'
+    _title: 'SIR Settings Form'
+  requirements:
+    _permission: 'administer site configuration'
+  options:
+    _admin_route: TRUE
+    no_cache: 'TRUE'

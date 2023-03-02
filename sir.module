@@ -1,0 +1,21 @@
+<?php
+/**
+ * Implements hook_theme
+ */
+function sir_theme($existing, $type, $theme, $path)
+{
+    return [
+        'instruments-list' => [
+            'variables' => ['content' => NULL]
+        ],
+        'instrument-card' => [
+            'variables' => ['content' => NULL]
+        ],
+        'editinstruments-list' => [
+            'variables' => ['content' => NULL]
+        ],
+        'editinstrument-card' => [
+            'variables' => ['content' => NULL]
+        ]
+    ];
+}
