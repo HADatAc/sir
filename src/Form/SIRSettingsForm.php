@@ -103,7 +103,7 @@
         $configdrupal->save();
 
         $messenger = \Drupal::service('messenger');
-        $messenger->addMessage($this->t('Your new configuration has been saved'));
+        $messenger->addMessage($this->t('Your new SIR configuration has been saved'));
     }
 
  }
