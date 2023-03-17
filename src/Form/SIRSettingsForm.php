@@ -61,9 +61,16 @@
 
         $form['repository_abbreviation'] = [
             '#type' => 'textfield',
-            '#title' => 'Institution name abbreviation (ex: UFMG, UCLA, RPI, etc.)',
+            '#title' => 'Institution name abbreviation (ex: ufmg, ucla, rpi, etc.)',
             '#required' => TRUE,
             '#default_value' => $config->get("repository_abbreviation"),
+        ];
+
+        $form['repository_description'] = [
+            '#type' => 'textfield',
+            '#title' => ' description for the repository that appears in the SIR APIs GUI',
+            '#required' => TRUE,
+            '#default_value' => $config->get("repository_description"),
         ];
 
         $form['api_url'] = [
@@ -90,20 +97,42 @@
      */
     public function submitForm(array &$form, FormStateInterface $form_state) {
         $config = $this->config(static::CONFIGNAME);
+        
+        //save confs
         $config->set("sir_home", $form_state->getValue('sir_home'));
         $config->set("repository_abbreviation", trim($form_state->getValue('repository_abbreviation')));
         $config->set("repository_iri", trim($form_state->getValue('repository_abbreviation')));
+        $config->set("repository_description", trim($form_state->getValue('repository_description')));
         $config->set("site_name", trim($form_state->getValue('site_name')));
         $config->set("api_url", $form_state->getValue('api_url'));
         $config->save();
         
-
+        //site name
         $configdrupal = \Drupal::service('config.factory')->getEditable('system.site');
         $configdrupal->set('name', $form_state->getValue('site_name')); 
         $configdrupal->save();
 
+        //update Repository configuration
+        //title
+        $data = [];
+        $newInstrument = $this->repositoryConf($form_state->getValue('api_url'),"/sirapi/api/repo/title/".$form_state->getValue('site_name'),$data);
+        //description
+        $data = [];
+        $newInstrument = $this->repositoryConf($form_state->getValue('api_url'),"/sirapi/api/repo/description/".$form_state->getValue('repository_description'),$data);
+
         $messenger = \Drupal::service('messenger');
         $messenger->addMessage($this->t('Your new SIR configuration has been saved'));
     }
+
+    public function repositoryConf($api_url,$endpoint,$data){
+        /** @var \FusekiAPI$fusekiAPIservice */
+        $fusekiAPIservice = \Drupal::service('sir.api_connector');
+    
+        $newInstrument = $fusekiAPIservice->repositoryConf($api_url,$endpoint,$data);
+        if(!empty($newInstrument)){
+          return $newInstrument;
+        }
+        return [];
+      }
 
  }

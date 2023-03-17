@@ -90,10 +90,7 @@ class AddInstrumentForm extends FormBase {
   
       $uid = \Drupal::currentUser()->id();
       $iid = time().rand(10000,99999).$uid;
-  
-     # $form_state->getValue('instrument_name')
-      #$form_state->getValue('instrument_abbreviation')
-     
+      
       $data = [
         'uri' => 'http://hadatac.org/kb/test/Instrument'.$iid,
         'typeUri' => 'http://hadatac.org/ont/vstoi#Questionnaire',
@@ -105,23 +102,16 @@ class AddInstrumentForm extends FormBase {
 
       $datap = '{"uri":"http://hadatac.org/kb/test/Instrument'.$iid.'","typeUri":"http://hadatac.org/ont/vstoi#Questionnaire","hascoTypeUri":"http://hadatac.org/ont/vstoi#Instrument","label":"'.$form_state->getValue('instrument_name').'","comment":"'.$form_state->getValue('instrument_description').'","hasShortName":"'.$form_state->getValue('instrument_abbreviation').'"}';
 
-     #print($datap);
-     #exit();
-
-     $dataJ = json_encode($data);
+    $dataJ = json_encode($data);
     
-     $dataE = rawurlencode($datap);
-    # print($dataE);
-      # exit();
+    $dataE = rawurlencode($datap);
 
-      $newInstrument = $this->addInstrument($api_url,"/sirapi/api/instrument/create/".$dataE,$data);
+    $newInstrument = $this->addInstrument($api_url,"/sirapi/api/instrument/create/".$dataE,$data);
      
       \Drupal::messenger()->addMessage(t("Questionnarie has been added successfully."));
     }catch(\Exception $e){
       \Drupal::messenger()->addMessage(t("An error occurred while adding the Questionnarie: ".$e->getMessage()));
     }
-   
-  
 
   }
 
