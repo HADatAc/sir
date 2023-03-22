@@ -5,6 +5,7 @@
   <div class="col-4">  <a href="/sir/manage/addinstrument"> <i class="fas fa-plus"></i> Add New Questionnarie</a></div>
 </div>
 <div class="content">
+{%if content.instruments is not empty %}
 <table class="table table-mobile-responsive table-mobile-striped">
   <thead class="teste">
     <tr>
@@ -16,13 +17,18 @@
     </tr>
   </thead>
   <tbody>
- {%if content.instruments is not empty %}
+ 
     {% for instrument in content.instruments %}
         {{instrument}} 
     {% endfor %}  
- {% endif %}
+ 
  </tbody>
 </table>
+{% else %}
+   <div>
+     {{ 'No questionnaries were found' }}
+    </div>
+{% endif %}
 </div>
 
 <div class="pagination">

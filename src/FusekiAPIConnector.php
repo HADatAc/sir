@@ -39,6 +39,11 @@ class FusekiAPIConnector
       return $this->perform_http_request('POST',$api_url.$endpoint,$data);          
     }
 
+    public function instrumentDel($api_url,$endpoint, $data)
+    {
+      return $this->perform_http_request('POST',$api_url.$endpoint,$data);          
+    }
+
     public function repositoryConf($api_url,$endpoint, $data)
     {
       return $this->perform_http_request('GET',$api_url.$endpoint,$data);          

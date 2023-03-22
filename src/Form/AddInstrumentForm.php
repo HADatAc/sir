@@ -89,6 +89,8 @@ class AddInstrumentForm extends FormBase {
       $repository_abbreviation = $config->get("repository_abbreviation");
   
       $uid = \Drupal::currentUser()->id();
+      $uemail = \Drupal::currentUser()->getEmail();
+
       $iid = time().rand(10000,99999).$uid;
       
       $data = [
@@ -100,7 +102,7 @@ class AddInstrumentForm extends FormBase {
       ];
       
 
-      $datap = '{"uri":"http://hadatac.org/kb/test/Instrument'.$iid.'","typeUri":"http://hadatac.org/ont/vstoi#Questionnaire","hascoTypeUri":"http://hadatac.org/ont/vstoi#Instrument","label":"'.$form_state->getValue('instrument_name').'","comment":"'.$form_state->getValue('instrument_description').'","hasShortName":"'.$form_state->getValue('instrument_abbreviation').'"}';
+      $datap = '{"uri":"http://hadatac.org/kb/test/Instrument'.$iid.'","typeUri":"http://hadatac.org/ont/vstoi#Questionnaire","hascoTypeUri":"http://hadatac.org/ont/vstoi#Instrument","label":"'.$form_state->getValue('instrument_name').'","comment":"'.$form_state->getValue('instrument_description').'","hasShortName":"'.$form_state->getValue('instrument_abbreviation').'","hasSIROwnerEmail":"'.$uemail.'"}';
 
     $dataJ = json_encode($data);
     

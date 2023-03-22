@@ -19,9 +19,12 @@ class EditInstrumentsController extends ControllerBase{
     {
       $config = $this->config(static::CONFIGNAME);           
       $api_url = $config->get("api_url");
-      $endpoint = "/sirapi/api/instrument/all";
+      $uemail = \Drupal::currentUser()->getEmail();
+      $endpoint = "/sirapi/api/instrument/owneremail/".rawurlencode($uemail);
+
       $this->listInstruments($api_url,$endpoint);
       $content = [];
+     
       $content['instruments'] = $this->createInstrumentCard($api_url,$endpoint);
         return[
             '#theme' => 'editinstruments-list',
@@ -33,7 +36,11 @@ class EditInstrumentsController extends ControllerBase{
       /** @var \FusekiAPI$fusekiAPIservice */
       $fusekiAPIservice = \Drupal::service('sir.api_connector');
 
-      $instrument_list = $fusekiAPIservice->instrumentsList($api_url,$endpoint);
+      $instrument_list = $fusekiAPIservice->instrumentsList
+      ($api_url,$endpoint);
+
+    
+
       if(!empty($instrument_list)){
         return $instrument_list;
       }
@@ -44,14 +51,16 @@ class EditInstrumentsController extends ControllerBase{
       $instrumentCards = [];
       $instruments = $this->listInstruments($api_url,$endpoint);
 
-      // Decode the JSON data into a PHP object
+      // Decode the JSON data into a PHP object 
       $obj = json_decode($instruments);
 
         if(!empty($obj)){
-         foreach($obj->body as $instrument){
-         
+          if($obj->isSuccessful)
+          {
+            foreach($obj->body as $instrument){
               $content = [
             'iname' => $instrument->label,
+            'iuri' => $instrument->uri,
             'ilabel' => $instrument->hasShortName,
           ];
 
@@ -63,6 +72,7 @@ class EditInstrumentsController extends ControllerBase{
           ];
 
          }
+        }         
       }
 
       return $instrumentCards;

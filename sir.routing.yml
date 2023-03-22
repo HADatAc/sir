@@ -69,6 +69,18 @@ sir.searchinstruments_ajax:
     _csrf_token: 'FALSE'
     no_cache: 'TRUE'
 
+sir.delinstrument_ajax:
+  path: '/sir/ajax/delinstrument'
+  defaults:
+    _controller: '\Drupal\sir\Controller\InstrumentController::delintrumentAjax'
+    _title: 'del instrument Ajax'
+  methods: [POST]
+  requirements:
+    _permission: 'access content' 
+  options:
+    _csrf_token: 'FALSE'
+    no_cache: 'TRUE'
+
 sir.admin_settings_custom:
   path: '/admin/config/sir'
   defaults:

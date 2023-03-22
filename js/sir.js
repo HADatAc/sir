@@ -49,5 +49,30 @@
            dataType: 'json'
          });
       }
+
+  
+      $(".delInstrument").click(function(){
+        if (confirm("Do you want to delete")){
+          let instrument = $(this).attr("data-item-url");
+          var data = {
+            'instrument': instrument
+          };
+          // Send the AJAX request.
+         jQuery.ajax({
+          type: 'POST',
+          url: '/sir/ajax/delinstrument',
+          data: JSON.stringify(data),
+          contentType: "application/json",
+          success: function (response) {
+            location.reload();
+          },
+          error: function () {
+            console.log('An error occurred while processing the request.');
+          },
+          dataType: 'json'
+        });
+        } 
+        return false;
+      });
  
   })(jQuery)

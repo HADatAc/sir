@@ -36,6 +36,7 @@
     </div>
     <div class="col-9">
       <div class="content">
+        {%if content.instruments is not empty %}
         <table class="table">
           <thead>
             <tr>
@@ -44,13 +45,17 @@
             </tr>
           </thead>
           <tbody id='searchinstrumentscontent'>
-            {%if content.instruments is not empty %}
                 {% for instrument in content.instruments %}
                     {{instrument}} 
                 {% endfor %}  
-            {% endif %}
+            
         </tbody>
         </table>
+        {% else %}
+          <div>
+            {{ 'No questionnaries were found' }}
+            </div>
+        {% endif %}
       </div>
     </div>
   </div>

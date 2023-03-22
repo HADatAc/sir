@@ -45,6 +45,14 @@ class InstrumentController extends ControllerBase{
       return [];
     }
 
+    public function deleteInstrument($api_url,$endpoint,$data){
+       /** @var \FusekiAPI$fusekiAPIservice */
+    $fusekiAPIservice = \Drupal::service('sir.api_connector');
+
+    $newInstrument = $fusekiAPIservice->instrumentDel($api_url,$endpoint,$data);
+    return [];
+    }
+
     public function createInstrumentCard($api_url,$endpoint) {
       $instrumentCards = [];
       $instruments = $this->listInstruments($api_url,$endpoint);
@@ -57,6 +65,7 @@ class InstrumentController extends ControllerBase{
          
               $content = [
             'iname' => $instrument->label,
+            'url' => $instrument->uri,
             'ilabel' => $instrument->hasShortName,
           ];
 
@@ -99,12 +108,6 @@ class InstrumentController extends ControllerBase{
        
        $instruments = $this->listInstruments($api_url,$endpoint);
 
-       # print("<hr>"); 
-        #print_r($endpoint); 
-       # print($instruments); 
-      #  exit();
-
-
        $content = "";
       // Decode the JSON data into a PHP object
       $obj = json_decode($instruments);
@@ -116,6 +119,39 @@ class InstrumentController extends ControllerBase{
       }
 
       // Return a JSON response.
+      return new JsonResponse($content);
+
+      }
+  
+      // Return an empty response if the request is not an AJAX POST request.
+      return new JsonResponse([]);
+    }
+
+    public function delintrumentAjax(Request $request) {
+      if ($request->isXmlHttpRequest() && $request->isMethod('POST')) {
+        // Retrieve the data from the AJAX request.
+        $data = $request->getContent();
+  
+        // Process the data as needed.
+        //$result = $this->processData($data);
+        $obj = json_decode($data);
+        $filter = "";
+
+        if(strlen($obj->instrument) > 0)
+        {
+          $endpoint =  "/sirapi/api/instrument/delete/".rawurlencode($obj->instrument);
+        }else{
+          return "0";
+        }
+        
+
+       $config = $this->config(static::CONFIGNAME);           
+       $api_url = $config->get("api_url");
+       $pdata = [];
+       
+       $instruments = $this->deleteInstrument($api_url,$endpoint,$pdata);
+
+     
       return new JsonResponse($content);
 
       }

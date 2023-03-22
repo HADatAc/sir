@@ -4,6 +4,9 @@ sir.edit_instruments:
   route_name: sir.edit_instruments
   menu_name: main
   weight: 1
+  requirements:
+      _permission: 'access content'
+      _role: 'authenticated'
 
 sir.edit_symptoms :
   title: Manage Symptoms 
@@ -11,6 +14,10 @@ sir.edit_symptoms :
   route_name: sir.edit_symptoms
   menu_name: main
   weight: 2
+  requirements:
+      _permission: 'access content'
+      _role: 'authenticated'
+
 
 sir.edit_scales:
   title: Manage Scales 
@@ -18,6 +25,9 @@ sir.edit_scales:
   route_name: sir.edit_scales
   menu_name: main
   weight: 3
+  requirements:
+      _permission: 'access content'
+      _role: 'authenticated'
 
 sir.admin_settings_link:
  title: Configuration
@@ -25,3 +35,6 @@ sir.admin_settings_link:
  menu_name: main 
  route_name: sir.admin_settings_custom
  weight: 4
+   requirements:
+      _permission: 'access content'
+      _role: 'authenticated'
