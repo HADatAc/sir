@@ -7,3 +7,7 @@ services:
     arguments: ['@current_user']
     tags:
       - { name: access_check, applies_to: _custom_access_check }
+  sir.route_subscriber:
+    class: Drupal\sir\EventSubscriber\RouteSubscriber
+    tags:
+        - { name: event_subscriber }     
