@@ -11,9 +11,10 @@ sir.add_instrument:
   path: 'sir/manage/addinstrument'
   defaults:
     _form: '\Drupal\sir\Form\AddInstrumentForm'
-    _title: 'Add new Questionnarie.'    
+    _title: 'Add new Questionnarie'    
   requirements:
-    _permission: 'access content' 
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
   options:
     no_cache: 'TRUE'
 
@@ -24,6 +25,7 @@ sir.edit_instruments:
     _title: 'Manage Questionnaries'    
   requirements:
     _permission: 'access content'
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
@@ -33,7 +35,8 @@ sir.edit_scales:
     _controller: '\Drupal\sir\Controller\EditInstrumentsController::index'
     _title: 'Edit Scales'    
   requirements:
-    _permission: 'access content'   
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
   options:
     no_cache: 'TRUE'
 
@@ -43,7 +46,8 @@ sir.edit_symptoms:
     _controller: '\Drupal\sir\Controller\EditInstrumentsController::index'
     _title: 'Edit Symptoms'    
   requirements:
-    _permission: 'access content'    
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
   options:
     no_cache: 'TRUE'
 
@@ -53,7 +57,8 @@ sir.edit_instrument:
     _form: '\Drupal\sir\Form\EditInstrumentForm'
     _title: 'Edit a Questionnarie'    
   requirements:
-    _permission: 'access content'     
+    _permission: 'access content'  
+    _custom_access_check: 'TRUE'      
   options:
     no_cache: 'TRUE'
 

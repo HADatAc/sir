@@ -37,7 +37,7 @@
          // Send the AJAX request.
          jQuery.ajax({
            type: 'POST',
-           url: '/sir/ajax/searchinstruments',
+           url: 'sir/ajax/searchinstruments',
            data: JSON.stringify(data),
            contentType: "application/json",
            success: function (response) {
@@ -60,7 +60,7 @@
           // Send the AJAX request.
          jQuery.ajax({
           type: 'POST',
-          url: '/sir/ajax/delinstrument',
+          url: 'sir/ajax/delinstrument',
           data: JSON.stringify(data),
           contentType: "application/json",
           success: function (response) {
