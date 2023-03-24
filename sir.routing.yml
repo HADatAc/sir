@@ -1,5 +1,5 @@
 sir.index:
-  path: '/sir/public/instruments'
+  path: 'sir/public/instruments'
   defaults:
     _controller: '\Drupal\sir\Controller\InstrumentController::index'
   requirements:
@@ -8,7 +8,7 @@ sir.index:
     no_cache: 'TRUE'
 
 sir.add_instrument:
-  path: '/sir/manage/addinstrument'
+  path: 'sir/manage/addinstrument'
   defaults:
     _form: '\Drupal\sir\Form\AddInstrumentForm'
     _title: 'Add new Questionnarie'    
@@ -19,7 +19,7 @@ sir.add_instrument:
     no_cache: 'TRUE'
 
 sir.edit_instruments:
-  path: '/sir/manage/editinstruments'
+  path: 'sir/manage/editinstruments'
   defaults:
     _controller: '\Drupal\sir\Controller\EditInstrumentsController::index'
     _title: 'Manage Questionnaries'    
@@ -30,7 +30,7 @@ sir.edit_instruments:
     no_cache: 'TRUE'
 
 sir.edit_scales:
-  path: '/sir/manage/editscales'
+  path: 'sir/manage/editscales'
   defaults:
     _controller: '\Drupal\sir\Controller\EditInstrumentsController::index'
     _title: 'Edit Scales'    
@@ -41,7 +41,7 @@ sir.edit_scales:
     no_cache: 'TRUE'
 
 sir.edit_symptoms:
-  path: '/sir/manage/editsymptoms'
+  path: 'sir/manage/editsymptoms'
   defaults:
     _controller: '\Drupal\sir\Controller\EditInstrumentsController::index'
     _title: 'Edit Symptoms'    
@@ -52,7 +52,7 @@ sir.edit_symptoms:
     no_cache: 'TRUE'
 
 sir.edit_instrument:
-  path: '/sir/manage/editinstrument'
+  path: 'sir/manage/editinstrument'
   defaults:
     _form: '\Drupal\sir\Form\EditInstrumentForm'
     _title: 'Edit a Questionnarie'    
@@ -63,7 +63,7 @@ sir.edit_instrument:
     no_cache: 'TRUE'
 
 sir.searchinstruments_ajax:
-  path: '/sir/ajax/searchinstruments'
+  path: 'sir/ajax/searchinstruments'
   defaults:
     _controller: '\Drupal\sir\Controller\InstrumentController::searchinstrumentsAjax'
     _title: 'search instruments Ajax'
@@ -75,7 +75,7 @@ sir.searchinstruments_ajax:
     no_cache: 'TRUE'
 
 sir.delinstrument_ajax:
-  path: '/sir/ajax/delinstrument'
+  path: 'sir/ajax/delinstrument'
   defaults:
     _controller: '\Drupal\sir\Controller\InstrumentController::delintrumentAjax'
     _title: 'del instrument Ajax'
@@ -87,7 +87,7 @@ sir.delinstrument_ajax:
     no_cache: 'TRUE'
 
 sir.admin_settings_custom:
-  path: '/admin/config/sir'
+  path: 'admin/config/sir'
   defaults:
     _form: '\Drupal\sir\Form\SIRSettingsForm'
     _title: 'SIR Settings Form'
