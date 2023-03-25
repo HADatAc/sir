@@ -14,12 +14,8 @@ class FusekiAPIConnector
 
     public function __construct(ClientFactory $client){
         
-      
 
     }
-
-    
-  
 
     public function instrumentsList($api_url,$endpoint)
     {

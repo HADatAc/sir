@@ -4,6 +4,8 @@ namespace Drupal\sir\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
+
 
 class AddInstrumentForm extends FormBase {
 
@@ -109,8 +111,17 @@ class AddInstrumentForm extends FormBase {
     $dataE = rawurlencode($datap);
 
     $newInstrument = $this->addInstrument($api_url,"/sirapi/api/instrument/create/".$dataE,$data);
-     
-      \Drupal::messenger()->addMessage(t("Questionnarie has been added successfully."));
+    
+    
+  $root_url = \Drupal::request()->getSchemeAndHttpHost();
+  $url = $root_url.'/sir/manage/editinstruments';
+  $url_object = Url::fromUri($url);
+  $form_state->setRedirectUrl($url_object);
+
+  \Drupal::messenger()->addMessage(t("Questionnarie has been added successfully."));
+
+      
+
     }catch(\Exception $e){
       \Drupal::messenger()->addMessage(t("An error occurred while adding the Questionnarie: ".$e->getMessage()));
     }

@@ -9,6 +9,9 @@ use Drupal\Core\Block\BlockBase;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Drupal\Core\Render\Markup;
+use Drupal\sir\Exception\SirExceptions;
+use Drupal\sir\Controller\UtilsController;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 
 class InstrumentController extends ControllerBase{
@@ -22,10 +25,16 @@ class InstrumentController extends ControllerBase{
     public function index()
     {
 
+      //verify if SIR is configured
+      $utils_controller = new UtilsController();
+      $response = $utils_controller->siripconfigured();
+      if ($response instanceof RedirectResponse) {
+        return $response;
+      }
+
       $config = $this->config(static::CONFIGNAME);           
-      $api_url = $config->get("api_url");
-      $endpoint = "/sirapi/api/instrument/all";
-      $this->listInstruments($api_url,$endpoint);
+      $api_url = $config->get("api_url");     
+     
       $content = [];
       $content['instruments'] = $this->createInstrumentCard($api_url,$endpoint);
         return[
@@ -92,7 +101,6 @@ class InstrumentController extends ControllerBase{
         $data = $request->getContent();
   
         // Process the data as needed.
-        //$result = $this->processData($data);
         $obj = json_decode($data);
         $filter = "";
 
@@ -133,7 +141,6 @@ class InstrumentController extends ControllerBase{
         $data = $request->getContent();
   
         // Process the data as needed.
-        //$result = $this->processData($data);
         $obj = json_decode($data);
         $filter = "";
 

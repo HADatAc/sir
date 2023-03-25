@@ -3,9 +3,12 @@
 namespace Drupal\sir\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
-use BorderCloud\SPARQL\SparqlClient;
 use Drupal\block\Entity\Block;
 use Drupal\Core\Block\BlockBase;
+use Drupal\sir\Exception\SirExceptions;
+use Drupal\sir\Controller\UtilsController;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+
 
 
 class EditInstrumentsController extends ControllerBase{
@@ -17,6 +20,15 @@ class EditInstrumentsController extends ControllerBase{
 
     public function index()
     {
+      
+      //verify if SIR is configured
+      $utils_controller = new UtilsController();
+      $response = $utils_controller->siripconfigured();
+      if ($response instanceof RedirectResponse) {
+        return $response;
+      }
+      
+      
       $config = $this->config(static::CONFIGNAME);           
       $api_url = $config->get("api_url");
       $uemail = \Drupal::currentUser()->getEmail();

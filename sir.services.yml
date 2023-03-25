@@ -9,5 +9,6 @@ services:
       - { name: access_check, applies_to: _custom_access_check }
   sir.route_subscriber:
     class: Drupal\sir\EventSubscriber\RouteSubscriber
+    arguments: ['@config.factory']
     tags:
         - { name: event_subscriber }     

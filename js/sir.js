@@ -26,6 +26,8 @@
 
       function updateinstruments()
       {
+        var rootUrl = window.location.protocol + '//' + window.location.host;
+
         let typeofsearch = $('#searchinstrumenttype').val();
         let questionnariename = $('#questionnariename').val();
 
@@ -37,7 +39,7 @@
          // Send the AJAX request.
          jQuery.ajax({
            type: 'POST',
-           url: 'sir/ajax/searchinstruments',
+           url: rootUrl+'/sir/ajax/searchinstruments',
            data: JSON.stringify(data),
            contentType: "application/json",
            success: function (response) {
@@ -52,7 +54,8 @@
 
   
       $(".delInstrument").click(function(){
-        if (confirm("Do you want to delete")){
+        if (confirm("Do you want to delete?")){
+          var rootUrl = window.location.protocol + '//' + window.location.host;
           let instrument = $(this).attr("data-item-url");
           var data = {
             'instrument': instrument
@@ -60,7 +63,7 @@
           // Send the AJAX request.
          jQuery.ajax({
           type: 'POST',
-          url: 'sir/ajax/delinstrument',
+          url: rootUrl+'/sir/ajax/delinstrument',
           data: JSON.stringify(data),
           contentType: "application/json",
           success: function (response) {
