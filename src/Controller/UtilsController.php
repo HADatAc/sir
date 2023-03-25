@@ -5,7 +5,7 @@ namespace Drupal\sir\Controller;
 use Drupal\Core\Controller\ControllerBase;
 use Symfony\Component\HttpFoundation\Request;
 use Drupal\sir\Exception\SirExceptions;
-use Symfony\Component\HttpFoundation\RedirectResponse;
+use Drupal\Core\Routing\TrustedRedirectResponse;
 
 
 class UtilsController extends ControllerBase{
@@ -26,7 +26,7 @@ class UtilsController extends ControllerBase{
       if($sir_not_configured){
         $root_url = \Drupal::request()->getSchemeAndHttpHost();
         $url = $root_url.'/admin/config/sir';
-        $response = new RedirectResponse($url);
+        $response = new TrustedRedirectResponse($url);
         \Drupal::messenger()->addMessage(t("Please configure SIR API IP address."));
         return $response;
       
