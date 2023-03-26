@@ -24,7 +24,7 @@ class UtilsController extends ControllerBase{
       $sir_not_configured = strpos($api_url,'x.x.x.x');
       
       if($sir_not_configured){
-        $root_url = \Drupal::request()->getSchemeAndHttpHost();
+        $root_url = \Drupal::request()->getBaseUrl();
         $url = $root_url.'/admin/config/sir';
         $response = new TrustedRedirectResponse($url);
         \Drupal::messenger()->addMessage(t("Please configure SIR API IP address."));
