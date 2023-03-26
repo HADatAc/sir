@@ -34,7 +34,8 @@ class InstrumentController extends ControllerBase{
 
       $config = $this->config(static::CONFIGNAME);           
       $api_url = $config->get("api_url");     
-     
+      $endpoint = "/sirapi/api/instrument/all";
+
       $content = [];
       $content['instruments'] = $this->createInstrumentCard($api_url,$endpoint);
         return[
