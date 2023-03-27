@@ -5,8 +5,8 @@ sir.edit_instruments:
   menu_name: main
   weight: 1
   requirements:
-      _permission: 'access content'
-      _role: 'authenticated'
+    _permission: 'access content'
+    _role: 'authenticated'
 
 sir.edit_symptoms :
   title: Manage Symptoms 
@@ -15,8 +15,8 @@ sir.edit_symptoms :
   menu_name: main
   weight: 2
   requirements:
-      _permission: 'access content'
-      _role: 'authenticated'
+    _permission: 'access content'
+    _role: 'authenticated'
 
 
 sir.edit_scales:
@@ -26,15 +26,15 @@ sir.edit_scales:
   menu_name: main
   weight: 3
   requirements:
-      _permission: 'access content'
-      _role: 'authenticated'
+    _permission: 'access content'
+    _role: 'authenticated'
 
 sir.admin_settings_link:
- title: Configuration
- description: SIR Settings
- menu_name: main 
- route_name: sir.admin_settings_custom
- weight: 4
-   requirements:
-      _permission: 'access content'
-      _role: 'authenticated'
+  title: Configuration
+  description: SIR Settings
+  menu_name: main 
+  route_name: sir.admin_settings_custom
+  weight: 4
+  requirements:
+    _permission: 'access content'
+    _role: 'authenticated'
