@@ -1,4 +1,9 @@
 (function ($) {
+  Drupal.behaviors.myModule = {
+    attach: function (context, settings) {
+      // Get the base URL from drupalSettings
+      var rootUrl = settings.mymodule.base_url;
+
     $(document).ready(function() {
         $('#searchinstrumentbytypebtn').hide(); 
         $('#questionnarieblock').hide(); 
@@ -26,8 +31,6 @@
 
       function updateinstruments()
       {
-        var rootUrl = window.location.protocol + '//' + window.location.host;
-
         let typeofsearch = $('#searchinstrumenttype').val();
         let questionnariename = $('#questionnariename').val();
 
@@ -55,7 +58,6 @@
   
       $(".delInstrument").click(function(){
         if (confirm("Do you want to delete?")){
-          var rootUrl = window.location.protocol + '//' + window.location.host;
           let instrument = $(this).attr("data-item-url");
           var data = {
             'instrument': instrument
@@ -77,5 +79,6 @@
         } 
         return false;
       });
- 
-  })(jQuery)
+    }
+    };
+  })(jQuery);
