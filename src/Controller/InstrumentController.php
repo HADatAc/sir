@@ -37,11 +37,19 @@ class InstrumentController extends ControllerBase{
       $endpoint = "/sirapi/api/instrument/all";
 
       $content = [];
+      $root_url = \Drupal::request()->getBaseUrl();
       $content['instruments'] = $this->createInstrumentCard($api_url,$endpoint);
         return[
             '#theme' => 'instruments-list',
             '#content' => $content,
-            ];
+            '#attached' => [
+              'drupalSettings' => [
+                'mymodule' => [
+                  'base_url' => $root_url,
+                ],
+              ],
+            ],
+          ];
     }
 
     public function listInstruments($api_url,$endpoint){

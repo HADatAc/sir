@@ -56,7 +56,7 @@
       }
 
   
-      $(".delInstrument").click(function(){
+      $(".delInstrument").once('sir').click(function(){
         if (confirm("Do you want to delete?")){
           let instrument = $(this).attr("data-item-url");
           var data = {

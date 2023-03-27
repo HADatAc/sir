@@ -36,12 +36,19 @@ class EditInstrumentsController extends ControllerBase{
 
       $this->listInstruments($api_url,$endpoint);
       $content = [];
-     
+      $root_url = \Drupal::request()->getBaseUrl();
       $content['instruments'] = $this->createInstrumentCard($api_url,$endpoint);
         return[
             '#theme' => 'editinstruments-list',
             '#content' => $content,
-            ];
+            '#attached' => [
+              'drupalSettings' => [
+                'mymodule' => [
+                  'base_url' => $root_url,
+                ],
+              ],
+            ],
+          ];
     }
 
     public function listInstruments($api_url,$endpoint){

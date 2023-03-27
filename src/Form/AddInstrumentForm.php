@@ -5,7 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-
+use Drupal\Core\Routing\TrustedRedirectResponse;
 
 class AddInstrumentForm extends FormBase {
 
@@ -113,7 +113,7 @@ class AddInstrumentForm extends FormBase {
     $newInstrument = $this->addInstrument($api_url,"/sirapi/api/instrument/create/".$dataE,$data);
     
     
-  $root_url = \Drupal::request()->getSchemeAndHttpHost();
+  $root_url = \Drupal::request()->getBaseUrl();
   $url = $root_url.'/sir/manage/editinstruments';
   $url_object = Url::fromUri($url);
   $form_state->setRedirectUrl($url_object);
