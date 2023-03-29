@@ -54,7 +54,6 @@
            dataType: 'json'
          });
       }
-
   
       $(".delInstrument").once('sir').click(function(){
         if (confirm("Do you want to delete?")){
@@ -79,6 +78,32 @@
         } 
         return false;
       });
+
+      $(".delExperience").once('sir').click(function(){
+        if (confirm("Do you want to delete?")){
+          let experience = $(this).attr("data-item-url");
+          var data = {
+            'experience': experience
+          };
+          // Send the AJAX request.
+         jQuery.ajax({
+          type: 'POST',
+          url: rootUrl+'/sir/ajax/delexperience',
+          data: JSON.stringify(data),
+          contentType: "application/json",
+          success: function (response) {
+            location.reload();
+          },
+          error: function () {
+            console.log('An error occurred while processing the request.');
+          },
+          dataType: 'json'
+        });
+        } 
+        return false;
+      });
+
+
     }
     };
   })(jQuery);

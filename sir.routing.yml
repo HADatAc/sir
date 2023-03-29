@@ -1,3 +1,4 @@
+# SIR landing page
 sir.index:
   path: 'sir/public/instruments'
   defaults:
@@ -6,6 +7,8 @@ sir.index:
     _permission: 'access content'
   options:
     no_cache: 'TRUE'
+
+# Main menu options
 
 sir.add_instrument:
   path: 'sir/manage/addinstrument'
@@ -32,8 +35,8 @@ sir.edit_instruments:
 sir.edit_experiences:
   path: 'sir/manage/editexperiences'
   defaults:
-    _controller: '\Drupal\sir\Controller\EditInstrumentsController::index'
-    _title: 'Edit Experiences'    
+    _controller: '\Drupal\sir\Controller\EditExperiencesController::index'
+    _title: 'Manage Experiences'    
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    
@@ -44,12 +47,14 @@ sir.edit_semantics:
   path: 'sir/manage/editsemantics'
   defaults:
     _controller: '\Drupal\sir\Controller\EditInstrumentsController::index'
-    _title: 'Edit Semantics'    
+    _title: 'Manage Semantics'    
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    
   options:
     no_cache: 'TRUE'
+
+# Instrument CRUD options
 
 sir.edit_instrument:
   path: 'sir/manage/editinstrument'
@@ -85,6 +90,56 @@ sir.delinstrument_ajax:
   options:
     _csrf_token: 'FALSE'
     no_cache: 'TRUE'
+
+# Experience CRUD options
+
+sir.add_experience:
+  path: 'sir/manage/addexperience'
+  defaults:
+    _form: '\Drupal\sir\Form\AddExperienceForm'
+    _title: 'Add new Experience'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+sir.edit_experience:
+  path: 'sir/manage/editexperience'
+  defaults:
+    _form: '\Drupal\sir\Form\EditExperienceForm'
+    _title: 'Edit an Experience'    
+  requirements:
+    _permission: 'access content'  
+    _custom_access_check: 'TRUE'      
+  options:
+    no_cache: 'TRUE'
+
+sir.searchexperiences_ajax:
+  path: 'sir/ajax/searchexperiences'
+  defaults:
+    _controller: '\Drupal\sir\Controller\ExperienceController::searchExperiencesAjax'
+    _title: 'search Experiences Ajax'
+  methods: [POST]
+  requirements:
+    _permission: 'access content' 
+  options:
+    _csrf_token: 'FALSE'
+    no_cache: 'TRUE'
+
+sir.delexperience_ajax:
+  path: 'sir/ajax/delexperience'
+  defaults:
+    _controller: '\Drupal\sir\Controller\ExperienceController::delExperienceAjax'
+    _title: 'del Experience Ajax'
+  methods: [POST]
+  requirements:
+    _permission: 'access content' 
+  options:
+    _csrf_token: 'FALSE'
+    no_cache: 'TRUE'
+
+# Configuration option
 
 sir.admin_settings_custom:
   path: 'admin/config/sir'

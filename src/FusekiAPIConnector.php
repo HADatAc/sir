@@ -17,36 +17,51 @@ class FusekiAPIConnector
 
     }
 
-    public function instrumentsList($api_url,$endpoint)
-    {
+    public function instrumentsList($api_url,$endpoint) {
       $instruments = [];
       //if we add auth in future
       $data = [
             'auth' => ['user', 'pass']
       ];
      
-     $instruments = $this->perform_http_request('GET',$api_url.$endpoint,$data);   
+      $instruments = $this->perform_http_request('GET',$api_url.$endpoint,$data);   
       
       return($instruments);
     }
 
-    public function instrumentAdd($api_url,$endpoint, $data)
-    {
+    public function instrumentAdd($api_url,$endpoint, $data) {
       return $this->perform_http_request('POST',$api_url.$endpoint,$data);          
     }
 
-    public function instrumentDel($api_url,$endpoint, $data)
-    {
+    public function instrumentDel($api_url,$endpoint, $data) {
       return $this->perform_http_request('POST',$api_url.$endpoint,$data);          
     }
 
-    public function repositoryConf($api_url,$endpoint, $data)
-    {
+    public function experiencesList($api_url,$endpoint) {
+      $experiences = [];
+      //if we add auth in future
+      $data = [
+            'auth' => ['user', 'pass']
+      ];
+     
+      $experiences = $this->perform_http_request('GET',$api_url.$endpoint,$data);   
+      
+      return($experiences);
+    }
+
+    public function experienceAdd($api_url,$endpoint, $data) {
+      return $this->perform_http_request('POST',$api_url.$endpoint,$data);          
+    }
+
+    public function experienceDel($api_url,$endpoint, $data) {
+      return $this->perform_http_request('POST',$api_url.$endpoint,$data);          
+    }
+
+    public function repositoryConf($api_url,$endpoint, $data) {
       return $this->perform_http_request('GET',$api_url.$endpoint,$data);          
     }
 
-    public static function perform_http_request($method, $url, $data = false) {
-       
+    public static function perform_http_request($method, $url, $data = false) {       
         try 
         {
             $client = new Client();
