@@ -8,21 +8,20 @@ sir.edit_instruments:
     _permission: 'access content'
     _role: 'authenticated'
 
-sir.edit_symptoms :
-  title: Manage Symptoms 
-  description: edit Symptoms
-  route_name: sir.edit_symptoms
+sir.edit_experiences :
+  title: Manage Experiences 
+  description: Manage experiences and their corresponding Response Options
+  route_name: sir.edit_experiences
   menu_name: main
   weight: 2
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
 
-
-sir.edit_scales:
-  title: Manage Scales 
-  description: edit Scales
-  route_name: sir.edit_scales
+sir.edit_semantics:
+  title: Manage Semantics 
+  description: edit semantics of variables used in instruments
+  route_name: sir.edit_semantics
   menu_name: main
   weight: 3
   requirements:

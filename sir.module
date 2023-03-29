@@ -19,3 +19,23 @@ function sir_theme($existing, $type, $theme, $path)
         ]
     ];
 }
+
+use Drupal\Core\Path\AliasStorageInterface;
+
+/**
+ * Implements hook_update_N().
+ */
+function sir_update_8001() {
+
+  \Drupal::configFactory()->getEditable('system.site')->set('page.front', '/sir/public/instruments')->save();
+
+/**
+  // Set the new home URI.
+  $home_uri = '/sir/public/instruments';
+  #$alias_storage = \Drupal::service('path.alias_storage');
+  #$alias_storage->save($home_uri, '/');
+  #$config = \Drupal::configFactory()->getEditable('system.site');
+  #$config->set('page.front', $home_uri)->save();
+ */
+}
+

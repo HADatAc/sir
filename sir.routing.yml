@@ -29,22 +29,22 @@ sir.edit_instruments:
   options:
     no_cache: 'TRUE'
 
-sir.edit_scales:
-  path: 'sir/manage/editscales'
+sir.edit_experiences:
+  path: 'sir/manage/editexperiences'
   defaults:
     _controller: '\Drupal\sir\Controller\EditInstrumentsController::index'
-    _title: 'Edit Scales'    
+    _title: 'Edit Experiences'    
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    
   options:
     no_cache: 'TRUE'
 
-sir.edit_symptoms:
-  path: 'sir/manage/editsymptoms'
+sir.edit_semantics:
+  path: 'sir/manage/editsemantics'
   defaults:
     _controller: '\Drupal\sir\Controller\EditInstrumentsController::index'
-    _title: 'Edit Symptoms'    
+    _title: 'Edit Semantics'    
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    
