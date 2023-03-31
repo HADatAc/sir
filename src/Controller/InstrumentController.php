@@ -82,9 +82,12 @@ class InstrumentController extends ControllerBase{
          foreach($obj->body as $instrument){
          
               $content = [
-            'iname' => $instrument->label,
-            'url' => $instrument->uri,
-            'ilabel' => $instrument->hasShortName,
+                'iname' => $instrument->label,
+                'uri' => $instrument->uri,
+                'ilabel' => $instrument->hasShortName,
+                'ilanguage' => $instrument->hasLanguage,
+                'iversion' => $instrument->hasVersion,
+                'iname' => $instrument->label,
           ];
 
          
@@ -131,7 +134,14 @@ class InstrumentController extends ControllerBase{
 
       if(!empty($obj)){
         foreach($obj->body as $instrument){
-        $content.='<tr><td scope="row">'.$instrument->label.'</td><td>'.$instrument->hasShortName.'</td></tr>';
+        $content.='<tr>'.
+          '<td scope="row">'.$instrument->hasShortName.'</td>'.
+          '<td>'.$instrument->label.'</td>'.
+          '<td>'.$instrument->hasLanguage.'</td>'.
+          '<td>'.$instrument->hasVersion.'</td>'.
+          '<td>TXT HTML PDF</td>'.
+          '<td>RDF FHIR REDCAP</td>'.
+          '</tr>';
         }
       }
 

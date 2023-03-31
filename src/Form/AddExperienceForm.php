@@ -96,7 +96,7 @@ class AddExperienceForm extends FormBase {
         '"hascoTypeUri":"http://hadatac.org/ont/vstoi#Experience",' . 
         '"label":"' . $form_state->getValue('experience_name') . '",' . 
         '"comment":"' . $form_state->getValue('experience_description') . '",' . 
-        '"hasSIROwnerEmail":"' . $uemail . '"}';
+        '"hasSIRMaintainerEmail":"' . $uemail . '"}';
 
     $dataJ = json_encode($data);
     

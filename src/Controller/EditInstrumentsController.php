@@ -32,7 +32,7 @@ class EditInstrumentsController extends ControllerBase{
       $config = $this->config(static::CONFIGNAME);           
       $api_url = $config->get("api_url");
       $uemail = \Drupal::currentUser()->getEmail();
-      $endpoint = "/sirapi/api/instrument/owneremail/".rawurlencode($uemail);
+      $endpoint = "/sirapi/api/instrument/maintaineremail/".rawurlencode($uemail);
 
       $this->listInstruments($api_url,$endpoint);
       $content = [];
@@ -81,6 +81,8 @@ class EditInstrumentsController extends ControllerBase{
             'iname' => $instrument->label,
             'iuri' => $instrument->uri,
             'ilabel' => $instrument->hasShortName,
+            'ilanguage' => $instrument->hasLanguage,
+            'iversion' => $instrument->hasVersion,
           ];
 
          

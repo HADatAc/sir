@@ -104,7 +104,7 @@ class AddInstrumentForm extends FormBase {
       ];
       
 
-      $datap = '{"uri":"http://hadatac.org/kb/test/Instrument'.$iid.'","typeUri":"http://hadatac.org/ont/vstoi#Questionnaire","hascoTypeUri":"http://hadatac.org/ont/vstoi#Instrument","label":"'.$form_state->getValue('instrument_name').'","comment":"'.$form_state->getValue('instrument_description').'","hasShortName":"'.$form_state->getValue('instrument_abbreviation').'","hasSIROwnerEmail":"'.$uemail.'"}';
+      $datap = '{"uri":"http://hadatac.org/kb/test/Instrument'.$iid.'","typeUri":"http://hadatac.org/ont/vstoi#Questionnaire","hascoTypeUri":"http://hadatac.org/ont/vstoi#Instrument","label":"'.$form_state->getValue('instrument_name').'","comment":"'.$form_state->getValue('instrument_description').'","hasShortName":"'.$form_state->getValue('instrument_abbreviation').'","hasSIRMaintainerEmail":"'.$uemail.'"}';
 
     $dataJ = json_encode($data);
     

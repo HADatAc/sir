@@ -30,7 +30,7 @@ class EditExperiencesController extends ControllerBase{
       $config = $this->config(static::CONFIGNAME);           
       $api_url = $config->get("api_url");
       $uemail = \Drupal::currentUser()->getEmail();
-      $endpoint = "/sirapi/api/experience/owneremail/".rawurlencode($uemail);
+      $endpoint = "/sirapi/api/experience/maintaineremail/".rawurlencode($uemail);
 
       $this->listExperiences($api_url,$endpoint);
       $content = [];
