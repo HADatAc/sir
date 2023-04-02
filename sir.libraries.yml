@@ -1,0 +1,28 @@
+sir_js_css:
+  version: 1.0
+  css:
+    theme:
+      css/sir.css: {}
+  js:
+    js/sir.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/jquery.once
+sir_itens_js_css:
+  version: 1.0
+  css:
+    theme:
+      css/instrumentitens.css: {}
+  js:
+    js/instrumentitens.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/jquery.once
+    - core/jquery.ui.autocomplete
+fontawesome5:
+  version: 1.0
+  css:
+    component:
+      //use.fontawesome.com/releases/v5.15.4/css/all.css: {}

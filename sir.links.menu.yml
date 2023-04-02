@@ -1,0 +1,39 @@
+sir.edit_instruments:
+  title: Manage Questionnaires
+  description: edit you questionnaries
+  route_name: sir.edit_instruments
+  menu_name: main
+  weight: 1
+  requirements:
+    _permission: 'access content'
+    _role: 'authenticated'
+
+sir.edit_experiences :
+  title: Manage Experiences 
+  description: Manage experiences and their corresponding Response Options
+  route_name: sir.edit_experiences
+  menu_name: main
+  weight: 2
+  requirements:
+    _permission: 'access content'
+    _role: 'authenticated'
+
+sir.edit_semantics:
+  title: Manage Semantics 
+  description: edit semantics of variables used in instruments
+  route_name: sir.edit_semantics
+  menu_name: main
+  weight: 3
+  requirements:
+    _permission: 'access content'
+    _role: 'authenticated'
+
+sir.admin_settings_link:
+  title: Configuration
+  description: SIR Settings
+  menu_name: main 
+  route_name: sir.admin_settings_custom
+  weight: 4
+  requirements:
+    _permission: 'access content'
+    _role: 'authenticated'

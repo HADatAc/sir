@@ -1,0 +1,40 @@
+{{ attach_library('sir/sir_itens_js_css') }}
+{{ attach_library('sir/fontawesome5') }}
+<div class="row justify-content-end">
+  <div class="col-6"></div>
+  <div class="col-3">
+      <a href="{{ path('sir.add_itemofinstrument', {'instrument': content.instrument}) }}">  <span  class="btn btn-success"><i class="fas fa-plus"></i> Create Item </span></a>
+  </div>
+  <div class="col-3"> 
+    <a href="{{ path('sir.reuse_itemofinstrument', {'instrument': content.instrument}) }}">  <span  class="btn btn-secondary"><i class="fas fa-recycle"></i> Reuse Existing Item </span></a>
+   </div>
+
+</div>
+<div class="content">
+{%if content.itens is not empty %}
+<table class="table table-mobile-responsive table-mobile-striped">
+  <thead class="teste">
+    <tr>
+        <th scope="col">Label</th>
+        <th scope="col">Edit</th>
+        <th scope="col">Delete</th>
+    </tr>
+  </thead>
+  <tbody>
+ 
+    {% for item in content.itens %}
+        {{itens}} 
+    {% endfor %}  
+ 
+ </tbody>
+</table>
+{% else %}
+   <div>
+     {{ 'No itens were found' }}
+    </div>
+{% endif %}
+</div>
+
+<div class="pagination">
+ pagination
+</div>

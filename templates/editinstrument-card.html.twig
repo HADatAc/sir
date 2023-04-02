@@ -1,0 +1,7 @@
+<tr>
+    <td scope="row">{{content.iname}}</td>
+    <td>{{content.ilabel}}</td>
+    <td><a href='{{ path('sir.itens_of_instruments', {'instrument': content.iuriencoded}) }}'><i class="bi bi-0-circle"></i><i class="fas fa-plus"></i></a></td>
+    <td><a href='#'><i class="fas fa-edit"></i></a></td>
+    <td><a href='#' class="delInstrument" data-item-url='{{content.iuri}}' id='teste'><i class="fas fa-trash-alt"></i></a></td>
+</tr>

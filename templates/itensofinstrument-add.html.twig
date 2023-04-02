@@ -1,0 +1,79 @@
+{{ attach_library('sir/sir_itens_js_css') }}
+{{ attach_library('sir/fontawesome5') }}
+<div class="container">
+  <div class="row align-items-start">
+    <div class="col-12">
+        <div class="mb-3">
+            <label for="searchinstrumenttype" class="form-label">Search Type</label>
+          <select name="searchinstrumenttype" id="searchinstrumenttype" class="form-select" required aria-label="select">
+            <option value=""> ---- Select a Type of Field ---- </option>
+                <option value="text">Text Box (Short Text, Number, Date/Time, ...)</option>
+                <option value="textarea">Notes Box (Paragraph Text)</option>
+                <option value="calc">Calculated Field</option>
+                <option value="select">Multiple Choice - Drop-down List (Single Answer)</option>
+                <option value="radio">Multiple Choice - Radio Buttons (Single Answer)</option>
+                <option value="checkbox">Checkboxes (Multiple Answers)</option>
+                <option value="yesno">Yes - No</option>
+                <option value="truefalse">True - False</option>
+                <option value="signature">Signature (draw signature with mouse or finger)</option>
+                <option value="file">File Upload (for users to upload files)</option>
+                <option value="slider">Slider / Visual Analog Scale</option>
+                <option value="descriptive">Descriptive Text (with optional Image/Video/Audio/File Attachment)</option>
+                <option value="section_header">Begin New Section (with optional text)</option>
+          </select>
+	</div>
+    <div id='itensblock'>
+        <div>
+            <label for="itemlabel" class="form-label">Item label</label>
+            <input type="text" class="form-control" id="itemlabel">
+            <label for="itemlabel" class="form-label">Experience</label>
+            <input type="text" class="form-control" id="itemexperience">
+            <input type="hidden" id="itemexperienceuri">
+        </div>
+        <div id="block-text" style="display:none">
+            text
+        </div>
+        <div id="block-textarea" style="display:none">
+            textarea
+        </div>
+        <div id="block-calc" style="display:none">
+            calc
+        </div>
+        <div id="block-select" style="display:none">
+            select
+        </div>
+        <div id="block-radio" style="display:none">
+           radio
+        </div>
+        <div id="block-checkbox" style="display:none">
+           checkbox
+        </div>
+        <div id="block-yesno" style="display:none">
+           yesno
+        </div>
+        <div id="block-truefalse" style="display:none">
+           truefalse
+        </div>
+        <div id="block-signature" style="display:none">
+           signature
+        </div>
+        <div id="block-signature" style="display:none">
+           signature
+        </div>
+        <div id="block-file" style="display:none">
+           file
+        </div>
+        <div id="block-slider" style="display:none">
+           slider
+        </div>
+        <div id="block-descriptive" style="display:none">
+           descriptive
+        </div>
+        <div>
+            <button class="btn btn-primary" id="newitemsave">Save Item</button>
+        </div>
+    </div>
+
+    </div>
+  </div>
+</div>
