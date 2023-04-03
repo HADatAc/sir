@@ -13,8 +13,18 @@ class FusekiAPIConnector
     private $query;
 
     public function __construct(ClientFactory $client){
-        
+    }
 
+    public function getUri($api_url,$endpoint) {
+      $object = NULL;
+      //if we add auth in future
+      $data = [
+            'auth' => ['user', 'pass']
+      ];
+     
+      $object = $this->perform_http_request('GET',$api_url.$endpoint,$data);   
+      
+      return($object);
     }
 
     public function instrumentsList($api_url,$endpoint) {
@@ -57,6 +67,26 @@ class FusekiAPIConnector
       return $this->perform_http_request('POST',$api_url.$endpoint,$data);          
     }
 
+    public function responseOptionList($api_url,$endpoint) {
+      $responseOptions = [];
+      //if we add auth in future
+      $data = [
+            'auth' => ['user', 'pass']
+      ];
+     
+      $responseOptions = $this->perform_http_request('GET',$api_url.$endpoint,$data);   
+      
+      return($responseOptions);
+    }
+
+    public function responseOptionAdd($api_url,$endpoint, $data) {
+      return $this->perform_http_request('POST',$api_url.$endpoint,$data);          
+    }
+
+    public function responseOptionDel($api_url,$endpoint, $data) {
+      return $this->perform_http_request('POST',$api_url.$endpoint,$data);          
+    }
+
     public function repositoryConf($api_url,$endpoint, $data) {
       return $this->perform_http_request('GET',$api_url.$endpoint,$data);          
     }
@@ -78,4 +108,6 @@ class FusekiAPIConnector
         print_r($e);
       }
     }
-}
+
+
+  }

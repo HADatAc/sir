@@ -177,5 +177,36 @@ class ExperienceController extends ControllerBase{
       return new JsonResponse([]);
     }
 
+    public function manageResponseOptions() {
+      
+      //verify if SIR is configured
+      $utils_controller = new UtilsController();
+      $response = $utils_controller->siripconfigured();
+      if ($response instanceof RedirectResponse) {
+        return $response;
+      }
+      
+      $config = $this->config(static::CONFIGNAME);           
+      $api_url = $config->get("api_url");
+      $uemail = \Drupal::currentUser()->getEmail();
+      $endpoint = "/sirapi/api/responseoption/byexperience/".rawurlencode($uemail);
+
+      $this->listResponseOptions($api_url,$endpoint);
+      $content = [];
+      $root_url = \Drupal::request()->getBaseUrl();
+      $content['responseoptions'] = $this->createResponseOptionCard($api_url,$endpoint);
+        return[
+            '#theme' => 'editresponseoptions-list',
+            '#content' => $content,
+            '#attached' => [
+              'drupalSettings' => [
+                'mymodule' => [
+                  'base_url' => $root_url,
+                ],
+              ],
+            ],
+          ];
+    }
+
 
 }

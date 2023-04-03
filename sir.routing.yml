@@ -10,39 +10,6 @@ sir.index:
 
 # Main menu options
 
-sir.add_instrument:
-  path: 'sir/manage/addinstrument'
-  defaults:
-    _form: '\Drupal\sir\Form\AddInstrumentForm'
-    _title: 'Add new Questionnarie'    
-  requirements:
-    _permission: 'access content'
-    _custom_access_check: 'TRUE'    
-  options:
-    no_cache: 'TRUE'
-
-sir.edit_instruments:
-  path: 'sir/manage/editinstruments'
-  defaults:
-    _controller: '\Drupal\sir\Controller\EditInstrumentsController::index'
-    _title: 'Manage Questionnaries'    
-  requirements:
-    _permission: 'access content'
-    _custom_access_check: 'TRUE'
-  options:
-    no_cache: 'TRUE'
-
-sir.edit_experiences:
-  path: 'sir/manage/editexperiences'
-  defaults:
-    _controller: '\Drupal\sir\Controller\EditExperiencesController::index'
-    _title: 'Manage Experiences'    
-  requirements:
-    _permission: 'access content'
-    _custom_access_check: 'TRUE'    
-  options:
-    no_cache: 'TRUE'
-
 sir.edit_semantics:
   path: 'sir/manage/editsemantics'
   defaults:
@@ -56,14 +23,47 @@ sir.edit_semantics:
 
 # Instrument CRUD options
 
+sir.manage_instruments:
+  path: 'sir/manage/instruments'
+  defaults:
+    _form: '\Drupal\sir\Form\ManageInstrumentsForm'
+    _title: 'Manage Instruments'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+sir.add_instrument:
+  path: 'sir/manage/addinstrument'
+  defaults:
+    _form: '\Drupal\sir\Form\AddInstrumentForm'
+    _title: 'Add New Questionnarie'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
 sir.edit_instrument:
-  path: 'sir/manage/editinstrument'
+  path: 'sir/manage/editinstrument/{instrumenturi}'
   defaults:
     _form: '\Drupal\sir\Form\EditInstrumentForm'
-    _title: 'Edit a Questionnarie'    
+    _title: 'Edit Questionnaries'    
   requirements:
-    _permission: 'access content'  
-    _custom_access_check: 'TRUE'      
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+sir.edit_instruments:
+  path: 'sir/manage/editinstruments'
+  defaults:
+    _controller: '\Drupal\sir\Controller\EditInstrumentsController::index'
+    _title: 'Manage Questionnaries'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
@@ -93,11 +93,22 @@ sir.delinstrument_ajax:
 
 # Experience CRUD options
 
+sir.manage_experiences:
+  path: 'sir/manage/experiences'
+  defaults:
+    _form: '\Drupal\sir\Form\ManageExperiencesForm'
+    _title: 'Manage Experiences'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
 sir.add_experience:
   path: 'sir/manage/addexperience'
   defaults:
     _form: '\Drupal\sir\Form\AddExperienceForm'
-    _title: 'Add new Experience'    
+    _title: 'Add Experience'    
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    
@@ -105,38 +116,49 @@ sir.add_experience:
     no_cache: 'TRUE'
 
 sir.edit_experience:
-  path: 'sir/manage/editexperience'
+  path: 'sir/manage/editexperience/{experienceuri}'
   defaults:
     _form: '\Drupal\sir\Form\EditExperienceForm'
-    _title: 'Edit an Experience'    
+    _title: 'Edit Experience'    
   requirements:
     _permission: 'access content'  
     _custom_access_check: 'TRUE'      
   options:
     no_cache: 'TRUE'
 
-sir.searchexperiences_ajax:
-  path: 'sir/ajax/searchexperiences'
+# Response Option CRUD options
+
+sir.manage_response_options:
+  path: 'sir/manage/responseoption/{experienceuri}'
   defaults:
-    _controller: '\Drupal\sir\Controller\ExperienceController::searchExperiencesAjax'
-    _title: 'search Experiences Ajax'
-  methods: [POST]
+    _form: '\Drupal\sir\Form\ManageResponseOptionsForm'
+    _title: 'Manage Response Options'    
   requirements:
-    _permission: 'access content' 
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
   options:
-    _csrf_token: 'FALSE'
     no_cache: 'TRUE'
 
-sir.delexperience_ajax:
-  path: 'sir/ajax/delexperience'
+sir.add_responseoption:
+  path: 'sir/manage/addresponseoption/{experienceuri}'
   defaults:
-    _controller: '\Drupal\sir\Controller\ExperienceController::delExperienceAjax'
-    _title: 'del Experience Ajax'
-  methods: [POST]
+    _form: '\Drupal\sir\Form\AddResponseOptionForm'
+    _title: 'Add Response Option'    
   requirements:
-    _permission: 'access content' 
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
   options:
-    _csrf_token: 'FALSE'
+    no_cache: 'TRUE'
+
+sir.edit_responseoption:
+  path: 'sir/manage/editresponseoption/{responseoptionuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\EditResponseOptionForm'
+    _title: 'Edit Response Option'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
     no_cache: 'TRUE'
 
 # Configuration option

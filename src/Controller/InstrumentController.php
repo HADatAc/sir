@@ -103,10 +103,7 @@ class InstrumentController extends ControllerBase{
       return $instrumentCards;
 
     }
-
-   
-
-
+    
     public function searchinstrumentsAjax(Request $request) {
       if ($request->isXmlHttpRequest() && $request->isMethod('POST')) {
         // Retrieve the data from the AJAX request.
@@ -129,8 +126,8 @@ class InstrumentController extends ControllerBase{
        $instruments = $this->listInstruments($api_url,$endpoint);
 
        $content = "";
-      // Decode the JSON data into a PHP object
-      $obj = json_decode($instruments);
+       // Decode the JSON data into a PHP object
+       $obj = json_decode($instruments);
 
       if(!empty($obj)){
         foreach($obj->body as $instrument){

@@ -17,18 +17,6 @@ function sir_theme($existing, $type, $theme, $path)
         'editinstrument-card' => [
             'variables' => ['content' => NULL]
         ],
-        'experiences-list' => [
-            'variables' => ['content' => NULL]
-        ],
-        'experience-card' => [
-            'variables' => ['content' => NULL]
-        ],
-        'editexperiences-list' => [
-            'variables' => ['content' => NULL]
-        ],
-        'editexperience-card' => [
-            'variables' => ['content' => NULL]
-        ]
 
     ];
 }

@@ -7,18 +7,38 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 
-class AddInstrumentForm extends FormBase {
+class EditInstrumentForm extends FormBase {
 
     /**
    * Settings Variable.
    */
   Const CONFIGNAME = "sir.settings";
 
+  protected $instrumentUri;
+
+  protected $instrument;
+
+  public function getInstrumentUri() {
+    return $this->instrumentUri;
+  }
+
+  public function setInstrumentUri($uri) {
+    return $this->instrumentUri = $uri; 
+  }
+
+  public function getInstrument() {
+    return $this->instrument;
+  }
+
+  public function setInstrument($instrument) {
+    return $this->instrument = $instrument; 
+  }
+
   /**
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'add_instrument_form';
+    return 'edit_instrument_form';
   }
 
   /**
@@ -34,35 +54,61 @@ class AddInstrumentForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state, $instrumenturi = NULL) {
+    $uri=$instrumenturi;
+    $uri_decode=base64_decode($uri);
+    $this->setInstrumentUri($uri_decode);
+
+    $config = $this->config(static::CONFIGNAME);           
+    $api_url = $config->get("api_url");
+    $endpoint = "/sirapi/api/uri/".rawurlencode($this->getInstrumentUri());
+
+    $fusekiAPIservice = \Drupal::service('sir.api_connector');
+    $rawresponse = $fusekiAPIservice->getUri($api_url,$endpoint);
+    $obj = json_decode($rawresponse);
+    
+    if ($obj->isSuccessful) {
+      $this->setInstrument($obj->body);
+      #dpm($this->getInstrument());
+    } else {
+      \Drupal::messenger()->addMessage(t("Failed to retrieve Instrument."));
+      $url = Url::fromRoute('sir.manage_instruments');
+      $form_state->setRedirectUrl($url);
+    }
 
     $form['instrument_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name'),
+      '#default_value' => $this->getInstrument()->label,
     ];
     $form['instrument_abbreviation'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Abbreviation'),
+      '#default_value' => $this->getInstrument()->hasShortName,
     ];
     $form['instrument_instructions'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Instructions'),
+      '#default_value' => $this->getInstrument()->hasInstruction,
     ];
     $form['instrument_language'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Language'),
+      '#default_value' => $this->getInstrument()->hasLanguage,
     ];
     $form['instrument_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
+      '#default_value' => $this->getInstrument()->hasVersion,
     ];
     $form['instrument_description'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
+      '#default_value' => $this->getInstrument()->comment,
     ];
-    $form['save_submit'] = [
+    $form['update_submit'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Save'),
+      '#value' => $this->t('Update'),
       '#name' => 'save',
     ];
     $form['cancel_submit'] = [
@@ -94,6 +140,9 @@ class AddInstrumentForm extends FormBase {
       if(strlen($form_state->getValue('instrument_language')) < 1) {
         $form_state->setErrorByName('instrument_language', $this->t('Please enter a valid language'));
       }
+      if(strlen($form_state->getValue('instrument_version')) < 1) {
+        $form_state->setErrorByName('instrument_version', $this->t('Please enter a valid version'));
+      }
     }
   }
 
@@ -119,10 +168,8 @@ class AddInstrumentForm extends FormBase {
       $uid = \Drupal::currentUser()->id();
       $uemail = \Drupal::currentUser()->getEmail();
 
-      $iid = time().rand(10000,99999).$uid;
-      
       $data = [
-        'uri' => 'http://hadatac.org/kb/test/Instrument'.$iid,
+        'uri' => $this->getInstrumentUri(),
         'typeUri' => 'http://hadatac.org/ont/vstoi#Questionnaire',
         'hascoTypeUri' => 'http://hadatac.org/ont/vstoi#Instrument',
         'label' => $form_state->getValue('instrument_name'),
@@ -134,7 +181,7 @@ class AddInstrumentForm extends FormBase {
         'hasSIRMaintainerEmail' => $uemail, 
       ];
       
-      $datap = '{"uri":"http://hadatac.org/kb/test/Instrument'.$iid.'",'.
+      $datap = '{"uri":"'.$this->getInstrumentUri().'",'.
         '"typeUri":"http://hadatac.org/ont/vstoi#Questionnaire",'.
         '"hascoTypeUri":"http://hadatac.org/ont/vstoi#Instrument",'.
         '"label":"'.$form_state->getValue('instrument_name').'",'.
@@ -144,32 +191,42 @@ class AddInstrumentForm extends FormBase {
         '"hasVersion":"'.$form_state->getValue('instrument_version').'",'.
         '"comment":"'.$form_state->getValue('instrument_description').'",'.
         '"hasSIRMaintainerEmail":"'.$uemail.'"}';
-
       $dataJ = json_encode($data);
     
       $dataE = rawurlencode($datap);
 
-      $newinstrument = $this->addinstrument($api_url,"/sirapi/api/instrument/create/".$dataE,$data);
+      // UPDATE BY DELETING AND CREATING
+      $uriEncoded = rawurlencode($this->getInstrumentUri());
+      $this->deleteInstrument($api_url,"/sirapi/api/instrument/delete/".$uriEncoded,[]);    
+      $updatedInstrument = $this->addInstrument($api_url,"/sirapi/api/instrument/create/".$dataE,$data);
     
-      \Drupal::messenger()->addMessage(t("Instruction has been added successfully."));
+      \Drupal::messenger()->addMessage(t("Instrument has been updated successfully."));
       $url = Url::fromRoute('sir.manage_instruments');
       $form_state->setRedirectUrl($url);
 
     }catch(\Exception $e){
-      \Drupal::messenger()->addMessage(t("An error occurred while adding instrument: ".$e->getMessage()));
+      \Drupal::messenger()->addMessage(t("An error occurred while updating the Instrument: ".$e->getMessage()));
       $url = Url::fromRoute('sir.manage_instruments');
       $form_state->setRedirectUrl($url);
     }
 
   }
 
-  public function addinstrument($api_url,$endpoint,$data){
+  public function addInstrument($api_url,$endpoint,$data){
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $newinstrument = $fusekiAPIservice->instrumentAdd($api_url,$endpoint,$data);
-    if(!empty($newinstrumentt)){
-      return $newinstrument;
+    $newInstrument = $fusekiAPIservice->instrumentAdd($api_url,$endpoint,$data);
+    if(!empty($newInstrumentt)){
+      return $newInstrument;
     }
     return [];
   }
+
+  public function deleteInstrument($api_url,$endpoint,$data){
+    $fusekiAPIservice = \Drupal::service('sir.api_connector');
+    $fusekiAPIservice->instrumentDel($api_url,$endpoint,$data);
+    return true;
+  }
+  
+
 
 }
