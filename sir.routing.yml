@@ -91,6 +91,30 @@ sir.delinstrument_ajax:
     _csrf_token: 'FALSE'
     no_cache: 'TRUE'
 
+# Detector "Item" CRUD options
+
+sir.manage_detectors:
+  path: 'sir/manage/detector/{instrumenturi}'
+  defaults:
+    _form: '\Drupal\sir\Form\ManageDetectorsForm'
+    _title: 'Manage Items'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+sir.add_detector:
+  path: 'sir/manage/adddetector/{instrumenturi}'
+  defaults:
+    _form: '\Drupal\sir\Form\AddDetectorForm'
+    _title: 'Add Item'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
 # Experience CRUD options
 
 sir.manage_experiences:

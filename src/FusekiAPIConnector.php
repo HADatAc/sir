@@ -47,6 +47,26 @@ class FusekiAPIConnector
       return $this->perform_http_request('POST',$api_url.$endpoint,$data);          
     }
 
+    public function detectorList($api_url,$endpoint) {
+      $detectors = [];
+      //if we add auth in future
+      $data = [
+            'auth' => ['user', 'pass']
+      ];
+     
+      $detectors = $this->perform_http_request('GET',$api_url.$endpoint,$data);   
+      
+      return($detectors);
+    }
+
+    public function detectorAdd($api_url,$endpoint, $data) {
+      return $this->perform_http_request('POST',$api_url.$endpoint,$data);          
+    }
+
+    public function detectorDel($api_url,$endpoint, $data) {
+      return $this->perform_http_request('POST',$api_url.$endpoint,$data);          
+    }
+
     public function experiencesList($api_url,$endpoint) {
       $experiences = [];
       //if we add auth in future
