@@ -1,6 +1,15 @@
 {{ attach_library('sir/sir_js_css') }}
 
 <div class="container">
+  <br>
+  <div class="row">
+    {%if content.description is not empty %}
+      {{content.description}}
+    {% endif %}
+  </div>
+  <br>
+  <hl>
+  <br>
   <div class="row align-items-start">
     <div class="col-3">
         <div class="mb-3">
@@ -8,8 +17,10 @@
           <select name="searchinstrumenttype" id="searchinstrumenttype" class="form-select" required aria-label="select">
             <option value="">Search Type</option>
             <option value="questionnaries">Questionnaries</option>
-            <option value="scales">Scales</option>
+            <option value="items">Items</option>
+            <option value="experiences">Experiences</option>
             <option value="symptoms">Symptoms</option>
+            <option value="scales">Scales</option>
           </select>
         </div>
         <div id='questionnarieblock'>
@@ -63,4 +74,5 @@
       </div>
     </div>
   </div>
+  <br><br><br>
 </div>

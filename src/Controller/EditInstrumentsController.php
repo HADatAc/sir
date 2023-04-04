@@ -18,8 +18,7 @@ class EditInstrumentsController extends ControllerBase{
    */
   Const CONFIGNAME = "sir.settings";
 
-    public function index()
-    {
+    public function index() {
       
       //verify if SIR is configured
       $utils_controller = new UtilsController();
@@ -27,7 +26,6 @@ class EditInstrumentsController extends ControllerBase{
       if ($response instanceof RedirectResponse) {
         return $response;
       }
-      
       
       $config = $this->config(static::CONFIGNAME);           
       $api_url = $config->get("api_url");
@@ -38,17 +36,18 @@ class EditInstrumentsController extends ControllerBase{
       $content = [];
       $root_url = \Drupal::request()->getBaseUrl();
       $content['instruments'] = $this->createInstrumentCard($api_url,$endpoint);
-        return[
-            '#theme' => 'editinstruments-list',
-            '#content' => $content,
-            '#attached' => [
-              'drupalSettings' => [
-                'mymodule' => [
-                  'base_url' => $root_url,
-                ],
-              ],
+
+      return[
+        '#theme' => 'editinstruments-list',
+        '#content' => $content,
+        '#attached' => [
+          'drupalSettings' => [
+            'mymodule' => [
+              'base_url' => $root_url,
             ],
-          ];
+          ],
+        ],
+      ];
     }
 
     public function listInstruments($api_url,$endpoint){

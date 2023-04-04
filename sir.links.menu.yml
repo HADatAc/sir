@@ -1,5 +1,5 @@
 sir.manage_instruments:
-  title: Manage Questionnaires
+  title: Questionnaires
   description: Manage Questionnaries
   route_name: sir.manage_instruments
   menu_name: main
@@ -9,7 +9,7 @@ sir.manage_instruments:
     _role: 'authenticated'
 
 sir.manage_experiences :
-  title: Manage Experiences 
+  title: Experiences 
   description: Manage experiences and their corresponding Response Options
   route_name: sir.manage_experiences
   menu_name: main
@@ -19,7 +19,7 @@ sir.manage_experiences :
     _role: 'authenticated'
 
 sir.edit_semantics:
-  title: Manage Semantics 
+  title: Semantics 
   description: edit semantics of variables used in instruments
   route_name: sir.edit_semantics
   menu_name: main

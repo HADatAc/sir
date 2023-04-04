@@ -21,36 +21,36 @@ class InstrumentController extends ControllerBase{
    */
   Const CONFIGNAME = "sir.settings";
   
+  public function index() {
 
-    public function index()
-    {
-
-      //verify if SIR is configured
-      $utils_controller = new UtilsController();
-      $response = $utils_controller->siripconfigured();
-      if ($response instanceof RedirectResponse) {
-        return $response;
-      }
-
-      $config = $this->config(static::CONFIGNAME);           
-      $api_url = $config->get("api_url");     
-      $endpoint = "/sirapi/api/instrument/all";
-
-      $content = [];
-      $root_url = \Drupal::request()->getBaseUrl();
-      $content['instruments'] = $this->createInstrumentCard($api_url,$endpoint);
-        return[
-            '#theme' => 'instruments-list',
-            '#content' => $content,
-            '#attached' => [
-              'drupalSettings' => [
-                'mymodule' => [
-                  'base_url' => $root_url,
-                ],
-              ],
-            ],
-          ];
+    //verify if SIR is configured
+    $utils_controller = new UtilsController();
+    $response = $utils_controller->siripconfigured();
+    if ($response instanceof RedirectResponse) {
+      return $response;
     }
+
+    $config = $this->config(static::CONFIGNAME);           
+    $api_url = $config->get("api_url");     
+    $endpoint = "/sirapi/api/instrument/all";
+
+    $content = [];
+    $root_url = \Drupal::request()->getBaseUrl();
+    $content['description'] = $config->get('repository_description');
+    $content['instruments'] = $this->createInstrumentCard($api_url,$endpoint);
+
+    return[
+      '#theme' => 'instruments-list',
+      '#content' => $content,
+      '#attached' => [
+        'drupalSettings' => [
+          'mymodule' => [
+            'base_url' => $root_url,
+          ],
+        ],
+      ],
+    ];
+  }
 
     public function listInstruments($api_url,$endpoint){
       /** @var \FusekiAPI$fusekiAPIservice */
@@ -78,32 +78,26 @@ class InstrumentController extends ControllerBase{
       // Decode the JSON data into a PHP object
       $obj = json_decode($instruments);
 
-        if(!empty($obj)){
-         foreach($obj->body as $instrument){
-         
-              $content = [
-                'iname' => $instrument->label,
-                'uri' => $instrument->uri,
-                'ilabel' => $instrument->hasShortName,
-                'ilanguage' => $instrument->hasLanguage,
-                'iversion' => $instrument->hasVersion,
-                'iname' => $instrument->label,
+      if(!empty($obj)) {
+        foreach($obj->body as $instrument) {
+          $content = [
+            'iname' => $instrument->label,
+            'uri' => $instrument->uri,
+            'ilabel' => $instrument->hasShortName,
+            'ilanguage' => $instrument->hasLanguage,
+            'iversion' => $instrument->hasVersion,
           ];
-
-         
-          $instrumentCards[] = 
-          [
+          $instrumentCards[] = [
             '#theme' => 'instrument-card',
             '#content' =>  $content,
           ];
-
-         }
+        }
       }
 
       return $instrumentCards;
 
     }
-    
+
     public function searchinstrumentsAjax(Request $request) {
       if ($request->isXmlHttpRequest() && $request->isMethod('POST')) {
         // Retrieve the data from the AJAX request.

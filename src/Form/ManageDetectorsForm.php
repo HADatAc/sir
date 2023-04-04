@@ -119,6 +119,11 @@ class ManageDetectorsForm extends FormBase {
       '#value' => $this->t('Reuse Existing Item'),
       '#name' => 'reuse_detector',
     ];
+    $form['traduce_detector'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Traduce Existing Item'),
+      '#name' => 'traduce_detector',
+    ];
     $form['edit_selected_detector'] = [
       '#type' => 'submit',
       '#value' => $this->t('Edit Selected Item'),
@@ -189,14 +194,14 @@ class ManageDetectorsForm extends FormBase {
     $config = $this->config(static::CONFIGNAME);     
     $api_url = $config->get("api_url");
 
-    // ADD RESPONSE OPTION
+    // ADD DETECTOR
     if ($button_name === 'add_detector') {
       $url = Url::fromRoute('sir.add_detector');
       $url->setRouteParameter('instrumenturi', base64_encode($this->getInstrumentUri()));
       $form_state->setRedirectUrl($url);
     }  
 
-    // EDIT RESPONSE OPTION
+    // EDIT DETECTOR
     if ($button_name === 'edit_detector') {
       if (sizeof($rows) < 1) {
         \Drupal::messenger()->addMessage(t("Select the exact item to be edited."));      
@@ -210,7 +215,7 @@ class ManageDetectorsForm extends FormBase {
       } 
     }
 
-    // DELETE RESPONSE OPTION
+    // DELETE DETECTOR
     if ($button_name === 'delete_detector') {
       if (sizeof($rows) <= 0) {
         \Drupal::messenger()->addMessage(t("At least one item needs to be selected to be deleted."));      

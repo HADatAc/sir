@@ -67,7 +67,7 @@
         ];
 
         $form['repository_description'] = [
-            '#type' => 'textfield',
+            '#type' => 'textarea',
             '#title' => ' description for the repository that appears in the SIR APIs GUI',
             '#required' => TRUE,
             '#default_value' => $config->get("repository_description"),

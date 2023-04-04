@@ -38,7 +38,7 @@ sir.add_instrument:
   path: 'sir/manage/addinstrument'
   defaults:
     _form: '\Drupal\sir\Form\AddInstrumentForm'
-    _title: 'Add New Questionnarie'    
+    _title: 'Add Questionnarie'    
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    
@@ -49,7 +49,7 @@ sir.edit_instrument:
   path: 'sir/manage/editinstrument/{instrumenturi}'
   defaults:
     _form: '\Drupal\sir\Form\EditInstrumentForm'
-    _title: 'Edit Questionnaries'    
+    _title: 'Edit Questionnarie'    
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'
@@ -72,18 +72,6 @@ sir.searchinstruments_ajax:
   defaults:
     _controller: '\Drupal\sir\Controller\InstrumentController::searchinstrumentsAjax'
     _title: 'search instruments Ajax'
-  methods: [POST]
-  requirements:
-    _permission: 'access content' 
-  options:
-    _csrf_token: 'FALSE'
-    no_cache: 'TRUE'
-
-sir.delinstrument_ajax:
-  path: 'sir/ajax/delinstrument'
-  defaults:
-    _controller: '\Drupal\sir\Controller\InstrumentController::delintrumentAjax'
-    _title: 'del instrument Ajax'
   methods: [POST]
   requirements:
     _permission: 'access content' 
@@ -114,6 +102,25 @@ sir.add_detector:
     _custom_access_check: 'TRUE'    
   options:
     no_cache: 'TRUE'
+
+sir.edit_detector:
+  path: 'sir/manage/editdetector/{detectoruri}'
+  defaults:
+    _form: '\Drupal\sir\Form\EditDetectorForm'
+    _title: 'Edit Item'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+sir.detector_experience_autocomplete:
+  path: '/sir/manage/detector/autocomplete'
+  defaults:
+    _controller: '\Drupal\sir\Controller\JsonApiExperienceController::handleAutocomplete'
+    _format: json
+  requirements:
+    _permission: 'access content'
 
 # Experience CRUD options
 
