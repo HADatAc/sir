@@ -1,3 +1,4 @@
+
 # SIR landing page
 sir.index:
   path: 'sir/public/instruments'
@@ -204,3 +205,4 @@ sir.admin_settings_custom:
   options:
     _admin_route: TRUE
     no_cache: 'TRUE'
+

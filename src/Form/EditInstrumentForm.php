@@ -61,7 +61,7 @@ class EditInstrumentForm extends FormBase {
 
     $config = $this->config(static::CONFIGNAME);           
     $api_url = $config->get("api_url");
-    $endpoint = "/sirapi/api/uri/".rawurlencode($this->getInstrumentUri());
+    $endpoint =  "/sirapi/api/uri/".rawurlencode($this->getInstrumentUri());
 
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
     $rawresponse = $fusekiAPIservice->getUri($api_url,$endpoint);

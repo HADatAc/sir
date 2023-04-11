@@ -5,6 +5,9 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\core\Url;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\InvokeCommand;
+use Drupal\Core\Ajax\OpenModalDialogCommand;
 
 class ManageExperiencesForm extends FormBase {
 
@@ -83,32 +86,36 @@ class ManageExperiencesForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Add Experience'),
       '#name' => 'add_experience',
-    ];
-    $form['edit_selected_experience'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Edit Selected Experience'),
-      '#name' => 'edit_experience',
-    ];
-    $form['manage_response_options'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Manage Response Options of Selected Experience'),
-      '#name' => 'manage_response_options',
+      '#disabled' => FALSE,      
     ];
     $form['delete_selected_experiences'] = [
       '#type' => 'submit',
       '#value' => $this->t('Delete Selected Experiences'),
       '#name' => 'delete_experience',
+      '#disabled' => TRUE,
+    ];
+    $form['edit_selected_experience'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Edit Selected Experience'),
+      '#name' => 'edit_experience',
+      '#disabled' => TRUE,      
+    ];
+    $form['manage_response_options'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Manage Response Options of Selected Experience'),
+      '#name' => 'manage_response_options',
+      '#disabled' => TRUE,
     ];
     $form['experience_table'] = [
       '#type' => 'tableselect',
       '#header' => $header,
       '#options' => $output,
+      '#js_select' => FALSE,
       '#empty' => t('No experiences found'),
       '#ajax' => [
         'callback' => '::experienceAjaxCallback', 
         'disable-refocus' => FALSE, 
         'event' => 'change',
-        'wrapper' => 'edit-output', 
         'progress' => [
           'type' => 'throbber',
           'message' => $this->t('Verifying entry...'),
@@ -136,6 +143,43 @@ class ManageExperiencesForm extends FormBase {
         $rows[$index] = $index;
       }
     }
+    $selected_size = sizeof($rows);
+    $response = new AjaxResponse();
+    if ($selected_size === 0) {
+      $response->addCommand(new InvokeCommand('#edit-edit-selected-experience', 'attr', array('disabled', 'disabled')));
+      $response->addCommand(new InvokeCommand('#edit-manage-response-options', 'attr', array('disabled', 'disabled')));
+      $response->addCommand(new InvokeCommand('#edit-delete-selected-experiences', 'attr', array('disabled', 'disabled')));
+    } else if ($selected_size === 1) {
+      $response->addCommand(new InvokeCommand('#edit-edit-selected-experience', 'removeAttr', array('disabled')));
+      $response->addCommand(new InvokeCommand('#edit-manage-response-options', 'removeAttr', array('disabled')));
+      $response->addCommand(new InvokeCommand('#edit-delete-selected-experiences', 'removeAttr', array('disabled')));
+    } else if ($selected_size > 1) {
+      $response->addCommand(new InvokeCommand('#edit-edit-selected-experience', 'attr', array('disabled', 'disabled')));
+      $response->addCommand(new InvokeCommand('#edit-manage-response-options', 'attr', array('disabled', 'disabled')));
+      $response->addCommand(new InvokeCommand('#edit-delete-selected-experiences', 'removeAttr', array('disabled')));
+    }
+    return $response;
+      
+      #$form['edit_selected_experience']['#attributes'] = [];
+      #$form['edit_selected_experience']['#disabled'] = FALSE;
+    
+    #return $form['edit_selected_experience'];
+    #$form_state->setRebuild(TRUE);
+    // Attach the javascript library for the dialog box command
+    // in the same way you would attach your custom JS scripts.
+      #$dialogText['#attached']['library'][] = 'core/drupal.dialog.ajax';
+    // Prepare the text for our dialogbox.
+      #$dialogText['#markup'] = "You selected: ". $selected_size;
+
+    // If we want to execute AJAX commands our callback needs to return
+    // an AjaxResponse object. let's create it and add our commands.
+      #$response = new AjaxResponse();
+    // Show the dialog box.
+      #$response->addCommand(new OpenModalDialogCommand('My title', $dialogText, ['width' => '300']));
+
+    // Finally return the AjaxResponse object.
+      #return $response;
+    #}
     #dpm($rows);
     #if(sizeof($rows) === 1) {
     #  \Drupal::messenger()->addMessage(t("1 selected"));

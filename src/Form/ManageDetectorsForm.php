@@ -119,10 +119,10 @@ class ManageDetectorsForm extends FormBase {
       '#value' => $this->t('Reuse Existing Item'),
       '#name' => 'reuse_detector',
     ];
-    $form['traduce_detector'] = [
+    $form['translate_detector'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Traduce Existing Item'),
-      '#name' => 'traduce_detector',
+      '#value' => $this->t('Translate Existing Item'),
+      '#name' => 'translate_detector',
     ];
     $form['edit_selected_detector'] = [
       '#type' => 'submit',
