@@ -86,25 +86,25 @@ class ManageExperiencesForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Add Experience'),
       '#name' => 'add_experience',
-      '#disabled' => FALSE,      
+      #'#disabled' => FALSE,      
     ];
     $form['delete_selected_experiences'] = [
       '#type' => 'submit',
       '#value' => $this->t('Delete Selected Experiences'),
       '#name' => 'delete_experience',
-      '#disabled' => TRUE,
+      #'#disabled' => TRUE,
     ];
     $form['edit_selected_experience'] = [
       '#type' => 'submit',
       '#value' => $this->t('Edit Selected Experience'),
       '#name' => 'edit_experience',
-      '#disabled' => TRUE,      
+      #'#disabled' => TRUE,      
     ];
     $form['manage_response_options'] = [
       '#type' => 'submit',
       '#value' => $this->t('Manage Response Options of Selected Experience'),
       '#name' => 'manage_response_options',
-      '#disabled' => TRUE,
+      #'#disabled' => TRUE,
     ];
     $form['experience_table'] = [
       '#type' => 'tableselect',
@@ -132,6 +132,7 @@ class ManageExperiencesForm extends FormBase {
       '#title' => t('<br><br>'),
     ];
 
+
     return $form;
   }
 
@@ -146,17 +147,17 @@ class ManageExperiencesForm extends FormBase {
     $selected_size = sizeof($rows);
     $response = new AjaxResponse();
     if ($selected_size === 0) {
-      $response->addCommand(new InvokeCommand('#edit-edit-selected-experience', 'attr', array('disabled', 'disabled')));
-      $response->addCommand(new InvokeCommand('#edit-manage-response-options', 'attr', array('disabled', 'disabled')));
-      $response->addCommand(new InvokeCommand('#edit-delete-selected-experiences', 'attr', array('disabled', 'disabled')));
+    #  $response->addCommand(new InvokeCommand('#edit-edit-selected-experience', 'attr', array('disabled', 'disabled')));
+    #  $response->addCommand(new InvokeCommand('#edit-manage-response-options', 'attr', array('disabled', 'disabled')));
+    #  $response->addCommand(new InvokeCommand('#edit-delete-selected-experiences', 'attr', array('disabled', 'disabled')));
     } else if ($selected_size === 1) {
-      $response->addCommand(new InvokeCommand('#edit-edit-selected-experience', 'removeAttr', array('disabled')));
-      $response->addCommand(new InvokeCommand('#edit-manage-response-options', 'removeAttr', array('disabled')));
-      $response->addCommand(new InvokeCommand('#edit-delete-selected-experiences', 'removeAttr', array('disabled')));
+    #  $response->addCommand(new InvokeCommand('#edit-edit-selected-experience', 'removeAttr', array('disabled')));
+    #  $response->addCommand(new InvokeCommand('#edit-manage-response-options', 'removeAttr', array('disabled')));
+    #  $response->addCommand(new InvokeCommand('#edit-delete-selected-experiences', 'removeAttr', array('disabled')));
     } else if ($selected_size > 1) {
-      $response->addCommand(new InvokeCommand('#edit-edit-selected-experience', 'attr', array('disabled', 'disabled')));
-      $response->addCommand(new InvokeCommand('#edit-manage-response-options', 'attr', array('disabled', 'disabled')));
-      $response->addCommand(new InvokeCommand('#edit-delete-selected-experiences', 'removeAttr', array('disabled')));
+    #  $response->addCommand(new InvokeCommand('#edit-edit-selected-experience', 'attr', array('disabled', 'disabled')));
+    #  $response->addCommand(new InvokeCommand('#edit-manage-response-options', 'attr', array('disabled', 'disabled')));
+    #  $response->addCommand(new InvokeCommand('#edit-delete-selected-experiences', 'removeAttr', array('disabled')));
     }
     return $response;
       
@@ -202,7 +203,9 @@ class ManageExperiencesForm extends FormBase {
 
     // RETRIEVE TRIGGERING BUTTON
     $triggering_element = $form_state->getTriggeringElement();
+    #dpm($form_state);
     $button_name = $triggering_element['#name'];
+    #\Drupal::messenger()->addMessage(t("button_name is " . $button_name));      
   
     // RETRIEVE SELECTED ROWS, IF ANY
     $selected_rows = $form_state->getValue('experience_table');
@@ -222,6 +225,7 @@ class ManageExperiencesForm extends FormBase {
     if ($button_name === 'add_experience') {
       $url = Url::fromRoute('sir.add_experience');
       $form_state->setRedirectUrl($url);
+      return;
     }  
 
     // EDIT EXPERIENCE
@@ -235,6 +239,7 @@ class ManageExperiencesForm extends FormBase {
         $url = Url::fromRoute('sir.edit_experience', ['experienceuri' => base64_encode($first)]);
         $form_state->setRedirectUrl($url);
       } 
+      return;
     }
 
     // DELETE EXPERIENCE
@@ -248,6 +253,7 @@ class ManageExperiencesForm extends FormBase {
         }
         \Drupal::messenger()->addMessage(t("Selected experience(s) has/have been deleted successfully."));      
       }
+      return;
     }  
 
     // MANAGE RESPONSE OPTIONS
@@ -261,13 +267,16 @@ class ManageExperiencesForm extends FormBase {
         $url = Url::fromRoute('sir.manage_response_options', ['experienceuri' => base64_encode($first)]);
         $form_state->setRedirectUrl($url);
       } 
+      return;
     }
 
     // BACK TO MAIN PAGE
     if ($button_name === 'back') {
       $url = Url::fromRoute('sir.index');
       $form_state->setRedirectUrl($url);
+      return;
     }  
+
   }
 
   public function deleteExperience($api_url,$endpoint,$data){
