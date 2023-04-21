@@ -12,6 +12,7 @@ use Drupal\Core\Render\Markup;
 use Drupal\sir\Exception\SirExceptions;
 use Drupal\sir\Controller\UtilsController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 
 class InstrumentController extends ControllerBase{
@@ -83,6 +84,7 @@ class InstrumentController extends ControllerBase{
           $content = [
             'iname' => $instrument->label,
             'uri' => $instrument->uri,
+            'iuriencoded' => rawurlencode($instrument->uri),            
             'ilabel' => $instrument->hasShortName,
             'ilanguage' => $instrument->hasLanguage,
             'iversion' => $instrument->hasVersion,
@@ -178,6 +180,26 @@ class InstrumentController extends ControllerBase{
     }
   
   
+    public function download($type,$instrument) {
+
+      $config = $this->config(static::CONFIGNAME);           
+      $api_url = $config->get("api_url");     
+      $endpoint = "/sirapi/api/instrument/totext/".$type."/".rawurlencode($instrument);
+
+      $fusekiAPIservice = \Drupal::service('sir.api_connector');
+
+      $instrument_list = $fusekiAPIservice->instrumentsList($api_url, $endpoint);
+      if (!empty($instrument_list)) {
+        $content = (string) $instrument_list;
+        $response = new Response($content);
+        return $response;
+      }
+    
+      return new Response();
+      
+    }
+
+
     private function processData($data) {
       // Process the data as needed and return a result array.
       return [

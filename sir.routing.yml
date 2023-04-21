@@ -80,6 +80,16 @@ sir.searchinstruments_ajax:
     _csrf_token: 'FALSE'
     no_cache: 'TRUE'
 
+sir.download_instrument:
+  path: 'sir/public/downloadinstrument/{type}/{instrument}'
+  defaults:
+    _controller: '\Drupal\sir\Controller\InstrumentController::download'
+  requirements:
+    _permission: 'access content'
+    instrument: .+    
+  options:
+    no_cache: 'TRUE'    
+
 # Detector "Item" CRUD options
 
 sir.manage_detectors:
