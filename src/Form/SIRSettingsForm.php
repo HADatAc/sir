@@ -9,6 +9,7 @@
 
  use Drupal\Core\Form\ConfigFormBase;
  use Drupal\Core\Form\FormStateInterface;
+ use Drupal\file\Entity\File;
 
  class SIRSettingsForm extends ConfigFormBase {
 
@@ -53,11 +54,15 @@
             '#default_value' => $config->get("site_name"),
         ];
 
-        $form['site_logo'] = [
-            '#type' => 'textfield',
-            '#title' => 'Repository Logo',
-            '#default_value' => $config->get("site_logo"),
-        ];
+        $form['svg_file'] = [
+            '#type' => 'managed_file',
+            '#title' => $this->t('Site logo in SVG format'),
+            '#upload_validators' => [
+              'file_validate_extensions' => ['svg'],
+            ],
+            '#upload_location' => 'public://temp_svg/',
+            '#required' => TRUE,
+          ];
 
         $form['repository_abbreviation'] = [
             '#type' => 'textfield',
@@ -119,6 +124,32 @@
         //description
         $data = [];
         $newInstrument = $this->repositoryConf($form_state->getValue('api_url'),"/sirapi/api/repo/description/".$form_state->getValue('repository_description'),$data);
+        
+        // Get the uploaded file.
+        $file_id = $form_state->getValue('svg_file')[0];
+        $file = File::load($file_id);
+      
+        // Set the file to be permanent and save.
+        $file->setPermanent();
+        $file->save();
+      
+        // Move the file to the desired location.
+        $destination = DRUPAL_ROOT . '/themes/contrib/bootstrap_barrio/subtheme/logo.svg';
+        if (file_exists($destination)) {
+          // Replace the existing file if necessary.
+          unlink($destination);
+        }
+      
+        // Use the file_system service to copy the file.
+        $file_system = \Drupal::service('file_system');
+        $file_system->copy($file->getFileUri(), $destination, \Drupal\Core\File\FileSystemInterface::EXISTS_REPLACE);
+      
+        // Save the filename in configuration.
+        $this->config('sir.settings')
+          ->set('svg_file', $file_id)
+          ->save();
+      
+
 
         $messenger = \Drupal::service('messenger');
         $messenger->addMessage($this->t('Your new SIR configuration has been saved'));
