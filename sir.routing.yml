@@ -76,6 +76,7 @@ sir.searchinstruments_ajax:
   methods: [POST]
   requirements:
     _permission: 'access content' 
+    instrument: .+   
   options:
     _csrf_token: 'FALSE'
     no_cache: 'TRUE'

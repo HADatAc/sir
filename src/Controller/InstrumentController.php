@@ -31,7 +31,22 @@ class InstrumentController extends ControllerBase{
       return $response;
     }
 
-    $config = $this->config(static::CONFIGNAME);           
+    $config = $this->config(static::CONFIGNAME);  
+
+    $sir_updated = $this->sirRepoVersion();
+    $sir_api_version = $sir_updated->body->hasVersion;
+
+    $sir_gui_version = $config->get("sir_gui_version");     
+
+    if($sir_gui_version != $sir_api_version)
+    {
+      echo "Please update SIR API and SIR GUI to the same version";
+      exit();
+    }
+
+    
+
+         
     $api_url = $config->get("api_url");     
     $endpoint = "/sirapi/api/instrument/all";
 
@@ -132,7 +147,7 @@ class InstrumentController extends ControllerBase{
           '<td>'.$instrument->label.'</td>'.
           '<td>'.$instrument->hasLanguage.'</td>'.
           '<td>'.$instrument->hasVersion.'</td>'.
-          '<td>TXT HTML PDF</td>'.
+          '<td><a href="'.$root_url.'/sir/public/downloadinstrument/plain/'.rawurlencode(rawurlencode($instrument->uri)).'" target="_blank">TXT</a> <a href="'.$root_url.'/sir/public/downloadinstrument/html/'.rawurlencode(rawurlencode($instrument->uri)).'" target="_blank">HTML</a> PDF</td>'.
           '<td>RDF FHIR REDCAP</td>'.
           '</tr>';
         }
@@ -197,6 +212,22 @@ class InstrumentController extends ControllerBase{
     
       return new Response();
       
+    }
+
+    private function sirRepoVersion() {
+
+      $content = [];
+      $config = $this->config(static::CONFIGNAME);           
+      $api_url = $config->get("api_url");  
+      $endpoint = "/sirapi/api/repo";
+
+      $fusekiAPIservice = \Drupal::service('sir.api_connector');
+
+      $sirRepoVersion = $fusekiAPIservice->instrumentsList($api_url, $endpoint);
+      if (!empty($sirRepoVersion)) {
+        $content = json_decode($sirRepoVersion);
+        return $content;
+      }
     }
 
 
