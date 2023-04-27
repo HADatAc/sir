@@ -1,0 +1,16 @@
+sir_js_css:
+  version: 1.0
+  css:
+    theme:
+      css/sir.css: {}
+  js:
+    js/sir.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/jquery.once
+fontawesome5:
+  version: 1.0
+  css:
+    component:
+      //use.fontawesome.com/releases/v5.15.4/css/all.css: {}

@@ -1,0 +1,8 @@
+<tr>
+    <td>{{content.ilabel}}</td>
+    <td scope="row">{{content.iname}}</td>
+    <td scope="row">{{content.ilanguage}}</td>
+    <td scope="row">{{content.iversion}}</td>
+    <td scope="row"><a href="{{ path('sir.download_instrument', {'type': 'plain', 'instrument': content.iuriencoded}) }}" target='_blank'>TXT</a> <a href="{{ path('sir.download_instrument', {'type': 'html', 'instrument': content.iuriencoded}) }}" target='_blank'>HTML</a> <a href="">PDF</a></td>
+    <td scope="row">RDF FHIR REDCAP</td>
+</tr>

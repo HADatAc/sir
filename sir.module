@@ -1,0 +1,42 @@
+<?php
+/**
+ * Implements hook_theme
+ */
+function sir_theme($existing, $type, $theme, $path)
+{
+    return [
+        'instruments-list' => [
+            'variables' => ['content' => NULL]
+        ],
+        'instrument-card' => [
+            'variables' => ['content' => NULL]
+        ],
+        'editinstruments-list' => [
+            'variables' => ['content' => NULL]
+        ],
+        'editinstrument-card' => [
+            'variables' => ['content' => NULL]
+        ],
+
+    ];
+}
+
+use Drupal\Core\Path\AliasStorageInterface;
+
+/**
+ * Implements hook_update_N().
+ */
+function sir_update_8001() {
+
+  \Drupal::configFactory()->getEditable('system.site')->set('page.front', '/sir/public/instruments')->save();
+
+/**
+  // Set the new home URI.
+  $home_uri = '/sir/public/instruments';
+  #$alias_storage = \Drupal::service('path.alias_storage');
+  #$alias_storage->save($home_uri, '/');
+  #$config = \Drupal::configFactory()->getEditable('system.site');
+  #$config->set('page.front', $home_uri)->save();
+ */
+}
+

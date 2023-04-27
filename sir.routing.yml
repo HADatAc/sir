@@ -1,7 +1,219 @@
-sir.admin_settings:
-  path: '/admin/config/content/sir'
+
+# SIR landing page
+sir.index:
+  path: 'sir/public/instruments'
   defaults:
-    _form: '\Drupal\sir\Form\SettingsForm'
-    _title: 'Semantic Instrument Repository Settings'
+    _controller: '\Drupal\sir\Controller\InstrumentController::index'
   requirements:
     _permission: 'access content'
+  options:
+    no_cache: 'TRUE'
+
+# Main menu options
+
+sir.edit_semantics:
+  path: 'sir/manage/editsemantics'
+  defaults:
+    _controller: '\Drupal\sir\Controller\EditInstrumentsController::index'
+    _title: 'Manage Semantics'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+# Instrument CRUD options
+
+sir.manage_instruments:
+  path: 'sir/manage/instruments'
+  defaults:
+    _form: '\Drupal\sir\Form\ManageInstrumentsForm'
+    _title: 'Manage Instruments'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+sir.add_instrument:
+  path: 'sir/manage/addinstrument'
+  defaults:
+    _form: '\Drupal\sir\Form\AddInstrumentForm'
+    _title: 'Add Questionnarie'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+sir.edit_instrument:
+  path: 'sir/manage/editinstrument/{instrumenturi}'
+  defaults:
+    _form: '\Drupal\sir\Form\EditInstrumentForm'
+    _title: 'Edit Questionnarie'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+sir.edit_instruments:
+  path: 'sir/manage/editinstruments'
+  defaults:
+    _controller: '\Drupal\sir\Controller\EditInstrumentsController::index'
+    _title: 'Manage Questionnaries'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+sir.searchinstruments_ajax:
+  path: 'sir/ajax/searchinstruments'
+  defaults:
+    _controller: '\Drupal\sir\Controller\InstrumentController::searchinstrumentsAjax'
+    _title: 'search instruments Ajax'
+  methods: [POST]
+  requirements:
+    _permission: 'access content' 
+    instrument: .+   
+  options:
+    _csrf_token: 'FALSE'
+    no_cache: 'TRUE'
+
+sir.download_instrument:
+  path: 'sir/public/downloadinstrument/{type}/{instrument}'
+  defaults:
+    _controller: '\Drupal\sir\Controller\InstrumentController::download'
+  requirements:
+    _permission: 'access content'
+    instrument: .+    
+  options:
+    no_cache: 'TRUE'    
+
+# Detector "Item" CRUD options
+
+sir.manage_detectors:
+  path: 'sir/manage/detector/{instrumenturi}'
+  defaults:
+    _form: '\Drupal\sir\Form\ManageDetectorsForm'
+    _title: 'Manage Items'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+sir.add_detector:
+  path: 'sir/manage/adddetector/{instrumenturi}'
+  defaults:
+    _form: '\Drupal\sir\Form\AddDetectorForm'
+    _title: 'Add Item'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+sir.edit_detector:
+  path: 'sir/manage/editdetector/{detectoruri}'
+  defaults:
+    _form: '\Drupal\sir\Form\EditDetectorForm'
+    _title: 'Edit Item'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+sir.detector_experience_autocomplete:
+  path: '/sir/manage/detector/autocomplete'
+  defaults:
+    _controller: '\Drupal\sir\Controller\JsonApiExperienceController::handleAutocomplete'
+    _format: json
+  requirements:
+    _permission: 'access content'
+
+# Experience CRUD options
+
+sir.manage_experiences:
+  path: 'sir/manage/experiences'
+  defaults:
+    _form: '\Drupal\sir\Form\ManageExperiencesForm'
+    _title: 'Manage Experiences'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+sir.add_experience:
+  path: 'sir/manage/addexperience'
+  defaults:
+    _form: '\Drupal\sir\Form\AddExperienceForm'
+    _title: 'Add Experience'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+sir.edit_experience:
+  path: 'sir/manage/editexperience/{experienceuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\EditExperienceForm'
+    _title: 'Edit Experience'    
+  requirements:
+    _permission: 'access content'  
+    _custom_access_check: 'TRUE'      
+  options:
+    no_cache: 'TRUE'
+
+# Response Option CRUD options
+
+sir.manage_response_options:
+  path: 'sir/manage/responseoption/{experienceuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\ManageResponseOptionsForm'
+    _title: 'Manage Response Options'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+sir.add_responseoption:
+  path: 'sir/manage/addresponseoption/{experienceuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\AddResponseOptionForm'
+    _title: 'Add Response Option'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+sir.edit_responseoption:
+  path: 'sir/manage/editresponseoption/{responseoptionuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\EditResponseOptionForm'
+    _title: 'Edit Response Option'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+# Configuration option
+
+sir.admin_settings_custom:
+  path: 'admin/config/sir'
+  defaults:
+    _form: '\Drupal\sir\Form\SIRSettingsForm'
+    _title: 'SIR Settings Form'
+  requirements:
+    _permission: 'administer site configuration'
+  options:
+    _admin_route: TRUE
+    no_cache: 'TRUE'
+

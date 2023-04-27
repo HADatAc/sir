@@ -1,0 +1,14 @@
+services:
+  sir.api_connector:
+    class: Drupal\sir\FusekiAPIConnector
+    arguments: ['@http_client_factory']
+  sir.custom_access_check:
+    class: Drupal\sir\Access\CustomAccessCheck
+    arguments: ['@current_user']
+    tags:
+      - { name: access_check, applies_to: _custom_access_check }
+  sir.route_subscriber:
+    class: Drupal\sir\EventSubscriber\RouteSubscriber
+    arguments: ['@config.factory']
+    tags:
+        - { name: event_subscriber }     

@@ -1,0 +1,78 @@
+{{ attach_library('sir/sir_js_css') }}
+
+<div class="container">
+  <br>
+  <div class="row">
+    {%if content.description is not empty %}
+      {{content.description}}
+    {% endif %}
+  </div>
+  <br>
+  <hl>
+  <br>
+  <div class="row align-items-start">
+    <div class="col-3">
+        <div class="mb-3">
+            <label for="searchinstrumenttype" class="form-label">Search Type</label>
+          <select name="searchinstrumenttype" id="searchinstrumenttype" class="form-select" required aria-label="select">
+            <option value="">Search Type</option>
+            <option value="questionnaries">Questionnaries</option>
+            <option value="items">Items</option>
+            <option value="experiences">Experiences</option>
+            <option value="symptoms">Symptoms</option>
+            <option value="scales">Scales</option>
+          </select>
+        </div>
+        <div id='questionnarieblock'>
+          <div class="mb-3">
+              <label for="questionnariename" class="form-label">Questionnarie name</label>
+                <input type="text" class="form-control" id="questionnariename">
+          </div>
+        </div>
+        <div id='scaleblock'>
+          <div class="mb-3">
+              <label for="scalename" class="form-label">Scale name</label>
+                <input type="text" class="form-control" id="scalename">
+          </div>
+        </div>
+        <div id='symptomblock'>
+          <div class="mb-3">
+              <label for="symptomname" class="form-label">Symptom name</label>
+                <input type="text" class="form-control" id="symptomname">
+          </div>
+        </div>
+        <div class="mb-3">
+          <button class="btn btn-primary" id="searchinstrumentbytypebtn">Search</button>
+        </div>
+    </div>
+    <div class="col-9">
+      <div class="content">
+        {%if content.instruments is not empty %}
+        <table class="table">
+          <thead>
+            <tr>
+                <th scope="col">Abbreviature</th>
+                <th scope="col">Name</th>
+                <th scope="col">Language</th>
+                <th scope="col">Version</th>
+                <th scope="col">Rendering Downloads</th>
+                <th scope="col">Interoperability Downloads</th>
+            </tr>
+          </thead>
+          <tbody id='searchinstrumentscontent'>
+                {% for instrument in content.instruments %}
+                    {{instrument}} 
+                {% endfor %}  
+            
+        </tbody>
+        </table>
+        {% else %}
+          <div>
+            {{ 'No questionnaries were found' }}
+            </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <br><br><br>
+</div>
