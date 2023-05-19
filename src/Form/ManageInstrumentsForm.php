@@ -91,10 +91,10 @@ class ManageInstrumentsForm extends FormBase {
       '#value' => $this->t('Edit Selected Instrument'),
       '#name' => 'edit_instrument',
     ];
-    $form['manage_detectors'] = [
+    $form['manage_attachments'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Manage Items of Selected Instrument'),
-      '#name' => 'manage_detectors',
+      '#value' => $this->t('Manage Attachments of Selected Instrument'),
+      '#name' => 'manage_attachments',
     ];
     $form['delete_selected_instruments'] = [
       '#type' => 'submit',
@@ -200,15 +200,15 @@ class ManageInstrumentsForm extends FormBase {
       }
     }  
 
-    // MANAGE DETECTORS (ITEMS)
-    if ($button_name === 'manage_detectors') {
+    // MANAGE ATTACHMENTS
+    if ($button_name === 'manage_attachments') {
       if (sizeof($rows) < 1) {
-        \Drupal::messenger()->addMessage(t("Select the exact instrument which items are going to be managed."));      
+        \Drupal::messenger()->addMessage(t("Select the exact instrument which attachments are going to be managed."));      
       } else if ((sizeof($rows) > 1)) {
         \Drupal::messenger()->addMessage(t("Select only one instrument. Items of no more than one instrument can be managed at once."));      
       } else {
         $first = array_shift($rows);
-        $url = Url::fromRoute('sir.manage_detectors', ['instrumenturi' => base64_encode($first)]);
+        $url = Url::fromRoute('sir.manage_attachments', ['instrumenturi' => base64_encode($first)]);
         $form_state->setRedirectUrl($url);
       } 
     }

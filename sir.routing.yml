@@ -93,6 +93,49 @@ sir.download_instrument:
 
 # Detector "Item" CRUD options
 
+sir.manage_attachments:
+  path: 'sir/manage/attachment/{instrumenturi}'
+  defaults:
+    _form: '\Drupal\sir\Form\ManageAttachmentsForm'
+    _title: 'Manage Attachments'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+sir.add_attachments:
+  path: 'sir/manage/addattachments/{instrumenturi}'
+  defaults:
+    _form: '\Drupal\sir\Form\AddAttachmentsForm'
+    _title: "Create Instrument's Attachments"    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+sir.edit_attachment:
+  path: 'sir/manage/editattachments/{attachmenturi}'
+  defaults:
+    _form: '\Drupal\sir\Form\EditAttachmentForm'
+    _title: 'Edit Attachment'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+sir.attachment_detector_autocomplete:
+  path: '/sir/manage/attachment/autocomplete'
+  defaults:
+    _controller: '\Drupal\sir\Controller\JsonApiDetectorController::handleAutocomplete'
+    _format: json
+  requirements:
+    _permission: 'access content'
+
+# Detector "Item" CRUD options
+
 sir.manage_detectors:
   path: 'sir/manage/detector/{instrumenturi}'
   defaults:
@@ -105,7 +148,7 @@ sir.manage_detectors:
     no_cache: 'TRUE'
 
 sir.add_detector:
-  path: 'sir/manage/adddetector/{instrumenturi}'
+  path: 'sir/manage/adddetector/{attachmenturi}'
   defaults:
     _form: '\Drupal\sir\Form\AddDetectorForm'
     _title: 'Add Item'    

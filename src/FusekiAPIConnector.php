@@ -47,7 +47,27 @@ class FusekiAPIConnector
       return $this->perform_http_request('POST',$api_url.$endpoint,$data);          
     }
 
-    public function detectorList($api_url,$endpoint) {
+    public function attachmentList($api_url,$endpoint) {
+      $attachments = [];
+      //if we add auth in future
+      $data = [
+            'auth' => ['user', 'pass']
+      ];
+     
+      $attachments = $this->perform_http_request('GET',$api_url.$endpoint,$data);   
+      
+      return($attachments);
+    }
+
+    public function attachmentAdd($api_url,$endpoint, $data) {
+      return $this->perform_http_request('POST',$api_url.$endpoint,$data);          
+    }
+
+    public function attachmentDel($api_url,$endpoint, $data) {
+      return $this->perform_http_request('POST',$api_url.$endpoint,$data);          
+    }
+
+    public function detectorsList($api_url,$endpoint) {
       $detectors = [];
       //if we add auth in future
       $data = [

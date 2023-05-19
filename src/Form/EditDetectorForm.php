@@ -18,6 +18,10 @@ class EditDetectorForm extends FormBase {
 
   protected $detector;
 
+  protected $instrumentUri;
+
+  protected $priority;
+
   public function getDetectorUri() {
     return $this->detectorUri;
   }
@@ -30,8 +34,24 @@ class EditDetectorForm extends FormBase {
     return $this->detector;
   }
 
-  public function setDetector($respOption) {
-    return $this->detector = $respOption; 
+  public function setDetector($obj) {
+    return $this->detector = $obj; 
+  }
+
+  public function getInstrumentUri() {
+    return $this->instrumentUri;
+  }
+
+  public function setInstrumentUri($instUri) {
+    return $this->intrumentUri = $instUri; 
+  }
+
+  public function getPriority() {
+    return $this->priority;
+  }
+
+  public function setPriority($priority) {
+    return $this->priority = $priority; 
   }
 
   /**
@@ -54,10 +74,14 @@ class EditDetectorForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $detectoruri = NULL) {
-    $uri=$detectoruri;
+  public function buildForm(array $form, FormStateInterface $form_state, $instrumenturi = NULL, $prty = NULL) {
+    $uri=$instrumenturi;
     $uri_decode=base64_decode($uri);
-    $this->setDetectorUri($uri_decode);
+    $this->setInstrumentUri($uri_decode);
+
+    $prty_orig=$prty;
+    $prty_decode=base64_decode($prty_orig);
+    $this->setPriority($prty_decode);
 
     $config = $this->config(static::CONFIGNAME);           
     $api_url = $config->get("api_url");
@@ -77,17 +101,6 @@ class EditDetectorForm extends FormBase {
       $form_state->setRedirectUrl($url);
     }
 
-    $form['detector_iinstrument'] = [
-      '#type' => 'textfield',
-      '#title' => t('Instrument'),
-      '#value' => $this->getDetector()->isInstrumentAttachment,
-      '#disabled' => TRUE,
-    ];
-    $form['detector_priority'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Priority'),
-      '#default_value' => $this->getDetector()->hasPriority,
-    ];
     $form['detector_content'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Content'),
