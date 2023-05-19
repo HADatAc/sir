@@ -14,14 +14,24 @@ class AddDetectorForm extends FormBase {
    */
   Const CONFIGNAME = "sir.settings";
 
-  protected $instrumentUri;
+  protected $attachmentUri;
 
-  public function getInstrumentUri() {
-    return $this->instrumentUri;
+  protected $attachment;
+
+  public function getAttachmentUri() {
+    return $this->attachmentUri;
   }
 
-  public function setInstrumentUri($uri) {
-    return $this->instrumentUri = $uri; 
+  public function getAttachment() {
+    return $this->attachment;
+  }
+
+  public function setAttachmentUri($uri) {
+    return $this->attachmentUri = $uri; 
+  }
+
+  public function setAttachment($att) {
+    return $this->attachment = $att; 
   }
 
   /**
@@ -44,21 +54,29 @@ class AddDetectorForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $instrumenturi = NULL) {
-    $uri=$instrumenturi ?? 'default';
+  public function buildForm(array $form, FormStateInterface $form_state, $attachmenturi = NULL) {
+    $uri=$attachmenturi ?? 'default';
     $uri_decode=base64_decode($uri);
-    $this->setInstrumentUri($uri_decode);
+    $this->setAttachmentUri($uri_decode);
 
-    $form['detector_instrument'] = [
-      '#type' => 'textfield',
-      '#title' => t('Instrument'),
-      '#value' => $this->getInstrumentUri(),
-      '#disabled' => TRUE,
-    ];
-    $form['detector_priority'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Priority'),
-    ];
+    $config = $this->config(static::CONFIGNAME);           
+    $api_url = $config->get("api_url");
+    $endpoint = "/sirapi/api/uri/".rawurlencode($this->getAttachmentUri());
+
+    $fusekiAPIservice = \Drupal::service('sir.api_connector');
+    $rawresponse = $fusekiAPIservice->getUri($api_url,$endpoint);
+    $obj = json_decode($rawresponse);
+
+    if ($obj->isSuccessful) {
+      $this->setAttachment($obj->body);
+    }
+
+    //$form['detector_attachment_uri'] = [
+    //  '#type' => 'textfield',
+    //  '#title' => t('Attachment URI'),
+    //  '#value' => $this->getAttachmentUri(),
+    //  '#disabled' => TRUE,
+    //];
     $form['detector_content'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Content'),
@@ -105,9 +123,6 @@ class AddDetectorForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name != 'back') {
-      if(strlen($form_state->getValue('detector_priority')) < 1) {
-        $form_state->setErrorByName('detector_priority', $this->t('Please enter a valid priority value'));
-      }
       if(strlen($form_state->getValue('detector_content')) < 1) {
         $form_state->setErrorByName('detector_content', $this->t('Please enter a valid content'));
       }
@@ -129,8 +144,8 @@ class AddDetectorForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $url = Url::fromRoute('sir.manage_detectors');
-      $url->setRouteParameter('instrumenturi', base64_encode($this->getInstrumentUri()));
+      $url = Url::fromRoute('sir.edit_attachment');
+      $url->setRouteParameter('attachmenturi', base64_encode($this->getAttachmentUri()));
       $form_state->setRedirectUrl($url);
       return;
     } 
@@ -143,14 +158,13 @@ class AddDetectorForm extends FormBase {
       $uid = \Drupal::currentUser()->id();
       $uemail = \Drupal::currentUser()->getEmail();
 
+
+      // CREATE A NEW DETECTOR
       $iid = time().rand(10000,99999).$uid;
-      
       $data = [
         'uri' => 'http://hadatac.org/kb/test/Detector'.$iid,
         'typeUri' => 'http://hadatac.org/ont/vstoi#Detector',
         'hascoTypeUri' => 'http://hadatac.org/ont/vstoi#Detector',
-        'isInstrumentAttachment' => $this->getInstrumentUri(),
-        'hasPriority' => $form_state->getValue('detector_priority'),
         'hasContent' => $form_state->getValue('detector_content'),
         'hasExperience' => $form_state->getValue('detector_experience'),
         'hasLanguage' => $form_state->getValue('detector_language'),
@@ -158,34 +172,39 @@ class AddDetectorForm extends FormBase {
         'comment' => $form_state->getValue('detector_description'),
         'hasSIRMaintainerEmail' => $uemail, 
       ];
-      
       $datap = '{"uri":"http://hadatac.org/kb/test/Detector'.$iid.'",'.
         '"typeUri":"http://hadatac.org/ont/vstoi#Detector",'.
         '"hascoTypeUri":"http://hadatac.org/ont/vstoi#Detector",'.
-        '"isInstrumentAttachment":"' . $this->getInstrumentUri().'",'.
-        '"hasPriority":"'.$form_state->getValue('detector_priority').'",'.
         '"hasContent":"'.$form_state->getValue('detector_content').'",'.
         '"hasExperience":"'.$form_state->getValue('detector_experience').'",'.
         '"hasLanguage":"'.$form_state->getValue('detector_language').'",'.
         '"hasVersion":"'.$form_state->getValue('detector_version').'",'.
         '"comment":"'.$form_state->getValue('detector_description').'",'.
         '"hasSIRMaintainerEmail":"'.$uemail.'"}';
-
       $dataJ = json_encode($data);
-    
       $dataE = rawurlencode($datap);
-
       $newDetector = $this->addDetector($api_url,"/sirapi/api/detector/create/".$dataE,$data);
-    
-      \Drupal::messenger()->addMessage(t("Detector has been added successfully."));
-      $url = Url::fromRoute('sir.manage_detectors');
-      $url->setRouteParameter('instrumenturi', base64_encode($this->getInstrumentUri()));
+
+      // IF IN THE CONTEXT OF AN EXISTING ATTACHMENT, ATTACH THE NEW DETECTOR TO THE ATTACHMENT
+      $attachment = $this->getAttachment();
+      if ($attachment == null) {
+        \Drupal::messenger()->addMessage(t("Detector has been added successfully."));
+      } else {
+        $uriEncoded = rawurlencode("http://hadatac.org/kb/test/Detector".$iid);
+        $instrUriEncoded = rawurlencode($this->getAttachment()->belongsTo);
+        $priorityEncoded = rawurlencode($this->getAttachment()->hasPriority);
+        $this->detectorAttach($api_url,"/sirapi/api/detector/attach/".$uriEncoded."/".$instrUriEncoded."/".$priorityEncoded,[]);
+        \Drupal::messenger()->addMessage(t("Detector [" . "http://hadatac.org/kb/test/Detector".$iid."] has been added and attached to intrument [" . $this->getAttachment()->belongsTo . "] successfully."));
+      }    
+
+      $url = Url::fromRoute('sir.edit_attachment');
+      $url->setRouteParameter('attachmenturi', base64_encode($this->getAttachmentUri()));
       $form_state->setRedirectUrl($url);
 
     }catch(\Exception $e){
       \Drupal::messenger()->addMessage(t("An error occurred while adding the Detector: ".$e->getMessage()));
-      $url = Url::fromRoute('sir.manage_detectors');
-      $url->setRouteParameter('instrumenturi', base64_encode($this->getInstrumentUri()));
+      $url = Url::fromRoute('sir.edit_attachment');
+      $url->setRouteParameter('attachmenturi', base64_encode($this->getAttachmentUri()));
       $form_state->setRedirectUrl($url);
     }
 
@@ -199,5 +218,16 @@ class AddDetectorForm extends FormBase {
     }
     return [];
   }
+
+  public function detectorAttach($api_url,$endpoint,$data){
+    $fusekiAPIservice = \Drupal::service('sir.api_connector');
+    $newAttachment = $fusekiAPIservice->detectorAttach($api_url,$endpoint,$data);
+    if(!empty($newAttachment)){
+      return $newAttachment;
+    }
+    return [];
+  }
+
+
 
 }

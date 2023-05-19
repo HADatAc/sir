@@ -47,7 +47,27 @@ class FusekiAPIConnector
       return $this->perform_http_request('POST',$api_url.$endpoint,$data);          
     }
 
-    public function detectorList($api_url,$endpoint) {
+    public function attachmentList($api_url,$endpoint) {
+      $attachments = [];
+      //if we add auth in future
+      $data = [
+            'auth' => ['user', 'pass']
+      ];
+     
+      $attachments = $this->perform_http_request('GET',$api_url.$endpoint,$data);   
+      
+      return($attachments);
+    }
+
+    public function attachmentAdd($api_url,$endpoint, $data) {
+      return $this->perform_http_request('POST',$api_url.$endpoint,$data);          
+    }
+
+    public function attachmentDel($api_url,$endpoint, $data) {
+      return $this->perform_http_request('POST',$api_url.$endpoint,$data);          
+    }
+
+    public function detectorsList($api_url,$endpoint) {
       $detectors = [];
       //if we add auth in future
       $data = [
@@ -65,6 +85,14 @@ class FusekiAPIConnector
 
     public function detectorDel($api_url,$endpoint, $data) {
       return $this->perform_http_request('POST',$api_url.$endpoint,$data);          
+    }
+
+    public function detectorAttach($api_url,$endpoint, $data) {
+      return $this->perform_http_request('GET',$api_url.$endpoint,$data);          
+    }
+
+    public function detectorDetach($api_url,$endpoint, $data) {
+      return $this->perform_http_request('GET',$api_url.$endpoint,$data);          
     }
 
     public function experiencesList($api_url,$endpoint) {
@@ -111,7 +139,8 @@ class FusekiAPIConnector
       return $this->perform_http_request('GET',$api_url.$endpoint,$data);          
     }
 
-    public static function perform_http_request($method, $url, $data = false) {       
+    public static function perform_http_request($method, $url, $data = false) {   
+      //dpm($url);    
         try 
         {
             $client = new Client();
