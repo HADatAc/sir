@@ -38,7 +38,7 @@ class InstrumentController extends ControllerBase{
 
     $sir_gui_version = $config->get("sir_gui_version");     
 
-    dpm($config);
+    //dpm($config);
     if($sir_gui_version != $sir_api_version) {
       echo "Please update SIR API to version [" . $sir_gui_version . "]";
       //exit();
