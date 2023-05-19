@@ -88,15 +88,30 @@ class ManageAttachmentsForm extends FormBase {
 
     $header = [
       'attachment_priority' => t('Priority'),
-      'attachment_detector' => t('Detector'),
+      'attachment_content' => t("Item's Content"),
+      'attachment_detector' => t("Item's URI"),
     ];
 
     # POPULATE DATA
 
     $output = array();
     foreach ($attachments as $attachment) {
+      $detector = NULL;
+      $content = "";
+      if ($attachment->hasDetector != null) {
+        $endpoint_instrument = "/sirapi/api/uri/".rawurlencode($attachment->hasDetector);
+        $rawdetector = $fusekiAPIservice->getUri($api_url,$endpoint_instrument);
+        $objdetector = json_decode($rawdetector);
+        if ($objdetector->isSuccessful) {
+          $detector = $objdetector->body;
+          if (isset($detector->hasContent)) {
+            $content = $detector->hasContent;
+          } 
+        }
+      }
       $output[$attachment->uri] = [
         'attachment_priority' => $attachment->hasPriority,     
+        'attachment_content' => $content,     
         'attachment_detector' => $attachment->hasDetector,     
       ];
     }
@@ -111,31 +126,16 @@ class ManageAttachmentsForm extends FormBase {
       '#type' => 'item',
       '#title' => t('<h4>Attachments maintained by <font color="DarkGreen">' . $name . ' (' . $uemail . ')</font></h4>'),
     ];
-    #$form['add_detector'] = [
-    #  '#type' => 'submit',
-    #  '#value' => $this->t('Add Item'),
-    #  '#name' => 'add_detector',
-    #];
-    #$form['reuse_detector'] = [
-    #  '#type' => 'submit',
-    #  '#value' => $this->t('Reuse Existing Item'),
-    #  '#name' => 'reuse_detector',
-    #];
-    #$form['translate_detector'] = [
-    #  '#type' => 'submit',
-    #  '#value' => $this->t('Translate Existing Item'),
-    #  '#name' => 'translate_detector',
-    #];
     $form['edit_selected_attachment'] = [
       '#type' => 'submit',
       '#value' => $this->t('Edit Selected Item'),
       '#name' => 'edit_attachment',
     ];
-    #$form['delete_selected_detectors'] = [
-    #  '#type' => 'submit',
-    #  '#value' => $this->t('Delete Selected Items'),
-    #  '#name' => 'delete_detector',
-    #];
+    $form['delete_attachments'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Delete All Attachments'),
+      '#name' => 'delete_attachments',
+    ];
     $form['attachment_table'] = [
       '#type' => 'tableselect',
       '#header' => $header,
@@ -196,13 +196,6 @@ class ManageAttachmentsForm extends FormBase {
     $config = $this->config(static::CONFIGNAME);     
     $api_url = $config->get("api_url");
 
-    // ADD DETECTOR
-    #if ($button_name === 'add_detector') {
-    #  $url = Url::fromRoute('sir.add_detector');
-    #  $url->setRouteParameter('instrumenturi', base64_encode($this->getInstrumentUri()));
-    #  $form_state->setRedirectUrl($url);
-    #}  
-
     // EDIT ATTACHMENT
     if ($button_name === 'edit_attachment') {
       if (sizeof($rows) < 1) {
@@ -217,18 +210,17 @@ class ManageAttachmentsForm extends FormBase {
       } 
     }
 
-    // DELETE DETECTOR
-    #if ($button_name === 'delete_detector') {
-    #  if (sizeof($rows) <= 0) {
-    #    \Drupal::messenger()->addMessage(t("At least one item needs to be selected to be deleted."));      
-    #  } else {
-    #    foreach($rows as $uri) {
-    #      $uriEncoded = rawurlencode($uri);
-    #      $this->deleteResponseOption($api_url,"/sirapi/api/detector/delete/".$uriEncoded,[]);  
-    #    }
-    #    \Drupal::messenger()->addMessage(t("Selected item(s) has/have been deleted successfully."));      
-    #  }
-    #}  
+    // DELETE ATTACHMENTS
+    if ($button_name === 'delete_attachments') {
+      $data = [];
+      $datap = $this->getInstrumentUri();
+      $dataE = rawurlencode($datap);
+      $deleteAttachments = $this->deleteAttachments($api_url,"/sirapi/api/attachment/delete/".$dataE,$data);
+    
+      \Drupal::messenger()->addMessage(t("Attachments has been deleted successfully."));
+      $url = Url::fromRoute('sir.manage_instruments');
+      $form_state->setRedirectUrl($url);
+    }
 
     // BACK TO MAIN PAGE
     if ($button_name === 'back') {
@@ -242,5 +234,13 @@ class ManageAttachmentsForm extends FormBase {
     $fusekiAPIservice->detectorDel($api_url,$endpoint,$data);
     return true;
   }
+
+  public function deleteAttachments($api_url,$endpoint,$data){
+    $fusekiAPIservice = \Drupal::service('sir.api_connector');
+    $fusekiAPIservice->attachmentDel($api_url,$endpoint,$data);
+    return [];
+  }
+
+
   
 }

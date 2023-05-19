@@ -16,12 +16,22 @@ class AddDetectorForm extends FormBase {
 
   protected $attachmentUri;
 
+  protected $attachment;
+
   public function getAttachmentUri() {
     return $this->attachmentUri;
   }
 
+  public function getAttachment() {
+    return $this->attachment;
+  }
+
   public function setAttachmentUri($uri) {
     return $this->attachmentUri = $uri; 
+  }
+
+  public function setAttachment($att) {
+    return $this->attachment = $att; 
   }
 
   /**
@@ -49,12 +59,24 @@ class AddDetectorForm extends FormBase {
     $uri_decode=base64_decode($uri);
     $this->setAttachmentUri($uri_decode);
 
-    $form['detector_attachment_uri'] = [
-      '#type' => 'textfield',
-      '#title' => t('Attachment URI'),
-      '#value' => $this->getAttachmentUri(),
-      '#disabled' => TRUE,
-    ];
+    $config = $this->config(static::CONFIGNAME);           
+    $api_url = $config->get("api_url");
+    $endpoint = "/sirapi/api/uri/".rawurlencode($this->getAttachmentUri());
+
+    $fusekiAPIservice = \Drupal::service('sir.api_connector');
+    $rawresponse = $fusekiAPIservice->getUri($api_url,$endpoint);
+    $obj = json_decode($rawresponse);
+
+    if ($obj->isSuccessful) {
+      $this->setAttachment($obj->body);
+    }
+
+    //$form['detector_attachment_uri'] = [
+    //  '#type' => 'textfield',
+    //  '#title' => t('Attachment URI'),
+    //  '#value' => $this->getAttachmentUri(),
+    //  '#disabled' => TRUE,
+    //];
     $form['detector_content'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Content'),
@@ -136,8 +158,9 @@ class AddDetectorForm extends FormBase {
       $uid = \Drupal::currentUser()->id();
       $uemail = \Drupal::currentUser()->getEmail();
 
+
+      // CREATE A NEW DETECTOR
       $iid = time().rand(10000,99999).$uid;
-      
       $data = [
         'uri' => 'http://hadatac.org/kb/test/Detector'.$iid,
         'typeUri' => 'http://hadatac.org/ont/vstoi#Detector',
@@ -149,7 +172,6 @@ class AddDetectorForm extends FormBase {
         'comment' => $form_state->getValue('detector_description'),
         'hasSIRMaintainerEmail' => $uemail, 
       ];
-      
       $datap = '{"uri":"http://hadatac.org/kb/test/Detector'.$iid.'",'.
         '"typeUri":"http://hadatac.org/ont/vstoi#Detector",'.
         '"hascoTypeUri":"http://hadatac.org/ont/vstoi#Detector",'.
@@ -159,14 +181,22 @@ class AddDetectorForm extends FormBase {
         '"hasVersion":"'.$form_state->getValue('detector_version').'",'.
         '"comment":"'.$form_state->getValue('detector_description').'",'.
         '"hasSIRMaintainerEmail":"'.$uemail.'"}';
-
       $dataJ = json_encode($data);
-    
       $dataE = rawurlencode($datap);
-
       $newDetector = $this->addDetector($api_url,"/sirapi/api/detector/create/".$dataE,$data);
-    
-      \Drupal::messenger()->addMessage(t("Detector has been added successfully."));
+
+      // IF IN THE CONTEXT OF AN EXISTING ATTACHMENT, ATTACH THE NEW DETECTOR TO THE ATTACHMENT
+      $attachment = $this->getAttachment();
+      if ($attachment == null) {
+        \Drupal::messenger()->addMessage(t("Detector has been added successfully."));
+      } else {
+        $uriEncoded = rawurlencode("http://hadatac.org/kb/test/Detector".$iid);
+        $instrUriEncoded = rawurlencode($this->getAttachment()->belongsTo);
+        $priorityEncoded = rawurlencode($this->getAttachment()->hasPriority);
+        $this->detectorAttach($api_url,"/sirapi/api/detector/attach/".$uriEncoded."/".$instrUriEncoded."/".$priorityEncoded,[]);
+        \Drupal::messenger()->addMessage(t("Detector [" . "http://hadatac.org/kb/test/Detector".$iid."] has been added and attached to intrument [" . $this->getAttachment()->belongsTo . "] successfully."));
+      }    
+
       $url = Url::fromRoute('sir.edit_attachment');
       $url->setRouteParameter('attachmenturi', base64_encode($this->getAttachmentUri()));
       $form_state->setRedirectUrl($url);
@@ -188,5 +218,16 @@ class AddDetectorForm extends FormBase {
     }
     return [];
   }
+
+  public function detectorAttach($api_url,$endpoint,$data){
+    $fusekiAPIservice = \Drupal::service('sir.api_connector');
+    $newAttachment = $fusekiAPIservice->detectorAttach($api_url,$endpoint,$data);
+    if(!empty($newAttachment)){
+      return $newAttachment;
+    }
+    return [];
+  }
+
+
 
 }
