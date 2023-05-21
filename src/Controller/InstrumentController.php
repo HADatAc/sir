@@ -6,7 +6,7 @@ use Drupal\Core\Controller\ControllerBase;
 use BorderCloud\SPARQL\SparqlClient;
 use Drupal\block\Entity\Block;
 use Drupal\Core\Block\BlockBase;
-use Symfony\Component\HttpFoundation\JsonResponse;f
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Drupal\Core\Render\Markup;
 use Drupal\sir\Exception\SirExceptions;
