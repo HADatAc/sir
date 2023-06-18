@@ -6,13 +6,9 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\Core\Routing\TrustedRedirectResponse;
+use Drupal\sir\Entity\Tables;
 
 class EditExperienceForm extends FormBase {
-
-    /**
-   * Settings Variable.
-   */
-  Const CONFIGNAME = "sir.settings";
 
   protected $experienceUri;
 
@@ -42,16 +38,6 @@ class EditExperienceForm extends FormBase {
   }
 
   /**
-     * {@inheritdoc}
-     */
-
-     protected function getEditableConfigNames() {
-      return [
-          static::CONFIGNAME,
-      ];
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $experienceuri = NULL) {
@@ -59,12 +45,11 @@ class EditExperienceForm extends FormBase {
     $uri_decode=base64_decode($uri);
     $this->setExperienceUri($uri_decode);
 
-    $config = $this->config(static::CONFIGNAME);           
-    $api_url = $config->get("api_url");
-    $endpoint = "/sirapi/api/uri/".rawurlencode($this->getExperienceUri());
+    $tables = new Tables;
+    $languages = $tables->getLanguages();
 
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $rawresponse = $fusekiAPIservice->getUri($api_url,$endpoint);
+    $rawresponse = $fusekiAPIservice->getUri($this->getExperienceUri());
     $obj = json_decode($rawresponse);
     
     if ($obj->isSuccessful) {
@@ -82,8 +67,9 @@ class EditExperienceForm extends FormBase {
       '#default_value' => $this->getExperience()->label,
     ];
     $form['experience_language'] = [
-      '#type' => 'textfield',
+      '#type' => 'select',
       '#title' => $this->t('Language'),
+      '#options' => $languages,
       '#default_value' => $this->getExperience()->hasLanguage,
     ];
     $form['experience_version'] = [

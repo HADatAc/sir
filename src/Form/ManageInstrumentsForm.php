@@ -5,6 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\core\Url;
+use Drupal\sir\Entity\Tables;
 
 class ManageInstrumentsForm extends FormBase {
 
@@ -45,6 +46,9 @@ class ManageInstrumentsForm extends FormBase {
     $name = $user->name->value;
     $endpoint = "/sirapi/api/instrument/maintaineremail/".rawurlencode($uemail);
 
+    $tables = new Tables;
+    $languages = $tables->getLanguages();
+
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
     $instrument_list = $fusekiAPIservice->instrumentsList($api_url,$endpoint);
     $obj = json_decode($instrument_list);
@@ -70,7 +74,7 @@ class ManageInstrumentsForm extends FormBase {
       $output[$instrument->uri] = [
         'instrument_name' => $instrument->label,     
         'instrument_abbreviation' => $instrument->hasShortName,     
-        'instrument_language' => $instrument->hasLanguage,
+        'instrument_language' => $languages[$instrument->hasLanguage],
         'instrument_version' => $instrument->hasVersion,
       ];
     }

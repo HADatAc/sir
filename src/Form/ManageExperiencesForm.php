@@ -8,6 +8,7 @@ use Drupal\core\Url;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\InvokeCommand;
 use Drupal\Core\Ajax\OpenModalDialogCommand;
+use Drupal\sir\Entity\Tables;
 
 class ManageExperiencesForm extends FormBase {
 
@@ -48,6 +49,9 @@ class ManageExperiencesForm extends FormBase {
     $name = $user->name->value;
     $endpoint = "/sirapi/api/experience/maintaineremail/".rawurlencode($uemail);
 
+    $tables = new Tables;
+    $languages = $tables->getLanguages();
+    
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
     $experience_list = $fusekiAPIservice->experiencesList($api_url,$endpoint);
     $obj = json_decode($experience_list);
@@ -71,7 +75,7 @@ class ManageExperiencesForm extends FormBase {
     foreach ($experiences as $experience) {
       $output[$experience->uri] = [
         'experience_name' => $experience->label,     
-        'experience_language' => $experience->hasLanguage,
+        'experience_language' => $languages[$experience->hasLanguage],
         'experience_version' => $experience->hasVersion,
       ];
     }

@@ -8,11 +8,6 @@ use Drupal\core\Url;
 
 class ManageResponseOptionsForm extends FormBase {
 
-    /**
-   * Settings Variable.
-   */
-  Const CONFIGNAME = "sir.settings";
-
   protected $experienceUri;
 
   public function getExperienceUri() {
@@ -31,16 +26,6 @@ class ManageResponseOptionsForm extends FormBase {
   }
 
   /**
-     * {@inheritdoc}
-     */
-
-     protected function getEditableConfigNames() {
-      return [
-          static::CONFIGNAME,
-      ];
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $experienceuri = NULL) {
@@ -51,8 +36,6 @@ class ManageResponseOptionsForm extends FormBase {
     $uri_decode=base64_decode($uri);
     $this->setExperienceUri($uri_decode);
 
-    $config = $this->config(static::CONFIGNAME);           
-    $api_url = $config->get("api_url");
     $uemail = \Drupal::currentUser()->getEmail();
     $uid = \Drupal::currentUser()->id();
     $user = \Drupal\user\Entity\User::load($uid);
@@ -60,8 +43,7 @@ class ManageResponseOptionsForm extends FormBase {
 
     // RETRIEVE EXPERIENCE BY URI
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $endpoint_experience = "/sirapi/api/uri/".rawurlencode($this->getExperienceUri());
-    $rawexperience = $fusekiAPIservice->getUri($api_url,$endpoint_experience);
+    $rawexperience = $fusekiAPIservice->getUri($this->getExperienceUri());
     $objexperience = json_decode($rawexperience);
     $experience = NULL;
     if ($objexperience->isSuccessful) {
@@ -69,8 +51,7 @@ class ManageResponseOptionsForm extends FormBase {
     }
 
     // RETRIEVE RESPONSE OPTIONS BY EXPERIENCE
-    $endpoint_responseoption = "/sirapi/api/responseoption/byexperience/".rawurlencode($this->getExperienceUri());
-    $responseoption_list = $fusekiAPIservice->responseoptionList($api_url,$endpoint_responseoption);
+    $responseoption_list = $fusekiAPIservice->responseoptionList($this->getExperienceUri());
     $obj = json_decode($responseoption_list);
     $responseoptions = [];
     if ($obj->isSuccessful) {
@@ -187,9 +168,6 @@ class ManageResponseOptionsForm extends FormBase {
       }
     }
 
-    $config = $this->config(static::CONFIGNAME);     
-    $api_url = $config->get("api_url");
-
     // ADD RESPONSE OPTION
     if ($button_name === 'add_responseoption') {
       $url = Url::fromRoute('sir.add_responseoption');
@@ -217,8 +195,8 @@ class ManageResponseOptionsForm extends FormBase {
         \Drupal::messenger()->addMessage(t("At least one response option needs to be selected to be deleted."));      
       } else {
         foreach($rows as $uri) {
-          $uriEncoded = rawurlencode($uri);
-          $this->deleteResponseOption($api_url,"/sirapi/api/responseoption/delete/".$uriEncoded,[]);  
+          $fusekiAPIservice = \Drupal::service('sir.api_connector');
+          $fusekiAPIservice->responseoptionDel($uri);
         }
         \Drupal::messenger()->addMessage(t("Selected response option(s) has/have been deleted successfully."));      
       }
@@ -231,10 +209,4 @@ class ManageResponseOptionsForm extends FormBase {
     }  
   }
 
-  public function deleteResponseOption($api_url,$endpoint,$data){
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $fusekiAPIservice->responseoptionDel($api_url,$endpoint,$data);
-    return true;
-  }
-  
 }

@@ -9,11 +9,6 @@ use Drupal\Core\Routing\TrustedRedirectResponse;
 
 class EditAttachmentForm extends FormBase {
 
-    /**
-   * Settings Variable.
-   */
-  Const CONFIGNAME = "sir.settings";
-
   protected $attachmentUri;
 
   protected $attachment;
@@ -42,16 +37,6 @@ class EditAttachmentForm extends FormBase {
   }
 
   /**
-     * {@inheritdoc}
-     */
-
-     protected function getEditableConfigNames() {
-      return [
-          static::CONFIGNAME,
-      ];
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $attachmenturi = NULL) {
@@ -59,12 +44,8 @@ class EditAttachmentForm extends FormBase {
     $uri_decode=base64_decode($uri);
     $this->setAttachmentUri($uri_decode);
 
-    $config = $this->config(static::CONFIGNAME);           
-    $api_url = $config->get("api_url");
-    $endpoint = "/sirapi/api/uri/".rawurlencode($this->getAttachmentUri());
-
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $rawresponse = $fusekiAPIservice->getUri($api_url,$endpoint);
+    $rawresponse = $fusekiAPIservice->getUri($this->getAttachmentUri());
     $obj = json_decode($rawresponse);
 
     $content = "";
@@ -174,7 +155,7 @@ class EditAttachmentForm extends FormBase {
     } 
 
     if ($button_name === 'new_detector') {
-      $url = Url::fromRoute('sir.add_detector');
+      $url = Url::fromRoute('sir.add_attachment_detector');
       $url->setRouteParameter('attachmenturi', base64_encode($this->getAttachmentUri()));
       $form_state->setRedirectUrl($url);
       return;

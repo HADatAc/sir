@@ -6,6 +6,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\Core\Routing\TrustedRedirectResponse;
+use Drupal\sir\Entity\Tables;
 
 class AddDetectorForm extends FormBase {
 
@@ -13,26 +14,6 @@ class AddDetectorForm extends FormBase {
    * Settings Variable.
    */
   Const CONFIGNAME = "sir.settings";
-
-  protected $attachmentUri;
-
-  protected $attachment;
-
-  public function getAttachmentUri() {
-    return $this->attachmentUri;
-  }
-
-  public function getAttachment() {
-    return $this->attachment;
-  }
-
-  public function setAttachmentUri($uri) {
-    return $this->attachmentUri = $uri; 
-  }
-
-  public function setAttachment($att) {
-    return $this->attachment = $att; 
-  }
 
   /**
    * {@inheritdoc}
@@ -54,29 +35,15 @@ class AddDetectorForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $attachmenturi = NULL) {
-    $uri=$attachmenturi ?? 'default';
-    $uri_decode=base64_decode($uri);
-    $this->setAttachmentUri($uri_decode);
-
+  public function buildForm(array $form, FormStateInterface $form_state, $sourcedetectoruri = NULL) {
     $config = $this->config(static::CONFIGNAME);           
-    $api_url = $config->get("api_url");
-    $endpoint = "/sirapi/api/uri/".rawurlencode($this->getAttachmentUri());
-
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $rawresponse = $fusekiAPIservice->getUri($api_url,$endpoint);
-    $obj = json_decode($rawresponse);
+    $api_url = $config->get("api_url");
 
-    if ($obj->isSuccessful) {
-      $this->setAttachment($obj->body);
-    }
+    $tables = new Tables;
+    $languages = $tables->getLanguages();
+    $derivations = array(t('Original'), t('Translation'), t('Generalization'), t('Specialization'));
 
-    //$form['detector_attachment_uri'] = [
-    //  '#type' => 'textfield',
-    //  '#title' => t('Attachment URI'),
-    //  '#value' => $this->getAttachmentUri(),
-    //  '#disabled' => TRUE,
-    //];
     $form['detector_content'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Content'),
@@ -87,8 +54,10 @@ class AddDetectorForm extends FormBase {
       '#autocomplete_route_name' => 'sir.detector_experience_autocomplete',
     ];
     $form['detector_language'] = [
-      '#type' => 'textfield',
+      '#type' => 'select',
       '#title' => $this->t('Language'),
+      '#options' => $languages,
+      '#default_value' => 'en',
     ];
     $form['detector_version'] = [
       '#type' => 'textfield',
@@ -97,6 +66,19 @@ class AddDetectorForm extends FormBase {
     $form['detector_description'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
+    ];
+    $form['detector_was_derived_from'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Was Derived From'),
+      '#default_value' => '',
+      '#disabled' => TRUE,
+    ];
+    $form['detector_was_derived_by'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Was Derived By'),
+      '#options' => $derivations,
+      '#default_value' => t('Original'),
+      '#disabled' => TRUE,
     ];
     $form['save_submit'] = [
       '#type' => 'submit',
@@ -144,11 +126,10 @@ class AddDetectorForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $url = Url::fromRoute('sir.edit_attachment');
-      $url->setRouteParameter('attachmenturi', base64_encode($this->getAttachmentUri()));
+      $url = Url::fromRoute('sir.manage_detectors');
       $form_state->setRedirectUrl($url);
       return;
-    } 
+  } 
 
     try{
       $config = $this->config(static::CONFIGNAME);     
@@ -185,21 +166,9 @@ class AddDetectorForm extends FormBase {
       $dataE = rawurlencode($datap);
       $newDetector = $this->addDetector($api_url,"/sirapi/api/detector/create/".$dataE,$data);
 
-      // IF IN THE CONTEXT OF AN EXISTING ATTACHMENT, ATTACH THE NEW DETECTOR TO THE ATTACHMENT
-      $attachment = $this->getAttachment();
-      if ($attachment == null) {
-        \Drupal::messenger()->addMessage(t("Detector has been added successfully."));
-      } else {
-        $uriEncoded = rawurlencode("http://hadatac.org/kb/test/Detector".$iid);
-        $instrUriEncoded = rawurlencode($this->getAttachment()->belongsTo);
-        $priorityEncoded = rawurlencode($this->getAttachment()->hasPriority);
-        $this->detectorAttach($api_url,"/sirapi/api/detector/attach/".$uriEncoded."/".$instrUriEncoded."/".$priorityEncoded,[]);
-        \Drupal::messenger()->addMessage(t("Detector [" . "http://hadatac.org/kb/test/Detector".$iid."] has been added and attached to intrument [" . $this->getAttachment()->belongsTo . "] successfully."));
-      }    
-
-      $url = Url::fromRoute('sir.edit_attachment');
-      $url->setRouteParameter('attachmenturi', base64_encode($this->getAttachmentUri()));
+      $url = Url::fromRoute('sir.manage_detectors');
       $form_state->setRedirectUrl($url);
+      return;
 
     }catch(\Exception $e){
       \Drupal::messenger()->addMessage(t("An error occurred while adding the Detector: ".$e->getMessage()));
@@ -218,16 +187,6 @@ class AddDetectorForm extends FormBase {
     }
     return [];
   }
-
-  public function detectorAttach($api_url,$endpoint,$data){
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $newAttachment = $fusekiAPIservice->detectorAttach($api_url,$endpoint,$data);
-    if(!empty($newAttachment)){
-      return $newAttachment;
-    }
-    return [];
-  }
-
 
 
 }

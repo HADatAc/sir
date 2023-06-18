@@ -6,13 +6,9 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\Core\Routing\TrustedRedirectResponse;
+use Drupal\sir\Entity\Tables;
 
 class EditInstrumentForm extends FormBase {
-
-    /**
-   * Settings Variable.
-   */
-  Const CONFIGNAME = "sir.settings";
 
   protected $instrumentUri;
 
@@ -42,16 +38,6 @@ class EditInstrumentForm extends FormBase {
   }
 
   /**
-     * {@inheritdoc}
-     */
-
-     protected function getEditableConfigNames() {
-      return [
-          static::CONFIGNAME,
-      ];
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $instrumenturi = NULL) {
@@ -59,17 +45,15 @@ class EditInstrumentForm extends FormBase {
     $uri_decode=base64_decode($uri);
     $this->setInstrumentUri($uri_decode);
 
-    $config = $this->config(static::CONFIGNAME);           
-    $api_url = $config->get("api_url");
-    $endpoint =  "/sirapi/api/uri/".rawurlencode($this->getInstrumentUri());
+    $tables = new Tables;
+    $languages = $tables->getLanguages();
 
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $rawresponse = $fusekiAPIservice->getUri($api_url,$endpoint);
+    $rawresponse = $fusekiAPIservice->getUri($this->getInstrumentUri());
     $obj = json_decode($rawresponse);
     
     if ($obj->isSuccessful) {
       $this->setInstrument($obj->body);
-      #dpm($this->getInstrument());
     } else {
       \Drupal::messenger()->addMessage(t("Failed to retrieve Instrument."));
       $url = Url::fromRoute('sir.manage_instruments');
@@ -92,8 +76,9 @@ class EditInstrumentForm extends FormBase {
       '#default_value' => $this->getInstrument()->hasInstruction,
     ];
     $form['instrument_language'] = [
-      '#type' => 'textfield',
+      '#type' => 'select',
       '#title' => $this->t('Language'),
+      '#options' => $languages,
       '#default_value' => $this->getInstrument()->hasLanguage,
     ];
     $form['instrument_version'] = [

@@ -6,6 +6,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\Core\Routing\TrustedRedirectResponse;
+use Drupal\sir\Entity\Tables;
 
 class AddInstrumentForm extends FormBase {
 
@@ -36,6 +37,9 @@ class AddInstrumentForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
 
+    $tables = new Tables;
+    $languages = $tables->getLanguages();
+    //dpm($languages);
     $form['instrument_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name'),
@@ -49,8 +53,10 @@ class AddInstrumentForm extends FormBase {
       '#title' => $this->t('Instructions'),
     ];
     $form['instrument_language'] = [
-      '#type' => 'textfield',
+      '#type' => 'select',
       '#title' => $this->t('Language'),
+      '#options' => $languages,
+      '#default_value' => 'en',
     ];
     $form['instrument_version'] = [
       '#type' => 'textfield',

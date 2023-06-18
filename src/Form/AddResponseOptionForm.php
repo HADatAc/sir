@@ -6,6 +6,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\Core\Routing\TrustedRedirectResponse;
+use Drupal\sir\Entity\Tables;
 
 class AddResponseOptionForm extends FormBase {
 
@@ -48,6 +49,8 @@ class AddResponseOptionForm extends FormBase {
     $uri=$experienceuri ?? 'default';
     $uri_decode=base64_decode($uri);
     $this->setExperienceUri($uri_decode);
+    $tables = new Tables;
+    $languages = $tables->getLanguages();
 
     $form['responseoption_experience'] = [
       '#type' => 'textfield',
@@ -64,8 +67,10 @@ class AddResponseOptionForm extends FormBase {
       '#title' => $this->t('Content'),
     ];
     $form['responseoption_language'] = [
-      '#type' => 'textfield',
+      '#type' => 'select',
       '#title' => $this->t('Language'),
+      '#options' => $languages,
+      '#default_value' => 'en',
     ];
     $form['responseoption_version'] = [
       '#type' => 'textfield',

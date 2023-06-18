@@ -137,7 +137,7 @@ sir.attachment_detector_autocomplete:
 # Detector "Item" CRUD options
 
 sir.manage_detectors:
-  path: 'sir/manage/detector/{instrumenturi}'
+  path: 'sir/manage/detector'
   defaults:
     _form: '\Drupal\sir\Form\ManageDetectorsForm'
     _title: 'Manage Items'    
@@ -148,9 +148,20 @@ sir.manage_detectors:
     no_cache: 'TRUE'
 
 sir.add_detector:
-  path: 'sir/manage/adddetector/{attachmenturi}'
+  path: 'sir/manage/adddetector'
   defaults:
     _form: '\Drupal\sir\Form\AddDetectorForm'
+    _title: 'Add Item'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+sir.add_attachment_detector:
+  path: 'sir/manage/addattachdetector/{attachmenturi}'
+  defaults:
+    _form: '\Drupal\sir\Form\AddAttachmentDetectorForm'
     _title: 'Add Item'    
   requirements:
     _permission: 'access content'

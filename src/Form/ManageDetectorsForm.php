@@ -5,6 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\core\Url;
+use Drupal\sir\Entity\Tables;
 
 class ManageDetectorsForm extends FormBase {
 
@@ -12,16 +13,6 @@ class ManageDetectorsForm extends FormBase {
    * Settings Variable.
    */
   Const CONFIGNAME = "sir.settings";
-
-  protected $instrumentUri;
-
-  public function getInstrumentUri() {
-    return $this->instrumentUri;
-  }
-
-  public function setInstrumentUri($uri) {
-    return $this->instrumentUri = $uri; 
-  }
 
   /**
    * {@inheritdoc}
@@ -43,14 +34,9 @@ class ManageDetectorsForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $instrumenturi = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state) {
 
-    # GET CONTENT
-
-    $uri=$instrumenturi ?? 'default';
-    $uri_decode=base64_decode($uri);
-    $this->setInstrumentUri($uri_decode);
-
+    // GET CONTENT
     $config = $this->config(static::CONFIGNAME);           
     $api_url = $config->get("api_url");
     $uemail = \Drupal::currentUser()->getEmail();
@@ -58,30 +44,26 @@ class ManageDetectorsForm extends FormBase {
     $user = \Drupal\user\Entity\User::load($uid);
     $name = $user->name->value;
 
-    // RETRIEVE INSTRUMENT BY URI
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $endpoint_instrument = "/sirapi/api/uri/".rawurlencode($this->getInstrumentUri());
-    $rawinstrument = $fusekiAPIservice->getUri($api_url,$endpoint_instrument);
-    $objinstrument = json_decode($rawinstrument);
-    $instrument = NULL;
-    if ($objinstrument->isSuccessful) {
-      $instrument = $objinstrument->body;
-    }
+    // GET LANGUAGES
+    $tables = new Tables;
+    $languages = $tables->getLanguages();
 
-    // RETRIEVE DETECTORS BY INSTRUMENT
-    $endpoint_detector = "/sirapi/api/detector/byinstrument/".rawurlencode($this->getInstrumentUri());
+    // RETRIEVE DETECTORS BY MAINTAINER
+    $fusekiAPIservice = \Drupal::service('sir.api_connector');
+    $endpoint_detector = "/sirapi/api/detector/maintaineremail/".rawurlencode($uemail);
     $detector_list = $fusekiAPIservice->detectorList($api_url,$endpoint_detector);
-    $obj = json_decode($detector_list);
     $detectors = [];
-    if ($obj->isSuccessful) {
-      $detectors = $obj->body;
+    if ($detector_list != null) {
+      $obj = json_decode($detector_list);
+      if ($obj->isSuccessful) {
+        $detectors = $obj->body;
+      }
     }
     #dpm($detectors);
 
     # BUILD HEADER
 
     $header = [
-      'detector_priority' => t('Priority'),
       'detector_content' => t('Content'),
       'detector_language' => t('Language'),
       'detector_version' => t('Version'),
@@ -92,37 +74,27 @@ class ManageDetectorsForm extends FormBase {
     $output = array();
     foreach ($detectors as $detector) {
       $output[$detector->uri] = [
-        'detector_priority' => $detector->hasPriority,     
         'detector_content' => $detector->hasContent,     
-        'detector_language' => $detector->hasLanguage,
+        'detector_language' => $languages[$detector->hasLanguage],
         'detector_version' => $detector->hasVersion,
       ];
     }
 
     # PUT FORM TOGETHER
 
-    $form['scope'] = [
-      '#type' => 'item',
-      '#title' => t('<h3>Items of Instrument <font color="DarkGreen">' . $instrument->label . '</font></h3>'),
-    ];
     $form['subtitle'] = [
       '#type' => 'item',
       '#title' => t('<h4>Items maintained by <font color="DarkGreen">' . $name . ' (' . $uemail . ')</font></h4>'),
     ];
     $form['add_detector'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Add Item'),
+      '#value' => $this->t('Add New Original Item'),
       '#name' => 'add_detector',
     ];
-    $form['reuse_detector'] = [
+    $form['derive_detector'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Reuse Existing Item'),
-      '#name' => 'reuse_detector',
-    ];
-    $form['translate_detector'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Translate Existing Item'),
-      '#name' => 'translate_detector',
+      '#value' => $this->t('Derive New Item From Selected Item'),
+      '#name' => 'derived_detector',
     ];
     $form['edit_selected_detector'] = [
       '#type' => 'submit',
@@ -133,6 +105,34 @@ class ManageDetectorsForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Delete Selected Items'),
       '#name' => 'delete_detector',
+    ];
+    $form['bottom_space1'] = [
+      '#type' => 'item',
+      '#title' => t('<br>'),
+    ];
+    $form['detector_label1'] = [
+      '#type' => 'label',
+      '#title' => t('Page 1 of 2&nbsp;&nbsp;&nbsp;'),
+    ];
+    $form['detector_first'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('First'),
+      '#name' => 'first',
+    ];
+    $form['detector_prev'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Previous'),
+      '#name' => 'prev',
+    ];
+    $form['detector_next'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Next'),
+      '#name' => 'next',
+    ];
+    $form['detector_last'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Last'),
+      '#name' => 'last',
     ];
     $form['detector_table'] = [
       '#type' => 'tableselect',
@@ -155,7 +155,7 @@ class ManageDetectorsForm extends FormBase {
       '#value' => $this->t('Back'),
       '#name' => 'back',
     ];
-    $form['bottom_space'] = [
+    $form['bottom_space2'] = [
       '#type' => 'item',
       '#title' => t('<br><br>'),
     ];
@@ -197,7 +197,6 @@ class ManageDetectorsForm extends FormBase {
     // ADD DETECTOR
     if ($button_name === 'add_detector') {
       $url = Url::fromRoute('sir.add_detector');
-      $url->setRouteParameter('instrumenturi', base64_encode($this->getInstrumentUri()));
       $form_state->setRedirectUrl($url);
     }  
 
@@ -222,7 +221,7 @@ class ManageDetectorsForm extends FormBase {
       } else {
         foreach($rows as $uri) {
           $uriEncoded = rawurlencode($uri);
-          $this->deleteResponseOption($api_url,"/sirapi/api/detector/delete/".$uriEncoded,[]);  
+          $this->deleteDetector($api_url,"/sirapi/api/detector/delete/".$uriEncoded,[]);  
         }
         \Drupal::messenger()->addMessage(t("Selected item(s) has/have been deleted successfully."));      
       }
@@ -235,7 +234,7 @@ class ManageDetectorsForm extends FormBase {
     }  
   }
 
-  public function deleteResponseOption($api_url,$endpoint,$data){
+  public function deleteDetector($api_url,$endpoint,$data){
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
     $fusekiAPIservice->detectorDel($api_url,$endpoint,$data);
     return true;

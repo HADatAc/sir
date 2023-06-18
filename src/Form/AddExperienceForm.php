@@ -6,6 +6,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\Core\Routing\TrustedRedirectResponse;
+use Drupal\sir\Entity\Tables;
 
 class AddExperienceForm extends FormBase {
 
@@ -25,13 +26,18 @@ class AddExperienceForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+    $tables = new Tables;
+    $languages = $tables->getLanguages();
     $form['experience_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name'),
     ];
     $form['experience_language'] = [
-      '#type' => 'textfield',
+      '#type' => 'select',
       '#title' => $this->t('Language'),
+      '#options' => $languages,
+      '#default_value' => 'en',
+
     ];
     $form['experience_version'] = [
       '#type' => 'textfield',
