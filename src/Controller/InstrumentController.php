@@ -64,11 +64,10 @@ class InstrumentController extends ControllerBase{
     ];
   }
 
-    public function listInstruments($api_url,$endpoint){
+    public function listInstruments(){
       /** @var \FusekiAPI$fusekiAPIservice */
       $fusekiAPIservice = \Drupal::service('sir.api_connector');
-
-      $instrument_list = $fusekiAPIservice->instrumentsList($api_url,$endpoint);
+      $instrument_list = $fusekiAPIservice->instrumentListAll();
       if(!empty($instrument_list)){
         return $instrument_list;
       }
@@ -143,7 +142,11 @@ class InstrumentController extends ControllerBase{
           '<td>'.$instrument->label.'</td>'.
           '<td>'.$instrument->hasLanguage.'</td>'.
           '<td>'.$instrument->hasVersion.'</td>'.
-          '<td><a href="'.$root_url.'/sir/public/downloadinstrument/plain/'.rawurlencode(rawurlencode($instrument->uri)).'" target="_blank">TXT</a> <a href="'.$root_url.'/sir/public/downloadinstrument/html/'.rawurlencode(rawurlencode($instrument->uri)).'" target="_blank">HTML</a> PDF</td>'.
+          '<td>'.
+            '<a href="'.$root_url.'/sir/public/downloadinstrument/plain/'.rawurlencode(rawurlencode($instrument->uri)).'" target="_blank">TXT</a> '.
+            '<a href="'.$root_url.'/sir/public/downloadinstrument/html/'.rawurlencode(rawurlencode($instrument->uri)).'" target="_blank">HTML</a> '.
+            '<a href="'.$root_url.'/sir/public/downloadinstrument/pdf/'.rawurlencode(rawurlencode($instrument->uri)).'" target="_blank">PDF</a> '.
+          '</td>'.
           '<td>RDF FHIR REDCAP</td>'.
           '</tr>';
         }
@@ -190,36 +193,52 @@ class InstrumentController extends ControllerBase{
       return new JsonResponse([]);
     }
   
-  
     public function download($type,$instrument) {
-
-      $config = $this->config(static::CONFIGNAME);           
-      $api_url = $config->get("api_url");     
-      $endpoint = "/sirapi/api/instrument/totext/".$type."/".rawurlencode($instrument);
-
+      //\Drupal::messenger()->addMessage(t("Type: [".$type."]"));
+      //\Drupal::messenger()->addMessage(t("Instrument: [".$instrumentUri."]"));
       $fusekiAPIservice = \Drupal::service('sir.api_connector');
-
-      $instrument_list = $fusekiAPIservice->instrumentsList($api_url, $endpoint);
-      if (!empty($instrument_list)) {
-        $content = (string) $instrument_list;
-        $response = new Response($content);
+      $instrument_list = $fusekiAPIservice->instrumentRendering($type, $instrument);
+      if ($type == 'pdf') {
+        $pdfFilePath = 'instrument.pdf';
+        $response = new Response();
+        $response->headers->set('Content-Type', 'application/pdf');
+        $response->headers->set('Content-Disposition', 'attachment; filename="' . basename($pdfFilePath) . '"');
+        $response->setContent($instrument_list);
         return $response;
       }
-    
+      if (!empty($instrument_list)) {
+        //$content = (string) $instrument_list;
+        $response = new Response($instrument_list);
+        return $response;
+      }
       return new Response();
-      
+
+      /*
+      $fusekiAPIservice = \Drupal::service('sir.api_connector');
+      $instrument_list = $fusekiAPIservice->instrumentRendering($type, $instrumentUri);
+      if ($type == 'pdf') {
+        $pdfFilePath = 'instrument.pdf';
+        $response = new Response();
+        $response->headers->set('Content-Type', 'application/pdf');
+        $response->headers->set('Content-Disposition', 'attachment; filename="' . basename($pdfFilePath) . '"');
+        $response->setContent($$instrument_list);
+        return $response;
+      }
+      if (!empty($instrument_list)) {
+        //$content = (string) $instrument_list;
+        $response = new Response($instrument_list);
+        return $response;
+      }
+      return new Response();
+      */
     }
 
     private function sirRepoVersion() {
 
       $content = [];
-      $config = $this->config(static::CONFIGNAME);           
-      $api_url = $config->get("api_url");  
-      $endpoint = "/sirapi/api/repo";
-
       $fusekiAPIservice = \Drupal::service('sir.api_connector');
-
-      $sirRepoVersion = $fusekiAPIservice->instrumentsList($api_url, $endpoint);
+      $sirRepoVersion = $fusekiAPIservice->repoInfo();
+      //dpm($sirRepoVersion);
       if (!empty($sirRepoVersion)) {
         $content = json_decode($sirRepoVersion);
         return $content;

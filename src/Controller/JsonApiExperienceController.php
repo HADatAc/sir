@@ -14,12 +14,6 @@ use Drupal\Component\Utility\Xss;
 class JsonApiExperienceController extends ControllerBase{
 
   /**
-   * Settings Variable.
-   */
-  Const CONFIGNAME = "sir.settings";
-
-
-  /**
    * @return JsonResponse
    */
   public function handleAutocomplete(Request $request) {
@@ -28,13 +22,9 @@ class JsonApiExperienceController extends ControllerBase{
     if (!$input) {
       return new JsonResponse($results);
     }
-    $input = Xss::filter($input);
-
-    $config = $this->config(static::CONFIGNAME);           
-    $api_url = $config->get("api_url");
-    $endpoint = "/sirapi/api/experience/keyword/".rawurlencode($input);
+    $keyword = Xss::filter($input);
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $experience_list = $fusekiAPIservice->experiencesList($api_url,$endpoint);
+    $experience_list = $fusekiAPIservice->experienceListByKeyword($keyword);
     $obj = json_decode($experience_list);
     $experiences = [];
     if ($obj->isSuccessful) {
@@ -42,8 +32,7 @@ class JsonApiExperienceController extends ControllerBase{
     }
     foreach ($experiences as $experience) {
       $results[] = [
-        'value' => $experience->uri,
-        #'label' => $experience->label.' ('.$experience->uri.')',
+        'value' => $experience->label . ' [' . $experience->uri . ']',
         'label' => $experience->label,
       ];
     }

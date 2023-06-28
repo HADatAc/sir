@@ -120,16 +120,16 @@ class ManageAttachmentsForm extends FormBase {
       '#header' => $header,
       '#options' => $output,
       '#empty' => t('No response options found'),
-      '#ajax' => [
-        'callback' => '::attachmentAjaxCallback', 
-        'disable-refocus' => FALSE, 
-        'event' => 'change',
-        'wrapper' => 'edit-output', 
-        'progress' => [
-          'type' => 'throbber',
-          'message' => $this->t('Verifying entry...'),
-        ],
-      ]    
+      //'#ajax' => [
+      //  'callback' => '::attachmentAjaxCallback', 
+      //  'disable-refocus' => FALSE, 
+      //  'event' => 'change',
+      //  'wrapper' => 'edit-output', 
+      //  'progress' => [
+      //    'type' => 'throbber',
+      //    'message' => $this->t('Verifying entry...'),
+      //  ],
+      //]    
     ];
     $form['submit'] = [
       '#type' => 'submit',

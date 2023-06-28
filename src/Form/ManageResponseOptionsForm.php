@@ -5,6 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\core\Url;
+use Drupal\sir\Entity\Tables;
 
 class ManageResponseOptionsForm extends FormBase {
 
@@ -31,15 +32,17 @@ class ManageResponseOptionsForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state, $experienceuri = NULL) {
 
     # GET CONTENT
-
     $uri=$experienceuri ?? 'default';
     $uri_decode=base64_decode($uri);
     $this->setExperienceUri($uri_decode);
 
-    $uemail = \Drupal::currentUser()->getEmail();
+    $useremail = \Drupal::currentUser()->getEmail();
     $uid = \Drupal::currentUser()->id();
     $user = \Drupal\user\Entity\User::load($uid);
     $name = $user->name->value;
+
+    $tables = new Tables;
+    $languages = $tables->getLanguages();
 
     // RETRIEVE EXPERIENCE BY URI
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
@@ -76,7 +79,7 @@ class ManageResponseOptionsForm extends FormBase {
       $output[$responseoption->uri] = [
         'responseoption_priority' => $responseoption->hasPriority,     
         'responseoption_content' => $responseoption->hasContent,     
-        'responseoption_language' => $responseoption->hasLanguage,
+        'responseoption_language' => $languages[$responseoption->hasLanguage],
         'responseoption_version' => $responseoption->hasVersion,
       ];
     }
@@ -89,7 +92,7 @@ class ManageResponseOptionsForm extends FormBase {
     ];
     $form['subtitle'] = [
       '#type' => 'item',
-      '#title' => t('<h4>Response Options maintained by <font color="DarkGreen">' . $name . ' (' . $uemail . ')</font></h4>'),
+      '#title' => t('<h4>Response Options maintained by <font color="DarkGreen">' . $name . ' (' . $useremail . ')</font></h4>'),
     ];
     $form['add_responseoption'] = [
       '#type' => 'submit',
@@ -116,16 +119,16 @@ class ManageResponseOptionsForm extends FormBase {
       '#header' => $header,
       '#options' => $output,
       '#empty' => t('No response options found'),
-      '#ajax' => [
-        'callback' => '::responseoptionAjaxCallback', 
-        'disable-refocus' => FALSE, 
-        'event' => 'change',
-        'wrapper' => 'edit-output', 
-        'progress' => [
-          'type' => 'throbber',
-          'message' => $this->t('Verifying entry...'),
-        ],
-      ]    
+      //'#ajax' => [
+      //  'callback' => '::responseoptionAjaxCallback', 
+      //  'disable-refocus' => FALSE, 
+      //  'event' => 'change',
+      //  'wrapper' => 'edit-output', 
+      //  'progress' => [
+      //    'type' => 'throbber',
+      //    'message' => $this->t('Verifying entry...'),
+      //  ],
+      //]    
     ];
     $form['submit'] = [
       '#type' => 'submit',

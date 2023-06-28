@@ -148,7 +148,7 @@ sir.manage_detectors:
     no_cache: 'TRUE'
 
 sir.add_detector:
-  path: 'sir/manage/adddetector'
+  path: 'sir/manage/adddetector/{sourcedetectoruri}/{attachmenturi}'
   defaults:
     _form: '\Drupal\sir\Form\AddDetectorForm'
     _title: 'Add Item'    
@@ -269,5 +269,17 @@ sir.admin_settings_custom:
     _permission: 'administer site configuration'
   options:
     _admin_route: TRUE
+    no_cache: 'TRUE'
+
+# About
+
+sir.about:
+  path: 'sir/about'
+  defaults:
+    _form: '\Drupal\sir\Form\About'
+    _title: 'SIR About'
+  requirements:
+    _permission: 'access content'
+  options:
     no_cache: 'TRUE'
 

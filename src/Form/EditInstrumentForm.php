@@ -5,8 +5,9 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\Core\Routing\TrustedRedirectResponse;
+use Drupal\sir\Constant;
 use Drupal\sir\Entity\Tables;
+use Drupal\sir\Vocabulary\VSTOI;
 
 class EditInstrumentForm extends FormBase {
 
@@ -47,6 +48,7 @@ class EditInstrumentForm extends FormBase {
 
     $tables = new Tables;
     $languages = $tables->getLanguages();
+    $informants = $tables->getInformants();
 
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
     $rawresponse = $fusekiAPIservice->getUri($this->getInstrumentUri());
@@ -60,6 +62,16 @@ class EditInstrumentForm extends FormBase {
       $form_state->setRedirectUrl($url);
     }
 
+    $hasInformant = Constant::DEFAULT_INFORMANT;
+    if ($this->getInstrument()->hasInformant != NULL && $this->getInstrument()->hasInformant != '') {
+      $hasInformant = $this->getInstrument()->hasInformant;
+    }
+
+    $hasLanguage = Constant::DEFAULT_LANGUAGE;
+    if ($this->getInstrument()->hasLanguage != NULL && $this->getInstrument()->hasLanguage != '') {
+      $hasLanguage = $this->getInstrument()->hasLanguage;
+    }
+
     $form['instrument_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name'),
@@ -70,6 +82,12 @@ class EditInstrumentForm extends FormBase {
       '#title' => $this->t('Abbreviation'),
       '#default_value' => $this->getInstrument()->hasShortName,
     ];
+    $form['instrument_informant'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Informant'),
+      '#options' => $informants,
+      '#default_value' => $hasInformant,
+    ];
     $form['instrument_instructions'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Instructions'),
@@ -79,7 +97,7 @@ class EditInstrumentForm extends FormBase {
       '#type' => 'select',
       '#title' => $this->t('Language'),
       '#options' => $languages,
-      '#default_value' => $this->getInstrument()->hasLanguage,
+      '#default_value' => $hasLanguage,
     ];
     $form['instrument_version'] = [
       '#type' => 'textfield',
@@ -90,6 +108,31 @@ class EditInstrumentForm extends FormBase {
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
       '#default_value' => $this->getInstrument()->comment,
+    ];
+    $form['instrument_date_field'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Date Field (Optional)'),
+      '#default_value' => $this->getInstrument()->hasDateField,
+    ];
+    $form['instrument_subject_id_field'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Subject ID Field (Optional)'),
+      '#default_value' => $this->getInstrument()->hasSubjectIDField,
+    ];
+    $form['instrument_subject_relationship_field'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Subject Relationship Field (Optional)'),
+      '#default_value' => $this->getInstrument()->hasSubjectRelationshipField,
+    ];
+    $form['instrument_page_number'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Page Number (Optional)'),
+      '#default_value' => $this->getInstrument()->hasPageNumber,
+    ];
+    $form['instrument_copyright_notice'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Copyright notice (Optional)'),
+      '#default_value' => $this->getInstrument()->hasCopyrightNotice,
     ];
     $form['update_submit'] = [
       '#type' => 'submit',
@@ -146,44 +189,30 @@ class EditInstrumentForm extends FormBase {
     } 
 
     try{
-      $config = $this->config(static::CONFIGNAME);     
-      $api_url = $config->get("api_url");
-      $repository_abbreviation = $config->get("repository_abbreviation");
-  
       $uid = \Drupal::currentUser()->id();
-      $uemail = \Drupal::currentUser()->getEmail();
+      $useremail = \Drupal::currentUser()->getEmail();
 
-      $data = [
-        'uri' => $this->getInstrumentUri(),
-        'typeUri' => 'http://hadatac.org/ont/vstoi#Questionnaire',
-        'hascoTypeUri' => 'http://hadatac.org/ont/vstoi#Instrument',
-        'label' => $form_state->getValue('instrument_name'),
-        'hasShortName' => $form_state->getValue('instrument_abbreviation'),
-        'hasInstruction' => $form_state->getValue('instrument_instructions'),
-        'hasLanguage' => $form_state->getValue('instrument_language'),
-        'hasVersion' => $form_state->getValue('instrument_version'),
-        'comment' => $form_state->getValue('instrument_description'),
-        'hasSIRMaintainerEmail' => $uemail, 
-      ];
-      
-      $datap = '{"uri":"'.$this->getInstrumentUri().'",'.
-        '"typeUri":"http://hadatac.org/ont/vstoi#Questionnaire",'.
-        '"hascoTypeUri":"http://hadatac.org/ont/vstoi#Instrument",'.
+      $instrumentJson = '{"uri":"'.$this->getInstrumentUri().'",'.
+        '"typeUri":"'.VSTOI::QUESTIONNAIRE.'",'.
+        '"hascoTypeUri":"'.VSTOI::INSTRUMENT.'",'.
         '"label":"'.$form_state->getValue('instrument_name').'",'.
         '"hasShortName":"'.$form_state->getValue('instrument_abbreviation').'",'.
+        '"hasInformant":"'.$form_state->getValue('instrument_informant').'",'.
         '"hasInstruction":"'.$form_state->getValue('instrument_instructions').'",'.
         '"hasLanguage":"'.$form_state->getValue('instrument_language').'",'.
         '"hasVersion":"'.$form_state->getValue('instrument_version').'",'.
         '"comment":"'.$form_state->getValue('instrument_description').'",'.
-        '"hasSIRMaintainerEmail":"'.$uemail.'"}';
-      $dataJ = json_encode($data);
-    
-      $dataE = rawurlencode($datap);
+        '"hasDateField":"'.$form_state->getValue('instrument_date_field').'",'.
+        '"hasSubjectIDField":"'.$form_state->getValue('instrument_subject_id_field').'",'.
+        '"hasSubjectRelationshipField":"'.$form_state->getValue('instrument_subject_relationship_field').'",'.
+        '"hasPageNumber":"'.$form_state->getValue('instrument_page_number').'",'.
+        '"hasCopyrightNotice":"'.$form_state->getValue('instrument_copyright_notice').'",'.
+        '"hasSIRMaintainerEmail":"'.$useremail.'"}';
 
       // UPDATE BY DELETING AND CREATING
-      $uriEncoded = rawurlencode($this->getInstrumentUri());
-      $this->deleteInstrument($api_url,"/sirapi/api/instrument/delete/".$uriEncoded,[]);    
-      $updatedInstrument = $this->addInstrument($api_url,"/sirapi/api/instrument/create/".$dataE,$data);
+      $fusekiAPIservice = \Drupal::service('sir.api_connector');
+      $fusekiAPIservice->instrumentDel($this->getInstrumentUri());
+      $newInstrument = $fusekiAPIservice->instrumentAdd($instrumentJson);
     
       \Drupal::messenger()->addMessage(t("Instrument has been updated successfully."));
       $url = Url::fromRoute('sir.manage_instruments');
@@ -196,22 +225,5 @@ class EditInstrumentForm extends FormBase {
     }
 
   }
-
-  public function addInstrument($api_url,$endpoint,$data){
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $newInstrument = $fusekiAPIservice->instrumentAdd($api_url,$endpoint,$data);
-    if(!empty($newInstrumentt)){
-      return $newInstrument;
-    }
-    return [];
-  }
-
-  public function deleteInstrument($api_url,$endpoint,$data){
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $fusekiAPIservice->instrumentDel($api_url,$endpoint,$data);
-    return true;
-  }
-  
-
 
 }

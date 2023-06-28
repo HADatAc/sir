@@ -12,26 +12,11 @@ use Drupal\sir\Entity\Tables;
 
 class ManageExperiencesForm extends FormBase {
 
-    /**
-   * Settings Variable.
-   */
-  Const CONFIGNAME = "sir.settings";
-
   /**
    * {@inheritdoc}
    */
   public function getFormId() {
     return 'manage_experiences_form';
-  }
-
-  /**
-     * {@inheritdoc}
-     */
-
-     protected function getEditableConfigNames() {
-      return [
-          static::CONFIGNAME,
-      ];
   }
 
   /**
@@ -41,19 +26,16 @@ class ManageExperiencesForm extends FormBase {
 
     # GET CONTENT
 
-    $config = $this->config(static::CONFIGNAME);           
-    $api_url = $config->get("api_url");
-    $uemail = \Drupal::currentUser()->getEmail();
+    $useremail = \Drupal::currentUser()->getEmail();
     $uid = \Drupal::currentUser()->id();
     $user = \Drupal\user\Entity\User::load($uid);
     $name = $user->name->value;
-    $endpoint = "/sirapi/api/experience/maintaineremail/".rawurlencode($uemail);
 
     $tables = new Tables;
     $languages = $tables->getLanguages();
     
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $experience_list = $fusekiAPIservice->experiencesList($api_url,$endpoint);
+    $experience_list = $fusekiAPIservice->experienceList($useremail);
     $obj = json_decode($experience_list);
     $experiences = [];
     if ($obj->isSuccessful) {
@@ -84,31 +66,27 @@ class ManageExperiencesForm extends FormBase {
 
     $form['subtitle'] = [
       '#type' => 'item',
-      '#title' => t('<h3>Experiences maintained by <font color="DarkGreen">' . $name . ' (' . $uemail . ')</font></h3>'),
+      '#title' => t('<h3>Experiences maintained by <font color="DarkGreen">' . $name . ' (' . $useremail . ')</font></h3>'),
     ];
     $form['add_experience'] = [
       '#type' => 'submit',
       '#value' => $this->t('Add Experience'),
       '#name' => 'add_experience',
-      #'#disabled' => FALSE,      
     ];
     $form['delete_selected_experiences'] = [
       '#type' => 'submit',
       '#value' => $this->t('Delete Selected Experiences'),
       '#name' => 'delete_experience',
-      #'#disabled' => TRUE,
     ];
     $form['edit_selected_experience'] = [
       '#type' => 'submit',
       '#value' => $this->t('Edit Selected Experience'),
       '#name' => 'edit_experience',
-      #'#disabled' => TRUE,      
     ];
     $form['manage_response_options'] = [
       '#type' => 'submit',
       '#value' => $this->t('Manage Response Options of Selected Experience'),
       '#name' => 'manage_response_options',
-      #'#disabled' => TRUE,
     ];
     $form['experience_table'] = [
       '#type' => 'tableselect',
@@ -116,15 +94,15 @@ class ManageExperiencesForm extends FormBase {
       '#options' => $output,
       '#js_select' => FALSE,
       '#empty' => t('No experiences found'),
-      '#ajax' => [
-        'callback' => '::experienceAjaxCallback', 
-        'disable-refocus' => FALSE, 
-        'event' => 'change',
-        'progress' => [
-          'type' => 'throbber',
-          'message' => $this->t('Verifying entry...'),
-        ],
-      ]    
+      //'#ajax' => [
+      //  'callback' => '::experienceAjaxCallback', 
+      //  'disable-refocus' => FALSE, 
+      //  'event' => 'change',
+      //  'progress' => [
+      //    'type' => 'throbber',
+      //    'message' => $this->t('Verifying entry...'),
+      //  ],
+      //]    
     ];
     $form['submit'] = [
       '#type' => 'submit',
@@ -220,11 +198,6 @@ class ManageExperiencesForm extends FormBase {
       }
     }
 
-    #dpm($rows);
-
-    $config = $this->config(static::CONFIGNAME);     
-    $api_url = $config->get("api_url");
-
     // ADD EXPERIENCE
     if ($button_name === 'add_experience') {
       $url = Url::fromRoute('sir.add_experience');
@@ -252,8 +225,8 @@ class ManageExperiencesForm extends FormBase {
         \Drupal::messenger()->addMessage(t("At least one experience needs to be selected to be deleted."));      
       } else {
         foreach($rows as $uri) {
-          $uriEncoded = rawurlencode($uri);
-          $this->deleteExperience($api_url,"/sirapi/api/experience/delete/".$uriEncoded,[]);  
+          $fusekiAPIservice = \Drupal::service('sir.api_connector');
+          $newExperience = $fusekiAPIservice->experienceDel($uri);
         }
         \Drupal::messenger()->addMessage(t("Selected experience(s) has/have been deleted successfully."));      
       }
@@ -283,10 +256,4 @@ class ManageExperiencesForm extends FormBase {
 
   }
 
-  public function deleteExperience($api_url,$endpoint,$data){
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $newExperience = $fusekiAPIservice->experienceDel($api_url,$endpoint,$data);
-    return true;
-  }
- 
 }

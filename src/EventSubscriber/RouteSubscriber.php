@@ -6,11 +6,8 @@ use Drupal\Core\Routing\RouteSubscriberBase;
 use Symfony\Component\Routing\RouteCollection;
 use Drupal\Core\Config\ConfigFactoryInterface;
 
-
 class RouteSubscriber extends RouteSubscriberBase {
 
-
- 
   /**
    * The config factory.
    *
@@ -27,7 +24,6 @@ class RouteSubscriber extends RouteSubscriberBase {
   public function __construct(ConfigFactoryInterface $config_factory) {
     $this->configFactory = $config_factory;
   }
-
 
   protected function alterRoutes(RouteCollection $collection) {
     

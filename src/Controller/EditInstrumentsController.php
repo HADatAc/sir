@@ -32,7 +32,7 @@ class EditInstrumentsController extends ControllerBase{
       $uemail = \Drupal::currentUser()->getEmail();
       $endpoint = "/sirapi/api/instrument/maintaineremail/".rawurlencode($uemail);
 
-      $this->listInstruments($api_url,$endpoint);
+      $this->listInstruments($uemail);
       $content = [];
       $root_url = \Drupal::request()->getBaseUrl();
       $content['instruments'] = $this->createInstrumentCard($api_url,$endpoint);
@@ -50,12 +50,11 @@ class EditInstrumentsController extends ControllerBase{
       ];
     }
 
-    public function listInstruments($api_url,$endpoint){
+    public function listInstruments($uemail){
       /** @var \FusekiAPI$fusekiAPIservice */
       $fusekiAPIservice = \Drupal::service('sir.api_connector');
 
-      $instrument_list = $fusekiAPIservice->instrumentsList
-      ($api_url,$endpoint);
+      $instrument_list = $fusekiAPIservice->instrumentList($uemail);
 
     
 

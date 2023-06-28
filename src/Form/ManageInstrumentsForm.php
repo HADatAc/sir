@@ -9,11 +9,6 @@ use Drupal\sir\Entity\Tables;
 
 class ManageInstrumentsForm extends FormBase {
 
-    /**
-   * Settings Variable.
-   */
-  Const CONFIGNAME = "sir.settings";
-
   /**
    * {@inheritdoc}
    */
@@ -22,35 +17,21 @@ class ManageInstrumentsForm extends FormBase {
   }
 
   /**
-     * {@inheritdoc}
-     */
-
-     protected function getEditableConfigNames() {
-      return [
-          static::CONFIGNAME,
-      ];
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
 
     # GET CONTENT
-
-    $config = $this->config(static::CONFIGNAME);           
-    $api_url = $config->get("api_url");
-    $uemail = \Drupal::currentUser()->getEmail();
+    $useremail = \Drupal::currentUser()->getEmail();
     $uid = \Drupal::currentUser()->id();
     $user = \Drupal\user\Entity\User::load($uid);
     $name = $user->name->value;
-    $endpoint = "/sirapi/api/instrument/maintaineremail/".rawurlencode($uemail);
 
     $tables = new Tables;
     $languages = $tables->getLanguages();
 
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $instrument_list = $fusekiAPIservice->instrumentsList($api_url,$endpoint);
+    $instrument_list = $fusekiAPIservice->instrumentList($useremail);
     $obj = json_decode($instrument_list);
     $instruments = [];
     if ($obj->isSuccessful) {
@@ -83,7 +64,7 @@ class ManageInstrumentsForm extends FormBase {
 
     $form['subtitle'] = [
       '#type' => 'item',
-      '#title' => t('<h3>instruments maintained by <font color="DarkGreen">' . $name . ' (' . $uemail . ')</font></h3>'),
+      '#title' => t('<h3>instruments maintained by <font color="DarkGreen">' . $name . ' (' . $useremail . ')</font></h3>'),
     ];
     $form['add_instrument'] = [
       '#type' => 'submit',
@@ -110,16 +91,16 @@ class ManageInstrumentsForm extends FormBase {
       '#header' => $header,
       '#options' => $output,
       '#empty' => t('No instruments found'),
-      '#ajax' => [
-        'callback' => '::instrumentAjaxCallback', 
-        'disable-refocus' => FALSE, 
-        'event' => 'change',
-        'wrapper' => 'edit-output', 
-        'progress' => [
-          'type' => 'throbber',
-          'message' => $this->t('Verifying entry...'),
-        ],
-      ]    
+      //'#ajax' => [
+      //  'callback' => '::instrumentAjaxCallback', 
+      //  'disable-refocus' => FALSE, 
+      //  'event' => 'change',
+      //  'wrapper' => 'edit-output', 
+      //  'progress' => [
+      //    'type' => 'throbber',
+      //    'message' => $this->t('Verifying entry...'),
+      //  ],
+      //]    
     ];
     $form['submit'] = [
       '#type' => 'submit',
@@ -169,9 +150,6 @@ class ManageInstrumentsForm extends FormBase {
 
     #dpm($rows);
 
-    $config = $this->config(static::CONFIGNAME);     
-    $api_url = $config->get("api_url");
-
     // ADD instrument
     if ($button_name === 'add_instrument') {
       $url = Url::fromRoute('sir.add_instrument');
@@ -196,9 +174,9 @@ class ManageInstrumentsForm extends FormBase {
       if (sizeof($rows) <= 0) {
         \Drupal::messenger()->addMessage(t("At least one instrument needs to be selected to be deleted."));      
       } else {
+        $fusekiAPIservice = \Drupal::service('sir.api_connector');
         foreach($rows as $uri) {
-          $uriEncoded = rawurlencode($uri);
-          $this->deleteinstrument($api_url,"/sirapi/api/instrument/delete/".$uriEncoded,[]);  
+          $fusekiAPIservice->instrumentDel($uri);
         }
         \Drupal::messenger()->addMessage(t("Selected instrument(s) has/have been deleted successfully."));      
       }
@@ -224,10 +202,4 @@ class ManageInstrumentsForm extends FormBase {
     }  
   }
 
-  public function deleteinstrument($api_url,$endpoint,$data){
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $newinstrument = $fusekiAPIservice->instrumentDel($api_url,$endpoint,$data);
-    return true;
-  }
- 
 }

@@ -5,15 +5,11 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\Core\Routing\TrustedRedirectResponse;
+use Drupal\sir\Constant;
 use Drupal\sir\Entity\Tables;
+use Drupal\sir\Vocabulary\VSTOI;
 
 class AddInstrumentForm extends FormBase {
-
-    /**
-   * Settings Variable.
-   */
-  Const CONFIGNAME = "sir.settings";
 
   /**
    * {@inheritdoc}
@@ -23,23 +19,14 @@ class AddInstrumentForm extends FormBase {
   }
 
   /**
-     * {@inheritdoc}
-     */
-
-     protected function getEditableConfigNames() {
-      return [
-          static::CONFIGNAME,
-      ];
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
 
     $tables = new Tables;
     $languages = $tables->getLanguages();
-    //dpm($languages);
+    $informants = $tables->getInformants();
+
     $form['instrument_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name'),
@@ -47,6 +34,12 @@ class AddInstrumentForm extends FormBase {
     $form['instrument_abbreviation'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Abbreviation'),
+    ];
+    $form['instrument_informant'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Informant'),
+      '#options' => $informants,
+      '#default_value' => Constant::DEFAULT_INFORMANT,
     ];
     $form['instrument_instructions'] = [
       '#type' => 'textarea',
@@ -56,7 +49,7 @@ class AddInstrumentForm extends FormBase {
       '#type' => 'select',
       '#title' => $this->t('Language'),
       '#options' => $languages,
-      '#default_value' => 'en',
+      '#default_value' => Constant::DEFAULT_LANGUAGE,
     ];
     $form['instrument_version'] = [
       '#type' => 'textfield',
@@ -65,6 +58,26 @@ class AddInstrumentForm extends FormBase {
     $form['instrument_description'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
+    ];
+    $form['instrument_date_field'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Date Field (Optional)'),
+    ];
+    $form['instrument_subject_id_field'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Subject ID Field (Optional)'),
+    ];
+    $form['instrument_subject_relationship_field'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Subject Relationship Field (Optional)'),
+    ];
+    $form['instrument_page_number'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Page Number (Optional)'),
+    ];
+    $form['instrument_copyright_notice'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Copyright notice (Optional)'),
     ];
     $form['save_submit'] = [
       '#type' => 'submit',
@@ -118,45 +131,30 @@ class AddInstrumentForm extends FormBase {
     } 
 
     try{
-      $config = $this->config(static::CONFIGNAME);     
-      $api_url = $config->get("api_url");
-      $repository_abbreviation = $config->get("repository_abbreviation");
-  
       $uid = \Drupal::currentUser()->id();
-      $uemail = \Drupal::currentUser()->getEmail();
+      $useremail = \Drupal::currentUser()->getEmail();
 
       $iid = time().rand(10000,99999).$uid;
       
-      $data = [
-        'uri' => 'http://hadatac.org/kb/test/Instrument'.$iid,
-        'typeUri' => 'http://hadatac.org/ont/vstoi#Questionnaire',
-        'hascoTypeUri' => 'http://hadatac.org/ont/vstoi#Instrument',
-        'label' => $form_state->getValue('instrument_name'),
-        'hasShortName' => $form_state->getValue('instrument_abbreviation'),
-        'hasInstruction' => $form_state->getValue('instrument_instructions'),
-        'hasLanguage' => $form_state->getValue('instrument_language'),
-        'hasVersion' => $form_state->getValue('instrument_version'),
-        'comment' => $form_state->getValue('instrument_description'),
-        'hasSIRMaintainerEmail' => $uemail, 
-      ];
-      
-      $datap = '{"uri":"http://hadatac.org/kb/test/Instrument'.$iid.'",'.
-        '"typeUri":"http://hadatac.org/ont/vstoi#Questionnaire",'.
-        '"hascoTypeUri":"http://hadatac.org/ont/vstoi#Instrument",'.
+      $instrumentJson = '{"uri":"http://hadatac.org/kb/test/Instrument'.$iid.'",'.
+        '"typeUri":"'.VSTOI::QUESTIONNAIRE.'",'.
+        '"hascoTypeUri":"'.VSTOI::INSTRUMENT.'",'.
         '"label":"'.$form_state->getValue('instrument_name').'",'.
         '"hasShortName":"'.$form_state->getValue('instrument_abbreviation').'",'.
+        '"hasInformant":"'.$form_state->getValue('instrument_informant').'",'.
         '"hasInstruction":"'.$form_state->getValue('instrument_instructions').'",'.
         '"hasLanguage":"'.$form_state->getValue('instrument_language').'",'.
         '"hasVersion":"'.$form_state->getValue('instrument_version').'",'.
         '"comment":"'.$form_state->getValue('instrument_description').'",'.
-        '"hasSIRMaintainerEmail":"'.$uemail.'"}';
+        '"hasDateField":"'.$form_state->getValue('instrument_date_field').'",'.
+        '"hasSubjectIDField":"'.$form_state->getValue('instrument_subject_id_field').'",'.
+        '"hasSubjectRelationshipField":"'.$form_state->getValue('instrument_subject_relationship_field').'",'.
+        '"hasPageNumber":"'.$form_state->getValue('instrument_page_number').'",'.
+        '"hasCopyrightNotice":"'.$form_state->getValue('instrument_copyright_notice').'",'.
+        '"hasSIRMaintainerEmail":"'.$useremail.'"}';
 
-      $dataJ = json_encode($data);
-    
-      $dataE = rawurlencode($datap);
-
-      $newinstrument = $this->addinstrument($api_url,"/sirapi/api/instrument/create/".$dataE,$data);
-    
+      $fusekiAPIservice = \Drupal::service('sir.api_connector');
+      $fusekiAPIservice->instrumentAdd($instrumentJson);    
       \Drupal::messenger()->addMessage(t("Instruction has been added successfully."));
       $url = Url::fromRoute('sir.manage_instruments');
       $form_state->setRedirectUrl($url);
@@ -167,15 +165,6 @@ class AddInstrumentForm extends FormBase {
       $form_state->setRedirectUrl($url);
     }
 
-  }
-
-  public function addinstrument($api_url,$endpoint,$data){
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $newinstrument = $fusekiAPIservice->instrumentAdd($api_url,$endpoint,$data);
-    if(!empty($newinstrumentt)){
-      return $newinstrument;
-    }
-    return [];
   }
 
 }

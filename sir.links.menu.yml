@@ -1,7 +1,26 @@
+sir.top_level:
+  title: SIR
+  description: Manage Reposiitory
+  route_name: sir.manage_instruments
+  menu_name: main
+  weight: 1
+  requirements:
+    _permission: 'access content'
+    
+sir.about:
+  title: About
+  description: About
+  route_name: sir.about
+  menu_name: main
+  weight: 2
+  requirements:
+    _permission: 'access content'
+
 sir.manage_instruments:
-  title: Questionnaires
+  title: Manage Questionnaires
   description: Manage Questionnaries
   route_name: sir.manage_instruments
+  parent: sir.top_level
   menu_name: main
   weight: 1
   requirements:
@@ -9,9 +28,10 @@ sir.manage_instruments:
     _role: 'authenticated'
 
 sir.manage_detectors :
-  title: Items 
+  title: Manage Items 
   description: Manage Items
   route_name: sir.manage_detectors
+  parent: sir.top_level
   menu_name: main
   weight: 2
   requirements:
@@ -19,9 +39,10 @@ sir.manage_detectors :
     _role: 'authenticated'
 
 sir.manage_experiences :
-  title: Experiences 
+  title: Manage Experiences 
   description: Manage experiences and their corresponding Response Options
   route_name: sir.manage_experiences
+  parent: sir.top_level
   menu_name: main
   weight: 3
   requirements:
@@ -29,9 +50,10 @@ sir.manage_experiences :
     _role: 'authenticated'
 
 sir.edit_semantics:
-  title: Semantics 
+  title: Manage Semantics 
   description: edit semantics of variables used in instruments
   route_name: sir.edit_semantics
+  parent: sir.top_level
   menu_name: main
   weight: 4
   requirements:
@@ -43,6 +65,7 @@ sir.admin_settings_link:
   description: SIR Settings
   menu_name: main 
   route_name: sir.admin_settings_custom
+  parent: sir.top_level
   weight: 5
   requirements:
     _permission: 'access content'

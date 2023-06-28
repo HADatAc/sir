@@ -1,8 +1,8 @@
 <?php
 
 namespace Drupal\sir\Entity;
-namespace Drupal\sir\Vocabulary\VSTOI;
 
+use Drupal\sir\Vocabulary\VSTOI;
 use Kint\Kint;
 
 class Detector {

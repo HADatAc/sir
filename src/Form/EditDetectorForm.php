@@ -7,6 +7,9 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\sir\Entity\Tables;
+use Drupal\sir\Constant;
+use Drupal\sir\Utils;
+use Drupal\sir\Vocabulary\VSTOI;
 
 class EditDetectorForm extends FormBase {
 
@@ -14,9 +17,7 @@ class EditDetectorForm extends FormBase {
 
   protected $detector;
 
-  protected $instrumentUri;
-
-  protected $priority;
+  protected $sourceDetector;
 
   public function getDetectorUri() {
     return $this->detectorUri;
@@ -34,6 +35,14 @@ class EditDetectorForm extends FormBase {
     return $this->detector = $obj; 
   }
 
+  public function getSourceDetector() {
+    return $this->sourceDetector;
+  }
+
+  public function setSourceDetector($obj) {
+    return $this->sourceDetector = $obj; 
+  }
+
   /**
    * {@inheritdoc}
    */
@@ -48,21 +57,33 @@ class EditDetectorForm extends FormBase {
     $uri=$detectoruri;
     $uri_decode=base64_decode($uri);
     $this->setDetectorUri($uri_decode);
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $rawresponse = $fusekiAPIservice->getUri($this->getDetectorUri());
-    $obj = json_decode($rawresponse);
-    if ($obj->isSuccessful) {
-      $this->setDetector($obj->body);
-      #dpm($this->getDetector());
-    } else {
-      \Drupal::messenger()->addMessage(t("Failed to retrieve Detector."));
-      $url = Url::fromRoute('sir.manage_detectors');
-      $form_state->setRedirectUrl($url);
-    }
 
     $tables = new Tables;
     $languages = $tables->getLanguages();
-    $derivations = array(t('Original'), t('Translation'), t('Generalization'), t('Specialization'));
+    $derivations = $tables->getGenerationActivities();
+
+    $sourceContent = '';
+    $experienceLabel = '';
+    $wasGeneratedBy = Constant::DEFAULT_WAS_GENERATED_BY;
+    $this->setDetector($this->retrieveDetector($this->getDetectorUri()));
+    if ($this->getDetector() == NULL) {
+      \Drupal::messenger()->addMessage(t("Failed to retrieve Detector."));
+      $url = Url::fromRoute('sir.manage_detectors');
+      $form_state->setRedirectUrl($url);
+    } else {
+      $wasGeneratedBy = $this->getDetector()->wasGeneratedBy;
+      if ($this->getDetector()->wasDerivedFrom != NULL) {
+        $this->setSourceDetector($this->retrieveDetector($this->getDetector()->wasDerivedFrom));
+        if ($this->getSourceDetector() != NULL && $this->getSourceDetector()->hasContent != NULL) { 
+          $sourceContent = $this->getSourceDetector()->hasContent;
+        }
+      }
+      if ($this->getDetector()->experience != NULL) {
+        $experienceLabel = $this->getDetector()->experience->label . ' [' . $this->getDetector()->experience->uri . ']';
+      }
+    }
+
+    //dpm($this->getDetector());
 
     $form['detector_content'] = [
       '#type' => 'textarea',
@@ -72,7 +93,7 @@ class EditDetectorForm extends FormBase {
     $form['detector_experience'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Experience'),
-      '#default_value' => $this->getDetector()->hasExperience,
+      '#default_value' => $experienceLabel,
       '#autocomplete_route_name' => 'sir.detector_experience_autocomplete',
     ];
     $form['detector_language'] = [
@@ -94,14 +115,14 @@ class EditDetectorForm extends FormBase {
     $form['detector_was_derived_from'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Was Derived From'),
-      '#default_value' => '',
+      '#default_value' => $sourceContent,
       '#disabled' => TRUE,
     ];
-    $form['detector_was_derived_by'] = [
+    $form['detector_was_generated_by'] = [
       '#type' => 'select',
       '#title' => $this->t('Was Derived By'),
       '#options' => $derivations,
-      '#default_value' => '',
+      '#default_value' => $wasGeneratedBy,
     ];
     $form['update_submit'] = [
       '#type' => 'submit',
@@ -155,44 +176,38 @@ class EditDetectorForm extends FormBase {
     } 
 
     try{
-      $config = $this->config(static::CONFIGNAME);     
-      $api_url = $config->get("api_url");
-      $repository_abbreviation = $config->get("repository_abbreviation");
   
       $uid = \Drupal::currentUser()->id();
-      $uemail = \Drupal::currentUser()->getEmail();
+      $useremail = \Drupal::currentUser()->getEmail();
 
-      $data = [
-        'uri' => $this->getDetector()->uri,
-        'typeUri' => 'http://hadatac.org/ont/vstoi#Detector',
-        'hascoTypeUri' => 'http://hadatac.org/ont/vstoi#Detector',
-        'hasContent' => $form_state->getValue('detector_content'),
-        'hasExperience' => $form_state->getValue('detector_experience'),
-        'hasLanguage' => $form_state->getValue('detector_language'),
-        'hasVersion' => $form_state->getValue('detector_version'),
-        'comment' => $form_state->getValue('detector_description'),
-        'hasSIRMaintainerEmail' => $uemail, 
-      ];
-      
-      $datap = '{"uri":"'. $this->getDetector()->uri .'",'.
-        '"typeUri":"http://hadatac.org/ont/vstoi#Detector",'.
-        '"hascoTypeUri":"http://hadatac.org/ont/vstoi#Detector",'.
+      $hasExperience = '';
+      if ($form_state->getValue('detector_experience') != NULL && $form_state->getValue('detector_experience') != '') {
+        $hasExperience = Utils::uriFromAutocomplete($form_state->getValue('detector_experience'));
+      } 
+
+      $wasDerivedFrom = '';
+      if ($this->getSourceDetector() === NULL || $this->getSourceDetector()->uri === NULL) {
+        $wasDerivedFrom = 'null';
+      } else {
+        $wasDerivedFrom = $this->getSourceDetector()->uri;
+      } 
+
+      $detectorJson = '{"uri":"'.$this->getDetector()->uri.'",'.
+        '"typeUri":"'.VSTOI::DETECTOR.'",'.
+        '"hascoTypeUri":"'.VSTOI::DETECTOR.'",'.
         '"hasContent":"'.$form_state->getValue('detector_content').'",'.
-        '"hasExperience":"'.$form_state->getValue('detector_experience').'",'.
+        '"hasExperience":"'.$hasExperience.'",'.
         '"hasLanguage":"'.$form_state->getValue('detector_language').'",'.
         '"hasVersion":"'.$form_state->getValue('detector_version').'",'.
         '"comment":"'.$form_state->getValue('detector_description').'",'.
-        '"hasSIRMaintainerEmail":"'.$uemail.'"}';
-
-      $dataJ = json_encode($data);
-    
-      $dataE = rawurlencode($datap);
+        '"wasDerivedFrom":"'.$wasDerivedFrom.'",'.
+        '"wasGeneratedBy":"'.$form_state->getValue('detector_was_generated_by').'",'.
+        '"hasSIRMaintainerEmail":"'.$useremail.'"}';
 
       // UPDATE BY DELETING AND CREATING
-      $uriEncoded = rawurlencode($this->getDetectorUri());
-      $this->deleteDetector($api_url,"/sirapi/api/detector/delete/".$uriEncoded,[]);    
-      $updatedDetector = $this->addDetector($api_url,"/sirapi/api/detector/create/".$dataE,$data);
-    
+      $fusekiAPIservice = \Drupal::service('sir.api_connector');
+      $fusekiAPIservice->detectorDel($this->getDetectorUri());
+      $updatedDetector = $fusekiAPIservice->detectorAdd($detectorJson);    
       \Drupal::messenger()->addMessage(t("Detector has been updated successfully."));
       $url = Url::fromRoute('sir.manage_detectors');
       $form_state->setRedirectUrl($url);
@@ -202,24 +217,16 @@ class EditDetectorForm extends FormBase {
       $url = Url::fromRoute('sir.manage_detectors');
       $form_state->setRedirectUrl($url);
     }
-
   }
 
-  public function addDetector($api_url,$endpoint,$data){
+  public function retrieveDetector($detectorUri) {
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $newDetector = $fusekiAPIservice->detectorAdd($api_url,$endpoint,$data);
-    if(!empty($newDetectort)){
-      return $newDetector;
+    $rawresponse = $fusekiAPIservice->getUri($detectorUri);
+    $obj = json_decode($rawresponse);
+    if ($obj->isSuccessful) {
+      return $obj->body;
     }
-    return [];
+    return NULL; 
   }
-
-  public function deleteDetector($api_url,$endpoint,$data){
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $fusekiAPIservice->detectorDel($api_url,$endpoint,$data);
-    return true;
-  }
-  
-
 
 }
