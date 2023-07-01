@@ -29,6 +29,34 @@ class FusekiAPIConnector {
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
+  // valid elementType: "detector"
+  public function listByKeywordAndLanguage($elementType, $keyword, $language, $pageSize, $offset) {
+    $endpoint = "/sirapi/api/".
+      $elementType.
+      "/keywordlanguage/".
+      rawurlencode($keyword)."/".
+      rawurlencode($language)."/".
+      $pageSize."/".
+      $offset;
+    $method = 'GET';
+    $api_url = $this->getApiUrl();
+    $data = [];
+    return $this->perform_http_request($method,$api_url.$endpoint,$data);   
+  }
+
+  // valid elementType: "detector"
+  public function listSizeByKeywordAndLanguage($elementType, $keyword, $language) {
+    $endpoint = "/sirapi/api/".
+      $elementType.
+      "/keywordlanguage/total/".
+      rawurlencode($keyword)."/".
+      rawurlencode($language);
+    $method = 'GET';
+    $api_url = $this->getApiUrl();
+    $data = [];
+    return $this->perform_http_request($method,$api_url.$endpoint,$data);   
+  }
+
   public function instrumentListAll() {
     $endpoint = "/sirapi/api/instrument/all";
     $method = "GET";
@@ -46,7 +74,11 @@ class FusekiAPIConnector {
   }
 
   public function instrumentRendering($type,$instrumentUri) {
-    $endpoint = "/sirapi/api/instrument/totext/".$type."/".rawurlencode($instrumentUri);
+    if ($type == 'fhir' || $type == 'rdf') {
+      $endpoint = "/sirapi/api/instrument/to".$type."/".rawurlencode($instrumentUri);
+    } else {
+      $endpoint = "/sirapi/api/instrument/totext/".$type."/".rawurlencode($instrumentUri);
+    }
     $method = "GET";
     $api_url = $this->getApiUrl();
     $data = [];    

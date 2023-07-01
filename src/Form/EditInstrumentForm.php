@@ -54,6 +54,8 @@ class EditInstrumentForm extends FormBase {
     $rawresponse = $fusekiAPIservice->getUri($this->getInstrumentUri());
     $obj = json_decode($rawresponse);
     
+    dpm($obj);
+    
     if ($obj->isSuccessful) {
       $this->setInstrument($obj->body);
     } else {

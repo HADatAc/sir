@@ -1,7 +1,7 @@
 
 # SIR landing page
 sir.index:
-  path: 'sir/public/instruments'
+  path: 'sir'
   defaults:
     _controller: '\Drupal\sir\Controller\InstrumentController::index'
   requirements:
@@ -16,6 +16,33 @@ sir.edit_semantics:
   defaults:
     _controller: '\Drupal\sir\Controller\EditInstrumentsController::index'
     _title: 'Manage Semantics'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+sir.list_page:
+  path: '/sir/listpage/{elementtype}/{page}/{pagesize}'
+  defaults: 
+    _controller: '\Drupal\sir\Controller\ListPageController2::page'
+  requirements:
+    _permission: 'access content'
+
+sir.sir_search_form:
+  path: '/sir/search'
+  defaults: 
+    _form: '\Drupal\sir\Form\SIRSearchForm'
+    _title: 'Search Criteria'
+  requirements:
+    _permission: 'access content'
+  options:
+    no_cache: 'TRUE'
+
+sir.list_element:
+  path: 'sir/list/{elementtype}/{keyword}/{language}/{page}/{pagesize}'
+  defaults:
+    _form: '\Drupal\sir\Form\ListForm'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    
@@ -82,7 +109,7 @@ sir.searchinstruments_ajax:
     no_cache: 'TRUE'
 
 sir.download_instrument:
-  path: 'sir/public/downloadinstrument/{type}/{instrument}'
+  path: 'sir/download/{type}/{instrument}'
   defaults:
     _controller: '\Drupal\sir\Controller\InstrumentController::download'
   requirements:

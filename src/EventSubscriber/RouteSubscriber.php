@@ -32,7 +32,7 @@ class RouteSubscriber extends RouteSubscriberBase {
 
     if($sir_home == '1'){
       if ($route = $collection->get('view.frontpage.page_1')) {
-        $route->setDefault('_controller', '\Drupal\sir\Controller\InstrumentController::index');
+        $route->setDefault('_controller', '\Drupal\sir\Controller\InitializationController::index');
       }
    }
   }

@@ -1,0 +1,54 @@
+{% if items['title'] %}
+  {% if items[page] > -1 %}
+    <h4>{{ items['title']|raw }}</h4>
+  {% else %}
+    {{ items['title']|raw }}
+  {% endif %}
+  <!--
+  Page: {{ items['page'] }} <br/>
+  First: {{ items['first'] }} <br/>
+  Previous: {{ items['previous'] }} <br/>
+  Next: {{ items['next'] }} <br/>
+  Last: {{ items['last'] }} <br/>
+  -->
+
+  <ul>
+  {% for link in items['links'] %}
+      <li>{{ link|raw }}</li>
+  {% endfor %}
+  </ul>
+
+  <nav aria-label="pagination-navigation">
+    <ul class="pagination">
+      <li class="page-item {% if items['page'] <= 1 %}disabled{% endif %}">
+        <a class="page-link" href="{{ items['first'] }}">&lt;&lt;</a>
+      </li>
+      <li class="page-item {% if items['page'] <= 1 %}disabled{% endif %}">
+        <a class="page-link" href="{{ items['previous'] }}">&lt;</a>
+      </li>
+      {% if items['page'] > 1 %}
+        <li class="page-item">
+          <a class="page-link" href="{{ items['previous'] }}">{{ items['page']  - 1 }}</a>
+        </li>
+      {% endif %}
+      <li class="page-item active">
+        <span class="page-link">{{ items['page'] }}<span class="sr-only"></span>
+        </span>
+      </li>
+      {% if items['page'] < items['last_page']%}
+        <li class="page-item">
+          <a class="page-link" href="{{ items['next'] }}">{{ items['page'] + 1 }}</a>
+        </li>
+      {% endif %}
+      <li class="page-item {% if items['page'] >= items['last_page'] %}disabled{% endif %}">
+        <a class="page-link" href="{{ items['next'] }}">&gt;</a>
+      </li>
+      <li class="page-item {% if items['page'] >= items['last_page'] %}disabled{% endif %}">
+        <a class="page-link" href="{{ items['last'] }}">&gt;&gt;</a>
+      </li>
+    </ul>
+  </nav>
+
+  <br><br><br>
+
+{% endif %}

@@ -17,7 +17,19 @@ function sir_theme($existing, $type, $theme, $path)
         'editinstrument-card' => [
             'variables' => ['content' => NULL]
         ],
-
+        'list-page' => [
+            'variables' => array(
+                'items' => array(          
+                    'offset' => '',
+                    'first' => '',
+                    'last' => '',
+                    'previous' => '',
+                    'next' => '',
+                    'links' => array(),
+                    'title' => ''
+                )
+            )
+        ],
     ];
 }
 
@@ -28,15 +40,7 @@ use Drupal\Core\Path\AliasStorageInterface;
  */
 function sir_update_8001() {
 
-  \Drupal::configFactory()->getEditable('system.site')->set('page.front', '/sir/public/instruments')->save();
+  \Drupal::configFactory()->getEditable('system.site')->set('page.front', '/sir/list/instrument/_/_/1/12')->save();
 
-/**
-  // Set the new home URI.
-  $home_uri = '/sir/public/instruments';
-  #$alias_storage = \Drupal::service('path.alias_storage');
-  #$alias_storage->save($home_uri, '/');
-  #$config = \Drupal::configFactory()->getEditable('system.site');
-  #$config->set('page.front', $home_uri)->save();
- */
 }
 

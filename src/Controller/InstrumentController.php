@@ -13,7 +13,7 @@ use Drupal\sir\Exception\SirExceptions;
 use Drupal\sir\Controller\UtilsController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
-
+use Drupal\sir\Entity\Tables;
 
 class InstrumentController extends ControllerBase{
 
@@ -83,6 +83,11 @@ class InstrumentController extends ControllerBase{
     }
 
     public function createInstrumentCard($api_url,$endpoint) {
+      
+      $tables = new Tables;
+      $languages = $tables->getLanguages();
+      $informants = $tables->getInformants();
+  
       $instrumentCards = [];
       $instruments = $this->listInstruments($api_url,$endpoint);
 
@@ -91,12 +96,16 @@ class InstrumentController extends ControllerBase{
 
       if(!empty($obj)) {
         foreach($obj->body as $instrument) {
+          $lang = '';
+          if ($instrument->hasLanguage != null && $instrument->hasLanguage != '') {
+            $lang = $languages[$instrument->hasLanguage];
+          }
           $content = [
             'iname' => $instrument->label,
             'uri' => $instrument->uri,
             'iuriencoded' => rawurlencode($instrument->uri),            
             'ilabel' => $instrument->hasShortName,
-            'ilanguage' => $instrument->hasLanguage,
+            'ilanguage' => $lang,
             'iversion' => $instrument->hasVersion,
           ];
           $instrumentCards[] = [
@@ -105,7 +114,7 @@ class InstrumentController extends ControllerBase{
           ];
         }
       }
-
+      
       return $instrumentCards;
 
     }

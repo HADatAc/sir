@@ -32,15 +32,6 @@ class ManageDetectorsForm extends FormBase {
     $languages = $tables->getLanguages();
     $derivations = $tables->getGenerationActivities();
 
-    //array(
-    //  '' => t('Original'),
-    //  'http://hadatac.org/ont/vstoi#Original' => t('Original'), 
-    //  'http://hadatac.org/ont/vstoi#Translation' => t('Translation'), 
-    //  'http://hadatac.org/ont/vstoi#Generalization' => t('Generalization'), 
-    //  'http://hadatac.org/ont/vstoi#Specialization' => t('Specialization')
-    //);
-
-
     // RETRIEVE DETECTORS BY MAINTAINER
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
     $detector_list = $fusekiAPIservice->detectorList($useremail);
