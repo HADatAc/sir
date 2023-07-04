@@ -53,9 +53,7 @@ class EditInstrumentForm extends FormBase {
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
     $rawresponse = $fusekiAPIservice->getUri($this->getInstrumentUri());
     $obj = json_decode($rawresponse);
-    
-    dpm($obj);
-    
+        //dpm($obj);
     if ($obj->isSuccessful) {
       $this->setInstrument($obj->body);
     } else {

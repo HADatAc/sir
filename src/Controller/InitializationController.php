@@ -3,17 +3,9 @@
 namespace Drupal\sir\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
-use BorderCloud\SPARQL\SparqlClient;
-use Drupal\block\Entity\Block;
-use Drupal\Core\Block\BlockBase;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
-use Drupal\Core\Render\Markup;
-use Drupal\sir\Exception\SirExceptions;
 use Drupal\sir\Controller\UtilsController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
-use Drupal\sir\Entity\Tables;
 
 class InitializationController extends ControllerBase{
 

@@ -5,24 +5,29 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\sir\Entity\Tables;
+use Drupal\sir\Vocabulary\VSTOI;
 
 class AddResponseOptionForm extends FormBase {
 
-    /**
-   * Settings Variable.
-   */
-  Const CONFIGNAME = "sir.settings";
+  protected $codebookSlotUri;
 
-  protected $experienceUri;
+  protected $codebookSlot;
 
-  public function getExperienceUri() {
-    return $this->experienceUri;
+  public function getCodebookSlotUri() {
+    return $this->codebookSlotUri;
   }
 
-  public function setExperienceUri($uri) {
-    return $this->experienceUri = $uri; 
+  public function setCodebookSlotUri($uri) {
+    return $this->codebookSlotUri = $uri; 
+  }
+
+  public function getCodebookSlot() {
+    return $this->codebookSlot;
+  }
+
+  public function setCodebookSlot($uri) {
+    return $this->codebookSlot = $uri; 
   }
 
   /**
@@ -33,34 +38,36 @@ class AddResponseOptionForm extends FormBase {
   }
 
   /**
-     * {@inheritdoc}
-     */
-
-     protected function getEditableConfigNames() {
-      return [
-          static::CONFIGNAME,
-      ];
-  }
-
-  /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $experienceuri = NULL) {
-    $uri=$experienceuri ?? 'default';
-    $uri_decode=base64_decode($uri);
-    $this->setExperienceUri($uri_decode);
+  public function buildForm(array $form, FormStateInterface $form_state, $codebooksloturi = NULL) {
+
+    // SAVE CODEBOOK SLOT URI
+    if ($codebooksloturi == "EMPTY") {
+      $this->setCodebookSlotUri("");
+      $this->setCodebookSlot(NULL);
+    } else {
+      $uri_decode=base64_decode($codebooksloturi);
+      $this->setCodebookSlotUri($uri_decode);
+
+      // RETRIEVE CODEBOOK SLOT
+      $fusekiAPIservice = \Drupal::service('sir.api_connector');
+      $rawresponse = $fusekiAPIservice->getUri($this->getCodebookSlotUri());
+      $obj = json_decode($rawresponse);
+      if ($obj->isSuccessful) {
+        $this->setCodebookSlot($obj->body);
+    }
+    }
+
+    // RETRIEVE TABLES
     $tables = new Tables;
     $languages = $tables->getLanguages();
 
-    $form['responseoption_experience'] = [
+    $form['responseoption_codebook_slot'] = [
       '#type' => 'textfield',
-      '#title' => t('Experience'),
-      '#value' => $this->getExperienceUri(),
+      '#title' => t('Codebook Slot URI'),
+      '#value' => $this->getCodebookSlotUri(),
       '#disabled' => TRUE,
-    ];
-    $form['responseoption_priority'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Priority'),
     ];
     $form['responseoption_content'] = [
       '#type' => 'textarea',
@@ -95,19 +102,14 @@ class AddResponseOptionForm extends FormBase {
       '#title' => t('<br><br>'),
     ];
 
-
     return $form;
   }
 
   public function validateForm(array &$form, FormStateInterface $form_state) {
-    $submitted_values = $form_state->cleanValues()->getValues();
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
 
     if ($button_name != 'back') {
-      if(strlen($form_state->getValue('responseoption_priority')) < 1) {
-        $form_state->setErrorByName('responseoption_priority', $this->t('Please enter a valid priority value'));
-      }
       if(strlen($form_state->getValue('responseoption_content')) < 1) {
         $form_state->setErrorByName('responseoption_content', $this->t('Please enter a valid content'));
       }
@@ -121,79 +123,75 @@ class AddResponseOptionForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $submitted_values = $form_state->cleanValues()->getValues();
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $url = Url::fromRoute('sir.manage_response_options');
-      $url->setRouteParameter('experienceuri', base64_encode($this->getExperienceUri()));
-      $form_state->setRedirectUrl($url);
-      return;
+      if ($this->getCodebookSlotUri() == "") {
+        $form_state->setRedirectUrl($this->backUrl());
+        return;
+      } else {
+        $url = Url::fromRoute('sir.edit_codebook_slot');
+        $url->setRouteParameter('codebooksloturi', base64_encode($this->getCodebookSlotUri()));
+        $form_state->setRedirectUrl($url);
+        return;
+      }
     } 
 
-    try{
-      $config = $this->config(static::CONFIGNAME);     
-      $api_url = $config->get("api_url");
-      $repository_abbreviation = $config->get("repository_abbreviation");
-  
+    try {
       $uid = \Drupal::currentUser()->id();
-      $uemail = \Drupal::currentUser()->getEmail();
+      $useremail = \Drupal::currentUser()->getEmail();
 
       $iid = time().rand(10000,99999).$uid;
       
-      $data = [
-        'uri' => 'http://hadatac.org/kb/test/ResponseOption'.$iid,
-        'typeUri' => 'http://hadatac.org/ont/vstoi#ResponseOption',
-        'hascoTypeUri' => 'http://hadatac.org/ont/vstoi#ResponseOption',
-        'ofExperience' => $this->getExperienceUri(),
-        'hasPriority' => $form_state->getValue('responseoption_priority'),
-        'hasContent' => $form_state->getValue('responseoption_content'),
-        'hasLanguage' => $form_state->getValue('responseoption_language'),
-        'hasVersion' => $form_state->getValue('responseoption_version'),
-        'comment' => $form_state->getValue('responseoption_description'),
-        'hasSIRMaintainerEmail' => $uemail, 
-      ];
-      
-      $datap = '{"uri":"http://hadatac.org/kb/test/ResponseOption'.$iid.'",'.
-        '"typeUri":"http://hadatac.org/ont/vstoi#ResponseOption",'.
-        '"hascoTypeUri":"http://hadatac.org/ont/vstoi#ResponseOption",'.
-        '"ofExperience":"' . $this->getExperienceUri().'",'.
-        '"hasPriority":"'.$form_state->getValue('responseoption_priority').'",'.
+      $newResponseOptionUri = "http://hadatac.org/kb/test/ResponseOption".$iid;
+      $responseOptionJSON = '{"uri":"'.$newResponseOptionUri.'",'.
+        '"typeUri":"'.VSTOI::RESPONSE_OPTION.'",'.
+        '"hascoTypeUri":"'.VSTOI::RESPONSE_OPTION.'",'.
         '"hasContent":"'.$form_state->getValue('responseoption_content').'",'.
         '"hasLanguage":"'.$form_state->getValue('responseoption_language').'",'.
         '"hasVersion":"'.$form_state->getValue('responseoption_version').'",'.
         '"comment":"'.$form_state->getValue('responseoption_description').'",'.
-        '"hasSIRMaintainerEmail":"'.$uemail.'"}';
+        '"hasSIRMaintainerEmail":"'.$useremail.'"}';
 
-      $dataJ = json_encode($data);
-    
-      $dataE = rawurlencode($datap);
-
-      $newResponseOption = $this->addResponseOption($api_url,"/sirapi/api/responseoption/create/".$dataE,$data);
-    
+      $fusekiAPIservice = \Drupal::service('sir.api_connector');
+      $fusekiAPIservice->responseOptionAdd($responseOptionJSON);
+      if ($this->getCodebookSlotUri() != NULL && $this->getCodebookSlot() != NULL && $this->getCodebookSlot()->belongsTo != NULL) {
+        $fusekiAPIservice->responseOptionAttach($newResponseOptionUri,$this->getCodebookSlotUri());
+      }
+      
       \Drupal::messenger()->addMessage(t("Response Option has been added successfully."));
-      $url = Url::fromRoute('sir.manage_response_options');
-      $url->setRouteParameter('experienceuri', base64_encode($this->getExperienceUri()));
-      $form_state->setRedirectUrl($url);
+      if ($this->getCodebookSlotUri() == "") {
+        $form_state->setRedirectUrl($this->backUrl());
+        return;
+      } else {
+        $url = Url::fromRoute('sir.edit_codebook_slot');
+        $url->setRouteParameter('codebooksloturi', base64_encode($this->getCodebookSlotUri()));
+        $form_state->setRedirectUrl($url);
+        return;
+      }
 
     }catch(\Exception $e){
       \Drupal::messenger()->addMessage(t("An error occurred while adding the Response Option: ".$e->getMessage()));
-      $url = Url::fromRoute('sir.manage_response_options');
-      $url->setRouteParameter('experienceuri', base64_encode($this->getExperienceUri()));
-      $form_state->setRedirectUrl($url);
+      if ($this->getCodebookSlotUri() == "") {
+        $form_state->setRedirectUrl($this->backUrl());
+        return;
+      } else {
+        $url = Url::fromRoute('sir.edit_codebook_slot');
+        $url->setRouteParameter('codebooksloturi', base64_encode($this->getCodebookSlotUri()));
+        $form_state->setRedirectUrl($url);
+        return;
+      }
     }
 
   }
 
-  public function addResponseOption($api_url,$endpoint,$data){
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $newResponseOption = $fusekiAPIservice->responseOptionAdd($api_url,$endpoint,$data);
-    if(!empty($newResponseOptiont)){
-      return $newResponseOption;
-    }
-    return [];
+  private function backUrl() {  
+    $url = Url::fromRoute('sir.select_element');
+    $url->setRouteParameter('elementtype', 'responseoption');
+    $url->setRouteParameter('page', '1');
+    $url->setRouteParameter('pagesize', '12');
+    return $url;
   }
-
 
 }

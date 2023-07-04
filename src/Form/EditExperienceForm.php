@@ -5,8 +5,8 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\sir\Entity\Tables;
+use Drupal\sir\Vocabulary\VSTOI;
 
 class EditExperienceForm extends FormBase {
 
@@ -102,7 +102,6 @@ class EditExperienceForm extends FormBase {
   }
 
   public function validateForm(array &$form, FormStateInterface $form_state) {
-    $submitted_values = $form_state->cleanValues()->getValues();
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
 
@@ -123,7 +122,6 @@ class EditExperienceForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $submitted_values = $form_state->cleanValues()->getValues();
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
 
@@ -134,41 +132,21 @@ class EditExperienceForm extends FormBase {
     } 
 
     try{
-      $config = $this->config(static::CONFIGNAME);     
-      $api_url = $config->get("api_url");
-      $repository_abbreviation = $config->get("repository_abbreviation");
-  
-      $uid = \Drupal::currentUser()->id();
-      $uemail = \Drupal::currentUser()->getEmail();
+      $useremail = \Drupal::currentUser()->getEmail();
 
-      $data = [
-        'uri' => $this->getExperience()->uri,
-        'typeUri' => 'http://hadatac.org/ont/vstoi#Experience',
-        'hascoTypeUri' => 'http://hadatac.org/ont/vstoi#Experience',
-        'label' => $form_state->getValue('experience_name'),
-        'hasLanguage' => $form_state->getValue('experience_language'),
-        'hasVersion' => $form_state->getValue('experience_version'),
-        'comment' => $form_state->getValue('experience_description'),
-        'hasSIRMaintainerEmail' => $uemail, 
-      ];
-      
-      $datap = '{"uri":"'. $this->getExperience()->uri .'",'.
-        '"typeUri":"http://hadatac.org/ont/vstoi#Experience",'.
-        '"hascoTypeUri":"http://hadatac.org/ont/vstoi#Experience",'.
+      $experienceJson = '{"uri":"'. $this->getExperience()->uri .'",'.
+        '"typeUri":"'.VSTOI::EXPERIENCE.'",'.
+        '"hascoTypeUri":"'.VSTOI::EXPERIENCE.'",'.
         '"label":"'.$form_state->getValue('experience_name').'",'.
         '"hasLanguage":"'.$form_state->getValue('experience_language').'",'.
         '"hasVersion":"'.$form_state->getValue('experience_version').'",'.
         '"comment":"'.$form_state->getValue('experience_description').'",'.
-        '"hasSIRMaintainerEmail":"'.$uemail.'"}';
-
-      $dataJ = json_encode($data);
-    
-      $dataE = rawurlencode($datap);
+        '"hasSIRMaintainerEmail":"'.$useremail.'"}';
 
       // UPDATE BY DELETING AND CREATING
-      $uriEncoded = rawurlencode($this->getExperienceUri());
-      $this->deleteExperience($api_url,"/sirapi/api/experience/delete/".$uriEncoded,[]);    
-      $updatedExperience = $this->addExperience($api_url,"/sirapi/api/experience/create/".$dataE,$data);
+      $fusekiAPIservice = \Drupal::service('sir.api_connector');
+      $fusekiAPIservice->experienceDel($this->getExperience()->uri);
+      $fusekiAPIservice->experienceAdd($experienceJson);
     
       \Drupal::messenger()->addMessage(t("Experience has been updated successfully."));
       $url = Url::fromRoute('sir.manage_experiences');
@@ -182,19 +160,4 @@ class EditExperienceForm extends FormBase {
 
   }
 
-  public function addExperience($api_url,$endpoint,$data){
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $newExperience = $fusekiAPIservice->experienceAdd($api_url,$endpoint,$data);
-    if(!empty($newExperience)){
-      return $newExperience;
-    }
-    return [];
-  }
-
-  public function deleteExperience($api_url,$endpoint,$data){
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $fusekiAPIservice->experienceDel($api_url,$endpoint,$data);
-    return true;
-  }
-  
 }

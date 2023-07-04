@@ -5,8 +5,6 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\Core\Routing\TrustedRedirectResponse;
-use Drupal\Core\Entity\Element\EntityAutocomplete;
 use Drupal\sir\Utils;
 
 class EditAttachmentForm extends FormBase {

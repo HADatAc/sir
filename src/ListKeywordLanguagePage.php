@@ -4,7 +4,7 @@ namespace Drupal\sir;
 
 use Drupal\sir\Vocabulary\SIRAPI;
 
-class BrowseListPage {
+class ListKeywordLanguagePage {
 
   public static function exec($elementtype, $keyword, $language, $page, $pagesize) {
     if ($elementtype == NULL || $page == NULL || $pagesize == NULL) {
@@ -26,21 +26,15 @@ class BrowseListPage {
       $language = "_";
     }
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $detector_list = $fusekiAPIservice->listByKeywordAndLanguage($elementtype,$keyword,$language,$pagesize,$offset);
-    $detectors = [];
-    if ($detector_list != null) {
-      $obj = json_decode($detector_list);
+    $element_list = $fusekiAPIservice->listByKeywordAndLanguage($elementtype,$keyword,$language,$pagesize,$offset);
+    $elements = [];
+    if ($element_list != null) {
+      $obj = json_decode($element_list);
       if ($obj->isSuccessful) {
-        $detectors = $obj->body;
+        $elements = $obj->body;
       }
     }
-    //$resp = [];
-    //foreach ($detectors as &$det) {
-    //  $value = $det->uri . ' [' . $det->hasContent . ']';
-    //  array_push($resp, $value);
-    //}
-    //unset($det);
-    return $detectors;
+    return $elements;
 
   }
 

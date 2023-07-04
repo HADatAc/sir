@@ -83,10 +83,10 @@ class ManageExperiencesForm extends FormBase {
       '#value' => $this->t('Edit Selected Experience'),
       '#name' => 'edit_experience',
     ];
-    $form['manage_response_options'] = [
+    $form['manage_codebook_slots'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Manage Response Options of Selected Experience'),
-      '#name' => 'manage_response_options',
+      '#value' => $this->t('Manage Slots of Selected Experience'),
+      '#name' => 'manage_codebook_slots',
     ];
     $form['experience_table'] = [
       '#type' => 'tableselect',
@@ -233,15 +233,15 @@ class ManageExperiencesForm extends FormBase {
       return;
     }  
 
-    // MANAGE RESPONSE OPTIONS
-    if ($button_name === 'manage_response_options') {
+    // MANAGE CODEBOOK SLOTS
+    if ($button_name === 'manage_codebook_slots') {
       if (sizeof($rows) < 1) {
-        \Drupal::messenger()->addMessage(t("Select the exact experience which response options are going to be managed."));      
+        \Drupal::messenger()->addMessage(t("Select the exact experience which codebook slots are going to be managed."));      
       } else if ((sizeof($rows) > 1)) {
-        \Drupal::messenger()->addMessage(t("The response options of no more than one experience can be managed at once."));      
+        \Drupal::messenger()->addMessage(t("The codebook slot of no more than one experience can be managed at once."));      
       } else {
         $first = array_shift($rows);
-        $url = Url::fromRoute('sir.manage_response_options', ['experienceuri' => base64_encode($first)]);
+        $url = Url::fromRoute('sir.manage_codebook_slots', ['experienceuri' => base64_encode($first)]);
         $form_state->setRedirectUrl($url);
       } 
       return;

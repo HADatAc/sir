@@ -5,14 +5,8 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\Core\Routing\TrustedRedirectResponse;
 
 class AddAttachmentsForm extends FormBase {
-
-    /**
-   * Settings Variable.
-   */
-  Const CONFIGNAME = "sir.settings";
 
   protected $instrumentUri;
 
@@ -29,16 +23,6 @@ class AddAttachmentsForm extends FormBase {
    */
   public function getFormId() {
     return 'add_attachments_form';
-  }
-
-  /**
-     * {@inheritdoc}
-     */
-
-     protected function getEditableConfigNames() {
-      return [
-          static::CONFIGNAME,
-      ];
   }
 
   /**
@@ -74,12 +58,10 @@ class AddAttachmentsForm extends FormBase {
       '#title' => t('<br><br>'),
     ];
 
-
     return $form;
   }
 
   public function validateForm(array &$form, FormStateInterface $form_state) {
-    $submitted_values = $form_state->cleanValues()->getValues();
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
 
@@ -94,7 +76,6 @@ class AddAttachmentsForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $submitted_values = $form_state->cleanValues()->getValues();
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
 
@@ -105,20 +86,8 @@ class AddAttachmentsForm extends FormBase {
     } 
 
     try{
-      $config = $this->config(static::CONFIGNAME);     
-      $api_url = $config->get("api_url");
-      $repository_abbreviation = $config->get("repository_abbreviation");
-  
-      $uid = \Drupal::currentUser()->id();
-      $uemail = \Drupal::currentUser()->getEmail();
-
-      $data = [];
-      
-      $datap = $this->getInstrumentUri();
-
-      $dataE = rawurlencode($datap);
-
-      $newAttachments = $this->addAttachments($api_url,"/sirapi/api/attachment/create/".$dataE."/".$form_state->getValue('attachment_total_number'),$data);
+      $fusekiAPIservice = \Drupal::service('sir.api_connector');
+      $fusekiAPIservice->attachmentAdd($this->getInstrumentUri(),$form_state->getValue('attachment_total_number'));
     
       \Drupal::messenger()->addMessage(t("Attachments has been added successfully."));
       $url = Url::fromRoute('sir.manage_attachments');
@@ -132,15 +101,6 @@ class AddAttachmentsForm extends FormBase {
       $form_state->setRedirectUrl($url);
     }
 
-  }
-
-  public function addAttachments($api_url,$endpoint,$data){
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $newAttachments = $fusekiAPIservice->responseOptionAdd($api_url,$endpoint,$data);
-    if(!empty($newAttachments)){
-      return $newAttachments;
-    }
-    return [];
   }
 
 }

@@ -173,7 +173,7 @@ class ManageResponseOptionsForm extends FormBase {
 
     // ADD RESPONSE OPTION
     if ($button_name === 'add_responseoption') {
-      $url = Url::fromRoute('sir.add_responseoption');
+      $url = Url::fromRoute('sir.add_response_option');
       $url->setRouteParameter('experienceuri', base64_encode($this->getExperienceUri()));
       $form_state->setRedirectUrl($url);
     }  
@@ -186,7 +186,7 @@ class ManageResponseOptionsForm extends FormBase {
         \Drupal::messenger()->addMessage(t("No more than one response option can be edited at once."));      
       } else {
         $first = array_shift($rows);
-        $url = Url::fromRoute('sir.edit_responseoption');
+        $url = Url::fromRoute('sir.edit_response_option');
         $url->setRouteParameter('responseoptionuri', base64_encode($first));
         $form_state->setRedirectUrl($url);
       } 

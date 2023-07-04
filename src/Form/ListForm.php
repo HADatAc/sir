@@ -4,10 +4,11 @@ namespace Drupal\sir\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\core\Url;
-use Drupal\sir\BrowseListPage;
-use Drupal\sir\Entity\Tables;
-use Drupal\sir\Vocabulary\SIRAPI;
+use Drupal\sir\ListKeywordLanguagePage;
+use Drupal\sir\Entity\Detector;
+use Drupal\sir\Entity\Experience;
+use Drupal\sir\Entity\Instrument;
+use Drupal\sir\Entity\ResponseOption;
 
 class ListForm extends FormBase {
 
@@ -43,15 +44,10 @@ class ListForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $elementtype=NULL, $keyword=NULL, $language=NULL, $page=NULL, $pagesize=NULL) {
 
-    // GET LANGUAGES
-    $tables = new Tables;
-    $languages = $tables->getLanguages();
-    $derivations = $tables->getGenerationActivities();
-
     // GET TOTAL NUMBER OF ELEMENTS AND TOTAL NUMBER OF PAGES
     $this->setListSize(-1);
     if ($elementtype != NULL) {
-      $this->setListSize(BrowseListPage::total($elementtype, $keyword, $language));
+      $this->setListSize(ListKeywordLanguagePage::total($elementtype, $keyword, $language));
     }
     if (gettype($this->list_size) == 'string') {
       $total_pages = "0";
@@ -66,19 +62,19 @@ class ListForm extends FormBase {
     // CREATE LINK FOR NEXT PAGE AND PREVIOUS PAGE
     if ($page < $total_pages) {
       $next_page = $page + 1;
-      $next_page_link = BrowseListPage::link($elementtype, $keyword, $language, $next_page, $pagesize);
+      $next_page_link = ListKeywordLanguagePage::link($elementtype, $keyword, $language, $next_page, $pagesize);
     } else {
       $next_page_link = '';
     }
     if ($page > 1) {
       $previous_page = $page - 1;
-      $previous_page_link = BrowseListPage::link($elementtype, $keyword, $language, $previous_page, $pagesize);
+      $previous_page_link = ListKeywordLanguagePage::link($elementtype, $keyword, $language, $previous_page, $pagesize);
     } else {
       $previous_page_link = '';
     }
 
     // RETRIEVE ELEMENTS
-    $this->setList(BrowseListPage::exec($elementtype, $keyword, $language, $page, $pagesize));
+    $this->setList(ListKeywordLanguagePage::exec($elementtype, $keyword, $language, $page, $pagesize));
 
     $class_name = "";
     switch ($elementtype) {
@@ -86,96 +82,36 @@ class ListForm extends FormBase {
       // INSTRUMENT
       case "instrument":
         $class_name = "Instruments";
-        $header = [
-          'element_abbreviation' => t('Abbreviation'),
-          'element_name' => t('Name'),
-          'element_language' => t('Language'),
-          'element_version' => t('Version'),
-          'element_rendering_downloads' => t('Rendering Downloads'),
-          'element_interoperability_downloads' => t('Interoperability Downloads'),
-          'element_version' => t('Version'),
-          //'element_uri' => t('URI'),
-        ];
-        $output = array();
-        foreach ($this->getList() as $element) {
-          $shortName = ' ';
-          if ($element->hasShortName != NULL) {
-            $shortName = $element->hasShortName;
-          }
-          $label = ' ';
-          if ($element->label != NULL) {
-            $label = $element->label;
-          }
-          $lang = ' ';
-          if ($element->hasLanguage != NULL) {
-            $lang = $languages[$element->hasLanguage];
-          }
-          $version = ' ';
-          if ($element->hasVersion != NULL) {
-            $version = $element->hasVersion;
-          }
-          $root_url = \Drupal::request()->getBaseUrl();
-          $encodedUri = rawurlencode(rawurlencode($element->uri));
-          $totxt = '<a href="'. $root_url . SIRAPI::DOWNLOAD . 'plain'. '/'. $encodedUri . '">TXT</a>';
-          $tohtml = '<a href="'. $root_url . SIRAPI::DOWNLOAD . 'html'. '/'. $encodedUri . '">HTML</a>';
-          $topdf = '<a href="'. $root_url . SIRAPI::DOWNLOAD . 'pdf'. '/'. $encodedUri . '">PDF</a>';
-          $tordf = '<a href="'. $root_url . SIRAPI::DOWNLOAD . 'rdf'. '/'. $encodedUri . '">RDF</a>';
-          $tofhir = '<a href="'. $root_url . SIRAPI::DOWNLOAD . 'fhir'. '/'. $encodedUri . '">FHIR</a>';
-          $output[$element->uri] = [
-            'element_abbreviation' => $shortName,     
-            'element_name' => $label,     
-            'element_language' => $lang,
-            'element_version' => $version,
-            'element_rendering_downloads' => t($totxt . ' ' . $tohtml . ' ' . $topdf),
-            'element_interoperability_downloads' => t($tordf . ' ' . $tofhir),
-            //'element_uri' => $element->uri,
-          ];
-        }
+        $header = Instrument::generateHeader();
+        $output = Instrument::generateOutput($this->getList());    
         break;
 
       // DETECTOR
       case "detector":
         $class_name = "Detectors";
-        $header = [
-          'element_content' => t('Content'),
-          'element_language' => t('Language'),
-          'element_version' => t('Version'),
-          'element_generated_by' => t('Was Generated By'),
-          //'element_uri' => t('URI'),
-        ];
-        $output = array();
-        foreach ($this->getList() as $element) {
-          $content = ' ';
-          if ($element->hasContent != NULL) {
-            $content = $element->hasContent;
-          }
-          $lang = ' ';
-          if ($element->hasLanguage != NULL) {
-            $lang = $languages[$element->hasLanguage];
-          }
-          $version = ' ';
-          if ($element->hasVersion != NULL) {
-            $version = $element->hasVersion;
-          }
-          $derivationVal = $derivations["http://hadatac.org/ont/vstoi#Original"];
-          if ($element->wasGeneratedBy != NULL && $element->wasGeneratedBy != '') {
-            $derivationVal = $derivations[$element->wasGeneratedBy];
-          }
-          $output[$element->uri] = [
-            'element_content' => $content,     
-            'element_language' => $lang,
-            'element_version' => $version,
-            'element_generated_by' => $derivationVal,
-            //'element_uri' => $element->uri,
-          ];
-        }
+        $header = Detector::generateHeader();
+        $output = Detector::generateOutput($this->getList());    
         break;
+
+      // EXPERIENCE
+      case "experience":
+        $class_name = "Experiences";
+        $header = Experience::generateHeader();
+        $output = Experience::generateOutput($this->getList());    
+        break;
+
+      // RESPONSE OPTION
+      case "responseoption":
+        $class_name = "Response Options";
+        $header = ResponseOption::generateHeader();
+        $output = ResponseOption::generateOutput($this->getList());    
+        break;
+
       default:
         $class_name = "Objects of Unknown Types";
     }
 
-
-    # PUT FORM TOGETHER
+    // PUT FORM TOGETHER
     $form['element_table'] = [
       '#type' => 'table',
       '#header' => $header,
@@ -187,8 +123,8 @@ class ListForm extends FormBase {
       '#theme' => 'list-page',
       '#items' => [
         'page' => strval($page),
-        'first' => BrowseListPage::link($elementtype, $keyword, $language, 1, $pagesize),
-        'last' => BrowseListPage::link($elementtype, $keyword, $language, $total_pages, $pagesize),
+        'first' => ListKeywordLanguagePage::link($elementtype, $keyword, $language, 1, $pagesize),
+        'last' => ListKeywordLanguagePage::link($elementtype, $keyword, $language, $total_pages, $pagesize),
         'previous' => $previous_page_link,
         'next' => $next_page_link,
         'last_page' => strval($total_pages),
