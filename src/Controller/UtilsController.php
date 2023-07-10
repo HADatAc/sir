@@ -17,11 +17,12 @@ class UtilsController extends ControllerBase{
   public function siripconfigured() {
     $config = $this->config(static::CONFIGNAME);           
     $api_url = $config->get("api_url");
-    $sir_not_configured = strpos($api_url,'x.x.x.x');
+    $sir_not_configured = ($api_url == NULL || $api_url == "" || strpos($api_url,'x.x.x.x'));
     
-    if($sir_not_configured){
+    if ($sir_not_configured){
       $root_url = \Drupal::request()->getBaseUrl();
-      $url = $root_url.'/admin/config/sir';
+      //$url = $root_url.'/admin/config/sir';
+      $url = $root_url.'/admin/config/sir/ip';
       $response = new TrustedRedirectResponse($url);
       \Drupal::messenger()->addMessage(t("Please configure SIR API IP address."));
       return $response;

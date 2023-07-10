@@ -42,10 +42,15 @@ class IPForm extends ConfigFormBase {
      public function buildForm(array $form, FormStateInterface $form_state){
         $config = $this->config(static::CONFIGNAME);
 
+        $default_api_url = "http://x.x.x.x:9000";
+        if ($config->get("api_url") != NULL && $config->get("api_url") != "") {
+            $default_api_url = $config->get("api_url");
+        }
+
         $form['api_url'] = [
             '#type' => 'textfield',
             '#title' => 'SIR API Base URL',
-            '#default_value' => $config->get("api_url"),
+            '#default_value' => $default_api_url,
         ];
         return Parent::buildForm($form, $form_state);
 
