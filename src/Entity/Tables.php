@@ -6,6 +6,21 @@ use Kint\Kint;
 
 class Tables {
   
+  public function getNamespaces() {
+    $fusekiAPIservice = \Drupal::service('sir.api_connector');
+    $namespace_list = $fusekiAPIservice->namespaceList();
+    //dpm($language_list);
+    $obj = json_decode($namespace_list);
+    if ($obj->isSuccessful) {
+      $namespaces = $obj->body;
+    }
+    $results = array();
+    foreach ($namespaces as $namespace) {
+      $results[$namespace->label] = $namespace->uri;
+    }
+    return $results;
+  }
+
   public function getLanguages() {
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
     $language_list = $fusekiAPIservice->languageList();

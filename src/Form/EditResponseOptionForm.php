@@ -5,6 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\sir\Utils;
 use Drupal\sir\Entity\Tables;
 use Drupal\sir\Vocabulary\VSTOI;
 
@@ -125,7 +126,7 @@ class EditResponseOptionForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $form_state->setRedirectUrl($this->backUrl());
+      $form_state->setRedirectUrl(Utils::selectBackUrl('responseoption'));
       return;
     } 
 
@@ -147,21 +148,13 @@ class EditResponseOptionForm extends FormBase {
       $fusekiAPIservice->responseoptionAdd($responseOptionJSON);
     
       \Drupal::messenger()->addMessage(t("Response Option has been updated successfully."));
-      $form_state->setRedirectUrl($this->backUrl());
+      $form_state->setRedirectUrl(Utils::selectBackUrl('responseoption'));
 
     }catch(\Exception $e){
       \Drupal::messenger()->addMessage(t("An error occurred while updating the Response Option: ".$e->getMessage()));
-      $form_state->setRedirectUrl($this->backUrl());
+      $form_state->setRedirectUrl(Utils::selectBackUrl('responseoption'));
     }
 
-  }
-
-  private function backUrl() {  
-    $url = Url::fromRoute('sir.select_element');
-    $url->setRouteParameter('elementtype', 'responseoption');
-    $url->setRouteParameter('page', '1');
-    $url->setRouteParameter('pagesize', '12');
-    return $url;
   }
 
 }

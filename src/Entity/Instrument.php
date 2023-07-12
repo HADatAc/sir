@@ -4,13 +4,14 @@ namespace Drupal\sir\Entity;
 
 use Drupal\sir\Entity\Tables;
 use Drupal\sir\Vocabulary\SIRAPI;
-use Kint\Kint;
+use Drupal\sir\Utils;
 
 class Instrument {
 
   public static function generateHeader() {
 
     return $header = [
+      'element_uri' => t('URI'),
       'element_abbreviation' => t('Abbreviation'),
       'element_name' => t('Name'),
       'element_language' => t('Language'),
@@ -31,6 +32,11 @@ class Instrument {
  
     $output = array();
     foreach ($list as $element) {
+      $uri = ' ';
+      if ($element->uri != NULL) {
+        $uri = $element->uri;
+      }
+      $uri = Utils::namespaceUri($uri);
       $shortName = ' ';
       if ($element->hasShortName != NULL) {
         $shortName = $element->hasShortName;
@@ -55,13 +61,13 @@ class Instrument {
       $tordf = '<a href="'. $root_url . SIRAPI::DOWNLOAD . 'rdf'. '/'. $encodedUri . '">RDF</a>';
       $tofhir = '<a href="'. $root_url . SIRAPI::DOWNLOAD . 'fhir'. '/'. $encodedUri . '">FHIR</a>';
       $output[$element->uri] = [
+        'element_uri' => $uri,
         'element_abbreviation' => $shortName,     
         'element_name' => $label,     
         'element_language' => $lang,
         'element_version' => $version,
         'element_rendering_downloads' => t($totxt . ' ' . $tohtml . ' ' . $topdf),
         'element_interoperability_downloads' => t($tordf . ' ' . $tofhir),
-        //'element_uri' => $element->uri,
       ];
     }
     return $output;

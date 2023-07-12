@@ -5,6 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\sir\Utils;
 use Drupal\sir\Entity\Tables;
 use Drupal\sir\Vocabulary\VSTOI;
 
@@ -128,7 +129,7 @@ class AddResponseOptionForm extends FormBase {
 
     if ($button_name === 'back') {
       if ($this->getCodebookSlotUri() == "") {
-        $form_state->setRedirectUrl($this->backUrl());
+        $form_state->setRedirectUrl(Utils::selectBackUrl('responseoption'));
         return;
       } else {
         $url = Url::fromRoute('sir.edit_codebook_slot');
@@ -139,12 +140,8 @@ class AddResponseOptionForm extends FormBase {
     } 
 
     try {
-      $uid = \Drupal::currentUser()->id();
       $useremail = \Drupal::currentUser()->getEmail();
-
-      $iid = time().rand(10000,99999).$uid;
-      
-      $newResponseOptionUri = "http://hadatac.org/kb/test/ResponseOption".$iid;
+      $newResponseOptionUri = Utils::uriGen('responseoption');
       $responseOptionJSON = '{"uri":"'.$newResponseOptionUri.'",'.
         '"typeUri":"'.VSTOI::RESPONSE_OPTION.'",'.
         '"hascoTypeUri":"'.VSTOI::RESPONSE_OPTION.'",'.
@@ -162,7 +159,7 @@ class AddResponseOptionForm extends FormBase {
       
       \Drupal::messenger()->addMessage(t("Response Option has been added successfully."));
       if ($this->getCodebookSlotUri() == "") {
-        $form_state->setRedirectUrl($this->backUrl());
+        $form_state->setRedirectUrl(Utils::selectBackUrl('responseoption'));
         return;
       } else {
         $url = Url::fromRoute('sir.edit_codebook_slot');
@@ -174,7 +171,7 @@ class AddResponseOptionForm extends FormBase {
     }catch(\Exception $e){
       \Drupal::messenger()->addMessage(t("An error occurred while adding the Response Option: ".$e->getMessage()));
       if ($this->getCodebookSlotUri() == "") {
-        $form_state->setRedirectUrl($this->backUrl());
+        $form_state->setRedirectUrl(Utils::selectBackUrl('responseoption'));
         return;
       } else {
         $url = Url::fromRoute('sir.edit_codebook_slot');
@@ -184,14 +181,6 @@ class AddResponseOptionForm extends FormBase {
       }
     }
 
-  }
-
-  private function backUrl() {  
-    $url = Url::fromRoute('sir.select_element');
-    $url->setRouteParameter('elementtype', 'responseoption');
-    $url->setRouteParameter('page', '1');
-    $url->setRouteParameter('pagesize', '12');
-    return $url;
   }
 
 }

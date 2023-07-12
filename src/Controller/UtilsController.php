@@ -4,12 +4,13 @@ namespace Drupal\sir\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Drupal\sir\Exception\SirExceptions;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 
 class UtilsController extends ControllerBase{
 
-   /**
+  /**
    * Settings Variable.
    */
   Const CONFIGNAME = "sir.settings";
@@ -28,4 +29,30 @@ class UtilsController extends ControllerBase{
       return $response;
     }  
   }
+
+  /**
+   *   Download instruments 
+   */
+  public function download($type,$instrument) {
+    //\Drupal::messenger()->addMessage(t("Type: [".$type."]"));
+    //\Drupal::messenger()->addMessage(t("Instrument: [".$instrumentUri."]"));
+    $fusekiAPIservice = \Drupal::service('sir.api_connector');
+    $downloadedDocument = $fusekiAPIservice->instrumentRendering($type, $instrument);
+    if ($type == 'pdf') {
+      $pdfFilePath = 'instrument.pdf';
+      $response = new Response();
+      $response->headers->set('Content-Type', 'application/pdf');
+      $response->headers->set('Content-Disposition', 'attachment; filename="' . basename($pdfFilePath) . '"');
+      $response->setContent($downloadedDocument);
+      return $response;
+    }
+    if (!empty($downloadedDocument)) {
+      //$content = (string) $instrument_list;
+      $response = new Response($downloadedDocument);
+      return $response;
+    }
+    return new Response();
+
+  }
+
 }

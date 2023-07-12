@@ -3,16 +3,17 @@
 namespace Drupal\sir\Entity;
 
 use Drupal\sir\Entity\Tables;
+use Drupal\sir\Utils;
 
 class ResponseOption {
 
   public static function generateHeader() {
 
     return $header = [
+      'element_uri' => t('URI'),
       'element_content' => t('Content'),
       'element_language' => t('Language'),
       'element_version' => t('Version'),
-      //'element_uri' => t('URI'),
     ];
 
   }
@@ -25,6 +26,11 @@ class ResponseOption {
 
     $output = array();
     foreach ($list as $element) {
+      $uri = ' ';
+      if ($element->uri != NULL) {
+        $uri = $element->uri;
+      }
+      $uri = Utils::namespaceUri($uri);
       $content = ' ';
       if ($element->hasContent != NULL) {
         $content = $element->hasContent;
@@ -38,10 +44,10 @@ class ResponseOption {
         $version = $element->hasVersion;
       }
       $output[$element->uri] = [
+        'element_uri' => $uri,     
         'element_content' => $content,     
         'element_language' => $lang,
         'element_version' => $version,
-        //'element_uri' => $element->uri,
       ];
     }
     return $output;

@@ -4,8 +4,8 @@ namespace Drupal\sir\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Url;
 use Drupal\sir\Constant;
+use Drupal\sir\Utils;
 use Drupal\sir\Entity\Tables;
 use Drupal\sir\Vocabulary\VSTOI;
 
@@ -58,8 +58,7 @@ class EditInstrumentForm extends FormBase {
       $this->setInstrument($obj->body);
     } else {
       \Drupal::messenger()->addMessage(t("Failed to retrieve Instrument."));
-      $url = Url::fromRoute('sir.manage_instruments');
-      $form_state->setRedirectUrl($url);
+      $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
     }
 
     $hasInformant = Constant::DEFAULT_INFORMANT;
@@ -183,8 +182,7 @@ class EditInstrumentForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $url = Url::fromRoute('sir.manage_instruments');
-      $form_state->setRedirectUrl($url);
+      $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
       return;
     } 
 
@@ -215,13 +213,11 @@ class EditInstrumentForm extends FormBase {
       $newInstrument = $fusekiAPIservice->instrumentAdd($instrumentJson);
     
       \Drupal::messenger()->addMessage(t("Instrument has been updated successfully."));
-      $url = Url::fromRoute('sir.manage_instruments');
-      $form_state->setRedirectUrl($url);
+      $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
 
     }catch(\Exception $e){
       \Drupal::messenger()->addMessage(t("An error occurred while updating the Instrument: ".$e->getMessage()));
-      $url = Url::fromRoute('sir.manage_instruments');
-      $form_state->setRedirectUrl($url);
+      $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
     }
 
   }

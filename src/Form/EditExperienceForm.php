@@ -4,7 +4,7 @@ namespace Drupal\sir\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Url;
+use Drupal\sir\Utils;
 use Drupal\sir\Entity\Tables;
 use Drupal\sir\Vocabulary\VSTOI;
 
@@ -57,8 +57,7 @@ class EditExperienceForm extends FormBase {
       #dpm($this->getExperience());
     } else {
       \Drupal::messenger()->addMessage(t("Failed to retrieve Experience."));
-      $url = Url::fromRoute('sir.manage_experiences');
-      $form_state->setRedirectUrl($url);
+      $form_state->setRedirectUrl(Utils::selectBackUrl('experience'));
     }
 
     $form['experience_name'] = [
@@ -126,8 +125,7 @@ class EditExperienceForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $url = Url::fromRoute('sir.manage_experiences');
-      $form_state->setRedirectUrl($url);
+      $form_state->setRedirectUrl(Utils::selectBackUrl('experience'));
       return;
     } 
 
@@ -149,13 +147,11 @@ class EditExperienceForm extends FormBase {
       $fusekiAPIservice->experienceAdd($experienceJson);
     
       \Drupal::messenger()->addMessage(t("Experience has been updated successfully."));
-      $url = Url::fromRoute('sir.manage_experiences');
-      $form_state->setRedirectUrl($url);
+      $form_state->setRedirectUrl(Utils::selectBackUrl('experience'));
 
     }catch(\Exception $e){
       \Drupal::messenger()->addMessage(t("An error occurred while updating Experience: ".$e->getMessage()));
-      $url = Url::fromRoute('sir.manage_experiences');
-      $form_state->setRedirectUrl($url);
+      $form_state->setRedirectUrl(Utils::selectBackUrl('experience'));
     }
 
   }

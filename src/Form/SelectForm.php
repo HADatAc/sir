@@ -101,16 +101,16 @@ class SelectForm extends FormBase {
 
       // INSTRUMENT
       case "instrument":
-        $this->single_class_name = "Instrument";
-        $this->plural_class_name = "Instruments";
+        $this->single_class_name = "Questionnaire";
+        $this->plural_class_name = "Questionnaires";
         $header = Instrument::generateHeader();
         $output = Instrument::generateOutput($this->getList());    
         break;
 
       // DETECTOR
       case "detector":
-        $this->single_class_name = "Detector";
-        $this->plural_class_name = "Detectors";
+        $this->single_class_name = "Item";
+        $this->plural_class_name = "Items";
         $header = Detector::generateHeader();
         $output = Detector::generateOutput($this->getList());    
         break;
@@ -139,7 +139,7 @@ class SelectForm extends FormBase {
     // PUT FORM TOGETHER
     $form['page_title'] = [
       '#type' => 'item',
-      '#title' => $this->t('<h3>Manage ' . $this->single_class_name . '</h3>'),
+      '#title' => $this->t('<h3>Manage ' . $this->plural_class_name . '</h3>'),
     ];
     $form['page_subtitle'] = [
       '#type' => 'item',
@@ -150,6 +150,13 @@ class SelectForm extends FormBase {
       '#value' => $this->t('Add New ' . $this->single_class_name),
       '#name' => 'add_element',
     ];
+    if ($this->element_type == 'detector') {
+      $form['derive_detector'] = [
+        '#type' => 'submit',
+        '#value' => $this->t('Derive New Item From Selected Item'),
+        '#name' => 'derive_detector',
+      ];
+    }
     $form['edit_selected_element'] = [
       '#type' => 'submit',
       '#value' => $this->t('Edit Selected ' . $this->single_class_name),
@@ -160,6 +167,20 @@ class SelectForm extends FormBase {
       '#value' => $this->t('Delete Selected ' . $this->plural_class_name),
       '#name' => 'delete_element',
     ];
+    if ($this->element_type == 'instrument') {
+        $form['manage_attachments'] = [
+        '#type' => 'submit',
+        '#value' => $this->t('Manage Attachments of Selected Questionnaire'),
+        '#name' => 'manage_attachments',
+      ];
+    }
+    if ($this->element_type == 'experience') {
+      $form['manage_codebook_slots'] = [
+        '#type' => 'submit',
+        '#value' => $this->t('Manage Slots of Selected Experience'),
+        '#name' => 'manage_codebook_slots',
+      ];  
+    }
     $form['element_table'] = [
       '#type' => 'tableselect',
       '#header' => $header,
@@ -179,6 +200,15 @@ class SelectForm extends FormBase {
         'links' => null,
         'title' => ' ',
       ],
+    ];
+    $form['submit'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Back'),
+      '#name' => 'back',
+    ];
+    $form['space'] = [
+      '#type' => 'item',
+      '#value' => $this->t('<br><br><br>'),
     ];
  
     return $form;
@@ -201,20 +231,19 @@ class SelectForm extends FormBase {
       }
     }
 
-    #dpm($rows);
-
     // ADD ELEMENT
     if ($button_name === 'add_element') {
       if ($this->element_type == 'instrument') {
         $url = Url::fromRoute('sir.add_instrument');
       } else if ($this->element_type == 'detector') {
         $url = Url::fromRoute('sir.add_detector');
+        $url->setRouteParameter('sourcedetectoruri', 'EMPTY');
+        $url->setRouteParameter('attachmenturi', 'EMPTY');  
       } else if ($this->element_type == 'experience') {
         $url = Url::fromRoute('sir.add_experience');
       } else if ($this->element_type == 'responseoption') {
         $url = Url::fromRoute('sir.add_response_option');
         $url->setRouteParameter('codebooksloturi', 'EMPTY');
-
       }
       $form_state->setRedirectUrl($url);
     }  
@@ -261,11 +290,54 @@ class SelectForm extends FormBase {
       }
     }  
 
+    // DERIVE DETECTOR
+    if ($button_name === 'derive_detector') {
+      if (sizeof($rows) < 1) {
+        \Drupal::messenger()->addMessage(t("Select the exact item to be derived."));      
+      } else if ((sizeof($rows) > 1)) {
+        \Drupal::messenger()->addMessage(t("Select only one item to be derived. No more than one item can be derived at once."));      
+      } else {
+        $first = array_shift($rows);
+        $url = Url::fromRoute('sir.add_detector');
+        $url->setRouteParameter('sourcedetectoruri', base64_encode($first));
+        $url->setRouteParameter('attachmenturi', 'EMPTY');
+        $form_state->setRedirectUrl($url);
+      }
+    }  
+    
+    // MANAGE CODEBOOK SLOTS
+    if ($button_name === 'manage_codebook_slots') {
+      if (sizeof($rows) < 1) {
+        \Drupal::messenger()->addMessage(t("Select the exact experience which codebook slots are going to be managed."));      
+      } else if ((sizeof($rows) > 1)) {
+        \Drupal::messenger()->addMessage(t("The codebook slot of no more than one experience can be managed at once."));      
+      } else {
+        $first = array_shift($rows);
+        $url = Url::fromRoute('sir.manage_codebook_slots', ['experienceuri' => base64_encode($first)]);
+        $form_state->setRedirectUrl($url);
+      } 
+      return;
+    }
+    
+    // MANAGE ATTACHMENTS
+    if ($button_name === 'manage_attachments') {
+      if (sizeof($rows) < 1) {
+        \Drupal::messenger()->addMessage(t("Select the exact questionnaire which attachments are going to be managed."));      
+      } else if ((sizeof($rows) > 1)) {
+        \Drupal::messenger()->addMessage(t("Select only one questionnaire. Items of no more than one questionnaire can be managed at once."));      
+      } else {
+        $first = array_shift($rows);
+        $url = Url::fromRoute('sir.manage_attachments', ['instrumenturi' => base64_encode($first)]);
+        $form_state->setRedirectUrl($url);
+      } 
+    }
+    
     // BACK TO MAIN PAGE
     if ($button_name === 'back') {
       $url = Url::fromRoute('sir.index');
       $form_state->setRedirectUrl($url);
     }  
+
   }
   
 

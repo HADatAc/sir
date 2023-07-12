@@ -4,13 +4,14 @@ namespace Drupal\sir\Entity;
 
 use Drupal\sir\Entity\Tables;
 use Drupal\sir\Vocabulary\VSTOI;
-use Kint\Kint;
+use Drupal\sir\Utils;
 
 class Detector {
 
   public static function generateHeader() {
 
     return $header = [
+      'element_uri' => t('URI'),
       'element_content' => t('Content'),
       'element_language' => t('Language'),
       'element_version' => t('Version'),
@@ -29,6 +30,11 @@ class Detector {
 
     $output = array();
     foreach ($list as $element) {
+      $uri = ' ';
+      if ($element->uri != NULL) {
+        $uri = $element->uri;
+      }
+      $uri = Utils::namespaceUri($uri);
       $content = ' ';
       if ($element->hasContent != NULL) {
         $content = $element->hasContent;
@@ -46,6 +52,7 @@ class Detector {
         $derivationVal = $derivations[$element->wasGeneratedBy];
       }
       $output[$element->uri] = [
+        'element_uri' => $uri,     
         'element_content' => $content,     
         'element_language' => $lang,
         'element_version' => $version,

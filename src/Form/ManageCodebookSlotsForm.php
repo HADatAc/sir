@@ -5,6 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\sir\Utils;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class ManageCodebookSlotsForm extends FormBase {
@@ -88,7 +89,7 @@ class ManageCodebookSlotsForm extends FormBase {
       $output[$slot->uri] = [
         'slot_priority' => $slot->hasPriority,     
         'slot_content' => $content,     
-        'slot_response_option' => $slot->hasResponseOption,     
+        'slot_response_option' => Utils::namespaceUri($slot->hasResponseOption),     
       ];
     }
 
@@ -192,14 +193,12 @@ class ManageCodebookSlotsForm extends FormBase {
       $fusekiAPIservice->codebookSlotDel($this->getExperienceUri());
     
       \Drupal::messenger()->addMessage(t("Codebook slots has been deleted successfully."));
-      $url = Url::fromRoute('sir.manage_experiences');
-      $form_state->setRedirectUrl($url);
+      $form_state->setRedirectUrl(Utils::selectBackUrl('experience'));
     }
 
     // BACK TO MAIN PAGE
     if ($button_name === 'back') {
-      $url = Url::fromRoute('sir.manage_experiences');
-      $form_state->setRedirectUrl($url);
+      $form_state->setRedirectUrl(Utils::selectBackUrl('experience'));
     }  
   }
   

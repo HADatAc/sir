@@ -4,8 +4,8 @@ namespace Drupal\sir\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Url;
 use Drupal\sir\Constant;
+use Drupal\sir\Utils;
 use Drupal\sir\Entity\Tables;
 use Drupal\sir\Vocabulary\VSTOI;
 
@@ -125,18 +125,14 @@ class AddInstrumentForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $url = Url::fromRoute('sir.manage_instruments');
-      $form_state->setRedirectUrl($url);
+      $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
       return;
     } 
 
     try{
-      $uid = \Drupal::currentUser()->id();
       $useremail = \Drupal::currentUser()->getEmail();
-
-      $iid = time().rand(10000,99999).$uid;
-      
-      $instrumentJson = '{"uri":"http://hadatac.org/kb/test/Instrument'.$iid.'",'.
+      $newInstrumentUri = Utils::uriGen('instrument');
+      $instrumentJson = '{"uri":"'.$newInstrumentUri.'",'.
         '"typeUri":"'.VSTOI::QUESTIONNAIRE.'",'.
         '"hascoTypeUri":"'.VSTOI::INSTRUMENT.'",'.
         '"label":"'.$form_state->getValue('instrument_name').'",'.
@@ -156,13 +152,11 @@ class AddInstrumentForm extends FormBase {
       $fusekiAPIservice = \Drupal::service('sir.api_connector');
       $fusekiAPIservice->instrumentAdd($instrumentJson);    
       \Drupal::messenger()->addMessage(t("Instruction has been added successfully."));
-      $url = Url::fromRoute('sir.manage_instruments');
-      $form_state->setRedirectUrl($url);
+      $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
 
     }catch(\Exception $e){
       \Drupal::messenger()->addMessage(t("An error occurred while adding instrument: ".$e->getMessage()));
-      $url = Url::fromRoute('sir.manage_instruments');
-      $form_state->setRedirectUrl($url);
+      $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
     }
 
   }

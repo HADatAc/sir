@@ -55,7 +55,7 @@ class About extends FormBase {
       $button_name = $triggering_element['#name'];
 
       if ($button_name === 'back') {
-        $url = Url::fromRoute('sir.manage_instruments');
+        $url = Url::fromRoute('sir.index');
         $form_state->setRedirectUrl($url);
         return;
       } 

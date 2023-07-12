@@ -14,17 +14,6 @@ sir.index:
 
 # Main menu options
 
-sir.edit_semantics:
-  path: 'sir/manage/editsemantics'
-  defaults:
-    _controller: '\Drupal\sir\Controller\EditInstrumentsController::index'
-    _title: 'Manage Semantics'    
-  requirements:
-    _permission: 'access content'
-    _custom_access_check: 'TRUE'    
-  options:
-    no_cache: 'TRUE'
-
 sir.list_element:
   path: 'sir/list/{elementtype}/{keyword}/{language}/{page}/{pagesize}'
   defaults:
@@ -46,17 +35,6 @@ sir.select_element:
     no_cache: 'TRUE'
 
 # Instrument CRUD options
-
-sir.manage_instruments:
-  path: 'sir/manage/instruments'
-  defaults:
-    _form: '\Drupal\sir\Form\ManageInstrumentsForm'
-    _title: 'Manage Instruments'    
-  requirements:
-    _permission: 'access content'
-    _custom_access_check: 'TRUE'    
-  options:
-    no_cache: 'TRUE'
 
 sir.add_instrument:
   path: 'sir/manage/addinstrument'
@@ -80,34 +58,10 @@ sir.edit_instrument:
   options:
     no_cache: 'TRUE'
 
-sir.edit_instruments:
-  path: 'sir/manage/editinstruments'
-  defaults:
-    _controller: '\Drupal\sir\Controller\EditInstrumentsController::index'
-    _title: 'Manage Questionnaries'    
-  requirements:
-    _permission: 'access content'
-    _custom_access_check: 'TRUE'
-  options:
-    no_cache: 'TRUE'
-
-sir.searchinstruments_ajax:
-  path: 'sir/ajax/searchinstruments'
-  defaults:
-    _controller: '\Drupal\sir\Controller\InstrumentController::searchinstrumentsAjax'
-    _title: 'search instruments Ajax'
-  methods: [POST]
-  requirements:
-    _permission: 'access content' 
-    instrument: .+   
-  options:
-    _csrf_token: 'FALSE'
-    no_cache: 'TRUE'
-
 sir.download_instrument:
   path: 'sir/download/{type}/{instrument}'
   defaults:
-    _controller: '\Drupal\sir\Controller\InstrumentController::download'
+    _controller: '\Drupal\sir\Controller\UtilsController::download'
   requirements:
     _permission: 'access content'
     instrument: .+    
@@ -159,17 +113,6 @@ sir.attachment_detector_autocomplete:
 
 # Detector "Item" CRUD options
 
-sir.manage_detectors:
-  path: 'sir/manage/detector'
-  defaults:
-    _form: '\Drupal\sir\Form\ManageDetectorsForm'
-    _title: 'Manage Items'    
-  requirements:
-    _permission: 'access content'
-    _custom_access_check: 'TRUE'    
-  options:
-    no_cache: 'TRUE'
-
 sir.add_detector:
   path: 'sir/manage/adddetector/{sourcedetectoruri}/{attachmenturi}'
   defaults:
@@ -212,17 +155,6 @@ sir.detector_experience_autocomplete:
     _permission: 'access content'
 
 # Experience CRUD options
-
-sir.manage_experiences:
-  path: 'sir/manage/experiences'
-  defaults:
-    _form: '\Drupal\sir\Form\ManageExperiencesForm'
-    _title: 'Manage Experiences'    
-  requirements:
-    _permission: 'access content'
-    _custom_access_check: 'TRUE'    
-  options:
-    no_cache: 'TRUE'
 
 sir.add_experience:
   path: 'sir/manage/addexperience'

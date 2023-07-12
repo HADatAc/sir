@@ -3,16 +3,17 @@
 namespace Drupal\sir\Entity;
 
 use Drupal\sir\Entity\Tables;
+use Drupal\sir\Utils;
 
 class Experience {
 
   public static function generateHeader() {
 
     return $header = [
+      'element_uri' => t('URI'),
       'element_name' => t('Name'),
       'element_language' => t('Language'),
       'element_version' => t('Version'),
-      //'element_uri' => t('URI'),
     ];
   
   }
@@ -25,6 +26,11 @@ class Experience {
  
     $output = array();
     foreach ($list as $element) {
+      $uri = ' ';
+      if ($element->uri != NULL) {
+        $uri = $element->uri;
+      }
+      $uri = Utils::namespaceUri($uri);
       $label = ' ';
       if ($element->label != NULL) {
         $label = $element->label;
@@ -38,6 +44,7 @@ class Experience {
         $version = $element->hasVersion;
       }
       $output[$element->uri] = [
+        'element_uri' => $uri,     
         'element_name' => $label,     
         'element_language' => $lang,
         'element_version' => $version,

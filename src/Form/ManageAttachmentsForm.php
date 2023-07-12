@@ -5,6 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\sir\Utils;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class ManageAttachmentsForm extends FormBase {
@@ -91,7 +92,7 @@ class ManageAttachmentsForm extends FormBase {
       $output[$attachment->uri] = [
         'attachment_priority' => $attachment->hasPriority,     
         'attachment_content' => $content,     
-        'attachment_detector' => $attachment->hasDetector,     
+        'attachment_detector' => Utils::namespaceUri($attachment->hasDetector),     
       ];
     }
 
@@ -192,14 +193,12 @@ class ManageAttachmentsForm extends FormBase {
       $fusekiAPIservice->attachmentDel($this->getInstrumentUri());
     
       \Drupal::messenger()->addMessage(t("Attachments has been deleted successfully."));
-      $url = Url::fromRoute('sir.manage_instruments');
-      $form_state->setRedirectUrl($url);
+      $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
     }
 
     // BACK TO MAIN PAGE
     if ($button_name === 'back') {
-      $url = Url::fromRoute('sir.manage_instruments');
-      $form_state->setRedirectUrl($url);
+      $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
     }  
   }
   

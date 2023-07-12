@@ -195,8 +195,7 @@ class AddDetectorForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $url = Url::fromRoute('sir.manage_detectors');
-      $form_state->setRedirectUrl($url);
+      $form_state->setRedirectUrl(Utils::selectBackUrl('detector'));
       return;
     } 
 
@@ -215,12 +214,10 @@ class AddDetectorForm extends FormBase {
       }
       $wasGeneratedBy = $form_state->getValue('detector_was_generated_by');
 
-      $uid = \Drupal::currentUser()->id();
       $useremail = \Drupal::currentUser()->getEmail();
 
       // CREATE A NEW DETECTOR
-      $iid = time().rand(10000,99999).$uid;
-      $newDetectorUri = 'http://hadatac.org/kb/test/Detector'.$iid;
+      $newDetectorUri = Utils::uriGen('detector');
       $detectorJson = '{"uri":"'.$newDetectorUri.'",'.
         '"typeUri":"'.VSTOI::DETECTOR.'",'.
         '"hascoTypeUri":"'.VSTOI::DETECTOR.'",'.
@@ -246,8 +243,7 @@ class AddDetectorForm extends FormBase {
         return;
       } else {        
         \Drupal::messenger()->addMessage(t("Detector has been added successfully."));
-        $url = Url::fromRoute('sir.manage_detectors');
-        $form_state->setRedirectUrl($url);
+        $form_state->setRedirectUrl(Utils::selectBackUrl('detector'));
         return;
       }
     } catch(\Exception $e) {
@@ -258,8 +254,7 @@ class AddDetectorForm extends FormBase {
         $form_state->setRedirectUrl($url);
       } else {
         \Drupal::messenger()->addMessage(t("An error occurred while adding the Detector: ".$e->getMessage()));
-        $url = Url::fromRoute('sir.manage_detectors');
-        $form_state->setRedirectUrl($url);
+        $form_state->setRedirectUrl(Utils::selectBackUrl('detector'));
         }
     }
   }

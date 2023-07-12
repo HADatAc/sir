@@ -382,6 +382,14 @@ class FusekiAPIConnector {
    *   AUXILIARY TABLES
    */
 
+  public function namespaceList() {
+    $endpoint = "/sirapi/api/repo/table/namespaces";
+    $method = "GET";
+    $api_url = $this->getApiUrl();
+    $data = [];
+    return $this->perform_http_request($method,$api_url.$endpoint,$data);   
+  }
+
   public function informantList() {
     $endpoint = "/sirapi/api/repo/table/informants";
     $method = "GET";

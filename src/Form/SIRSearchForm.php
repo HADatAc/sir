@@ -5,6 +5,8 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\RedirectCommand;
 use Drupal\sir\Entity\Tables;
 use Drupal\sir\Vocabulary\HASCO;
 use Drupal\sir\Vocabulary\VSTOI;
@@ -128,18 +130,24 @@ class SIRSearchForm extends FormBase {
 //        'semanticvariable' => $this->t('Semantic Variable'),
       ],
       '#default_value' => $this->getElementType(),
+      '#ajax' => [
+        'callback' => '::ajaxSubmitForm',
+      ],
+    ];
+    $form['search_language'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Language'),
+      '#options' => $languages,
+      '#default_value' => $this->getLanguage(),
+      '#ajax' => [
+        'callback' => '::ajaxSubmitForm',
+      ],
     ];
     $form['search_keyword'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Keyword'),
       '#default_value' => $this->getKeyword(),
     ];
-    $form['search_language'] = [
-        '#type' => 'select',
-        '#title' => $this->t('Language'),
-        '#options' => $languages,
-        '#default_value' => $this->getLanguage(),
-      ];
     $form['search_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Search'),
@@ -155,6 +163,37 @@ class SIRSearchForm extends FormBase {
     if(strlen($form_state->getValue('search_element_type')) < 1) {
       $form_state->setErrorByName('search_element_type', $this->t('Please select an element type'));
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  private function redirectUrl(FormStateInterface $form_state) {
+    $this->setKeyword($form_state->getValue('search_keyword'));
+    if ($this->getKeyword() == NULL || $this->getKeyword() == '') {
+      $this->setKeyword("_");
+    }
+    $this->setLanguage($form_state->getValue('search_language'));
+    if ($this->getLanguage() == NULL || $this->getLanguage() == '' || $this->getLanguage() == 'ANY') {
+      $this->setLanguage("_");
+    }
+    $url = Url::fromRoute('sir.list_element');
+    $url->setRouteParameter('elementtype', $form_state->getValue('search_element_type'));
+    $url->setRouteParameter('keyword', $this->getKeyword());
+    $url->setRouteParameter('language', $this->getLanguage());
+    $url->setRouteParameter('page', $this->getPage());
+    $url->setRouteParameter('pagesize', $this->getPageSize());
+    return $url;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function ajaxSubmitForm(array &$form, FormStateInterface $form_state) {
+    $response = new AjaxResponse();
+    $url = $this->redirectUrl($form_state);
+    $response->addCommand(new RedirectCommand($url->toString()));
+    return $response;
   }
 
   /**
@@ -177,7 +216,6 @@ class SIRSearchForm extends FormBase {
     $url->setRouteParameter('page', $this->getPage());
     $url->setRouteParameter('pagesize', $this->getPageSize());
     $form_state->setRedirectUrl($url);
-    
-}
+  }
 
 }
