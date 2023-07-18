@@ -86,10 +86,14 @@ class ManageCodebookSlotsForm extends FormBase {
           } 
         }
       }
+      $responseOptionUriStr = "";
+      if ($slot->hasResponseOption != NULL && $slot->hasResponseOption != '') {
+        $responseOptionUriStr = Utils::namespaceUri($slot->hasResponseOption);
+      }
       $output[$slot->uri] = [
         'slot_priority' => $slot->hasPriority,     
         'slot_content' => $content,     
-        'slot_response_option' => Utils::namespaceUri($slot->hasResponseOption),     
+        'slot_response_option' => $responseOptionUriStr,     
       ];
     }
 

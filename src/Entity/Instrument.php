@@ -26,6 +26,9 @@ class Instrument {
 
   public static function generateOutput($list) {
 
+    // ROOT URL
+    $root_url = \Drupal::request()->getBaseUrl();
+
     // GET LANGUAGES
     $tables = new Tables;
     $languages = $tables->getLanguages();
@@ -61,7 +64,7 @@ class Instrument {
       $tordf = '<a href="'. $root_url . SIRAPI::DOWNLOAD . 'rdf'. '/'. $encodedUri . '">RDF</a>';
       $tofhir = '<a href="'. $root_url . SIRAPI::DOWNLOAD . 'fhir'. '/'. $encodedUri . '">FHIR</a>';
       $output[$element->uri] = [
-        'element_uri' => $uri,
+        'element_uri' => t('<a href="'.$root_url.SIRAPI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),     
         'element_abbreviation' => $shortName,     
         'element_name' => $label,     
         'element_language' => $lang,

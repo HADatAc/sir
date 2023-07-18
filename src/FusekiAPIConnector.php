@@ -33,6 +33,14 @@ class FusekiAPIConnector {
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
+  public function getUsage($uri) {
+    $endpoint = "/sirapi/api/usage/".rawurlencode($uri);
+    $method = 'GET';
+    $api_url = $this->getApiUrl();
+    $data = [];
+    return $this->perform_http_request($method,$api_url.$endpoint,$data);   
+  }
+
   // valid values for elementType: "instrument", "detector", "experience", "responseoption"
   public function listByKeywordAndLanguage($elementType, $keyword, $language, $pageSize, $offset) {
     $endpoint = "/sirapi/api/".
@@ -442,5 +450,16 @@ class FusekiAPIConnector {
     }
     
   }
+
+  public function parseObjectResponse($response) {
+    if ($response == NULL || $response == "") {
+        return NULL;
+    }
+    $obj = json_decode($response);
+    if ($obj->isSuccessful) {
+      return $obj->body;
+    }
+    return NULL; 
+}
 
 }

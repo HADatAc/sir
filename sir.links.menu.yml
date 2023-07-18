@@ -76,13 +76,24 @@ sir.manage_responseoptions :
     _permission: 'access content'
     _role: 'authenticated'
 
+sir.uri_describe:
+  title: Describe URI
+  description: Describe URI
+  route_name: sir.element_uri
+  parent: sir.top_level
+  menu_name: main
+  weight: 5
+  requirements:
+    _permission: 'access content'
+    _role: 'authenticated'
+    
 sir.admin_settings_link:
   title: Configuration
   description: SIR Settings
   menu_name: main 
   route_name: sir.admin_settings_custom
   parent: sir.top_level
-  weight: 6
+  weight: 10
   requirements:
     _permission: 'access content'
     _role: 'authenticated'

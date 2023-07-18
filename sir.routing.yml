@@ -34,6 +34,29 @@ sir.select_element:
   options:
     no_cache: 'TRUE'
 
+sir.describe_element:
+  path: 'sir/uri/{elementuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\DescribeForm'
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+# Element URI 
+
+sir.element_uri:
+  path: 'sir/uriform'
+  defaults:
+    _form: '\Drupal\sir\Form\UriForm'
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+
 # Instrument CRUD options
 
 sir.add_instrument:
@@ -284,7 +307,6 @@ sir.about:
   path: 'sir/about'
   defaults:
     _form: '\Drupal\sir\Form\About'
-    _title: 'SIR About'
   requirements:
     _permission: 'access content'
   options:

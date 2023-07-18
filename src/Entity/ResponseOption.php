@@ -4,6 +4,7 @@ namespace Drupal\sir\Entity;
 
 use Drupal\sir\Entity\Tables;
 use Drupal\sir\Utils;
+use Drupal\sir\Vocabulary\SIRAPI;
 
 class ResponseOption {
 
@@ -19,6 +20,9 @@ class ResponseOption {
   }
 
   public static function generateOutput($list) {
+
+    // ROOT URL
+    $root_url = \Drupal::request()->getBaseUrl();
 
     // GET LANGUAGES
     $tables = new Tables;
@@ -44,7 +48,7 @@ class ResponseOption {
         $version = $element->hasVersion;
       }
       $output[$element->uri] = [
-        'element_uri' => $uri,     
+        'element_uri' => t('<a href="'.$root_url.SIRAPI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),     
         'element_content' => $content,     
         'element_language' => $lang,
         'element_version' => $version,

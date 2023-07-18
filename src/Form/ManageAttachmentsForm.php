@@ -89,10 +89,14 @@ class ManageAttachmentsForm extends FormBase {
           } 
         }
       }
+      $detectorUriStr = "";
+      if ($attachment->hasDetector != NULL && $attachment->hasDetector != '') {
+        $detectorUriStr = Utils::namespaceUri($attachment->hasDetector);
+      }
       $output[$attachment->uri] = [
         'attachment_priority' => $attachment->hasPriority,     
         'attachment_content' => $content,     
-        'attachment_detector' => Utils::namespaceUri($attachment->hasDetector),     
+        'attachment_detector' => $detectorUriStr,     
       ];
     }
 

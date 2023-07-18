@@ -68,8 +68,7 @@ class EditDetectorForm extends FormBase {
     $this->setDetector($this->retrieveDetector($this->getDetectorUri()));
     if ($this->getDetector() == NULL) {
       \Drupal::messenger()->addMessage(t("Failed to retrieve Detector."));
-      $url = Url::fromRoute('sir.manage_detectors');
-      $form_state->setRedirectUrl($url);
+      $form_state->setRedirectUrl(Utils::selectBackUrl('detector'));
     } else {
       $wasGeneratedBy = $this->getDetector()->wasGeneratedBy;
       if ($this->getDetector()->wasDerivedFrom != NULL) {
@@ -170,8 +169,7 @@ class EditDetectorForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $url = Url::fromRoute('sir.manage_detectors');
-      $form_state->setRedirectUrl($url);
+      $form_state->setRedirectUrl(Utils::selectBackUrl('detector'));
       return;
     } 
 
@@ -209,13 +207,11 @@ class EditDetectorForm extends FormBase {
       $fusekiAPIservice->detectorDel($this->getDetectorUri());
       $updatedDetector = $fusekiAPIservice->detectorAdd($detectorJson);    
       \Drupal::messenger()->addMessage(t("Detector has been updated successfully."));
-      $url = Url::fromRoute('sir.manage_detectors');
-      $form_state->setRedirectUrl($url);
+      $form_state->setRedirectUrl(Utils::selectBackUrl('detector'));
 
     }catch(\Exception $e){
       \Drupal::messenger()->addMessage(t("An error occurred while updating the Detector: ".$e->getMessage()));
-      $url = Url::fromRoute('sir.manage_detectors');
-      $form_state->setRedirectUrl($url);
+      $form_state->setRedirectUrl(Utils::selectBackUrl('detector'));
     }
   }
 

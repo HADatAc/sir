@@ -259,7 +259,7 @@ class SelectForm extends FormBase {
         if ($this->element_type == 'instrument') {
           $url = Url::fromRoute('sir.edit_instrument', ['instrumenturi' => base64_encode($first)]);
         } else if ($this->element_type == 'detector') {
-          $url = Url::fromRoute('sir.edit_detector', ['datectoruri' => base64_encode($first)]);
+          $url = Url::fromRoute('sir.edit_detector', ['detectoruri' => base64_encode($first)]);
         } else if ($this->element_type == 'experience') {
           $url = Url::fromRoute('sir.edit_experience', ['experienceuri' => base64_encode($first)]);
         } else if ($this->element_type == 'responseoption') {

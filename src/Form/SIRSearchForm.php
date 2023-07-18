@@ -191,6 +191,8 @@ class SIRSearchForm extends FormBase {
    */
   public function ajaxSubmitForm(array &$form, FormStateInterface $form_state) {
     $response = new AjaxResponse();
+    $this->setPage(1);
+    $this->setPageSize(12);
     $url = $this->redirectUrl($form_state);
     $response->addCommand(new RedirectCommand($url->toString()));
     return $response;
@@ -200,21 +202,7 @@ class SIRSearchForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $this->setKeyword($form_state->getValue('search_keyword'));
-    if ($this->getKeyword() == NULL || $this->getKeyword() == '') {
-      $this->setKeyword("_");
-    }
-    $this->setLanguage($form_state->getValue('search_language'));
-    if ($this->getLanguage() == NULL || $this->getLanguage() == '' || $this->getLanguage() == 'ANY') {
-      $this->setLanguage("_");
-    }
-    
-    $url = Url::fromRoute('sir.list_element');
-    $url->setRouteParameter('elementtype', $form_state->getValue('search_element_type'));
-    $url->setRouteParameter('keyword', $this->getKeyword());
-    $url->setRouteParameter('language', $this->getLanguage());
-    $url->setRouteParameter('page', $this->getPage());
-    $url->setRouteParameter('pagesize', $this->getPageSize());
+    $url = $this->redirectUrl($form_state);
     $form_state->setRedirectUrl($url);
   }
 
