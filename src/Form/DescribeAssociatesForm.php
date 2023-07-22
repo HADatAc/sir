@@ -72,7 +72,12 @@
           $header = Attachment::generateHeader();
           $output = Attachment::generateOutput($this->getAssociates());    
 
-          // PUT FORM TOGETHER
+          $form['associates_detectors_header'] = [
+            '#type' => 'item',
+            '#title' => '<h4>Items</h4>',
+          ];
+  
+            // PUT FORM TOGETHER
           $form['associates_table'] = [
             '#type' => 'table',
             '#header' => $header,

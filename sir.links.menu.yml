@@ -1,21 +1,22 @@
 sir.top_level:
-  title: SIR
+  title: Advanced
   description: Manage Repository
   route_name: sir.index
+  menu_name: main
+  weight: 100
+  requirements:
+    _permission: 'access content'
+    
+sir.search:
+  title: Search
+  description: Search Repository
+  route_name: sir.index
+  parent: sir.top_level
   menu_name: main
   weight: 1
   requirements:
     _permission: 'access content'
     
-sir.about:
-  title: About
-  description: About
-  route_name: sir.about
-  menu_name: main
-  weight: 2
-  requirements:
-    _permission: 'access content'
-
 sir.manage_instruments:
   title: Manage Questionnaires
   description: Manage Questionnaries
@@ -23,10 +24,10 @@ sir.manage_instruments:
   route_parameters:
     elementtype: 'instrument'
     page: '1'
-    pagesize: '12'
+    pagesize: '10'
   parent: sir.top_level
   menu_name: main
-  weight: 1
+  weight: 2
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -38,10 +39,10 @@ sir.manage_detectors :
   route_parameters:
     elementtype: 'detector'
     page: '1'
-    pagesize: '12'
+    pagesize: '10'
   parent: sir.top_level
   menu_name: main
-  weight: 2
+  weight: 3
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -53,10 +54,10 @@ sir.manage_experiences :
   route_parameters:
     elementtype: 'experience'
     page: '1'
-    pagesize: '12'
+    pagesize: '10'
   parent: sir.top_level
   menu_name: main
-  weight: 3
+  weight: 4
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -68,10 +69,10 @@ sir.manage_responseoptions :
   route_parameters:
     elementtype: 'responseoption'
     page: '1'
-    pagesize: '12'
+    pagesize: '10'
   parent: sir.top_level
   menu_name: main
-  weight: 4
+  weight: 5
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -82,11 +83,20 @@ sir.uri_describe:
   route_name: sir.element_uri
   parent: sir.top_level
   menu_name: main
-  weight: 5
+  weight: 6
   requirements:
     _permission: 'access content'
-    _role: 'authenticated'
     
+sir.about:
+  title: About
+  description: About
+  route_name: sir.about
+  parent: sir.top_level
+  menu_name: main
+  weight: 12
+  requirements:
+    _permission: 'access content'
+
 sir.admin_settings_link:
   title: Configuration
   description: SIR Settings
@@ -97,3 +107,4 @@ sir.admin_settings_link:
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
+
