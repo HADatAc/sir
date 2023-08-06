@@ -5,14 +5,11 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\Core\Routing\TrustedRedirectResponse;
+use Drupal\sir\Utils;
+use Drupal\sir\Entity\Tables;
+use Drupal\sir\Vocabulary\VSTOI;
 
 class EditResponseOptionForm extends FormBase {
-
-    /**
-   * Settings Variable.
-   */
-  Const CONFIGNAME = "sir.settings";
 
   protected $responseOptionUri;
 
@@ -42,16 +39,6 @@ class EditResponseOptionForm extends FormBase {
   }
 
   /**
-     * {@inheritdoc}
-     */
-
-     protected function getEditableConfigNames() {
-      return [
-          static::CONFIGNAME,
-      ];
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $responseoptionuri = NULL) {
@@ -59,12 +46,11 @@ class EditResponseOptionForm extends FormBase {
     $uri_decode=base64_decode($uri);
     $this->setResponseOptionUri($uri_decode);
 
-    $config = $this->config(static::CONFIGNAME);           
-    $api_url = $config->get("api_url");
-    $endpoint = "/sirapi/api/uri/".rawurlencode($this->getResponseOptionUri());
+    $tables = new Tables;
+    $languages = $tables->getLanguages();
 
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $rawresponse = $fusekiAPIservice->getUri($api_url,$endpoint);
+    $rawresponse = $fusekiAPIservice->getUri($this->getResponseOptionUri());
     $obj = json_decode($rawresponse);
     
     if ($obj->isSuccessful) {
@@ -73,29 +59,19 @@ class EditResponseOptionForm extends FormBase {
     } else {
       \Drupal::messenger()->addMessage(t("Failed to retrieve Response Option."));
       $url = Url::fromRoute('sir.manage_response_options');
-      $url->setRouteParameter('experienceuri', base64_encode($this->getResponseOption()->ofExperience));
+      # $url->setRouteParameter('experienceuri', base64_encode($this->getResponseOption()->ofExperience));
       $form_state->setRedirectUrl($url);
     }
 
-    $form['responseoption_experience'] = [
-      '#type' => 'textfield',
-      '#title' => t('Experience'),
-      '#value' => $this->getResponseOption()->ofExperience,
-      '#disabled' => TRUE,
-    ];
-    $form['responseoption_priority'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Priority'),
-      '#default_value' => $this->getResponseOption()->hasPriority,
-    ];
     $form['responseoption_content'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Content'),
       '#default_value' => $this->getResponseOption()->hasContent,
     ];
     $form['responseoption_language'] = [
-      '#type' => 'textfield',
+      '#type' => 'select',
       '#title' => $this->t('Language'),
+      '#options' => $languages,
       '#default_value' => $this->getResponseOption()->hasLanguage,
     ];
     $form['responseoption_version'] = [
@@ -133,9 +109,6 @@ class EditResponseOptionForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name != 'back') {
-      if(strlen($form_state->getValue('responseoption_priority')) < 1) {
-        $form_state->setErrorByName('responseoption_priority', $this->t('Please enter a valid priority value'));
-      }
       if(strlen($form_state->getValue('responseoption_content')) < 1) {
         $form_state->setErrorByName('responseoption_content', $this->t('Please enter a valid content'));
       }
@@ -149,87 +122,39 @@ class EditResponseOptionForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $submitted_values = $form_state->cleanValues()->getValues();
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $url = Url::fromRoute('sir.manage_response_options');
-      $url->setRouteParameter('experienceuri', base64_encode($this->getResponseOption()->ofExperience));
-      $form_state->setRedirectUrl($url);
+      $form_state->setRedirectUrl(Utils::selectBackUrl('responseoption'));
       return;
     } 
 
     try{
-      $config = $this->config(static::CONFIGNAME);     
-      $api_url = $config->get("api_url");
-      $repository_abbreviation = $config->get("repository_abbreviation");
-  
-      $uid = \Drupal::currentUser()->id();
-      $uemail = \Drupal::currentUser()->getEmail();
+      $useremail = \Drupal::currentUser()->getEmail();
 
-      $data = [
-        'uri' => $this->getResponseOption()->uri,
-        'typeUri' => 'http://hadatac.org/ont/vstoi#ResponseOption',
-        'hascoTypeUri' => 'http://hadatac.org/ont/vstoi#ResponseOption',
-        'ofExperience' => $this->getResponseOption()->ofExperience,
-        'hasPriority' => $form_state->getValue('responseoption_priority'),
-        'hasContent' => $form_state->getValue('responseoption_content'),
-        'hasLanguage' => $form_state->getValue('responseoption_language'),
-        'hasVersion' => $form_state->getValue('responseoption_version'),
-        'comment' => $form_state->getValue('responseoption_description'),
-        'hasSIRMaintainerEmail' => $uemail, 
-      ];
-      
-      $datap = '{"uri":"'. $this->getResponseOption()->uri .'",'.
-        '"typeUri":"http://hadatac.org/ont/vstoi#ResponseOption",'.
-        '"hascoTypeUri":"http://hadatac.org/ont/vstoi#ResponseOption",'.
-        '"ofExperience":"' . $this->getResponseOption()->ofExperience . '",'.
-        '"hasPriority":"'.$form_state->getValue('responseoption_priority').'",'.
+      $responseOptionJSON = '{"uri":"'. $this->getResponseOption()->uri .'",'.
+        '"typeUri":"'.VSTOI::RESPONSE_OPTION.'",'.
+        '"hascoTypeUri":"'.VSTOI::RESPONSE_OPTION.'",'.
         '"hasContent":"'.$form_state->getValue('responseoption_content').'",'.
         '"hasLanguage":"'.$form_state->getValue('responseoption_language').'",'.
         '"hasVersion":"'.$form_state->getValue('responseoption_version').'",'.
         '"comment":"'.$form_state->getValue('responseoption_description').'",'.
-        '"hasSIRMaintainerEmail":"'.$uemail.'"}';
-
-      $dataJ = json_encode($data);
-    
-      $dataE = rawurlencode($datap);
+        '"hasSIRMaintainerEmail":"'.$useremail.'"}';
 
       // UPDATE BY DELETING AND CREATING
-      $uriEncoded = rawurlencode($this->getResponseOptionUri());
-      $this->deleteResponseOption($api_url,"/sirapi/api/responseoption/delete/".$uriEncoded,[]);    
-      $updatedResponseOption = $this->addResponseOption($api_url,"/sirapi/api/responseoption/create/".$dataE,$data);
+      $fusekiAPIservice = \Drupal::service('sir.api_connector');
+      $fusekiAPIservice->responseoptionDel($this->getResponseOption()->uri);
+      $fusekiAPIservice->responseoptionAdd($responseOptionJSON);
     
       \Drupal::messenger()->addMessage(t("Response Option has been updated successfully."));
-      $url = Url::fromRoute('sir.manage_response_options');
-      $url->setRouteParameter('experienceuri', base64_encode($this->getResponseOption()->ofExperience));
-      $form_state->setRedirectUrl($url);
+      $form_state->setRedirectUrl(Utils::selectBackUrl('responseoption'));
 
     }catch(\Exception $e){
       \Drupal::messenger()->addMessage(t("An error occurred while updating the Response Option: ".$e->getMessage()));
-      $url = Url::fromRoute('sir.manage_response_options');
-      $url->setRouteParameter('experienceuri', base64_encode($this->getResponseOption()->ofExperience));
-      $form_state->setRedirectUrl($url);
+      $form_state->setRedirectUrl(Utils::selectBackUrl('responseoption'));
     }
 
   }
-
-  public function addResponseOption($api_url,$endpoint,$data){
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $newResponseOption = $fusekiAPIservice->responseOptionAdd($api_url,$endpoint,$data);
-    if(!empty($newResponseOptiont)){
-      return $newResponseOption;
-    }
-    return [];
-  }
-
-  public function deleteResponseOption($api_url,$endpoint,$data){
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $fusekiAPIservice->responseoptionDel($api_url,$endpoint,$data);
-    return true;
-  }
-  
-
 
 }

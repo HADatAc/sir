@@ -6,11 +6,8 @@ use Drupal\Core\Routing\RouteSubscriberBase;
 use Symfony\Component\Routing\RouteCollection;
 use Drupal\Core\Config\ConfigFactoryInterface;
 
-
 class RouteSubscriber extends RouteSubscriberBase {
 
-
- 
   /**
    * The config factory.
    *
@@ -28,7 +25,6 @@ class RouteSubscriber extends RouteSubscriberBase {
     $this->configFactory = $config_factory;
   }
 
-
   protected function alterRoutes(RouteCollection $collection) {
     
     $config = $this->configFactory->get('sir.settings');
@@ -36,7 +32,7 @@ class RouteSubscriber extends RouteSubscriberBase {
 
     if($sir_home == '1'){
       if ($route = $collection->get('view.frontpage.page_1')) {
-        $route->setDefault('_controller', '\Drupal\sir\Controller\InstrumentController::index');
+        $route->setDefault('_controller', '\Drupal\sir\Controller\InitializationController::index');
       }
    }
   }

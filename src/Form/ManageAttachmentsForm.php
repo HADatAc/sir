@@ -5,14 +5,10 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\sir\Utils;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class ManageAttachmentsForm extends FormBase {
-
-    /**
-   * Settings Variable.
-   */
-  Const CONFIGNAME = "sir.settings";
 
   protected $instrumentUri;
 
@@ -32,28 +28,15 @@ class ManageAttachmentsForm extends FormBase {
   }
 
   /**
-     * {@inheritdoc}
-     */
-
-     protected function getEditableConfigNames() {
-      return [
-          static::CONFIGNAME,
-      ];
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $instrumenturi = NULL) {
 
     # GET CONTENT
-
     $uri=$instrumenturi ?? 'default';
     $uri_decode=base64_decode($uri);
     $this->setInstrumentUri($uri_decode);
 
-    $config = $this->config(static::CONFIGNAME);           
-    $api_url = $config->get("api_url");
     $uemail = \Drupal::currentUser()->getEmail();
     $uid = \Drupal::currentUser()->id();
     $user = \Drupal\user\Entity\User::load($uid);
@@ -61,8 +44,7 @@ class ManageAttachmentsForm extends FormBase {
 
     // RETRIEVE INSTRUMENT BY URI
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $endpoint_instrument = "/sirapi/api/uri/".rawurlencode($this->getInstrumentUri());
-    $rawinstrument = $fusekiAPIservice->getUri($api_url,$endpoint_instrument);
+    $rawinstrument = $fusekiAPIservice->getUri($this->getInstrumentUri());
     $objinstrument = json_decode($rawinstrument);
     $instrument = NULL;
     if ($objinstrument->isSuccessful) {
@@ -70,8 +52,7 @@ class ManageAttachmentsForm extends FormBase {
     }
 
     // RETRIEVE ATTACHMENTS BY INSTRUMENT
-    $endpoint_detector = "/sirapi/api/attachment/byinstrument/".rawurlencode($this->getInstrumentUri());
-    $attachment_list = $fusekiAPIservice->attachmentList($api_url,$endpoint_detector);
+    $attachment_list = $fusekiAPIservice->attachmentList($this->getInstrumentUri());
     $obj = json_decode($attachment_list);
     $attachments = [];
     if ($obj->isSuccessful) {
@@ -99,8 +80,7 @@ class ManageAttachmentsForm extends FormBase {
       $detector = NULL;
       $content = "";
       if ($attachment->hasDetector != null) {
-        $endpoint_instrument = "/sirapi/api/uri/".rawurlencode($attachment->hasDetector);
-        $rawdetector = $fusekiAPIservice->getUri($api_url,$endpoint_instrument);
+        $rawdetector = $fusekiAPIservice->getUri($attachment->hasDetector);
         $objdetector = json_decode($rawdetector);
         if ($objdetector->isSuccessful) {
           $detector = $objdetector->body;
@@ -109,10 +89,14 @@ class ManageAttachmentsForm extends FormBase {
           } 
         }
       }
+      $detectorUriStr = "";
+      if ($attachment->hasDetector != NULL && $attachment->hasDetector != '') {
+        $detectorUriStr = Utils::namespaceUri($attachment->hasDetector);
+      }
       $output[$attachment->uri] = [
         'attachment_priority' => $attachment->hasPriority,     
         'attachment_content' => $content,     
-        'attachment_detector' => $attachment->hasDetector,     
+        'attachment_detector' => $detectorUriStr,     
       ];
     }
 
@@ -128,7 +112,7 @@ class ManageAttachmentsForm extends FormBase {
     ];
     $form['edit_selected_attachment'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Edit Selected Item'),
+      '#value' => $this->t('Edit Selected Attachment'),
       '#name' => 'edit_attachment',
     ];
     $form['delete_attachments'] = [
@@ -141,16 +125,16 @@ class ManageAttachmentsForm extends FormBase {
       '#header' => $header,
       '#options' => $output,
       '#empty' => t('No response options found'),
-      '#ajax' => [
-        'callback' => '::attachmentAjaxCallback', 
-        'disable-refocus' => FALSE, 
-        'event' => 'change',
-        'wrapper' => 'edit-output', 
-        'progress' => [
-          'type' => 'throbber',
-          'message' => $this->t('Verifying entry...'),
-        ],
-      ]    
+      //'#ajax' => [
+      //  'callback' => '::attachmentAjaxCallback', 
+      //  'disable-refocus' => FALSE, 
+      //  'event' => 'change',
+      //  'wrapper' => 'edit-output', 
+      //  'progress' => [
+      //    'type' => 'throbber',
+      //    'message' => $this->t('Verifying entry...'),
+      //  ],
+      //]    
     ];
     $form['submit'] = [
       '#type' => 'submit',
@@ -193,9 +177,6 @@ class ManageAttachmentsForm extends FormBase {
       }
     }
 
-    $config = $this->config(static::CONFIGNAME);     
-    $api_url = $config->get("api_url");
-
     // EDIT ATTACHMENT
     if ($button_name === 'edit_attachment') {
       if (sizeof($rows) < 1) {
@@ -212,35 +193,17 @@ class ManageAttachmentsForm extends FormBase {
 
     // DELETE ATTACHMENTS
     if ($button_name === 'delete_attachments') {
-      $data = [];
-      $datap = $this->getInstrumentUri();
-      $dataE = rawurlencode($datap);
-      $deleteAttachments = $this->deleteAttachments($api_url,"/sirapi/api/attachment/delete/".$dataE,$data);
+      $fusekiAPIservice = \Drupal::service('sir.api_connector');
+      $fusekiAPIservice->attachmentDel($this->getInstrumentUri());
     
       \Drupal::messenger()->addMessage(t("Attachments has been deleted successfully."));
-      $url = Url::fromRoute('sir.manage_instruments');
-      $form_state->setRedirectUrl($url);
+      $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
     }
 
     // BACK TO MAIN PAGE
     if ($button_name === 'back') {
-      $url = Url::fromRoute('sir.manage_instruments');
-      $form_state->setRedirectUrl($url);
+      $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
     }  
   }
-
-  public function deleteResponseOption($api_url,$endpoint,$data){
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $fusekiAPIservice->detectorDel($api_url,$endpoint,$data);
-    return true;
-  }
-
-  public function deleteAttachments($api_url,$endpoint,$data){
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $fusekiAPIservice->attachmentDel($api_url,$endpoint,$data);
-    return [];
-  }
-
-
   
 }

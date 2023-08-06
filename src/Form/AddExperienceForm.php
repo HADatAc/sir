@@ -4,15 +4,11 @@ namespace Drupal\sir\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Url;
-use Drupal\Core\Routing\TrustedRedirectResponse;
+use Drupal\sir\Utils;
+use Drupal\sir\Entity\Tables;
+use Drupal\sir\Vocabulary\VSTOI;
 
 class AddExperienceForm extends FormBase {
-
-    /**
-   * Settings Variable.
-   */
-  Const CONFIGNAME = "sir.settings";
 
   /**
    * {@inheritdoc}
@@ -25,13 +21,17 @@ class AddExperienceForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+    $tables = new Tables;
+    $languages = $tables->getLanguages();
     $form['experience_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name'),
     ];
     $form['experience_language'] = [
-      '#type' => 'textfield',
+      '#type' => 'select',
       '#title' => $this->t('Language'),
+      '#options' => $languages,
+      '#default_value' => 'en',
     ];
     $form['experience_version'] = [
       '#type' => 'textfield',
@@ -83,69 +83,32 @@ class AddExperienceForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $url = Url::fromRoute('sir.manage_experiences');
-      $form_state->setRedirectUrl($url);
+      $form_state->setRedirectUrl(Utils::selectBackUrl('experience'));
       return;
     } 
 
     try {
-      $config = $this->config(static::CONFIGNAME);     
-      $api_url = $config->get("api_url");
-      $repository_abbreviation = $config->get("repository_abbreviation");
-  
-      $uid = \Drupal::currentUser()->id();
       $uemail = \Drupal::currentUser()->getEmail();
-
-      $iid = time().rand(10000,99999).$uid;
-      
-      $data = [
-        'uri' => 'http://hadatac.org/kb/test/Experience'.$iid,
-        'typeUri' => 'http://hadatac.org/ont/vstoi#Experience',
-        'hascoTypeUri' => 'http://hadatac.org/ont/vstoi#Experience',
-        'label' => $form_state->getValue('experience_name'),
-        'hasLanguage' => $form_state->getValue('experience_language'),
-        'hasVersion' => $form_state->getValue('experience_version'),
-        'comment' => $form_state->getValue('experience_description'),
-        'hasSIRMaintainerEmail' => $uemail,
-      ];
-      
-
-      $datap = '{"uri":"http://hadatac.org/kb/test/Experience' . $iid . '",' . 
-        '"typeUri":"http://hadatac.org/ont/vstoi#Experience",' . 
-        '"hascoTypeUri":"http://hadatac.org/ont/vstoi#Experience",' . 
+      $newExperienceUri = Utils::uriGen('experience');
+      $experienceJSON = '{"uri":"'.$newExperienceUri.'",' . 
+        '"typeUri":"'.VSTOI::EXPERIENCE.'",'.
+        '"hascoTypeUri":"'.VSTOI::EXPERIENCE.'",'.
         '"label":"' . $form_state->getValue('experience_name') . '",' . 
         '"hasLanguage":"' . $form_state->getValue('experience_language') . '",' . 
         '"hasVersion":"' . $form_state->getValue('experience_version') . '",' . 
         '"comment":"' . $form_state->getValue('experience_description') . '",' . 
         '"hasSIRMaintainerEmail":"' . $uemail . '"}';
 
-      $dataJ = json_encode($data);
-      
-      $dataE = rawurlencode($datap);
-
-      $newExperience = $this->addExperience($api_url,"/sirapi/api/experience/create/".$dataE,$data);  
-      
+      $fusekiAPIservice = \Drupal::service('sir.api_connector');
+      $fusekiAPIservice->experienceAdd($experienceJSON);
       \Drupal::messenger()->addMessage(t("Experience has been added successfully."));      
-      $url = Url::fromRoute('sir.manage_experiences');
-      $form_state->setRedirectUrl($url);
+      $form_state->setRedirectUrl(Utils::selectBackUrl('experience'));
 
     }catch(\Exception $e){
       \Drupal::messenger()->addMessage(t("An error occurred while adding an experience: ".$e->getMessage()));
-      $url = Url::fromRoute('sir.manage_experiences');
-      $form_state->setRedirectUrl($url);
+      $form_state->setRedirectUrl(Utils::selectBackUrl('experience'));
     }
 
   }
-
-  public function addExperience($api_url,$endpoint,$data){
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-
-    $newExperience = $fusekiAPIservice->experienceAdd($api_url,$endpoint,$data);
-    if(!empty($newExperience)){
-      return $newExperience;
-    }
-    return [];
-  }
-
 
 }

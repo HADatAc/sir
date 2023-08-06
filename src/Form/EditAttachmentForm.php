@@ -5,14 +5,9 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\Core\Routing\TrustedRedirectResponse;
+use Drupal\sir\Utils;
 
 class EditAttachmentForm extends FormBase {
-
-    /**
-   * Settings Variable.
-   */
-  Const CONFIGNAME = "sir.settings";
 
   protected $attachmentUri;
 
@@ -42,16 +37,6 @@ class EditAttachmentForm extends FormBase {
   }
 
   /**
-     * {@inheritdoc}
-     */
-
-     protected function getEditableConfigNames() {
-      return [
-          static::CONFIGNAME,
-      ];
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $attachmenturi = NULL) {
@@ -59,19 +44,15 @@ class EditAttachmentForm extends FormBase {
     $uri_decode=base64_decode($uri);
     $this->setAttachmentUri($uri_decode);
 
-    $config = $this->config(static::CONFIGNAME);           
-    $api_url = $config->get("api_url");
-    $endpoint = "/sirapi/api/uri/".rawurlencode($this->getAttachmentUri());
-
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $rawresponse = $fusekiAPIservice->getUri($api_url,$endpoint);
+    $rawresponse = $fusekiAPIservice->getUri($this->getAttachmentUri());
     $obj = json_decode($rawresponse);
 
     $content = "";
     if ($obj->isSuccessful) {
       $this->setAttachment($obj->body);
       if ($this->getAttachment()->detector != NULL) {
-        $content = $this->getAttachment()->detector->hasContent;
+        $content = $this->getAttachment()->detector->hasContent . ' [' . $this->getAttachment()->hasDetector . ']';
       }
         //dpm($this->getAttachment());
     } else {
@@ -87,7 +68,7 @@ class EditAttachmentForm extends FormBase {
       '#disabled' => TRUE,
     ];
     //$form['attachment_instrument'] = [
-    //'#type' => 'textfield',
+    //  '#type' => 'textfield',
     //  '#title' => t('Instrument URI'),
     //  '#value' => $this->getAttachment()->belongsTo,
     //  '#disabled' => TRUE,
@@ -100,16 +81,16 @@ class EditAttachmentForm extends FormBase {
     ];
     $form['attachment_detector'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Item'),
+      '#title' => $this->t("Item"),
       '#default_value' => $content,
-      '#disabled' => TRUE,
-    ];
-    $form['attachment_detector_uri'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t("Item's URI"),
-      '#default_value' => $this->getAttachment()->hasDetector,
       '#autocomplete_route_name' => 'sir.attachment_detector_autocomplete',
     ];
+    //$form['attachment_detector_uri'] = [
+    //  '#type' => 'textfield',
+    //  '#title' => $this->t("Item Uri"),
+    //  '#default_value' => $this->getAttachment()->hasDetector,
+    //  '#disabled' => TRUE,
+    //];
     $form['new_detector_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('New Item'),
@@ -135,7 +116,6 @@ class EditAttachmentForm extends FormBase {
       '#title' => t('<br><br>'),
     ];
 
-
     return $form;
   }
 
@@ -159,10 +139,6 @@ class EditAttachmentForm extends FormBase {
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
 
-    $config = $this->config(static::CONFIGNAME);     
-    $api_url = $config->get("api_url");
-    $repository_abbreviation = $config->get("repository_abbreviation");
-
     $uid = \Drupal::currentUser()->id();
     $uemail = \Drupal::currentUser()->getEmail();
 
@@ -175,18 +151,17 @@ class EditAttachmentForm extends FormBase {
 
     if ($button_name === 'new_detector') {
       $url = Url::fromRoute('sir.add_detector');
-      $url->setRouteParameter('attachmenturi', base64_encode($this->getAttachmentUri()));
+      $url->setRouteParameter('sourcedetectoruri', 'EMPTY'); 
+      $url->setRouteParameter('attachmenturi', base64_encode($this->getAttachmentUri())); 
       $form_state->setRedirectUrl($url);
       return;
     } 
 
     if ($button_name === 'reset_detector') {
       // RESET DETECTOR
-      $detectorUri = $form_state->getValue('attachment_detector_uri');
-      if ($detectorUri != null) {
-        $uriEncoded = rawurlencode($detectorUri);
-        $instrUriEncoded = rawurlencode($this->getAttachment()->belongsTo);
-        $this->detectorDetach($api_url,"/sirapi/api/detector/detach/".$uriEncoded."/".$instrUriEncoded,[]);    
+      if ($this->getAttachmentUri() != NULL) {
+        $fusekiAPIservice = \Drupal::service('sir.api_connector');
+        $fusekiAPIservice->attachmentReset($this->getAttachmentUri());
       } 
 
       $url = Url::fromRoute('sir.manage_attachments');
@@ -197,44 +172,23 @@ class EditAttachmentForm extends FormBase {
 
     try{
       // UPDATE DETECTOR
-      $detectorUri = $form_state->getValue('attachment_detector_uri');
-      if ($detectorUri != null) {
-        $uriEncoded = rawurlencode($detectorUri);
-        $instrUriEncoded = rawurlencode($this->getAttachment()->belongsTo);
-        $priorityEncoded = rawurlencode($this->getAttachment()->hasPriority);
-        $this->detectorAttach($api_url,"/sirapi/api/detector/attach/".$uriEncoded."/".$instrUriEncoded."/".$priorityEncoded,[]);    
+      if ($this->getAttachmentUri() != NULL) {
+        $fusekiAPIservice = \Drupal::service('sir.api_connector');
+        $fusekiAPIservice->detectorAttach(Utils::uriFromAutocomplete($form_state->getValue('attachment_detector')),$this->getAttachmentUri());
       } 
 
-      \Drupal::messenger()->addMessage(t("Detector has been updated successfully."));
+      \Drupal::messenger()->addMessage(t("Attachment has been updated successfully."));
       $url = Url::fromRoute('sir.manage_attachments');
       $url->setRouteParameter('instrumenturi', base64_encode($this->getAttachment()->belongsTo));
       $form_state->setRedirectUrl($url);
 
     }catch(\Exception $e){
-      \Drupal::messenger()->addMessage(t("An error occurred while updating the Detector: ".$e->getMessage()));
+      \Drupal::messenger()->addMessage(t("An error occurred while updating the attachment: ".$e->getMessage()));
       $url = Url::fromRoute('sir.manage_attachments');
       $url->setRouteParameter('instrumenturi', base64_encode($this->getAttachment()->belongsTo));
       $form_state->setRedirectUrl($url);
     }
 
-  }
-
-  public function detectorAttach($api_url,$endpoint,$data){
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $newAttachment = $fusekiAPIservice->detectorAttach($api_url,$endpoint,$data);
-    if(!empty($newAttachment)){
-      return $newAttachment;
-    }
-    return [];
-  }
-
-  public function detectorDetach($api_url,$endpoint,$data){
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $newAttachment = $fusekiAPIservice->detectorDetach($api_url,$endpoint,$data);
-    if(!empty($newAttachment)){
-      return $newAttachment;
-    }
-    return [];
   }
 
 }

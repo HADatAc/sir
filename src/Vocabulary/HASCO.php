@@ -12,6 +12,6 @@
     const ONTOLOGY            = HASCO::HASCO . "Ontology";
     const STUDY               = HASCO::HASCO . "Study";
     const VALUE               = HASCO::HASCO . "Value";
-    const VARIABLE_SPEC       = HASCO::HASCO . "VariableSpec";
+    const SEMANTIC_VARIABLE   = HASCO::HASCO . "SemanticVariable";
 
   }

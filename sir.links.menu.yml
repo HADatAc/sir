@@ -1,39 +1,110 @@
-sir.manage_instruments:
-  title: Questionnaires
-  description: Manage Questionnaries
-  route_name: sir.manage_instruments
+sir.top_level:
+  title: Advanced
+  description: Manage Repository
+  route_name: sir.index
+  menu_name: main
+  weight: 100
+  requirements:
+    _permission: 'access content'
+    
+sir.search:
+  title: Search
+  description: Search Repository
+  route_name: sir.index
+  parent: sir.top_level
   menu_name: main
   weight: 1
   requirements:
     _permission: 'access content'
-    _role: 'authenticated'
-
-sir.manage_experiences :
-  title: Experiences 
-  description: Manage experiences and their corresponding Response Options
-  route_name: sir.manage_experiences
+    
+sir.manage_instruments:
+  title: Manage Questionnaires
+  description: Manage Questionnaries
+  route_name: sir.select_element
+  route_parameters:
+    elementtype: 'instrument'
+    page: '1'
+    pagesize: '10'
+  parent: sir.top_level
   menu_name: main
   weight: 2
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
 
-sir.edit_semantics:
-  title: Semantics 
-  description: edit semantics of variables used in instruments
-  route_name: sir.edit_semantics
+sir.manage_detectors :
+  title: Manage Items 
+  description: Manage Items
+  route_name: sir.select_element
+  route_parameters:
+    elementtype: 'detector'
+    page: '1'
+    pagesize: '10'
+  parent: sir.top_level
   menu_name: main
   weight: 3
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
 
+sir.manage_experiences :
+  title: Manage Experiences 
+  description: Manage experiences and their corresponding Response Options
+  route_name: sir.select_element
+  route_parameters:
+    elementtype: 'experience'
+    page: '1'
+    pagesize: '10'
+  parent: sir.top_level
+  menu_name: main
+  weight: 4
+  requirements:
+    _permission: 'access content'
+    _role: 'authenticated'
+
+sir.manage_responseoptions :
+  title: Manage Response Options 
+  description: Manage Response Options
+  route_name: sir.select_element
+  route_parameters:
+    elementtype: 'responseoption'
+    page: '1'
+    pagesize: '10'
+  parent: sir.top_level
+  menu_name: main
+  weight: 5
+  requirements:
+    _permission: 'access content'
+    _role: 'authenticated'
+
+sir.uri_describe:
+  title: Describe URI
+  description: Describe URI
+  route_name: sir.element_uri
+  parent: sir.top_level
+  menu_name: main
+  weight: 6
+  requirements:
+    _permission: 'access content'
+    
+sir.about:
+  title: About
+  description: About
+  route_name: sir.about
+  parent: sir.top_level
+  menu_name: main
+  weight: 12
+  requirements:
+    _permission: 'access content'
+
 sir.admin_settings_link:
   title: Configuration
   description: SIR Settings
   menu_name: main 
   route_name: sir.admin_settings_custom
-  weight: 4
+  parent: sir.top_level
+  weight: 10
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
+

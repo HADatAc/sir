@@ -1,39 +1,63 @@
 
-# SIR landing page
+# Landing page
+
 sir.index:
-  path: 'sir/public/instruments'
+  path: 'sir'
   defaults:
-    _controller: '\Drupal\sir\Controller\InstrumentController::index'
+    _controller: '\Drupal\sir\Controller\InitializationController::index'
+    _title: 'SIR'    
   requirements:
     _permission: 'access content'
+    _custom_access_check: 'TRUE'    
   options:
     no_cache: 'TRUE'
 
 # Main menu options
 
-sir.edit_semantics:
-  path: 'sir/manage/editsemantics'
+sir.list_element:
+  path: 'sir/list/{elementtype}/{keyword}/{language}/{page}/{pagesize}'
   defaults:
-    _controller: '\Drupal\sir\Controller\EditInstrumentsController::index'
-    _title: 'Manage Semantics'    
+    _form: '\Drupal\sir\Form\ListForm'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    
   options:
     no_cache: 'TRUE'
+
+sir.select_element:
+  path: 'sir/select/{elementtype}/{page}/{pagesize}'
+  defaults:
+    _form: '\Drupal\sir\Form\SelectForm'
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+sir.describe_element:
+  path: 'sir/uri/{elementuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\DescribeForm'
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+# Element URI 
+
+sir.element_uri:
+  path: 'sir/uriform'
+  defaults:
+    _form: '\Drupal\sir\Form\UriForm'
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
 
 # Instrument CRUD options
-
-sir.manage_instruments:
-  path: 'sir/manage/instruments'
-  defaults:
-    _form: '\Drupal\sir\Form\ManageInstrumentsForm'
-    _title: 'Manage Instruments'    
-  requirements:
-    _permission: 'access content'
-    _custom_access_check: 'TRUE'    
-  options:
-    no_cache: 'TRUE'
 
 sir.add_instrument:
   path: 'sir/manage/addinstrument'
@@ -57,34 +81,10 @@ sir.edit_instrument:
   options:
     no_cache: 'TRUE'
 
-sir.edit_instruments:
-  path: 'sir/manage/editinstruments'
-  defaults:
-    _controller: '\Drupal\sir\Controller\EditInstrumentsController::index'
-    _title: 'Manage Questionnaries'    
-  requirements:
-    _permission: 'access content'
-    _custom_access_check: 'TRUE'
-  options:
-    no_cache: 'TRUE'
-
-sir.searchinstruments_ajax:
-  path: 'sir/ajax/searchinstruments'
-  defaults:
-    _controller: '\Drupal\sir\Controller\InstrumentController::searchinstrumentsAjax'
-    _title: 'search instruments Ajax'
-  methods: [POST]
-  requirements:
-    _permission: 'access content' 
-    instrument: .+   
-  options:
-    _csrf_token: 'FALSE'
-    no_cache: 'TRUE'
-
 sir.download_instrument:
-  path: 'sir/public/downloadinstrument/{type}/{instrument}'
+  path: 'sir/download/{type}/{instrument}'
   defaults:
-    _controller: '\Drupal\sir\Controller\InstrumentController::download'
+    _controller: '\Drupal\sir\Controller\UtilsController::download'
   requirements:
     _permission: 'access content'
     instrument: .+    
@@ -136,21 +136,21 @@ sir.attachment_detector_autocomplete:
 
 # Detector "Item" CRUD options
 
-sir.manage_detectors:
-  path: 'sir/manage/detector/{instrumenturi}'
+sir.add_detector:
+  path: 'sir/manage/adddetector/{sourcedetectoruri}/{attachmenturi}'
   defaults:
-    _form: '\Drupal\sir\Form\ManageDetectorsForm'
-    _title: 'Manage Items'    
+    _form: '\Drupal\sir\Form\AddDetectorForm'
+    _title: 'Add Item'    
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    
   options:
     no_cache: 'TRUE'
 
-sir.add_detector:
-  path: 'sir/manage/adddetector/{attachmenturi}'
+sir.add_attachment_detector:
+  path: 'sir/manage/addattachdetector/{attachmenturi}'
   defaults:
-    _form: '\Drupal\sir\Form\AddDetectorForm'
+    _form: '\Drupal\sir\Form\AddAttachmentDetectorForm'
     _title: 'Add Item'    
   requirements:
     _permission: 'access content'
@@ -179,17 +179,6 @@ sir.detector_experience_autocomplete:
 
 # Experience CRUD options
 
-sir.manage_experiences:
-  path: 'sir/manage/experiences'
-  defaults:
-    _form: '\Drupal\sir\Form\ManageExperiencesForm'
-    _title: 'Manage Experiences'    
-  requirements:
-    _permission: 'access content'
-    _custom_access_check: 'TRUE'    
-  options:
-    no_cache: 'TRUE'
-
 sir.add_experience:
   path: 'sir/manage/addexperience'
   defaults:
@@ -214,19 +203,49 @@ sir.edit_experience:
 
 # Response Option CRUD options
 
-sir.manage_response_options:
-  path: 'sir/manage/responseoption/{experienceuri}'
+sir.manage_codebook_slots:
+  path: 'sir/manage/codebookslot/{experienceuri}'
   defaults:
-    _form: '\Drupal\sir\Form\ManageResponseOptionsForm'
-    _title: 'Manage Response Options'    
+    _form: '\Drupal\sir\Form\ManageCodebookSlotsForm'
+    _title: 'Manage Codebook Slots'    
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    
   options:
     no_cache: 'TRUE'
 
-sir.add_responseoption:
-  path: 'sir/manage/addresponseoption/{experienceuri}'
+sir.add_codebook_slots:
+  path: 'sir/manage/addcodebookslots/{experienceuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\AddCodebookSlotsForm'
+    _title: "Create Experience's Slots"    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+sir.edit_codebook_slot:
+  path: 'sir/manage/editcodebookslot/{codebooksloturi}'
+  defaults:
+    _form: '\Drupal\sir\Form\EditCodebookSlotForm'
+    _title: "Edit Experience's Slot"    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+sir.codebook_slot_response_option_autocomplete:
+  path: '/sir/manage/responseoption/autocomplete'
+  defaults:
+    _controller: '\Drupal\sir\Controller\JsonApiResponseOptionController::handleAutocomplete'
+    _format: json
+  requirements:
+    _permission: 'access content'
+
+sir.add_response_option:
+  path: 'sir/manage/addresponseoption/{codebooksloturi}'
   defaults:
     _form: '\Drupal\sir\Form\AddResponseOptionForm'
     _title: 'Add Response Option'    
@@ -236,7 +255,7 @@ sir.add_responseoption:
   options:
     no_cache: 'TRUE'
 
-sir.edit_responseoption:
+sir.edit_response_option:
   path: 'sir/manage/editresponseoption/{responseoptionuri}'
   defaults:
     _form: '\Drupal\sir\Form\EditResponseOptionForm'
@@ -258,5 +277,38 @@ sir.admin_settings_custom:
     _permission: 'administer site configuration'
   options:
     _admin_route: TRUE
+    no_cache: 'TRUE'
+
+sir.admin_ip_settings_custom:
+  path: 'admin/config/sir/ip'
+  defaults:
+    _form: '\Drupal\sir\Form\IPForm'
+    _title: 'SIR IP Settings Form'
+  requirements:
+    _permission: 'administer site IP configuration'
+  options:
+    _admin_route: TRUE
+    no_cache: 'TRUE'
+
+sir.repo_info:
+  path: 'sir/repo/info'
+  defaults:
+    _form: '\Drupal\sir\Form\RepoInfoForm'
+    _title: 'Current Repository Configuration'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+# About
+
+sir.about:
+  path: 'sir/about'
+  defaults:
+    _form: '\Drupal\sir\Form\About'
+  requirements:
+    _permission: 'access content'
+  options:
     no_cache: 'TRUE'
 
