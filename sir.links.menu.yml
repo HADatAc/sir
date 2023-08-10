@@ -1,3 +1,4 @@
+    
 sir.top_level:
   title: Advanced
   description: Manage Repository
@@ -9,14 +10,15 @@ sir.top_level:
     
 sir.search:
   title: Search
-  description: Search Repository
+  description: Search SIR Elements
   route_name: sir.index
   parent: sir.top_level
   menu_name: main
+  enabled: 1
   weight: 1
   requirements:
-    _permission: 'access content'
-    
+   _permission: 'access content'
+
 sir.manage_instruments:
   title: Manage Questionnaires
   description: Manage Questionnaries

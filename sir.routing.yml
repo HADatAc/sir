@@ -8,7 +8,7 @@ sir.index:
     _title: 'SIR'    
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+  #  _custom_access_check: 'TRUE'    
   options:
     no_cache: 'TRUE'
 
