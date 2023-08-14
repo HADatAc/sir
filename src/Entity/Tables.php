@@ -2,7 +2,7 @@
 
 namespace Drupal\sir\Entity;
 
-use Kint\Kint;
+//use Kint\Kint;
 
 class Tables {
   
@@ -24,7 +24,6 @@ class Tables {
   public function getLanguages() {
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
     $language_list = $fusekiAPIservice->languageList();
-    //dpm($language_list);
     $obj = json_decode($language_list);
     if ($obj->isSuccessful) {
       $languages = $obj->body;

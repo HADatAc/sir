@@ -42,7 +42,7 @@ class About extends FormBase {
             '#title' => 'This repository currently hosts a knowledge graph about the following:<br>',
         ];
         $totals = '<ul>';
-        $totals .= '<li> ' . About::total('instrument') . ' <a href="'.Utils::selectBackUrl('instrument')->toString().'">instrument(s)</a></li>';
+        $totals .= '<li> ' . About::total('instrument') . ' <a href="'.Utils::selectBackUrl('instrument')->toString().'">instrument(s)</a></li>'; 
         $totals .=  '<li> ' . About::total('detector') . ' <a href="'.Utils::selectBackUrl('detector')->toString().'">detector(s)</a></li>';
         $totals .=  '<li> ' . About::total('experience') . ' <a href="'.Utils::selectBackUrl('experience')->toString().'">experience(s)</a></li>';
         $totals .=  '<li> ' . About::total('responseoption') . ' <a href="'.Utils::selectBackUrl('responseoption')->toString().'">response option(s)</a></li>';

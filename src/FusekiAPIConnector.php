@@ -3,12 +3,19 @@
 namespace Drupal\sir;
 
 use Drupal\Core\Http\ClientFactory;
+use Drupal\sir\JWT;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\ConnectException; 
+use Exception;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 class FusekiAPIConnector {
   private $client;
   private $query;
+  private $error;
+  private $error_message;
+  private $bearer;
 
   /**
    * Settings Variable.
@@ -26,10 +33,7 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/uri/".rawurlencode($uri);
     $method = "GET";
     $api_url = $this->getApiUrl();
-    $data = [
-      //if we add auth in future
-      'auth' => ['user', 'pass']
-    ];    
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
@@ -37,7 +41,7 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/usage/".rawurlencode($uri);
     $method = 'GET';
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
@@ -45,7 +49,7 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/derivation/".rawurlencode($uri);
     $method = 'GET';
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
@@ -60,7 +64,7 @@ class FusekiAPIConnector {
       $offset;
     $method = 'GET';
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
@@ -73,7 +77,7 @@ class FusekiAPIConnector {
       rawurlencode($language);
     $method = 'GET';
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
@@ -87,7 +91,7 @@ class FusekiAPIConnector {
       $offset;
     $method = 'GET';
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
@@ -99,7 +103,7 @@ class FusekiAPIConnector {
       $maintaineremail;
     $method = 'GET';
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
@@ -111,7 +115,7 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/instrument/all";
     $method = "GET";
     $api_url = $this->getApiUrl();
-    $data = [];    
+    $data = $this->getHeader();    
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
@@ -119,7 +123,7 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/instrument/maintaineremail/".rawurlencode($useremail);
     $method = "GET";
     $api_url = $this->getApiUrl();
-    $data = [];    
+    $data = $this->getHeader();    
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
@@ -131,7 +135,7 @@ class FusekiAPIConnector {
     }
     $method = "GET";
     $api_url = $this->getApiUrl();
-    $data = [];    
+    $data = $this->getHeader();    
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
@@ -139,7 +143,7 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/instrument/create/".rawurlencode($instrumentJson);
     $method = "POST";
     $api_url = $this->getApiUrl();
-    $data = [];    
+    $data = $this->getHeader();    
     return $this->perform_http_request($method,$api_url.$endpoint,$data);          
   }
 
@@ -147,19 +151,21 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/instrument/delete/".rawurlencode($instrumentUri);    
     $method = "POST";
     $api_url = $this->getApiUrl();
-    $data = [];    
+    $data = $this->getHeader();    
     return $this->perform_http_request($method,$api_url.$endpoint,$data);          
   }
 
   /**
+   *  
    *    ATTACHMENTS
+   * 
    */
 
   public function attachmentList($instrumentUri) {
     $endpoint = "/sirapi/api/attachment/byinstrument/".rawurlencode($instrumentUri);
     $method = "GET";
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
@@ -167,7 +173,7 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/attachment/create/".rawurlencode($instrumentUri)."/".rawurlencode($totalAttachments);
     $method = "POST";
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);          
   }
 
@@ -175,7 +181,7 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/attachment/delete/".rawurlencode($attachmentUri);
     $method = 'POST';
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);          
   }
 
@@ -183,7 +189,7 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/detector/detach/".rawurlencode($attachmentUri);    
     $method = 'GET';
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);          
   }
 
@@ -195,7 +201,7 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/detector/maintaineremail/".rawurlencode($useremail);
     $method = 'GET';
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
@@ -203,7 +209,7 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/detector/keyword/".rawurlencode($keyword);
     $method = 'GET';
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
@@ -211,7 +217,7 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/detector/create/".rawurlencode($detectorJson);
     $method = 'POST';
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);          
   }
 
@@ -219,7 +225,7 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/detector/delete/".rawurlencode($detectorUri);
     $method = 'POST';
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);          
   }
 
@@ -227,7 +233,7 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/detector/attach/".rawurlencode($detectorUri)."/".rawurlencode($attachmentUri);
     $method = 'GET';
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);          
   }
 
@@ -239,7 +245,7 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/experience/maintaineremail/".rawurlencode($useremail);
     $method = 'GET';
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
@@ -247,7 +253,7 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/experience/keyword/".rawurlencode($keyword);
     $method = 'GET';
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
@@ -255,7 +261,7 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/experience/create/".rawurlencode($experienceJson);
     $method = "POST";
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);          
   }
 
@@ -263,7 +269,7 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/experience/delete/".rawurlencode($experienceUri);
     $method = "POST";
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
@@ -275,7 +281,7 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/codebookslot/byexperience/".rawurlencode($experienceUri);
     $method = "GET";
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
@@ -283,7 +289,7 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/codebookslot/create/".rawurlencode($experienceUri)."/".rawurlencode($totalCodebookSlots);
     $method = "POST";
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);          
   }
 
@@ -291,7 +297,7 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/codebookslot/delete/".rawurlencode($codebookSlotUri);
     $method = 'POST';
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);          
   }
 
@@ -299,7 +305,7 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/responseoption/detach/".rawurlencode($codebookSlotUri);    
     $method = 'GET';
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);          
   }
 
@@ -311,7 +317,7 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/responseoption/byexperience/".rawurlencode($experienceUri);
     $method = "GET";
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
@@ -319,7 +325,7 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/responseoption/keyword/".rawurlencode($keyword);
     $method = 'GET';
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
@@ -327,7 +333,7 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/responseoption/create/".rawurlencode($responseoptionJSON);
     $method = "POST";
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);          
   }
 
@@ -335,7 +341,7 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/responseoption/delete/".rawurlencode($responseOptionUri);
     $method = "POST";
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
@@ -343,7 +349,7 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/responseoption/attach/".rawurlencode($responseOptionUri)."/".rawurlencode($codebookSlotUri);
     $method = 'GET';
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);          
   }
 
@@ -355,43 +361,57 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/repo";
     $method = "GET";
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
   public function repoInfoNewIP($api_url) {
     $endpoint = "/sirapi/api/repo";
     $method = "GET";
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
   public function repoUpdateLabel($api_url, $label) {
     $endpoint = "/sirapi/api/repo/label/".rawurlencode($label);
     $method = "GET";
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);          
   }
 
   public function repoUpdateTitle($api_url, $title) {
     $endpoint = "/sirapi/api/repo/title/".rawurlencode($title);
     $method = "GET";
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);          
   }
 
   public function repoUpdateDescription($api_url, $description) {
     $endpoint = "/sirapi/api/repo/description/".rawurlencode($description);
     $method = "GET";
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);          
   }
 
   public function repoUpdateNamespace($api_url, $namespace, $baseUrl) {
     $endpoint = "/sirapi/api/repo/namespace/default/".rawurlencode($namespace)."/".rawurlencode($baseUrl);
     $method = "GET";
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);          
+  }
+
+  /** 
+   *
+   *   ERROR METHODS    
+   * 
+   */
+
+   public function getError() {
+    return $this->error;
+  }
+
+  public function getErrorMessage() {
+    return $this->error_message;
   }
 
   /**
@@ -402,7 +422,7 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/repo/table/namespaces";
     $method = "GET";
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
@@ -410,7 +430,8 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/repo/table/informants";
     $method = "GET";
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
+    var_dump($api_url.$endpoint);
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
@@ -418,7 +439,7 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/repo/table/languages";
     $method = "GET";
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
@@ -426,7 +447,7 @@ class FusekiAPIConnector {
     $endpoint = "/sirapi/api/repo/table/generationactivities";
     $method = "GET";
     $api_url = $this->getApiUrl();
-    $data = [];
+    $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
@@ -434,30 +455,53 @@ class FusekiAPIConnector {
    *   AUXILIATY METHODS
    */
 
+  /**  
+  public function getApiUrl() {
+    return "http://192.168.1.13:9000";
+  }
+  */
+
+  
   public function getApiUrl() {
     $config = \Drupal::config(static::CONFIGNAME);           
     return $config->get("api_url");
   }
 
-  public static function perform_http_request($method, $url, $data = false) {   
-    //dpm($url);    
+  public function getHeader() {
+    if ($this->bearer == NULL) {
+      $this->bearer = "Bearer " . JWT::jwt();
+    }
+    return ['headers' => 
+      [
+        //'Authorization' => "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE2OTA4Mjk0MTAsImV4cCI6MTcyMjM2NTQxMCwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsIkdpdmVuTmFtZSI6IlBhdWxvIiwiU3VybmFtZSI6IlJpYmVpcm8iLCJFbWFpbCI6ImFwaXRlc3RAZ21haWwuY29tIiwiUm9sZSI6Ik1hbmFnZXIifQ.8yM3pqWir9PM_NLmrAWPDDDugWoGt3se0W3zjzFmZ0E"
+        'Authorization' => $this->bearer
+      ]
+    ];
+  }
+
+  public function perform_http_request($method, $url, $data = false) {   
+    $client = new Client();
+    $res=NULL;
+    $this->error=NULL;
+    $this->error_message="";
     try {
-      $client = new Client();
-      $res = $client->request($method, $url, $data);
-      //\Drupal::messenger()->addMessage(t("(perform_http_request) Status code: ".$res->getStatusCode()));
-      if($res->getStatusCode() != '200') {
-        $error_message = "API request returned the following error message:" . $e->getMessage();
-        Drupal::messenger()->addMessage($error_message);
-        return(NULL);
-      }
-      return($res->getBody());
-    } catch(Exception $e){
-      $error_message = "Site IP may be incorrect. Error message:" . $e->getMessage();
-      Drupal::messenger()->addMessage($error_message);
+      $res = $client->request($method,$url,$data);
+    } 
+    catch(ConnectException $e){
+      $this->error="CON";
+      $this->error_message = "Connection error the following message: " . $e->getMessage();
       return(NULL);
     }
-    
-  }
+    catch(ClientException $e){
+      $res = $e->getResponse();
+      if($res->getStatusCode() != '200') {
+        $this->error=$res->getStatusCode();
+        $this->error_message = "API request returned the following status code: " . $res->getStatusCode();
+        return(NULL);
+      }
+    } 
+    return($res->getBody()); 
+  }   
 
   public function parseObjectResponse($response) {
     if ($response == NULL || $response == "") {
@@ -468,6 +512,21 @@ class FusekiAPIConnector {
       return $obj->body;
     }
     return NULL; 
-}
+  }
+
+  public function parseTableResponse($response) {
+    if ($response == NULL || $response == "") {
+      return NULL;
+    }
+    $objs_raw = json_decode($response);
+    if ($objs_raw->isSuccessful) {
+      $objs = $objs_raw->body;
+    }
+    $results = array();
+    foreach ($objs as $element) {
+      $results[$element->code] = $element->value;
+    }
+    return $results;
+  }
 
 }

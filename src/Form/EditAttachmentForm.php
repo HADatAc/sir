@@ -84,6 +84,8 @@ class EditAttachmentForm extends FormBase {
       '#title' => $this->t("Item"),
       '#default_value' => $content,
       '#autocomplete_route_name' => 'sir.attachment_detector_autocomplete',
+      '#maxlength' => NULL,
+
     ];
     //$form['attachment_detector_uri'] = [
     //  '#type' => 'textfield',

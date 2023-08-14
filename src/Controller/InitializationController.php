@@ -37,6 +37,7 @@ class InitializationController extends ControllerBase{
 
     $root_url = \Drupal::request()->getBaseUrl();
     $redirect = new RedirectResponse($root_url . '/sir/list/instrument/_/_/1/12');
+  
     return $redirect;
 
   }

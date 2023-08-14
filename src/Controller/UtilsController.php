@@ -16,7 +16,7 @@ class UtilsController extends ControllerBase{
   Const CONFIGNAME = "sir.settings";
   
   public function siripconfigured() {
-    $config = $this->config(static::CONFIGNAME);           
+    $config = $this->config(static::CONFIGNAME); 
     $api_url = $config->get("api_url");
     $sir_not_configured = ($api_url == NULL || $api_url == "" || strpos($api_url,'x.x.x.x'));
     
