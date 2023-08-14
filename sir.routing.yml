@@ -290,6 +290,17 @@ sir.admin_ip_settings_custom:
     _admin_route: TRUE
     no_cache: 'TRUE'
 
+sir.admin_namespace_settings_custom:
+  path: 'admin/config/sir/namespace'
+  defaults:
+    _form: '\Drupal\sir\Form\SIRNameSpaceForm'
+    _title: 'SIR NameSpace Management Form'
+  requirements:
+    _permission: 'administer site NameSpace configuration'
+  options:
+    _admin_route: TRUE
+    no_cache: 'TRUE'
+
 sir.repo_info:
   path: 'sir/repo/info'
   defaults:

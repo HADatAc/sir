@@ -4,7 +4,7 @@ namespace Drupal\sir;
 
 class JWT {
 
-  const JWT_SALT = "qwertyuiopasdfghjklzxcvbnm123456";
+  //const JWT_SALT = "qwertyuiopasdfghjklzxcvbnm123456";
 
   static function generate_jwt($headers, $payload, $secret) {
     $headers_encoded = JWT::base64url_encode(json_encode($headers));
@@ -66,7 +66,20 @@ class JWT {
         'exp'=>(time() + 600)
       );
     }
-    $jwt = JWT::generate_jwt($headers, $payload, JWT::JWT_SALT);
+
+    $key_value = '';
+    $config_jwt = \Drupal::config("sir.settings")->get("jwt_secret");
+    if ($config_jwt == NULL) {
+      echo "No JWT Secret set in configuration";
+      return NULL;
+    }
+    $key_entity = \Drupal::service('key.repository')->getKey($config_jwt);
+    if ($key_entity == NULL || $key_entity->getKeyValue() == NULL) {
+      echo "No registered JWT Secret";
+      return NULL;
+    }
+    $key_value = $key_entity->getKeyValue();
+    $jwt = JWT::generate_jwt($headers, $payload, $key_value);
     return $jwt;
   }
 

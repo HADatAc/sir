@@ -400,6 +400,22 @@ class FusekiAPIConnector {
     return $this->perform_http_request($method,$api_url.$endpoint,$data);          
   }
 
+  public function repoReloadNamespaceTriples() {
+    $endpoint = "/sirapi/api/repo/ont/load";
+    $method = "GET";
+    $api_url = $this->getApiUrl();
+    $data = $this->getHeader();
+    return $this->perform_http_request($method,$api_url.$endpoint,$data);          
+  }
+
+  public function repoDeleteNamespaceTriples() {
+    $endpoint = "/sirapi/api/repo/ont/delete";
+    $method = "GET";
+    $api_url = $this->getApiUrl();
+    $data = $this->getHeader();
+    return $this->perform_http_request($method,$api_url.$endpoint,$data);          
+  }
+
   /** 
    *
    *   ERROR METHODS    
