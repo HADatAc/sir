@@ -56,9 +56,14 @@
 
         $APIservice = \Drupal::service('sir.api_connector');
         $namespace_list = $APIservice->namespaceList();
-        $obj = json_decode($namespace_list);
-        if ($obj->isSuccessful) {
-          $this->setList($obj->body);
+        if ($namespace_list == NULL) {
+            $empty_list = array();
+            $this->setList($empty_list);
+        } else {
+            $obj = json_decode($namespace_list);
+            if ($obj->isSuccessful) {
+                $this->setList($obj->body);
+            }
         }
         $header = Ontology::generateHeader();
         $output = Ontology::generateOutput($this->getList());   
@@ -67,12 +72,12 @@
             '#type' => 'item',
             '#title' => $this->t('<br>'),
         ];
-      
+
         $form['reload_triples_submit'] = [
             '#type' => 'submit',
             '#value' => $this->t('Reload Triples from All NameSpaces with URL'),
             '#name' => 'reload',
-          ];
+        ];
       
         $form['delete_triples_submit'] = [
             '#type' => 'submit',
@@ -109,10 +114,16 @@
             '#title' => $this->t('<br>'),
         ];      
 
-        $form['edit-submit'] = [
+        $form['actions']['submit']['#access'] = 'FALSE'; 
+        //$form['actions']['edit-submit'] = [
+        //    '#type' => 'hidden',
+        //    '#title' => 'test',
+        //];
+        //$form['edit-submit']['#access'] = 'FALSE';
+        //$form['edit-submit'] = [
             //'#class' => 'button button--primary js-form-submit form-submit',
-            '#value' => 'hidden',
-        ];
+          //  '#value' => 'hidden',
+        //];
 
         return Parent::buildForm($form, $form_state);
     }
