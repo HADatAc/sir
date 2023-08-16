@@ -9,6 +9,10 @@ Semantic Instrument Repository
 * install module dependencies:
   * Key
 
+### Usage:
+
+Once the module is installed, SIR options are going to be available under the option <b>Advanced</b> of the main menu. Access to SIR options depends on user permissions on Drupal. 
+
 ### Upgrade (in Pantheon): 
 
 * put website under maintenance
