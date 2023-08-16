@@ -13,7 +13,7 @@
  use Drupal\sir\ListUsage;
  use Drupal\sir\Utils;
  use Drupal\sir\Entity\Tables;
- use Drupal\sir\Vocabulary\SIRAPI;
+ use Drupal\sir\Vocabulary\SIRGUI;
  use Drupal\sir\Vocabulary\VSTOI;
 
  class DescribeForm extends FormBase {

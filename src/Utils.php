@@ -4,7 +4,7 @@ namespace Drupal\sir;
 
 use Drupal\Core\Url;
 use Drupal\sir\Entity\Tables;
-use Drupal\sir\Vocabulary\SIRAPI;
+use Drupal\sir\Vocabulary\SIGUI;
 
 class Utils {
 
@@ -128,7 +128,7 @@ class Utils {
   public static function sirUriLink($uri) {
     $root_url = \Drupal::request()->getBaseUrl();
     $uriFinal = Utils::namespaceUri($uri);
-    $link = '<a href="'.$root_url.SIRAPI::DESCRIBE_PAGE.base64_encode($uri).'">' . $uriFinal . '</a>';
+    $link = '<a href="'.$root_url.SIRGUI::DESCRIBE_PAGE.base64_encode($uri).'">' . $uriFinal . '</a>';
     return $link;
   }
 

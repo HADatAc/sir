@@ -59,7 +59,8 @@ class Instrument {
       $totxt = '<a href="'. $root_url . SIRGUI::DOWNLOAD . 'plain'. '/'. $encodedUri . '">TXT</a>';
       $tohtml = '<a href="'. $root_url . SIRGUI::DOWNLOAD . 'html'. '/'. $encodedUri . '">HTML</a>';
       $topdf = '<a href="'. $root_url . SIRGUI::DOWNLOAD . 'pdf'. '/'. $encodedUri . '">PDF</a>';
-      $tordf = '<a href="'. $root_url . SIRGUI::DOWNLOAD . 'rdf'. '/'. $encodedUri . '">RDF</a>';
+      //$tordf = '<a href="'. $root_url . SIRGUI::DOWNLOAD . 'rdf'. '/'. $encodedUri . '">RDF</a>';
+      $tordf = ' ';
       $tofhir = '<a href="'. $root_url . SIRGUI::DOWNLOAD . 'fhir'. '/'. $encodedUri . '">FHIR</a>';
       $output[$element->uri] = [
         'element_uri' => t('<a href="'.$root_url.SIRGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),     
