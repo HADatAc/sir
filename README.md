@@ -7,7 +7,7 @@ Semantic Instrument Repository
 * paste the URL from Download.zip from https://github.com/HADatAc/sir/
 
 * install module dependencies:
-** Key
+  * Key
 
 ### Upgrade (in Pantheon): 
 
