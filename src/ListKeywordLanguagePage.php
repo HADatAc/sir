@@ -2,7 +2,7 @@
 
 namespace Drupal\sir;
 
-use Drupal\sir\Vocabulary\SIRAPI;
+use Drupal\sir\Vocabulary\SIRGUI;
 
 class ListKeywordLanguagePage {
 
@@ -68,7 +68,7 @@ class ListKeywordLanguagePage {
   public static function link($elementtype, $keyword, $language, $page, $pagesize) {
     $root_url = \Drupal::request()->getBaseUrl();
     if ($elementtype != NULL && $page > 0 && $pagesize > 0) {
-      return $root_url . SIRAPI::LIST_PAGE . 
+      return $root_url . SIRGUI::LIST_PAGE . 
           $elementtype . '/' .
           $keyword . '/' .
           $language . '/' .

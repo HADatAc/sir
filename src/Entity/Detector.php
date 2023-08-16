@@ -44,7 +44,9 @@ class Detector {
       }
       $lang = ' ';
       if ($element->hasLanguage != NULL) {
-        $lang = $languages[$element->hasLanguage];
+        if ($languages != NULL) {
+          $lang = $languages[$element->hasLanguage];
+        }
       }
       $version = ' ';
       if ($element->hasVersion != NULL) {
@@ -52,7 +54,9 @@ class Detector {
       }
       $derivationVal = $derivations["http://hadatac.org/ont/vstoi#Original"];
       if ($element->wasGeneratedBy != NULL && $element->wasGeneratedBy != '') {
-        $derivationVal = $derivations[$element->wasGeneratedBy];
+        if ($derivations != NULL) {
+          $derivationVal = $derivations[$element->wasGeneratedBy];
+        }
       }
       $output[$element->uri] = [
         'element_uri' => t('<a href="'.$root_url.SIRAPI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),     

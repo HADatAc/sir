@@ -50,7 +50,9 @@ class Instrument {
       }
       $lang = ' ';
       if ($element->hasLanguage != NULL) {
-        $lang = $languages[$element->hasLanguage];
+        if ($languages != NULL) {
+          $lang = $languages[$element->hasLanguage];
+        }
       }
       $version = ' ';
       if ($element->hasVersion != NULL) {

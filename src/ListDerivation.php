@@ -4,7 +4,6 @@ namespace Drupal\sir;
 
 use Drupal\sir\Utils;
 use Drupal\sir\Entity\Tables;
-use Drupal\sir\Vocabulary\SIRAPI;
 
 class ListDerivation {
 
