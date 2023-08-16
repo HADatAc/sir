@@ -28,13 +28,11 @@
 
         // SET SERVICES
         $messenger = \Drupal::service('messenger');
-        $fusekiAPIservice = \Drupal::service('sir.api_connector');
+        $APIservice = \Drupal::service('sir.api_connector');
 
         // RETRIEVE CONFIGURATION FROM CURRENT IP
-        $repo = $fusekiAPIservice->repoInfo();
-        $obj = json_decode($repo);
-        if ($obj->isSuccessful) {
-            $repoObj = $obj->body;
+        $repoObj = $APIservice->parseObjectResponse($APIservice->repoInfo(),'repoInfo');
+        if ($repoObj != NULL) {
             $label = $repoObj->label;
             $name = $repoObj->title;
             $domainUrl = $repoObj->hasDefaultNamespaceURL;

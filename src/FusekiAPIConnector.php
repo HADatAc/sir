@@ -471,13 +471,6 @@ class FusekiAPIConnector {
    *   AUXILIATY METHODS
    */
 
-  /**  
-  public function getApiUrl() {
-    return "http://192.168.1.13:9000";
-  }
-  */
-
-  
   public function getApiUrl() {
     $config = \Drupal::config(static::CONFIGNAME);           
     return $config->get("api_url");
@@ -489,7 +482,6 @@ class FusekiAPIConnector {
     }
     return ['headers' => 
       [
-        //'Authorization' => "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE2OTA4Mjk0MTAsImV4cCI6MTcyMjM2NTQxMCwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsIkdpdmVuTmFtZSI6IlBhdWxvIiwiU3VybmFtZSI6IlJpYmVpcm8iLCJFbWFpbCI6ImFwaXRlc3RAZ21haWwuY29tIiwiUm9sZSI6Ik1hbmFnZXIifQ.8yM3pqWir9PM_NLmrAWPDDDugWoGt3se0W3zjzFmZ0E"
         'Authorization' => $this->bearer
       ]
     ];
@@ -519,30 +511,25 @@ class FusekiAPIConnector {
     return($res->getBody()); 
   }   
 
-  public function parseObjectResponse($response) {
+  public function parseObjectResponse($response, $methodCalled) {
+    if ($this->error != NULL) {
+      if ($this->error == 'CON') {
+        \Drupal::messenger()->addError(t("Connection with API is broken. Either the Internet is down, the API is down or the API IP configuration is incorrect."));
+      } else {
+        \Drupal::messenger()->addError(t("API ERROR " . $this->error . ". Message: " . $this->error_message));
+      }
+      return NULL;
+    }
     if ($response == NULL || $response == "") {
+        \Drupal::messenger()->addError(t("API service has returned no response: called " . $methodCalled));
         return NULL;
     }
     $obj = json_decode($response);
     if ($obj->isSuccessful) {
       return $obj->body;
     }
+    \Drupal::messenger()->addError(t("API service has failed with following message: " . $obj->body));
     return NULL; 
-  }
-
-  public function parseTableResponse($response) {
-    if ($response == NULL || $response == "") {
-      return NULL;
-    }
-    $objs_raw = json_decode($response);
-    if ($objs_raw->isSuccessful) {
-      $objs = $objs_raw->body;
-    }
-    $results = array();
-    foreach ($objs as $element) {
-      $results[$element->code] = $element->value;
-    }
-    return $results;
   }
 
 }

@@ -58,8 +58,12 @@ class About extends FormBase {
         $ontologies = '<ul>';
         $tables = new Tables;
         $namespaces = $tables->getNamespaces();
-        foreach ($namespaces as $abbrev => $ns) {
-            $ontologies .= '<li><a href="'. $ns .'">'. $ns . '</a> ('. $abbrev . ')</li>';
+        if ($namespaces != NULL) {
+          foreach ($namespaces as $abbrev => $ns) {
+             $ontologies .= '<li><a href="'. $ns .'">'. $ns . '</a> ('. $abbrev . ')</li>';
+          }
+        } else {
+            $ontologies .= '<li>No NAMESPACE information available at the moment</li>';
         }
         $ontologies .= '</ul>';
         $form['sir_ontologies_totals'] = [

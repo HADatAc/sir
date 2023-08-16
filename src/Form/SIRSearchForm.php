@@ -77,10 +77,13 @@ class SIRSearchForm extends FormBase {
 
     // LOAD LANGUAGE TABLE
     $tables = new Tables;
+    $tablesLanguages = $tables->getLanguages();
     $languages = [];
     $languages['ANY'] = '-- ANY LANGUAGE --';
-    foreach ($tables->getLanguages() as $key => $lang) {
-      $languages[$key] = $lang;
+    if ($tablesLanguages != NULL) {
+      foreach ($tablesLanguages as $key => $lang) {
+        $languages[$key] = $lang;
+      }
     }
 
     // RETRIEVE PARAMETERS FROM HTML REQUEST

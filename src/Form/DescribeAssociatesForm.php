@@ -53,7 +53,7 @@
         $uri=base64_decode(rawurldecode($elementuri));
         $this->setElementUri(Utils::plainUri($uri));
         $api = \Drupal::service('sir.api_connector');
-        $this->setAssociates($api->parseObjectResponse($api->attachmentList($this->getElementUri())));
+        $this->setAssociates($api->parseObjectResponse($api->attachmentList($this->getElementUri())),'attachmentList');
 
         $form['associates_header'] = [
           '#type' => 'item',

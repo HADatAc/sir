@@ -70,12 +70,12 @@ class JWT {
     $key_value = '';
     $config_jwt = \Drupal::config("sir.settings")->get("jwt_secret");
     if ($config_jwt == NULL) {
-      echo "No JWT Secret set in configuration";
+      \Drupal::messenger()->addError(t("No JWT Secret set in configuration"));
       return NULL;
     }
     $key_entity = \Drupal::service('key.repository')->getKey($config_jwt);
     if ($key_entity == NULL || $key_entity->getKeyValue() == NULL) {
-      echo "No registered JWT Secret";
+      \Drupal::messenger()->addError(t("No registered JWT Secret"));
       return NULL;
     }
     $key_value = $key_entity->getKeyValue();

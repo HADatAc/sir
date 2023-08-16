@@ -146,14 +146,14 @@
         $APIservice = \Drupal::service('sir.api_connector');
 
         if ($button_name === 'reload') {
-          $message = $APIservice->parseObjectResponse($APIservice->repoReloadNamespaceTriples());
+          $message = $APIservice->parseObjectResponse($APIservice->repoReloadNamespaceTriples(),'repoReloadNamespaceTriples');
           \Drupal::messenger()->addMessage(t($message));
           $form_state->setRedirectUrl(Url::fromRoute('sir.admin_namespace_settings_custom'));
           return;
         } 
                 
         if ($button_name === 'delete') {
-          $message = $APIservice->parseObjectResponse($APIservice->repoDeleteNamespaceTriples());
+          $message = $APIservice->parseObjectResponse($APIservice->repoDeleteNamespaceTriples(),'repoDeleteNamespaceTriples');
           \Drupal::messenger()->addMessage(t($message));
           $form_state->setRedirectUrl(Url::fromRoute('sir.admin_namespace_settings_custom'));
           return;

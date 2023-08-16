@@ -125,7 +125,7 @@
         $form['jwt_secret'] = [
             '#type' => 'key_select',
             '#title' => 'JWT Secret',
-            '#key_filters' => ['type' => 'jwt_hs'],
+            '#key_filters' => ['type' => 'authentication'],
             '#default_value' => $config->get("jwt_secret"),
         ];
 

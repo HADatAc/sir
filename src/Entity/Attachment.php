@@ -36,7 +36,7 @@ class Attachment {
           $priority = $element->hasPriority;
           $uri = Utils::namespaceUri($uri);
           if ($element->hasDetector != NULL && $element->hasDetector != "") {
-            $detector = $api->parseObjectResponse($api->getUri($element->hasDetector));
+            $detector = $api->parseObjectResponse($api->getUri($element->hasDetector), 'getUri');
             if ($detector != NULL) {
               $nsUri = Utils::namespaceUri($detector->uri);
               $detectorStr =  t('<a href="'.$root_url.SIRAPI::DESCRIBE_PAGE.base64_encode($detector->uri).'">'.$nsUri.'</a>');

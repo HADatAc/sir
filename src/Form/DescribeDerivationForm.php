@@ -68,7 +68,7 @@
     $uri=base64_decode(rawurldecode($elementuri));
     $full_uri = Utils::plainUri($uri);
     $api = \Drupal::service('sir.api_connector');
-    $this->setElement($api->parseObjectResponse($api->getUri($full_uri)));
+    $this->setElement($api->parseObjectResponse($api->getUri($full_uri),'getUri'));
     if ($this->getElement() == NULL || $this->getElement() == "") {
       $hascoType = "";
       $maintainer = "NONE";
@@ -79,7 +79,7 @@
       $maintainer = $this->getElement()->hasSIRMaintainerEmail;
       if ($hascoType == VSTOI::DETECTOR) {
         if ($this->getElement()->wasDerivedFrom != NULL) {
-            $this->setSource($api->parseObjectResponse($api->getUri($this->getElement()->wasDerivedFrom)));
+            $this->setSource($api->parseObjectResponse($api->getUri($this->getElement()->wasDerivedFrom),'getUri'));
         }
         $generatedByUri = $this->getElement()->wasGeneratedBy;
     }

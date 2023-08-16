@@ -14,7 +14,7 @@ class ListDerivation {
         return $resp;
     }
     $api = \Drupal::service('sir.api_connector');
-    $elements = $api->parseObjectResponse($api->getDerivation($uri));
+    $elements = $api->parseObjectResponse($api->getDerivation($uri, 'getDerivation'));
     if ($elements == NULL) {
       $elements = array();
       return $elements;

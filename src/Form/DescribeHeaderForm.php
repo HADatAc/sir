@@ -41,7 +41,7 @@
         $uri=base64_decode(rawurldecode($elementuri));
         $full_uri = Utils::plainUri($uri);
         $api = \Drupal::service('sir.api_connector');
-        $this->setElement($api->parseObjectResponse($api->getUri($full_uri)));
+        $this->setElement($api->parseObjectResponse($api->getUri($full_uri),'getUri'));
 
         if ($this->getElement() == NULL || $this->getElement() == "") {
 
