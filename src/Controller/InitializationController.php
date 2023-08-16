@@ -25,31 +25,31 @@ class InitializationController extends ControllerBase{
 
     $config = $this->config(static::CONFIGNAME);  
 
-    $sir_updated = $this->sirRepoVersion();
-    $sir_api_version = $sir_updated->body->hasVersion;
+    $APIservice = \Drupal::service('sir.api_connector');
+    $sir_updated = $APIservice->parseObjectResponse($APIservice->repoInfo(), 'repoInfo');
+    $sir_api_version = NULL;
+    if ($sir_updated != NULL) {
+      $sir_api_version = $sir_updated->hasVersion;
+    }
 
     $sir_gui_version = $config->get("sir_gui_version");     
     
-    if($sir_gui_version != $sir_api_version) {
-      echo "Please update SIR API to version [" . $sir_gui_version . "]";
-      //exit();
+    if ($sir_api_version == NULL) {
+      \Drupal::messenger()->addError(t("API service could not retrieve its version number. Check if API IP configuration is correct."));
+    } else {
+      if($sir_gui_version != $sir_api_version) {
+        \Drupal::messenger()->addError(t("SIR's API and GUI are required to have identical version numbers. API version is " . $sir_api_version . ". GUI version is " . $sir_gui_version . "."));
+      }
     }
 
     $root_url = \Drupal::request()->getBaseUrl();
     $redirect = new RedirectResponse($root_url . '/sir/list/instrument/_/_/1/12');
+  
     return $redirect;
 
   }
 
   private function sirRepoVersion() {
-    $content = [];
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $sirRepoVersion = $fusekiAPIservice->repoInfo();
-    //dpm($sirRepoVersion);
-    if (!empty($sirRepoVersion)) {
-      $content = json_decode($sirRepoVersion);
-      return $content;
-    }
   }
 
 }

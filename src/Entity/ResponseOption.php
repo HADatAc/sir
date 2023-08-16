@@ -4,7 +4,7 @@ namespace Drupal\sir\Entity;
 
 use Drupal\sir\Entity\Tables;
 use Drupal\sir\Utils;
-use Drupal\sir\Vocabulary\SIRAPI;
+use Drupal\sir\Vocabulary\SIRGUI;
 
 class ResponseOption {
 
@@ -41,14 +41,16 @@ class ResponseOption {
       }
       $lang = ' ';
       if ($element->hasLanguage != NULL) {
-        $lang = $languages[$element->hasLanguage];
+        if ($languages != NULL) {
+          $lang = $languages[$element->hasLanguage];
+        }
       }
       $version = ' ';
       if ($element->hasVersion != NULL) {
         $version = $element->hasVersion;
       }
       $output[$element->uri] = [
-        'element_uri' => t('<a href="'.$root_url.SIRAPI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),     
+        'element_uri' => t('<a href="'.$root_url.SIRGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),     
         'element_content' => $content,     
         'element_language' => $lang,
         'element_version' => $version,

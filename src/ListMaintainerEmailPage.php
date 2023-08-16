@@ -2,7 +2,7 @@
 
 namespace Drupal\sir;
 
-use Drupal\sir\Vocabulary\SIRAPI;
+use Drupal\sir\Vocabulary\SIRGUI;
 
 class ListMaintainerEmailPage {
 
@@ -54,7 +54,7 @@ class ListMaintainerEmailPage {
   public static function link($elementtype, $page, $pagesize) {
     $root_url = \Drupal::request()->getBaseUrl();
     if ($elementtype != NULL && $page > 0 && $pagesize > 0) {
-      return $root_url . SIRAPI::SELECT_PAGE . 
+      return $root_url . SIRGUI::SELECT_PAGE . 
           $elementtype . '/' .
           strval($page) . '/' . 
           strval($pagesize);

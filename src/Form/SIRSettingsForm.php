@@ -113,6 +113,38 @@
             '#default_value' => $config->get("api_url"),
         ];
 
+        //$keys = \Drupal::service('key.repository')->getKeys();
+        //var_dump($keys);
+
+        //$key_value = '';
+        //$key_entity = \Drupal::service('key.repository')->getKey('jwt');
+        //if ($key_entity != NULL && $key_entity->getKeyValue() != NULL) {
+        //    $key_value = $key_entity->getKeyValue();
+        //}
+
+        $form['jwt_secret'] = [
+            '#type' => 'key_select',
+            '#title' => 'JWT Secret',
+            '#key_filters' => ['type' => 'authentication'],
+            '#default_value' => $config->get("jwt_secret"),
+        ];
+
+        $form['filler_1'] = [
+            '#type' => 'item',
+            '#title' => $this->t('<br>'),
+        ];
+      
+        $form['namespace_submit'] = [
+            '#type' => 'submit',
+            '#value' => $this->t('Manage NameSpaces'),
+            '#name' => 'namespace',
+        ];
+      
+        $form['filler_2'] = [
+            '#type' => 'item',
+            '#title' => $this->t('<br>'),
+        ];
+      
         return Parent::buildForm($form, $form_state);
 
 
@@ -131,6 +163,14 @@
      * {@inheritdoc}
      */
     public function submitForm(array &$form, FormStateInterface $form_state) {
+        $triggering_element = $form_state->getTriggeringElement();
+        $button_name = $triggering_element['#name'];
+    
+        if ($button_name === 'namespace') {
+          $form_state->setRedirectUrl(Url::fromRoute('sir.admin_namespace_settings_custom'));
+          return;
+        } 
+        
         $config = $this->config(static::CONFIGNAME);
         
         //save confs
@@ -141,6 +181,7 @@
         $config->set("repository_domain_namespace", trim($form_state->getValue('repository_domain_namespace')));
         $config->set("repository_description", trim($form_state->getValue('repository_description')));
         $config->set("api_url", $form_state->getValue('api_url'));
+        $config->set("jwt_secret", $form_state->getValue('jwt_secret'));
         $config->save();
         
         //site name

@@ -3,7 +3,7 @@
 namespace Drupal\sir\Entity;
 
 use Drupal\sir\Utils;
-use Drupal\sir\Vocabulary\SIRAPI;
+use Drupal\sir\Vocabulary\SIRGUI;
 
 class Attachment {
 
@@ -36,16 +36,16 @@ class Attachment {
           $priority = $element->hasPriority;
           $uri = Utils::namespaceUri($uri);
           if ($element->hasDetector != NULL && $element->hasDetector != "") {
-            $detector = $api->parseObjectResponse($api->getUri($element->hasDetector));
+            $detector = $api->parseObjectResponse($api->getUri($element->hasDetector), 'getUri');
             if ($detector != NULL) {
               $nsUri = Utils::namespaceUri($detector->uri);
-              $detectorStr =  t('<a href="'.$root_url.SIRAPI::DESCRIBE_PAGE.base64_encode($detector->uri).'">'.$nsUri.'</a>');
+              $detectorStr =  t('<a href="'.$root_url.SIRGUI::DESCRIBE_PAGE.base64_encode($detector->uri).'">'.$nsUri.'</a>');
             }
           }
         }
         $output[$uri] = [
           'element_position' => $priority,     
-          //'element_detector' => t('<a href="'.$root_url.SIRAPI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),     
+          //'element_detector' => t('<a href="'.$root_url.SIRGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),     
           'element_detector' => $detectorStr,     
         ];
       }

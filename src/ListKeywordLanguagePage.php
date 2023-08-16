@@ -2,7 +2,7 @@
 
 namespace Drupal\sir;
 
-use Drupal\sir\Vocabulary\SIRAPI;
+use Drupal\sir\Vocabulary\SIRGUI;
 
 class ListKeywordLanguagePage {
 
@@ -48,7 +48,9 @@ class ListKeywordLanguagePage {
     if ($language == NULL) {
       $language = "_";
     }
+    
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
+    
     $response = $fusekiAPIservice->listSizeByKeywordAndLanguage($elementtype,$keyword,$language);
     $listSize = -1;
     if ($response != null) {
@@ -66,7 +68,7 @@ class ListKeywordLanguagePage {
   public static function link($elementtype, $keyword, $language, $page, $pagesize) {
     $root_url = \Drupal::request()->getBaseUrl();
     if ($elementtype != NULL && $page > 0 && $pagesize > 0) {
-      return $root_url . SIRAPI::LIST_PAGE . 
+      return $root_url . SIRGUI::LIST_PAGE . 
           $elementtype . '/' .
           $keyword . '/' .
           $language . '/' .

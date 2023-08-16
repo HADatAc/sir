@@ -13,7 +13,7 @@
  use Drupal\sir\ListUsage;
  use Drupal\sir\Utils;
  use Drupal\sir\Entity\Tables;
- use Drupal\sir\Vocabulary\SIRAPI;
+ use Drupal\sir\Vocabulary\SIRGUI;
  use Drupal\sir\Vocabulary\VSTOI;
 
  class DescribeForm extends FormBase {
@@ -49,7 +49,7 @@
         $uri_decode=base64_decode($elementuri);
         $full_uri = Utils::plainUri($uri_decode);
         $api = \Drupal::service('sir.api_connector');
-        $this->setElement($api->parseObjectResponse($api->getUri($full_uri)));
+        $this->setElement($api->parseObjectResponse($api->getUri($full_uri),'getUri'));
         //dpm($this->getElement());
 
         // RETRIEVE CONFIGURATION FROM CURRENT IP

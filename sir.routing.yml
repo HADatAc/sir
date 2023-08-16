@@ -8,7 +8,7 @@ sir.index:
     _title: 'SIR'    
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+  #  _custom_access_check: 'TRUE'    
   options:
     no_cache: 'TRUE'
 
@@ -286,6 +286,17 @@ sir.admin_ip_settings_custom:
     _title: 'SIR IP Settings Form'
   requirements:
     _permission: 'administer site IP configuration'
+  options:
+    _admin_route: TRUE
+    no_cache: 'TRUE'
+
+sir.admin_namespace_settings_custom:
+  path: 'admin/config/sir/namespace'
+  defaults:
+    _form: '\Drupal\sir\Form\SIRNameSpaceForm'
+    _title: 'SIR NameSpace Management Form'
+  requirements:
+    _permission: 'administer site NameSpace configuration'
   options:
     _admin_route: TRUE
     no_cache: 'TRUE'

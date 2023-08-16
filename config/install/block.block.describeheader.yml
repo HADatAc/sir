@@ -1,0 +1,25 @@
+uuid: 615f4f1c-9c4a-4693-93b2-b9df888d179a
+langcode: en
+status: true
+dependencies:
+  module:
+    - sir
+    - system
+  theme:
+    - bootstrap_barrio_subtheme
+id: describeheader
+theme: bootstrap_barrio_subtheme
+region: sidebar_first
+weight: 0
+provider: null
+plugin: describe_header_block
+settings:
+  id: describe_header_block
+  label: 'Describe Header'
+  label_display: visible
+  provider: sir
+visibility:
+  request_path:
+    id: request_path
+    negate: false
+    pages: '/sir/uri/*'

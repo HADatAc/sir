@@ -3,7 +3,7 @@
 namespace Drupal\sir\Entity;
 
 use Drupal\sir\Entity\Tables;
-use Drupal\sir\Vocabulary\SIRAPI;
+use Drupal\sir\Vocabulary\SIRGUI;
 use Drupal\sir\Utils;
 
 class Instrument {
@@ -15,11 +15,7 @@ class Instrument {
       'element_abbreviation' => t('Abbreviation'),
       'element_name' => t('Name'),
       'element_language' => t('Language'),
-      'element_version' => t('Version'),
-      'element_rendering_downloads' => t('Rendering Downloads'),
-      'element_interoperability_downloads' => t('Interoperability Downloads'),
-      'element_version' => t('Version'),
-      //'element_uri' => t('URI'),
+      'element_downloads' => t('Downloads'),
     ];
   
   }
@@ -50,27 +46,28 @@ class Instrument {
       }
       $lang = ' ';
       if ($element->hasLanguage != NULL) {
-        $lang = $languages[$element->hasLanguage];
+        if ($languages != NULL) {
+          $lang = $languages[$element->hasLanguage];
+        }
       }
       $version = ' ';
       if ($element->hasVersion != NULL) {
-        $version = $element->hasVersion;
+        $version = '<br><b>Version</b>: ' . $element->hasVersion;
       }
       $root_url = \Drupal::request()->getBaseUrl();
       $encodedUri = rawurlencode(rawurlencode($element->uri));
-      $totxt = '<a href="'. $root_url . SIRAPI::DOWNLOAD . 'plain'. '/'. $encodedUri . '">TXT</a>';
-      $tohtml = '<a href="'. $root_url . SIRAPI::DOWNLOAD . 'html'. '/'. $encodedUri . '">HTML</a>';
-      $topdf = '<a href="'. $root_url . SIRAPI::DOWNLOAD . 'pdf'. '/'. $encodedUri . '">PDF</a>';
-      $tordf = '<a href="'. $root_url . SIRAPI::DOWNLOAD . 'rdf'. '/'. $encodedUri . '">RDF</a>';
-      $tofhir = '<a href="'. $root_url . SIRAPI::DOWNLOAD . 'fhir'. '/'. $encodedUri . '">FHIR</a>';
+      $totxt = '<a href="'. $root_url . SIRGUI::DOWNLOAD . 'plain'. '/'. $encodedUri . '">TXT</a>';
+      $tohtml = '<a href="'. $root_url . SIRGUI::DOWNLOAD . 'html'. '/'. $encodedUri . '">HTML</a>';
+      $topdf = '<a href="'. $root_url . SIRGUI::DOWNLOAD . 'pdf'. '/'. $encodedUri . '">PDF</a>';
+      //$tordf = '<a href="'. $root_url . SIRGUI::DOWNLOAD . 'rdf'. '/'. $encodedUri . '">RDF</a>';
+      $tordf = ' ';
+      $tofhir = '<a href="'. $root_url . SIRGUI::DOWNLOAD . 'fhir'. '/'. $encodedUri . '">FHIR</a>';
       $output[$element->uri] = [
-        'element_uri' => t('<a href="'.$root_url.SIRAPI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),     
+        'element_uri' => t('<a href="'.$root_url.SIRGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),     
         'element_abbreviation' => $shortName,     
-        'element_name' => $label,     
+        'element_name' => t($label . $version),     
         'element_language' => $lang,
-        'element_version' => $version,
-        'element_rendering_downloads' => t($totxt . ' ' . $tohtml . ' ' . $topdf),
-        'element_interoperability_downloads' => t($tordf . ' ' . $tofhir),
+        'element_downloads' => t($totxt . ' ' . $tohtml . ' ' . $topdf . '<br>' . $tordf . ' ' . $tofhir),
       ];
     }
     return $output;

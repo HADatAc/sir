@@ -3,7 +3,6 @@
 namespace Drupal\sir;
 
 use Drupal\sir\Utils;
-use Drupal\sir\Vocabulary\SIRAPI;
 
 class ListUsage {
 

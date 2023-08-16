@@ -2,17 +2,15 @@
 
 namespace Drupal\sir\Entity;
 
-use Kint\Kint;
+//use Kint\Kint;
 
 class Tables {
   
   public function getNamespaces() {
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $namespace_list = $fusekiAPIservice->namespaceList();
-    //dpm($language_list);
-    $obj = json_decode($namespace_list);
-    if ($obj->isSuccessful) {
-      $namespaces = $obj->body;
+    $APIservice = \Drupal::service('sir.api_connector');
+    $namespaces = $APIservice->parseObjectResponse($APIservice->namespaceList(), 'namespaceList');
+    if ($namespaces == NULL) {
+      return NULL;
     }
     $results = array();
     foreach ($namespaces as $namespace) {
@@ -22,12 +20,10 @@ class Tables {
   }
 
   public function getLanguages() {
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $language_list = $fusekiAPIservice->languageList();
-    //dpm($language_list);
-    $obj = json_decode($language_list);
-    if ($obj->isSuccessful) {
-      $languages = $obj->body;
+    $APIservice = \Drupal::service('sir.api_connector');
+    $languages = $APIservice->parseObjectResponse($APIservice->languageList(), 'languageList');
+    if ($languages == NULL) {
+      return NULL;
     }
     $results = array();
     foreach ($languages as $language) {
@@ -37,11 +33,10 @@ class Tables {
   }
 
   public function getInformants() {
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $informant_list = $fusekiAPIservice->informantList();
-    $obj = json_decode($informant_list);
-    if ($obj->isSuccessful) {
-      $informants = $obj->body;
+    $APIservice = \Drupal::service('sir.api_connector');
+    $informants = $APIservice->parseObjectResponse($APIservice->informantList(), 'informantList');
+    if ($informants == NULL) {
+      return NULL;
     }
     $results = array();
     foreach ($informants as $informant) {
@@ -51,11 +46,10 @@ class Tables {
   }
 
   public function getGenerationActivities() {
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $generation_activity_list = $fusekiAPIservice->generationActivityList();
-    $obj = json_decode($generation_activity_list);
-    if ($obj->isSuccessful) {
-      $generationActivities = $obj->body;
+    $APIservice = \Drupal::service('sir.api_connector');
+    $generationActivities = $APIservice->parseObjectResponse($APIservice->generationActivityList(), 'generationActivityList');
+    if ($generationActivities == NULL) {
+      return NULL;
     }
     $results = array();
     foreach ($generationActivities as $generationActivity) {
