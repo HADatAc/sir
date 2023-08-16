@@ -15,11 +15,7 @@ class Instrument {
       'element_abbreviation' => t('Abbreviation'),
       'element_name' => t('Name'),
       'element_language' => t('Language'),
-      'element_version' => t('Version'),
-      'element_rendering_downloads' => t('Rendering Downloads'),
-      'element_interoperability_downloads' => t('Interoperability Downloads'),
-      'element_version' => t('Version'),
-      //'element_uri' => t('URI'),
+      'element_downloads' => t('Downloads'),
     ];
   
   }
@@ -56,7 +52,7 @@ class Instrument {
       }
       $version = ' ';
       if ($element->hasVersion != NULL) {
-        $version = $element->hasVersion;
+        $version = '<br><b>Version</b>: ' . $element->hasVersion;
       }
       $root_url = \Drupal::request()->getBaseUrl();
       $encodedUri = rawurlencode(rawurlencode($element->uri));
@@ -68,11 +64,9 @@ class Instrument {
       $output[$element->uri] = [
         'element_uri' => t('<a href="'.$root_url.SIRGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),     
         'element_abbreviation' => $shortName,     
-        'element_name' => $label,     
+        'element_name' => t($label . $version),     
         'element_language' => $lang,
-        'element_version' => $version,
-        'element_rendering_downloads' => t($totxt . ' ' . $tohtml . ' ' . $topdf),
-        'element_interoperability_downloads' => t($tordf . ' ' . $tofhir),
+        'element_downloads' => t($totxt . ' ' . $tohtml . ' ' . $topdf . '<br>' . $tordf . ' ' . $tofhir),
       ];
     }
     return $output;
