@@ -3,7 +3,7 @@
 namespace Drupal\sir\Entity;
 
 use Drupal\sir\Utils;
-use Drupal\sir\Vocabulary\SIRAPI;
+use Drupal\sir\Vocabulary\SIRGUI;
 
 class Ontology {
 

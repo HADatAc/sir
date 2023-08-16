@@ -3,7 +3,7 @@
 namespace Drupal\sir\Entity;
 
 use Drupal\sir\Entity\Tables;
-use Drupal\sir\Vocabulary\SIRAPI;
+use Drupal\sir\Vocabulary\SIRGUI;
 use Drupal\sir\Utils;
 
 class Instrument {
@@ -60,13 +60,13 @@ class Instrument {
       }
       $root_url = \Drupal::request()->getBaseUrl();
       $encodedUri = rawurlencode(rawurlencode($element->uri));
-      $totxt = '<a href="'. $root_url . SIRAPI::DOWNLOAD . 'plain'. '/'. $encodedUri . '">TXT</a>';
-      $tohtml = '<a href="'. $root_url . SIRAPI::DOWNLOAD . 'html'. '/'. $encodedUri . '">HTML</a>';
-      $topdf = '<a href="'. $root_url . SIRAPI::DOWNLOAD . 'pdf'. '/'. $encodedUri . '">PDF</a>';
-      $tordf = '<a href="'. $root_url . SIRAPI::DOWNLOAD . 'rdf'. '/'. $encodedUri . '">RDF</a>';
-      $tofhir = '<a href="'. $root_url . SIRAPI::DOWNLOAD . 'fhir'. '/'. $encodedUri . '">FHIR</a>';
+      $totxt = '<a href="'. $root_url . SIRGUI::DOWNLOAD . 'plain'. '/'. $encodedUri . '">TXT</a>';
+      $tohtml = '<a href="'. $root_url . SIRGUI::DOWNLOAD . 'html'. '/'. $encodedUri . '">HTML</a>';
+      $topdf = '<a href="'. $root_url . SIRGUI::DOWNLOAD . 'pdf'. '/'. $encodedUri . '">PDF</a>';
+      $tordf = '<a href="'. $root_url . SIRGUI::DOWNLOAD . 'rdf'. '/'. $encodedUri . '">RDF</a>';
+      $tofhir = '<a href="'. $root_url . SIRGUI::DOWNLOAD . 'fhir'. '/'. $encodedUri . '">FHIR</a>';
       $output[$element->uri] = [
-        'element_uri' => t('<a href="'.$root_url.SIRAPI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),     
+        'element_uri' => t('<a href="'.$root_url.SIRGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),     
         'element_abbreviation' => $shortName,     
         'element_name' => $label,     
         'element_language' => $lang,

@@ -5,7 +5,7 @@ namespace Drupal\sir\Entity;
 use Drupal\sir\Entity\Tables;
 use Drupal\sir\Vocabulary\VSTOI;
 use Drupal\sir\Utils;
-use Drupal\sir\Vocabulary\SIRAPI;
+use Drupal\sir\Vocabulary\SIRGUI;
 
 class Detector {
 
@@ -59,7 +59,7 @@ class Detector {
         }
       }
       $output[$element->uri] = [
-        'element_uri' => t('<a href="'.$root_url.SIRAPI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),     
+        'element_uri' => t('<a href="'.$root_url.SIRGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),     
         'element_content' => $content,     
         'element_language' => $lang,
         'element_version' => $version,
