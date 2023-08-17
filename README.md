@@ -1,12 +1,12 @@
 # SIR: Semantic Instrument Repository
 
-This repository has been developed as a <i>custom module</i> for Drupal 8+ implemented in PHP. 
+This repository has been developed as a <i>custom module</i> for Drupal 9+ implemented in PHP. 
 
 * Developer: HADatAc.org community (http://hadatac.org)
 
 ### Deployment: 
 
-SIR deployment requires the availability of a Drupal instance (version 8 or above), and an user of this Drupal instance with adminstrative privileges. 
+SIR deployment requires the availability of a Drupal instance (version 9 or above), and an user of this Drupal instance with adminstrative privileges. 
 
 * upload SIR code
   * in the admin menu, go to `Extend` > `Add New Module` > `Add from a URL`
