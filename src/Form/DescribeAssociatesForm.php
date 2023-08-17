@@ -81,17 +81,17 @@
           $header = Attachment::generateHeader();
           $output = Attachment::generateOutput($this->getAssociates());    
 
-          $form['associates_detectors_header'] = [
-            '#type' => 'item',
-            '#title' => '<h4>Items</h4>',
-          ];
+          //$form['associates_detectors_header'] = [
+          //  '#type' => 'item',
+          //  '#title' => '<h4>Items</h4>',
+          //];
   
             // PUT FORM TOGETHER
           $form['associates_table'] = [
             '#type' => 'table',
             '#header' => $header,
             '#rows' => $output,
-            '#empty' => t('No response options found'),
+            '#empty' => t('No associated items'),
           ];
 
         }

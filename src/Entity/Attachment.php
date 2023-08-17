@@ -10,8 +10,8 @@ class Attachment {
   public static function generateHeader() {
 
     return $header = [
+      'element_detector' => t('Item(s)'),
       'element_position' => t('Position'),
-      'element_detector' => t('Item'),
     ];
 
   }
@@ -44,9 +44,8 @@ class Attachment {
           }
         }
         $output[$uri] = [
-          'element_position' => $priority,     
-          //'element_detector' => t('<a href="'.$root_url.SIRGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),     
           'element_detector' => $detectorStr,     
+          'element_position' => $priority,     
         ];
       }
     }
