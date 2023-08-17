@@ -1,19 +1,21 @@
 # SIR: Semantic Instrument Repository
 
-* Developer: HADatAc.org community (http://hadatac.org)
+This repository has been developed as a <i>custom module</i> for Drupal 8+ implemented in PHP. 
 
-The PHP code in this repository has been developed as a <i>custom module</i> for Drupal 8+. 
+* Developer: HADatAc.org community (http://hadatac.org)
 
 ### Deployment: 
 
 SIR deployment requires the availability of a Drupal instance (version 8 or above), and an user of this Drupal instance with adminstrative privileges. 
 
 * upload SIR code
-  * in the administration menu of Drupal, go to `Extend` > `Add New Module` > `Add from a URL`
-  * paste the URL from Download.zip from https://github.com/HADatAc/sir/
-* upload module dependencies:
-  * Key (https://www.drupal.org/project/key)
+  * in the admin menu, go to `Extend` > `Add New Module` > `Add from a URL`
+  * paste the following link from github: `https://github.com/HADatAc/sir/archive/refs/heads/main.zip`
+* upload module dependencies. See below a list of current SIR dependencies:
+  * <i>Key</i> (https://www.drupal.org/project/key)
 * go to `Extend` and install both SIR and its dependencies
+* clear all Drupal caches
+  * in the admin menu, go to `Configuration` > `Performance` > `Clear All Caches`  
  
 ### Configuration setup:
 
@@ -36,6 +38,11 @@ User needs to have administrative privileges on Drupal to be able to setup SIR
     * Provide the base URL for the API -- this is the URL of the back-end machine hosting the API
     * Provide the name of the key used to create API tokens -- the API is not going to respond if the token is missing or is incorrect
 * Step 3: setup SIR's Knowledge Graph
+  * go to `Main Menu` > `Advanced` > `Configuration` > `Manage Namespaces` (or alternativelly `[drupal_url]/admin/config/sir/namespace`)
+    * verify that you can see a list of namespaces
+    * for the namespaces with values for `Source URL`, verify if they have values for triples. If not, you need to select the `Reload Triples From All Namespaces With URL`
+    * wait a while and press the refresh button of the browser to verify if the triples have been loaded
+    * if needed, the triples can be deleted and reloaded again. Wait for the triples to be zeroed before reloading.   
 
 ### Usage:
 
