@@ -1,6 +1,6 @@
 # SIR: Semantic Instrument Repository
 
-This repository has been developed as a <i>custom module</i> for Drupal 9+ implemented in PHP. 
+This repository has been developed as a <i>custom module</i> for Drupal 9+ implemented in PHP. The module depends on an external API called SIRAPI (SIRAPI code is available at https://github.com/HADatAc/sirapi). SIR content is stored inside of the API's knowledge graph.  
 
 * Developer: HADatAc.org community (http://hadatac.org)
 
