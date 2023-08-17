@@ -4,7 +4,7 @@ This repository has been developed as a <i>custom module</i> for Drupal 9+ imple
 
 * Developer: HADatAc.org community (http://hadatac.org)
 
-### Deployment: 
+## Deployment: 
 
 SIR deployment requires the availability of a Drupal instance (version 9 or above), and an user of this Drupal instance with adminstrative privileges. 
 
@@ -17,7 +17,7 @@ SIR deployment requires the availability of a Drupal instance (version 9 or abov
 * clear all Drupal caches
   * in the admin menu, go to `Configuration` > `Performance` > `Clear All Caches`  
  
-### Configuration setup:
+## Configuration setup:
 
 User needs to have administrative privileges on Drupal to be able to setup SIR
 
@@ -44,11 +44,11 @@ User needs to have administrative privileges on Drupal to be able to setup SIR
     * wait a while and press the refresh button of the browser to verify if the triples have been loaded
     * if needed, the triples can be deleted and reloaded again. Wait for the triples to be zeroed before reloading.   
 
-### Usage:
+## Usage:
 
 Once the module is installed, SIR options are going to be available under `main menu` > `Advanced`. Access to SIR options depends on user permissions on Drupal. By default, an anonymous user of a SIR repository has access to the `search` and `about` pages. 
 
-### Upgrade (in Pantheon): 
+## Upgrade (in Pantheon): 
 
 * put website under maintenance
 * uninstall module
