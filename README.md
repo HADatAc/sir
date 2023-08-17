@@ -9,7 +9,7 @@ The PHP code in this repository has been developed as a <i>custom module</i> for
 SIR deployment requires the availability of a Drupal instance (version 8 or above), and an user of this Drupal instance with adminstrative privileges. 
 
 * upload SIR code
-  * in the administration menu of Drupal, go to <i>Extend</i> > <i>Add New Module</i> > <i>Add from a URL</i>
+  * in the administration menu of Drupal, go to `Extend` > `Add New Module` > `Add from a URL`
   * paste the URL from Download.zip from https://github.com/HADatAc/sir/
 * upload module dependencies:
   * Key (https://www.drupal.org/project/key)
@@ -19,12 +19,15 @@ SIR deployment requires the availability of a Drupal instance (version 8 or abov
 
 User needs to have administrative privileges on Drupal to be able to setup SIR
 
-* setup secret key to connect to API
+* Step 1: setup secret key to connect to API
   * the secret key is a string used during the setup of the API. The secret key of SIR and its API must be exactly the same
   * In SIR, the key is added going to [drupal_url]/admin/config/system/keys/add
     * Provide a name that will be later selected in the SIR configuration page
     * Select type <i>Authentication</i>
     * Select provider <i>Configuration</i>
+* Step 2: setup SIR
+  * go to <i>Main Menu</i> 
+* Step 3: setup SIR's Knowledge Graph
 
 ### Usage:
 
