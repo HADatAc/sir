@@ -13,7 +13,7 @@ SIR deployment requires the availability of a Drupal instance (version 8 or abov
   * paste the URL from Download.zip from https://github.com/HADatAc/sir/
 * upload module dependencies:
   * Key (https://www.drupal.org/project/key)
-* go to <i>Extend</i> and install both SIR and its dependencies
+* go to `Extend` and install both SIR and its dependencies
  
 ### Configuration setup:
 
@@ -21,17 +21,25 @@ User needs to have administrative privileges on Drupal to be able to setup SIR
 
 * Step 1: setup secret key to connect to API
   * the secret key is a string used during the setup of the API. The secret key of SIR and its API must be exactly the same
-  * In SIR, the key is added going to [drupal_url]/admin/config/system/keys/add
+  * In SIR, the key is added going to `[drupal_url]/admin/config/system/keys/add`
     * Provide a name that will be later selected in the SIR configuration page
-    * Select type <i>Authentication</i>
-    * Select provider <i>Configuration</i>
+    * Select type `Authentication`
+    * Select provider `Configuration`
 * Step 2: setup SIR
-  * go to <i>Main Menu</i> 
+  * go to `Main Menu` > `Advanced` > `Configuration` (or alternativelly `[drupal_url]/admin/config/sir`)
+    * Check whether or not you want SIR search page to be the main page of your website
+    * Provide a short name
+    * Provide a full name - used as the website's title
+    * Provide a domain URL - this is the base of the URIs for all the SIR elements created in the current SIR instance 
+    * Provide a namespace for the domain
+    * Provide a description for the website
+    * Provide the base URL for the API -- this is the URL of the back-end machine hosting the API
+    * Provide the name of the key used to create API tokens -- the API is not going to respond if the token is missing or is incorrect
 * Step 3: setup SIR's Knowledge Graph
 
 ### Usage:
 
-Once the module is installed, SIR options are going to be available under the option <b>Advanced</b> of the main menu. Access to SIR options depends on user permissions on Drupal. 
+Once the module is installed, SIR options are going to be available under `main menu` > `Advanced`. Access to SIR options depends on user permissions on Drupal. By default, an anonymous user of a SIR repository has access to the `search` and `about` pages. 
 
 ### Upgrade (in Pantheon): 
 
