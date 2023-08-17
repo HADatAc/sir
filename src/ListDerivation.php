@@ -13,18 +13,19 @@ class ListDerivation {
         return $resp;
     }
     $api = \Drupal::service('sir.api_connector');
-    $elements = $api->parseObjectResponse($api->getDerivation($uri, 'getDerivation'));
+    $elements = $api->parseObjectResponse($api->getDerivation($uri), 'getDerivation');
     if ($elements == NULL) {
       $elements = array();
       return $elements;
     }
+    //$elements = array();
     return $elements;
   }
 
   public static function fromDetectorToHtml($detectors) {
     $tables = new Tables;
     $generationActivities = $tables->getGenerationActivities();
-      $html = "<ul>";
+    $html = "<ul>";
     if (sizeof($detectors) <= 0) {
       $html .= "<li>NONE</li>";
     } else {

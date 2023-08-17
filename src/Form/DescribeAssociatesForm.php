@@ -7,19 +7,20 @@
  use Drupal\sir\Entity\Attachment;
  use Drupal\sir\Utils;
  use Drupal\sir\Vocabulary\SIRGUI;
+ use Drupal\sir\Vocabulary\VSTOI;
 
  class DescribeAssociatesForm extends FormBase {
 
-    protected $elementUri;
+    protected $element;
 
     protected $associates;
   
-    public function getElementUri() {
-      return $this->elementUri;
+    public function getElement() {
+      return $this->element;
     }
   
-    public function setElementUri($uri) {
-      return $this->elementUri = $uri; 
+    public function setElement($object) {
+      return $this->element = $object; 
     }
   
     public function getAssociates() {
@@ -51,9 +52,17 @@
         }
         // RETRIEVE REQUESTED ELEMENT
         $uri=base64_decode(rawurldecode($elementuri));
-        $this->setElementUri(Utils::plainUri($uri));
         $api = \Drupal::service('sir.api_connector');
-        $this->setAssociates($api->parseObjectResponse($api->attachmentList($this->getElementUri()),'attachmentList'));
+        $finalUri = $api->getUri(Utils::plainUri($uri));
+        if ($finalUri != NULL) {
+          $this->setElement($api->parseObjectResponse($finalUri,'getUri'));
+          if ($this->getElement() != NULL) {
+            //var_dump($this->getElement());
+            if ($this->getElement()->hascoTypeUri == VSTOI::INSTRUMENT) {
+              $this->setAssociates($api->parseObjectResponse($api->attachmentList($this->getElement()->uri),'attachmentList'));
+            }
+          }
+        }
 
         $form['associates_header'] = [
           '#type' => 'item',
