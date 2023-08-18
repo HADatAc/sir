@@ -36,11 +36,12 @@ class InitializationController extends ControllerBase{
     
     if ($sir_api_version == NULL) {
       \Drupal::messenger()->addError(t("API service could not retrieve its version number. Check if API IP configuration is correct."));
-    } else {
-      if($sir_gui_version != $sir_api_version) {
-        \Drupal::messenger()->addError(t("SIR's API and GUI are required to have identical version numbers. API version is " . $sir_api_version . ". GUI version is " . $sir_gui_version . "."));
-      }
-    }
+    } 
+    //else {
+    //  if($sir_gui_version != $sir_api_version) {
+    //    \Drupal::messenger()->addError(t("SIR's API and GUI are required to have identical version numbers. API version is " . $sir_api_version . ". GUI version is " . $sir_gui_version . "."));
+    //  }
+    //}
 
     $root_url = \Drupal::request()->getBaseUrl();
     $redirect = new RedirectResponse($root_url . '/sir/list/instrument/_/_/1/12');
