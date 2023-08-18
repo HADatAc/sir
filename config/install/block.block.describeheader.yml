@@ -16,7 +16,7 @@ plugin: describe_header_block
 settings:
   id: describe_header_block
   label: 'Describe Header'
-  label_display: visible
+  label_display: '0'
   provider: sir
 visibility:
   request_path:

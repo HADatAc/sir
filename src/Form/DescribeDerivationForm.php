@@ -89,7 +89,6 @@
     $tables = new Tables;
     $derivations = $tables->getGenerationActivities();
 
-
     // ROOT URL
     $root_url = \Drupal::request()->getBaseUrl();
 

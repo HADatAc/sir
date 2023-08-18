@@ -16,7 +16,7 @@ plugin: describe_associates_block
 settings:
   id: describe_associates_block
   label: 'Describe Associates'
-  label_display: visible
+  label_display: '0'
   provider: sir
 visibility:
   request_path:

@@ -528,6 +528,11 @@ class FusekiAPIConnector {
     if ($obj->isSuccessful) {
       return $obj->body;
     }
+    $message = $obj->body;
+    if ($message != NULL && is_string($message) && 
+        str_starts_with($message,"No") && str_ends_with($message,"has been found")) {
+      return array();
+    }    
     \Drupal::messenger()->addError(t("API service has failed with following message: " . $obj->body));
     return NULL; 
   }

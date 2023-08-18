@@ -4,7 +4,7 @@ namespace Drupal\sir;
 
 use Drupal\Core\Url;
 use Drupal\sir\Entity\Tables;
-use Drupal\sir\Vocabulary\SIGUI;
+use Drupal\sir\Vocabulary\SIRGUI;
 
 class Utils {
 

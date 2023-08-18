@@ -16,7 +16,7 @@ plugin: describe_derivation_block
 settings:
   id: describe_derivation_block
   label: 'Describe Derivation'
-  label_display: visible
+  label_display: '0'
   provider: sir
 visibility:
   request_path:

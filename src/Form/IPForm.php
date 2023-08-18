@@ -38,9 +38,8 @@ class IPForm extends ConfigFormBase {
      /**
      * {@inheritdoc}
      */
-
-     public function buildForm(array $form, FormStateInterface $form_state){
-        $config = $this->config(static::CONFIGNAME);
+     public function buildForm(array $form, FormStateInterface $form_state) {
+        $config = \Drupal::config(static::CONFIGNAME);
 
         $default_api_url = "http://x.x.x.x:9000";
         if ($config->get("api_url") != NULL && $config->get("api_url") != "") {
@@ -52,10 +51,17 @@ class IPForm extends ConfigFormBase {
             '#title' => 'SIR API Base URL',
             '#default_value' => $default_api_url,
         ];
+
+        $form['jwt_secret'] = [
+            '#type' => 'key_select',
+            '#title' => 'JWT Secret',
+            '#key_filters' => ['type' => 'authentication'],
+            '#default_value' => $config->get("jwt_secret"),
+        ];
+
         return Parent::buildForm($form, $form_state);
 
-
-     }
+    }
 
     public function validateForm(array &$form, FormStateInterface $form_state) {
     }
@@ -68,9 +74,12 @@ class IPForm extends ConfigFormBase {
         // SET SERVICES
         $messenger = \Drupal::service('messenger');
         $fusekiAPIservice = \Drupal::service('sir.api_connector');
+        $config = \Drupal::config(static::CONFIGNAME);
 
         //retrieve Repository configuration
         try {
+            $config->set("jwt_secret", $form_state->getValue('jwt_secret'));
+            $config->save();
             $repo = $fusekiAPIservice->repoInfoNewIp($form_state->getValue('api_url'));
             $obj = json_decode($repo);
             if ($obj->isSuccessful) {
@@ -80,8 +89,6 @@ class IPForm extends ConfigFormBase {
                 $domainUrl = $repoObj->hasDefaultNamespaceURL;
                 $domainNamespace = $repoObj->hasDefaultNamespaceAbbreviation;
                 $description = $repoObj->comment;
-
-                $config = $this->config(static::CONFIGNAME);
 
                 //save confs
                 $config->set("site_label", $label);
