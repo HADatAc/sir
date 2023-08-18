@@ -51,13 +51,17 @@ Once the module is installed, SIR options are going to be available under `main 
 ## Upgrade (in Pantheon): 
 
 * put website under maintenance (`Configuration` > `Maintenance Mode` > `Put site into maintenance mode`) 
-* sing the `Extend` in SIR GUI, uninstall module
+* using Drupal Admin Menu's `Extend`, uninstall SIR module
 * clear caches
-* using the pantheon site maintenance GUI, move website from git to sftp mode
+* using Pantheon's site maintenance, move website from git to sftp mode
 * use sftp to remove module files under `/code/web/modules`
 * use sftp to remove module files cached under `/tmp`
-* using the `Extend` in SIR GUI, upload new version of SIR module 
-* using the `Extend` in SIR GUI, install new SIR
+* clear caches
+* using `Extend`, verify if SIR module's code has been removed from the list of available modules
+* remove website from maintenance
+* put website under maintenance
+* using `Extend`, upload new version of SIR module 
+* using `Extend`, install new SIR
 * clear caches
 * remove website from maintenance
 * restore sir configuration including key
