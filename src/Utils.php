@@ -70,11 +70,14 @@ class Utils {
       case "detector":
         $short = "DT";
         break;
-      case "experience":
+      case "codebook":
         $short = "EX";
         break;
       case "responseoption":
         $short = "RO";
+        break;
+      case "semanticvariable":
+        $short = "SV";
         break;
       default:
         $short = NULL;
@@ -103,7 +106,16 @@ class Utils {
    * 
    */
   public static function selectBackUrl($element_type) {  
-    $url = Url::fromRoute('sir.select_element');
+    $rt = NULL;
+    if ($element_type == 'semanticvariable') {
+      $rt = 'sem.select_element';
+    } else {
+      $rt = 'sir.select_element';
+    }
+    if ($rt == NULL) {
+      return Url::fromRoute('sir.index');
+    }
+    $url = Url::fromRoute($rt);
     $url->setRouteParameter('elementtype', $element_type);
     $url->setRouteParameter('page', '1');
     $url->setRouteParameter('pagesize', '12');

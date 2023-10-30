@@ -9,7 +9,7 @@ sir.top_level:
     _permission: 'access content'
     
 sir.search:
-  title: Search
+  title: Search Questionnaire Elements
   description: Search SIR Elements
   route_name: sir.index
   parent: sir.top_level
@@ -49,12 +49,12 @@ sir.manage_detectors :
     _permission: 'access content'
     _role: 'authenticated'
 
-sir.manage_experiences :
-  title: Manage Experiences 
-  description: Manage experiences and their corresponding Response Options
+sir.manage_codebooks :
+  title: Manage Codebooks 
+  description: Manage codebooks and their corresponding Response Options
   route_name: sir.select_element
   route_parameters:
-    elementtype: 'experience'
+    elementtype: 'codebook'
     page: '1'
     pagesize: '10'
   parent: sir.top_level

@@ -48,7 +48,7 @@ class ListKeywordLanguagePage {
     if ($language == NULL) {
       $language = "_";
     }
-    
+        
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
     
     $response = $fusekiAPIservice->listSizeByKeywordAndLanguage($elementtype,$keyword,$language);

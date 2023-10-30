@@ -128,7 +128,7 @@ class SIRSearchForm extends FormBase {
       '#options' => [
         'instrument' => $this->t('Questionnaires'),
         'detector' => $this->t('Items'),
-        'experience' => $this->t('Experience'),
+        'codebook' => $this->t('Codebook'),
         'responseoption' => $this->t('Response Option'),
 //        'semanticvariable' => $this->t('Semantic Variable'),
       ],

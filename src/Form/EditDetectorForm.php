@@ -63,7 +63,7 @@ class EditDetectorForm extends FormBase {
     $derivations = $tables->getGenerationActivities();
 
     $sourceContent = '';
-    $experienceLabel = '';
+    $codebookLabel = '';
     $wasGeneratedBy = Constant::DEFAULT_WAS_GENERATED_BY;
     $this->setDetector($this->retrieveDetector($this->getDetectorUri()));
     if ($this->getDetector() == NULL) {
@@ -77,8 +77,8 @@ class EditDetectorForm extends FormBase {
           $sourceContent = $this->getSourceDetector()->hasContent;
         }
       }
-      if ($this->getDetector()->experience != NULL) {
-        $experienceLabel = $this->getDetector()->experience->label . ' [' . $this->getDetector()->experience->uri . ']';
+      if ($this->getDetector()->codebook != NULL) {
+        $codebookLabel = $this->getDetector()->codebook->label . ' [' . $this->getDetector()->codebook->uri . ']';
       }
     }
 
@@ -89,11 +89,11 @@ class EditDetectorForm extends FormBase {
       '#title' => $this->t('Content'),
       '#default_value' => $this->getDetector()->hasContent,
     ];
-    $form['detector_experience'] = [
+    $form['detector_codebook'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Experience'),
-      '#default_value' => $experienceLabel,
-      '#autocomplete_route_name' => 'sir.detector_experience_autocomplete',
+      '#title' => $this->t('Codebook'),
+      '#default_value' => $codebookLabel,
+      '#autocomplete_route_name' => 'sir.detector_codebook_autocomplete',
     ];
     $form['detector_language'] = [
       '#type' => 'select',
@@ -178,9 +178,9 @@ class EditDetectorForm extends FormBase {
       $uid = \Drupal::currentUser()->id();
       $useremail = \Drupal::currentUser()->getEmail();
 
-      $hasExperience = '';
-      if ($form_state->getValue('detector_experience') != NULL && $form_state->getValue('detector_experience') != '') {
-        $hasExperience = Utils::uriFromAutocomplete($form_state->getValue('detector_experience'));
+      $hasCodebook = '';
+      if ($form_state->getValue('detector_codebook') != NULL && $form_state->getValue('detector_codebook') != '') {
+        $hasCodebook = Utils::uriFromAutocomplete($form_state->getValue('detector_codebook'));
       } 
 
       $wasDerivedFrom = '';
@@ -194,13 +194,13 @@ class EditDetectorForm extends FormBase {
         '"typeUri":"'.VSTOI::DETECTOR.'",'.
         '"hascoTypeUri":"'.VSTOI::DETECTOR.'",'.
         '"hasContent":"'.$form_state->getValue('detector_content').'",'.
-        '"hasExperience":"'.$hasExperience.'",'.
+        '"hasCodebook":"'.$hasCodebook.'",'.
         '"hasLanguage":"'.$form_state->getValue('detector_language').'",'.
         '"hasVersion":"'.$form_state->getValue('detector_version').'",'.
         '"comment":"'.$form_state->getValue('detector_description').'",'.
         '"wasDerivedFrom":"'.$wasDerivedFrom.'",'.
         '"wasGeneratedBy":"'.$form_state->getValue('detector_was_generated_by').'",'.
-        '"hasSIRMaintainerEmail":"'.$useremail.'"}';
+        '"hasSIRManagerEmail":"'.$useremail.'"}';
 
       // UPDATE BY DELETING AND CREATING
       $fusekiAPIservice = \Drupal::service('sir.api_connector');

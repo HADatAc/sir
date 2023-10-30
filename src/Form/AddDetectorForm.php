@@ -118,10 +118,10 @@ class AddDetectorForm extends FormBase {
       '#type' => 'textarea',
       '#title' => $this->t('Content'),
     ];
-    $form['detector_experience'] = [
+    $form['detector_codebook'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Experience'),
-      '#autocomplete_route_name' => 'sir.detector_experience_autocomplete',
+      '#title' => $this->t('Codebook'),
+      '#autocomplete_route_name' => 'sir.detector_codebook_autocomplete',
     ];
     $form['detector_language'] = [
       '#type' => 'select',
@@ -201,9 +201,9 @@ class AddDetectorForm extends FormBase {
 
     try {
 
-      $hasExperience = '';
-      if ($form_state->getValue('detector_experience') != NULL && $form_state->getValue('detector_experience') != '') {
-        $hasExperience = Utils::uriFromAutocomplete($form_state->getValue('detector_experience'));
+      $hasCodebook = '';
+      if ($form_state->getValue('detector_codebook') != NULL && $form_state->getValue('detector_codebook') != '') {
+        $hasCodebook = Utils::uriFromAutocomplete($form_state->getValue('detector_codebook'));
       } 
 
       $wasDerivedFrom = '';
@@ -222,13 +222,13 @@ class AddDetectorForm extends FormBase {
         '"typeUri":"'.VSTOI::DETECTOR.'",'.
         '"hascoTypeUri":"'.VSTOI::DETECTOR.'",'.
         '"hasContent":"'.$form_state->getValue('detector_content').'",'.
-        '"hasExperience":"'.$hasExperience.'",'.
+        '"hasCodebook":"'.$hasCodebook.'",'.
         '"hasLanguage":"'.$form_state->getValue('detector_language').'",'.
         '"hasVersion":"'.$form_state->getValue('detector_version').'",'.
         '"comment":"'.$form_state->getValue('detector_description').'",'.
         '"wasDerivedFrom":"'.$wasDerivedFrom.'",'.
         '"wasGeneratedBy":"'.$wasGeneratedBy.'",'.
-        '"hasSIRMaintainerEmail":"'.$useremail.'"}';
+        '"hasSIRManagerEmail":"'.$useremail.'"}';
       $fusekiAPIservice = \Drupal::service('sir.api_connector');
       $fusekiAPIservice->detectorAdd($detectorJson);
       //dpm($resp);

@@ -22,7 +22,7 @@
 
     protected $source;
 
-    protected $experience;
+    protected $codebook;
   
     public function getElement() {
       return $this->element;
@@ -58,7 +58,7 @@
             if ($hascoType == VSTOI::INSTRUMENT) {
                 $shortName = $this->getElement()->hasShortName;
             }
-            if ($hascoType == VSTOI::INSTRUMENT || $hascoType == VSTOI::EXPERIENCE) {
+            if ($hascoType == VSTOI::INSTRUMENT || $hascoType == VSTOI::CODEBOOK) {
                 $name = $this->getElement()->label;
             }
             $message = "";
@@ -83,7 +83,7 @@
             ];
         }
 
-        if ($hascoType == VSTOI::INSTRUMENT || $hascoType == VSTOI::EXPERIENCE) {
+        if ($hascoType == VSTOI::INSTRUMENT || $hascoType == VSTOI::CODEBOOK) {
             $form['element_name'] = [
                 '#type' => 'item',
                 '#title' => '<b>Full Name</b>: ' . $name,

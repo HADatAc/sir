@@ -8,10 +8,10 @@ use Symfony\Component\HttpFoundation\Request;
 use Drupal\Component\Utility\Xss;
 
 /**
- * Class JsonApiExperienceController
+ * Class JsonApiCodebookController
  * @package Drupal\sir\Controller
  */
-class JsonApiExperienceController extends ControllerBase{
+class JsonApiCodebookController extends ControllerBase{
 
   /**
    * @return JsonResponse
@@ -24,16 +24,16 @@ class JsonApiExperienceController extends ControllerBase{
     }
     $keyword = Xss::filter($input);
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $experience_list = $fusekiAPIservice->experienceListByKeyword($keyword);
-    $obj = json_decode($experience_list);
-    $experiences = [];
+    $codebook_list = $fusekiAPIservice->codebookListByKeyword($keyword);
+    $obj = json_decode($codebook_list);
+    $codebooks = [];
     if ($obj->isSuccessful) {
-      $experiences = $obj->body;
+      $codebooks = $obj->body;
     }
-    foreach ($experiences as $experience) {
+    foreach ($codebooks as $codebook) {
       $results[] = [
-        'value' => $experience->label . ' [' . $experience->uri . ']',
-        'label' => $experience->label,
+        'value' => $codebook->label . ' [' . $codebook->uri . ']',
+        'label' => $codebook->label,
       ];
     }
     return new JsonResponse($results);

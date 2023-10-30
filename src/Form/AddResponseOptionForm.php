@@ -149,7 +149,7 @@ class AddResponseOptionForm extends FormBase {
         '"hasLanguage":"'.$form_state->getValue('responseoption_language').'",'.
         '"hasVersion":"'.$form_state->getValue('responseoption_version').'",'.
         '"comment":"'.$form_state->getValue('responseoption_description').'",'.
-        '"hasSIRMaintainerEmail":"'.$useremail.'"}';
+        '"hasSIRManagerEmail":"'.$useremail.'"}';
 
       $fusekiAPIservice = \Drupal::service('sir.api_connector');
       $fusekiAPIservice->responseOptionAdd($responseOptionJSON);

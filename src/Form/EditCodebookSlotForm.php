@@ -57,7 +57,7 @@ class EditCodebookSlotForm extends FormBase {
         //dpm($this->getCodebookSlot());
     } else {
       \Drupal::messenger()->addMessage(t("Failed to retrieve Codebook Slot."));
-      $url = Url::fromRoute('sir.manage_experiments');
+      $url = Url::fromRoute('sir.manage_codebooks');
       $form_state->setRedirectUrl($url);
     }
 
@@ -127,7 +127,7 @@ class EditCodebookSlotForm extends FormBase {
 
     if ($button_name === 'back') {
       $url = Url::fromRoute('sir.manage_codebook_slots');
-      $url->setRouteParameter('experienceuri', base64_encode($this->getCodebookSlot()->belongsTo));
+      $url->setRouteParameter('codebookuri', base64_encode($this->getCodebookSlot()->belongsTo));
       $form_state->setRedirectUrl($url);
       return;
     } 
@@ -147,7 +147,7 @@ class EditCodebookSlotForm extends FormBase {
       } 
 
       $url = Url::fromRoute('sir.manage_codebook_slots');
-      $url->setRouteParameter('experienceuri', base64_encode($this->getCodebookSlot()->belongsTo));
+      $url->setRouteParameter('codebookuri', base64_encode($this->getCodebookSlot()->belongsTo));
       $form_state->setRedirectUrl($url);
       return;
     } 
@@ -161,13 +161,13 @@ class EditCodebookSlotForm extends FormBase {
 
       \Drupal::messenger()->addMessage(t("Codebook Slot has been updated successfully."));
       $url = Url::fromRoute('sir.manage_codebook_slots');
-      $url->setRouteParameter('experienceuri', base64_encode($this->getCodebookSlot()->belongsTo));
+      $url->setRouteParameter('codebookuri', base64_encode($this->getCodebookSlot()->belongsTo));
       $form_state->setRedirectUrl($url);
 
     } catch(\Exception $e) {
       \Drupal::messenger()->addMessage(t("An error occurred while updating the Codebook Slot: ".$e->getMessage()));
       $url = Url::fromRoute('sir.manage_codebook_slots');
-      $url->setRouteParameter('experienceuri', base64_encode($this->getCodebookSlot()->belongsTo));
+      $url->setRouteParameter('codebookuri', base64_encode($this->getCodebookSlot()->belongsTo));
       $form_state->setRedirectUrl($url);
     }
 

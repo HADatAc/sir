@@ -59,7 +59,7 @@ class EditResponseOptionForm extends FormBase {
     } else {
       \Drupal::messenger()->addMessage(t("Failed to retrieve Response Option."));
       $url = Url::fromRoute('sir.manage_response_options');
-      # $url->setRouteParameter('experienceuri', base64_encode($this->getResponseOption()->ofExperience));
+      # $url->setRouteParameter('codebookuri', base64_encode($this->getResponseOption()->ofCodebook));
       $form_state->setRedirectUrl($url);
     }
 
@@ -140,7 +140,7 @@ class EditResponseOptionForm extends FormBase {
         '"hasLanguage":"'.$form_state->getValue('responseoption_language').'",'.
         '"hasVersion":"'.$form_state->getValue('responseoption_version').'",'.
         '"comment":"'.$form_state->getValue('responseoption_description').'",'.
-        '"hasSIRMaintainerEmail":"'.$useremail.'"}';
+        '"hasSIRManagerEmail":"'.$useremail.'"}';
 
       // UPDATE BY DELETING AND CREATING
       $fusekiAPIservice = \Drupal::service('sir.api_connector');

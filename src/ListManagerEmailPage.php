@@ -4,9 +4,9 @@ namespace Drupal\sir;
 
 use Drupal\sir\Vocabulary\SIRGUI;
 
-class ListMaintainerEmailPage {
+class ListManagerEmailPage {
 
-  public static function exec($elementtype, $maintaineremail, $page, $pagesize) {
+  public static function exec($elementtype, $manageremail, $page, $pagesize) {
     if ($elementtype == NULL || $page == NULL || $pagesize == NULL) {
         $resp = array();
         return $resp;
@@ -20,7 +20,7 @@ class ListMaintainerEmailPage {
     }
 
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $element_list = $fusekiAPIservice->listByMaintainerEmail($elementtype,$maintaineremail,$pagesize,$offset);
+    $element_list = $fusekiAPIservice->listByManagerEmail($elementtype,$manageremail,$pagesize,$offset);
     $elements = [];
     if ($element_list != null) {
       $obj = json_decode($element_list);
@@ -32,12 +32,12 @@ class ListMaintainerEmailPage {
 
   }
 
-  public static function total($elementtype, $maintaineremail) {
+  public static function total($elementtype, $manageremail) {
     if ($elementtype == NULL) {
       return -1;
     }
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $response = $fusekiAPIservice->listSizeByMaintainerEmail($elementtype,$maintaineremail);
+    $response = $fusekiAPIservice->listSizeByManagerEmail($elementtype,$manageremail);
     $listSize = -1;
     if ($response != null) {
       $obj = json_decode($response);

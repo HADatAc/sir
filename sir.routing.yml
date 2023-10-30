@@ -169,32 +169,32 @@ sir.edit_detector:
   options:
     no_cache: 'TRUE'
 
-sir.detector_experience_autocomplete:
+sir.detector_codebook_autocomplete:
   path: '/sir/manage/detector/autocomplete'
   defaults:
-    _controller: '\Drupal\sir\Controller\JsonApiExperienceController::handleAutocomplete'
+    _controller: '\Drupal\sir\Controller\JsonApiCodebookController::handleAutocomplete'
     _format: json
   requirements:
     _permission: 'access content'
 
-# Experience CRUD options
+# Codebook CRUD options
 
-sir.add_experience:
-  path: 'sir/manage/addexperience'
+sir.add_codebook:
+  path: 'sir/manage/addcodebook'
   defaults:
-    _form: '\Drupal\sir\Form\AddExperienceForm'
-    _title: 'Add Experience'    
+    _form: '\Drupal\sir\Form\AddCodebookForm'
+    _title: 'Add Codebook'    
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    
   options:
     no_cache: 'TRUE'
 
-sir.edit_experience:
-  path: 'sir/manage/editexperience/{experienceuri}'
+sir.edit_codebook:
+  path: 'sir/manage/editcodebook/{codebookuri}'
   defaults:
-    _form: '\Drupal\sir\Form\EditExperienceForm'
-    _title: 'Edit Experience'    
+    _form: '\Drupal\sir\Form\EditCodebookForm'
+    _title: 'Edit Codebook'    
   requirements:
     _permission: 'access content'  
     _custom_access_check: 'TRUE'      
@@ -204,7 +204,7 @@ sir.edit_experience:
 # Response Option CRUD options
 
 sir.manage_codebook_slots:
-  path: 'sir/manage/codebookslot/{experienceuri}'
+  path: 'sir/manage/codebookslot/{codebookuri}'
   defaults:
     _form: '\Drupal\sir\Form\ManageCodebookSlotsForm'
     _title: 'Manage Codebook Slots'    
@@ -215,10 +215,10 @@ sir.manage_codebook_slots:
     no_cache: 'TRUE'
 
 sir.add_codebook_slots:
-  path: 'sir/manage/addcodebookslots/{experienceuri}'
+  path: 'sir/manage/addcodebookslots/{codebookuri}'
   defaults:
     _form: '\Drupal\sir\Form\AddCodebookSlotsForm'
-    _title: "Create Experience's Slots"    
+    _title: "Create Codebook's Slots"    
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    
@@ -229,7 +229,7 @@ sir.edit_codebook_slot:
   path: 'sir/manage/editcodebookslot/{codebooksloturi}'
   defaults:
     _form: '\Drupal\sir\Form\EditCodebookSlotForm'
-    _title: "Edit Experience's Slot"    
+    _title: "Edit Codebook's Slot"    
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    
