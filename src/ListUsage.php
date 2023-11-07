@@ -24,16 +24,16 @@ class ListUsage {
     return $elements;
   }
 
-  public static function fromDetectorToHtml($attachments) {
+  public static function fromDetectorToHtml($detectorslots) {
     $html = "<ul>";
-    if (sizeof($attachments) <= 0) {
+    if (sizeof($detectorslots) <= 0) {
       $html .= "<li>NONE</li>";
     } else {
-      foreach ($attachments as $attachment) {
-        $instrument = ListUsage::getInstrument($attachment->belongsTo);
+      foreach ($detectorslots as $detectorslot) {
+        $instrument = ListUsage::getInstrument($detectorslot->belongsTo);
         if ($instrument != NULL) {
-          //dpm($attachment);
-          $html .= "<li>Position " . $attachment->hasPriority . " in Questionnaire " . $instrument->label . " (" . Utils::sirUriLink($instrument->uri) . ")</li>"; 
+          //dpm($detectorslot);
+          $html .= "<li>Position " . $detectorslot->hasPriority . " in Questionnaire " . $instrument->label . " (" . Utils::sirUriLink($instrument->uri) . ")</li>"; 
         }
       }     
     }

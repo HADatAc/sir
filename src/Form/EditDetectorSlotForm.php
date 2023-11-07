@@ -7,90 +7,90 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\sir\Utils;
 
-class EditAttachmentForm extends FormBase {
+class EditDetectorSlotForm extends FormBase {
 
-  protected $attachmentUri;
+  protected $detectorslotUri;
 
-  protected $attachment;
+  protected $detectorslot;
 
-  public function getAttachmentUri() {
-    return $this->attachmentUri;
+  public function getDetectorSlotUri() {
+    return $this->detectorslotUri;
   }
 
-  public function setAttachmentUri($uri) {
-    return $this->attachmentUri = $uri; 
+  public function setDetectorSlotUri($uri) {
+    return $this->detectorslotUri = $uri; 
   }
 
-  public function getAttachment() {
-    return $this->attachment;
+  public function getDetectorSlot() {
+    return $this->detectorslot;
   }
 
-  public function setAttachment($obj) {
-    return $this->attachment = $obj; 
+  public function setDetectorSlot($obj) {
+    return $this->detectorslot = $obj; 
   }
 
   /**
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'edit_attachment_form';
+    return 'edit_detectorslot_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $attachmenturi = NULL) {
-    $uri=$attachmenturi;
+  public function buildForm(array $form, FormStateInterface $form_state, $detectorsloturi = NULL) {
+    $uri=$detectorsloturi;
     $uri_decode=base64_decode($uri);
-    $this->setAttachmentUri($uri_decode);
+    $this->setDetectorSlotUri($uri_decode);
 
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $rawresponse = $fusekiAPIservice->getUri($this->getAttachmentUri());
+    $rawresponse = $fusekiAPIservice->getUri($this->getDetectorSlotUri());
     $obj = json_decode($rawresponse);
 
     $content = "";
     if ($obj->isSuccessful) {
-      $this->setAttachment($obj->body);
-      if ($this->getAttachment()->detector != NULL) {
-        $content = $this->getAttachment()->detector->hasContent . ' [' . $this->getAttachment()->hasDetector . ']';
+      $this->setDetectorSlot($obj->body);
+      if ($this->getDetectorSlot()->detector != NULL) {
+        $content = $this->getDetectorSlot()->detector->hasContent . ' [' . $this->getDetectorSlot()->hasDetector . ']';
       }
-        //dpm($this->getAttachment());
+        //dpm($this->getDetectorSlot());
     } else {
-      \Drupal::messenger()->addMessage(t("Failed to retrieve Attachment."));
+      \Drupal::messenger()->addMessage(t("Failed to retrieve DetectorSlot."));
       $url = Url::fromRoute('sir.manage_instruments');
       $form_state->setRedirectUrl($url);
     }
 
-    $form['attachment_uri'] = [
+    $form['detectorslot_uri'] = [
       '#type' => 'textfield',
-      '#title' => t('Attachment URI'),
-      '#value' => $this->getAttachmentUri(),
+      '#title' => t('DetectorSlot URI'),
+      '#value' => $this->getDetectorSlotUri(),
       '#disabled' => TRUE,
     ];
-    //$form['attachment_instrument'] = [
+    //$form['detectorslot_instrument'] = [
     //  '#type' => 'textfield',
     //  '#title' => t('Instrument URI'),
-    //  '#value' => $this->getAttachment()->belongsTo,
+    //  '#value' => $this->getDetectorSlot()->belongsTo,
     //  '#disabled' => TRUE,
     //];
-    $form['attachment_priority'] = [
+    $form['detectorslot_priority'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Priority'),
-      '#default_value' => $this->getAttachment()->hasPriority,
+      '#default_value' => $this->getDetectorSlot()->hasPriority,
       '#disabled' => TRUE,
     ];
-    $form['attachment_detector'] = [
+    $form['detectorslot_detector'] = [
       '#type' => 'textfield',
       '#title' => $this->t("Item"),
       '#default_value' => $content,
-      '#autocomplete_route_name' => 'sir.attachment_detector_autocomplete',
+      '#autocomplete_route_name' => 'sir.detectorslot_detector_autocomplete',
       '#maxlength' => NULL,
 
     ];
-    //$form['attachment_detector_uri'] = [
+    //$form['detectorslot_detector_uri'] = [
     //  '#type' => 'textfield',
     //  '#title' => $this->t("Item Uri"),
-    //  '#default_value' => $this->getAttachment()->hasDetector,
+    //  '#default_value' => $this->getDetectorSlot()->hasDetector,
     //  '#disabled' => TRUE,
     //];
     $form['new_detector_submit'] = [
@@ -127,8 +127,8 @@ class EditAttachmentForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name != 'back') {
-      if(strlen($form_state->getValue('attachment_priority')) < 1) {
-        $form_state->setErrorByName('attachment_priority', $this->t('Please enter a valid priority value'));
+      if(strlen($form_state->getValue('detectorslot_priority')) < 1) {
+        $form_state->setErrorByName('detectorslot_priority', $this->t('Please enter a valid priority value'));
       }
     }
   }
@@ -145,8 +145,8 @@ class EditAttachmentForm extends FormBase {
     $uemail = \Drupal::currentUser()->getEmail();
 
     if ($button_name === 'back') {
-      $url = Url::fromRoute('sir.manage_attachments');
-      $url->setRouteParameter('instrumenturi', base64_encode($this->getAttachment()->belongsTo));
+      $url = Url::fromRoute('sir.manage_detectorslots');
+      $url->setRouteParameter('instrumenturi', base64_encode($this->getDetectorSlot()->belongsTo));
       $form_state->setRedirectUrl($url);
       return;
     } 
@@ -154,40 +154,40 @@ class EditAttachmentForm extends FormBase {
     if ($button_name === 'new_detector') {
       $url = Url::fromRoute('sir.add_detector');
       $url->setRouteParameter('sourcedetectoruri', 'EMPTY'); 
-      $url->setRouteParameter('attachmenturi', base64_encode($this->getAttachmentUri())); 
+      $url->setRouteParameter('detectorsloturi', base64_encode($this->getDetectorSlotUri())); 
       $form_state->setRedirectUrl($url);
       return;
     } 
 
     if ($button_name === 'reset_detector') {
       // RESET DETECTOR
-      if ($this->getAttachmentUri() != NULL) {
+      if ($this->getDetectorSlotUri() != NULL) {
         $fusekiAPIservice = \Drupal::service('sir.api_connector');
-        $fusekiAPIservice->attachmentReset($this->getAttachmentUri());
+        $fusekiAPIservice->detectorslotReset($this->getDetectorSlotUri());
       } 
 
-      $url = Url::fromRoute('sir.manage_attachments');
-      $url->setRouteParameter('instrumenturi', base64_encode($this->getAttachment()->belongsTo));
+      $url = Url::fromRoute('sir.manage_detectorslots');
+      $url->setRouteParameter('instrumenturi', base64_encode($this->getDetectorSlot()->belongsTo));
       $form_state->setRedirectUrl($url);
       return;
     } 
 
     try{
       // UPDATE DETECTOR
-      if ($this->getAttachmentUri() != NULL) {
+      if ($this->getDetectorSlotUri() != NULL) {
         $fusekiAPIservice = \Drupal::service('sir.api_connector');
-        $fusekiAPIservice->detectorAttach(Utils::uriFromAutocomplete($form_state->getValue('attachment_detector')),$this->getAttachmentUri());
+        $fusekiAPIservice->detectorAttach(Utils::uriFromAutocomplete($form_state->getValue('detectorslot_detector')),$this->getDetectorSlotUri());
       } 
 
-      \Drupal::messenger()->addMessage(t("Attachment has been updated successfully."));
-      $url = Url::fromRoute('sir.manage_attachments');
-      $url->setRouteParameter('instrumenturi', base64_encode($this->getAttachment()->belongsTo));
+      \Drupal::messenger()->addMessage(t("DetectorSlot has been updated successfully."));
+      $url = Url::fromRoute('sir.manage_detectorslots');
+      $url->setRouteParameter('instrumenturi', base64_encode($this->getDetectorSlot()->belongsTo));
       $form_state->setRedirectUrl($url);
 
     }catch(\Exception $e){
-      \Drupal::messenger()->addMessage(t("An error occurred while updating the attachment: ".$e->getMessage()));
-      $url = Url::fromRoute('sir.manage_attachments');
-      $url->setRouteParameter('instrumenturi', base64_encode($this->getAttachment()->belongsTo));
+      \Drupal::messenger()->addMessage(t("An error occurred while updating the detectorslot: ".$e->getMessage()));
+      $url = Url::fromRoute('sir.manage_detectorslots');
+      $url->setRouteParameter('instrumenturi', base64_encode($this->getDetectorSlot()->belongsTo));
       $form_state->setRedirectUrl($url);
     }
 

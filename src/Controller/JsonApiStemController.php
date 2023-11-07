@@ -11,7 +11,7 @@ use Drupal\Component\Utility\Xss;
  * Class JsonApiCodebookController
  * @package Drupal\sir\Controller
  */
-class JsonApiCodebookController extends ControllerBase{
+class JsonApiStemController extends ControllerBase{
 
   /**
    * @return JsonResponse
@@ -23,17 +23,19 @@ class JsonApiCodebookController extends ControllerBase{
       return new JsonResponse($results);
     }
     $keyword = Xss::filter($input);
+    dpm($keyword);
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $codebook_list = $fusekiAPIservice->listByKeyword('codebook',$keyword,10,0);
-    $obj = json_decode($codebook_list);
-    $codebooks = [];
+    $stem_list = $fusekiAPIservice->listByKeyword('detectorstem',$keyword,10,0);
+    $obj = json_decode($stem_list);
+    $stems = [];
     if ($obj->isSuccessful) {
-      $codebooks = $obj->body;
+      $stems = $obj->body;
     }
-    foreach ($codebooks as $codebook) {
+    dpm($stems);
+    foreach ($stems as $stem) {
       $results[] = [
-        'value' => $codebook->label . ' [' . $codebook->uri . ']',
-        'label' => $codebook->label,
+        'value' => $stem->hasContent . ' [' . $stem->uri . ']',
+        'label' => $stem->hasContent,
       ];
     }
     return new JsonResponse($results);

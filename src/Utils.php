@@ -67,6 +67,9 @@ class Utils {
       case "instrument":
         $short = "IN";
         break;
+      case "detectorstem":
+        $short = "DS";
+        break;
       case "detector":
         $short = "DT";
         break;

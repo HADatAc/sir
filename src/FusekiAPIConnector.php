@@ -91,6 +91,7 @@ class FusekiAPIConnector {
     $method = 'GET';
     $api_url = $this->getApiUrl();
     $data = $this->getHeader();
+    //dpm($endpoint);
     return $this->perform_http_request($method, $api_url.$endpoint, $data);   
   }
 
@@ -116,6 +117,7 @@ class FusekiAPIConnector {
     $method = 'GET';
     $api_url = $this->getApiUrl();
     $data = $this->getHeader();
+    //dpm($endpoint);
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
@@ -182,37 +184,73 @@ class FusekiAPIConnector {
 
   /**
    *  
-   *    ATTACHMENTS
+   *    DETECTOR_SLOTS
    * 
    */
 
-  public function attachmentList($instrumentUri) {
-    $endpoint = "/sirapi/api/attachment/byinstrument/".rawurlencode($instrumentUri);
+  public function detectorslotList($instrumentUri) {
+    $endpoint = "/sirapi/api/detectorslot/byinstrument/".rawurlencode($instrumentUri);
     $method = "GET";
     $api_url = $this->getApiUrl();
     $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
-  public function attachmentAdd($instrumentUri,$totalAttachments) {
-    $endpoint = "/sirapi/api/attachment/create/".rawurlencode($instrumentUri)."/".rawurlencode($totalAttachments);
+  public function detectorslotAdd($instrumentUri,$totalDetectorSlots) {
+    $endpoint = "/sirapi/api/detectorslot/create/".rawurlencode($instrumentUri)."/".rawurlencode($totalDetectorSlots);
     $method = "POST";
     $api_url = $this->getApiUrl();
     $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);          
   }
 
-  public function attachmentDel($attachmentUri) {
-    $endpoint = "/sirapi/api/attachment/delete/".rawurlencode($attachmentUri);
+  public function detectorslotDel($detectorslotUri) {
+    $endpoint = "/sirapi/api/detectorslot/delete/".rawurlencode($detectorslotUri);
     $method = 'POST';
     $api_url = $this->getApiUrl();
     $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);          
   }
 
-  public function attachmentReset($attachmentUri) {
-    $endpoint = "/sirapi/api/detector/detach/".rawurlencode($attachmentUri);    
+  public function detectorslotReset($detectorslotUri) {
+    $endpoint = "/sirapi/api/detector/detach/".rawurlencode($detectorslotUri);    
     $method = 'GET';
+    $api_url = $this->getApiUrl();
+    $data = $this->getHeader();
+    return $this->perform_http_request($method,$api_url.$endpoint,$data);          
+  }
+
+  /**
+   *   DETECTOR STEMS
+   */
+
+   public function detectorStemList($useremail) {
+    $endpoint = "/sirapi/api/detectorstem/manageremail/".rawurlencode($useremail);
+    $method = 'GET';
+    $api_url = $this->getApiUrl();
+    $data = $this->getHeader();
+    return $this->perform_http_request($method,$api_url.$endpoint,$data);   
+  }
+
+  public function detectorStemListByKeyword($keyword) {
+    $endpoint = "/sirapi/api/detectorstem/keyword/".rawurlencode($keyword);
+    $method = 'GET';
+    $api_url = $this->getApiUrl();
+    $data = $this->getHeader();
+    return $this->perform_http_request($method,$api_url.$endpoint,$data);   
+  }
+
+  public function detectorStemAdd($detectorStemJson) {
+    $endpoint = "/sirapi/api/detectorstem/create/".rawurlencode($detectorStemJson);
+    $method = 'POST';
+    $api_url = $this->getApiUrl();
+    $data = $this->getHeader();
+    return $this->perform_http_request($method,$api_url.$endpoint,$data);          
+  }
+
+  public function detectorStemDel($detectorStemUri) {
+    $endpoint = "/sirapi/api/detectorstem/delete/".rawurlencode($detectorStemUri);
+    $method = 'POST';
     $api_url = $this->getApiUrl();
     $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);          
@@ -254,8 +292,8 @@ class FusekiAPIConnector {
     return $this->perform_http_request($method,$api_url.$endpoint,$data);          
   }
 
-  public function detectorAttach($detectorUri,$attachmentUri) {
-    $endpoint = "/sirapi/api/detector/attach/".rawurlencode($detectorUri)."/".rawurlencode($attachmentUri);
+  public function detectorAttach($detectorUri,$detectorslotUri) {
+    $endpoint = "/sirapi/api/detector/attach/".rawurlencode($detectorUri)."/".rawurlencode($detectorslotUri);
     $method = 'GET';
     $api_url = $this->getApiUrl();
     $data = $this->getHeader();

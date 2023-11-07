@@ -5,6 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\sir\ListKeywordLanguagePage;
+use Drupal\sir\Entity\DetectorStem;
 use Drupal\sir\Entity\Detector;
 use Drupal\sir\Entity\Codebook;
 use Drupal\sir\Entity\Instrument;
@@ -84,6 +85,13 @@ class ListForm extends FormBase {
         $class_name = "Instruments";
         $header = Instrument::generateHeader();
         $output = Instrument::generateOutput($this->getList());    
+        break;
+
+      // DETECTOR STEM
+      case "detectorstem":
+        $class_name = "Detector Stems";
+        $header = DetectorStem::generateHeader();
+        $output = DetectorStem::generateOutput($this->getList());    
         break;
 
       // DETECTOR

@@ -144,8 +144,9 @@ class EditResponseOptionForm extends FormBase {
 
       // UPDATE BY DELETING AND CREATING
       $fusekiAPIservice = \Drupal::service('sir.api_connector');
-      $fusekiAPIservice->responseoptionDel($this->getResponseOption()->uri);
-      $fusekiAPIservice->responseoptionAdd($responseOptionJSON);
+      //dpm($this->getResponseOption()->uri);
+      $fusekiAPIservice->responseOptionDel($this->getResponseOption()->uri);
+      $fusekiAPIservice->responseOptionAdd($responseOptionJSON);
     
       \Drupal::messenger()->addMessage(t("Response Option has been updated successfully."));
       $form_state->setRedirectUrl(Utils::selectBackUrl('responseoption'));

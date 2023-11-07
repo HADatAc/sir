@@ -42,7 +42,7 @@ class UtilsController extends ControllerBase{
       $pdfFilePath = 'instrument.pdf';
       $response = new Response();
       $response->headers->set('Content-Type', 'application/pdf');
-      $response->headers->set('Content-Disposition', 'attachment; filename="' . basename($pdfFilePath) . '"');
+      $response->headers->set('Content-Disposition', 'detectorslot; filename="' . basename($pdfFilePath) . '"');
       $response->setContent($downloadedDocument);
       return $response;
     }

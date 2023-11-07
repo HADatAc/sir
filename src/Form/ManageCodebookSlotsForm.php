@@ -124,7 +124,7 @@ class ManageCodebookSlotsForm extends FormBase {
       '#js_select' => FALSE,
       '#empty' => t('No codebook slots found'),
       //'#ajax' => [
-      //  'callback' => '::attachmentAjaxCallback', 
+      //  'callback' => '::detectorslotAjaxCallback', 
       //  'disable-refocus' => FALSE, 
       //  'event' => 'change',
       //  'wrapper' => 'edit-output', 
@@ -148,7 +148,7 @@ class ManageCodebookSlotsForm extends FormBase {
   }
 
   /*
-  public function attachmentAjaxCallback(array &$form, FormStateInterface $form_state) {
+  public function detectorslotAjaxCallback(array &$form, FormStateInterface $form_state) {
     $selected_rows = $form_state->getValue('slot_table');
     $rows = [];
     foreach ($selected_rows as $index => $selected) {

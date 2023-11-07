@@ -91,53 +91,78 @@ sir.download_instrument:
   options:
     no_cache: 'TRUE'    
 
-# Detector "Item" CRUD options
+# Detector Slot CRUD options
 
-sir.manage_attachments:
-  path: 'sir/manage/attachment/{instrumenturi}'
+sir.manage_detectorslots:
+  path: 'sir/manage/detectorslot/{instrumenturi}'
   defaults:
-    _form: '\Drupal\sir\Form\ManageAttachmentsForm'
-    _title: 'Manage Attachments'    
+    _form: '\Drupal\sir\Form\ManageDetectorSlotsForm'
+    _title: 'Manage DetectorSlots'    
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    
   options:
     no_cache: 'TRUE'
 
-sir.add_attachments:
-  path: 'sir/manage/addattachments/{instrumenturi}'
+sir.add_detectorslots:
+  path: 'sir/manage/adddetectorslots/{instrumenturi}'
   defaults:
-    _form: '\Drupal\sir\Form\AddAttachmentsForm'
-    _title: "Create Instrument's Attachments"    
+    _form: '\Drupal\sir\Form\AddDetectorSlotsForm'
+    _title: "Create Instrument's DetectorSlots"    
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    
   options:
     no_cache: 'TRUE'
 
-sir.edit_attachment:
-  path: 'sir/manage/editattachments/{attachmenturi}'
+sir.edit_detectorslot:
+  path: 'sir/manage/editdetectorslots/{detectorsloturi}'
   defaults:
-    _form: '\Drupal\sir\Form\EditAttachmentForm'
-    _title: 'Edit Attachment'    
+    _form: '\Drupal\sir\Form\EditDetectorSlotForm'
+    _title: 'Edit DetectorSlot'    
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    
   options:
     no_cache: 'TRUE'
 
-sir.attachment_detector_autocomplete:
-  path: '/sir/manage/attachment/autocomplete'
+sir.detectorslot_detector_autocomplete:
+  path: '/sir/manage/detectorslot/autocomplete'
   defaults:
     _controller: '\Drupal\sir\Controller\JsonApiDetectorController::handleAutocomplete'
     _format: json
   requirements:
     _permission: 'access content'
 
+
+# Detector Stem CRUD options
+
+sir.add_detectorstem:
+  path: 'sir/manage/adddetectorstem/{sourcedetectorstemuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\AddDetectorStemForm'
+    _title: 'Add Item Stem'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+sir.edit_detectorstem:
+  path: 'sir/manage/editdetectorstem/{detectorstemuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\EditDetectorStemForm'
+    _title: 'Edit Item Stem'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
 # Detector "Item" CRUD options
 
 sir.add_detector:
-  path: 'sir/manage/adddetector/{sourcedetectoruri}/{attachmenturi}'
+  path: 'sir/manage/adddetector/{sourcedetectoruri}/{detectorsloturi}'
   defaults:
     _form: '\Drupal\sir\Form\AddDetectorForm'
     _title: 'Add Item'    
@@ -147,10 +172,10 @@ sir.add_detector:
   options:
     no_cache: 'TRUE'
 
-sir.add_attachment_detector:
-  path: 'sir/manage/addattachdetector/{attachmenturi}'
+sir.add_detectorslot_detector:
+  path: 'sir/manage/addattachdetector/{detectorsloturi}'
   defaults:
-    _form: '\Drupal\sir\Form\AddAttachmentDetectorForm'
+    _form: '\Drupal\sir\Form\AddDetectorSlotDetectorForm'
     _title: 'Add Item'    
   requirements:
     _permission: 'access content'
@@ -169,8 +194,16 @@ sir.edit_detector:
   options:
     no_cache: 'TRUE'
 
+sir.detector_stem_autocomplete:
+  path: '/sir/manage/detector/stem/autocomplete'
+  defaults:
+    _controller: '\Drupal\sir\Controller\JsonApiStemController::handleAutocomplete'
+    _format: json
+  requirements:
+    _permission: 'access content'
+
 sir.detector_codebook_autocomplete:
-  path: '/sir/manage/detector/autocomplete'
+  path: '/sir/manage/detector/codebook/autocomplete'
   defaults:
     _controller: '\Drupal\sir\Controller\JsonApiCodebookController::handleAutocomplete'
     _format: json
