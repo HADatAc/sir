@@ -39,18 +39,20 @@ class Detector {
       }
       $uri = Utils::namespaceUri($uri);
       $content = ' ';
-      if ($element->detectorStem->hasContent != NULL) {
-        $content = $element->detectorStem->hasContent;
-      }
       $lang = ' ';
-      if ($element->detectorStem->hasLanguage != NULL) {
-        if ($languages != NULL) {
-          $lang = $languages[$element->detectorStem->hasLanguage];
-        }
-      }
       $version = ' ';
-      if ($element->hasVersion != NULL) {
-        $version = $element->detectorStem->hasVersion;
+      if ($element->detectorStem != NULL) {
+        if ($element->detectorStem->hasContent != NULL) {
+          $content = $element->detectorStem->hasContent;
+        }
+        if ($element->detectorStem->hasLanguage != NULL) {
+          if ($languages != NULL) {
+            $lang = $languages[$element->detectorStem->hasLanguage];
+          }
+        }
+        if ($element->detectorStem->hasVersion != NULL) {
+          $version = $element->detectorStem->hasVersion;
+        }
       }
       $codebookLabel = ' ';
       if ($element->codebook != NULL && $element->codebook->label != '') {

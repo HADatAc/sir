@@ -23,6 +23,8 @@ class AddDetectorForm extends FormBase {
 
   protected $sourceDetector;
 
+  protected $detectorStem;
+
   protected $detectorslotUri;
 
   protected $detectorslot;
@@ -41,6 +43,14 @@ class AddDetectorForm extends FormBase {
 
   public function setSourceDetector($obj) {
     return $this->sourceDetector = $obj; 
+  }
+
+  public function getDetectorStem() {
+    return $this->detectorStem;
+  }
+
+  public function setDetectorStem($stem) {
+    return $this->detectorStem = $stem; 
   }
 
   public function getDetectorSlotUri() {
@@ -65,7 +75,7 @@ class AddDetectorForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state, $sourcedetectoruri = NULL, $detectorsloturi = NULL) {
 
     // ESTABLISH API SERVICE
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
+    $api = \Drupal::service('sir.api_connector');
 
     // HANDLE SOURCE DETECTOR,  IF ANY
     $sourceuri=$sourcedetectoruri;
@@ -75,7 +85,7 @@ class AddDetectorForm extends FormBase {
     } else {
       $sourceuri_decode=base64_decode($sourceuri);
       $this->setSourceDetectorUri($sourceuri_decode);
-      $rawresponse = $fusekiAPIservice->getUri($this->getSourceDetectorUri());
+      $rawresponse = $api->getUri($this->getSourceDetectorUri());
       //dpm($rawresponse);
       $obj = json_decode($rawresponse);
       if ($obj->isSuccessful) {
@@ -97,7 +107,7 @@ class AddDetectorForm extends FormBase {
       $attachuri_decode=base64_decode($attachuri);
       $this->setDetectorSlotUri($attachuri_decode);
       if ($this->getDetectorSlotUri() != NULL) {
-        $attachrawresponse = $fusekiAPIservice->getUri($this->getDetectorSlotUri());
+        $attachrawresponse = $api->getUri($this->getDetectorSlotUri());
         $attachobj = json_decode($attachrawresponse);
         if ($attachobj->isSuccessful) {
           $this->setDetectorSlot($attachobj->body);
@@ -147,9 +157,18 @@ class AddDetectorForm extends FormBase {
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
 
+    // ESTABLISH API SERVICE
+    $api = \Drupal::service('sir.api_connector');
+
     if ($button_name != 'back') {
-      if(strlen($form_state->getValue('detector_stem')) < 1) {
-        $form_state->setErrorByName('detector_stem', $this->t('Please enter a valid stem'));
+
+      if ($form_state->getValue('detector_stem') == NULL || $form_state->getValue('detector_stem') == '') {
+        $form_state->setErrorByName('detector_stem', $this->t('Detector stem value is empty. Please enter a valid stem.'));
+      }
+      $stemUri = Utils::uriFromAutocomplete($form_state->getValue('detector_stem'));
+      $this->setDetectorStem($api->parseObjectResponse($api->getUri($stemUri),'getUri'));
+      if($this->getDetectorStem() == NULL) {
+        $form_state->setErrorByName('detector_stem', $this->t('Value for Detector Stem is not valid. Please enter a valid stem.'));
       }
     }
   }
@@ -162,17 +181,15 @@ class AddDetectorForm extends FormBase {
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
 
+    // ESTABLISH API SERVICE
+    $api = \Drupal::service('sir.api_connector');
+
     if ($button_name === 'back') {
       $form_state->setRedirectUrl(Utils::selectBackUrl('detector'));
       return;
     } 
 
     try {
-
-      $hasStem = '';
-      if ($form_state->getValue('detector_stem') != NULL && $form_state->getValue('detector_stem') != '') {
-        $hasStem = Utils::uriFromAutocomplete($form_state->getValue('detector_stem'));
-      } 
 
       $hasCodebook = '';
       if ($form_state->getValue('detector_codebook') != NULL && $form_state->getValue('detector_codebook') != '') {
@@ -186,16 +203,14 @@ class AddDetectorForm extends FormBase {
       $detectorJson = '{"uri":"'.$newDetectorUri.'",'.
         '"typeUri":"'.VSTOI::DETECTOR.'",'.
         '"hascoTypeUri":"'.VSTOI::DETECTOR.'",'.
-        '"hasDetectorStem":"'.$hasStem.'",'.
+        '"hasDetectorStem":"'.$this->getDetectorStem()->uri.'",'.
         '"hasCodebook":"'.$hasCodebook.'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
-      $fusekiAPIservice = \Drupal::service('sir.api_connector');
-      $fusekiAPIservice->detectorAdd($detectorJson);
-      //dpm($resp);
+      $api->detectorAdd($detectorJson);
     
       // IF IN THE CONTEXT OF AN EXISTING DETECTOR_SLOT, ATTACH THE NEWLY CREATED DETECTOR TO THE DETECTOR_SLOT
       if ($this->getDetectorSlot() != NULL) {
-        $fusekiAPIservice->detectorAttach($newDetectorUri,$this->getDetectorSlotUri());
+        $api->detectorAttach($newDetectorUri,$this->getDetectorSlotUri());
         \Drupal::messenger()->addMessage(t("Detector [" . $newDetectorUri ."] has been added and attached to intrument [" . $this->getDetectorSlot()->belongsTo . "] successfully."));
         $url = Url::fromRoute('sir.edit_detectorslot');
         $url->setRouteParameter('detectorsloturi', base64_encode($this->getDetectorSlotUri()));

@@ -8,7 +8,7 @@ use Drupal\Core\Url;
 use Drupal\sir\Utils;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
-class ManageCodebookSlotsForm extends FormBase {
+class ManageResponseOptionSlotsForm extends FormBase {
 
   protected $codebookUri;
 
@@ -24,7 +24,7 @@ class ManageCodebookSlotsForm extends FormBase {
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'manage_codebook_slot_form';
+    return 'manage_responseoption_slot_form';
   }
 
   /**
@@ -51,8 +51,8 @@ class ManageCodebookSlotsForm extends FormBase {
       $codebook = $objcodebook->body;
     }
 
-    // RETRIEVE CODEBOOK SLOTS BY CODEBOOK
-    $slot_list = $fusekiAPIservice->codebookSlotList($this->getCodebookUri());
+    // RETRIEVE RESPONSEOPTION SLOTS BY CODEBOOK
+    $slot_list = $fusekiAPIservice->responseOptionSlotList($this->getCodebookUri());
     $obj = json_decode($slot_list);
     $slots = [];
     if ($obj->isSuccessful) {
@@ -60,7 +60,7 @@ class ManageCodebookSlotsForm extends FormBase {
     }
 
     if (sizeof($slots) <= 0) {
-      return new RedirectResponse(Url::fromRoute('sir.add_codebook_slots', ['codebookuri' => base64_encode($this->getCodebookUri())])->toString());
+      return new RedirectResponse(Url::fromRoute('sir.add_responseoptionslots', ['codebookuri' => base64_encode($this->getCodebookUri())])->toString());
     }
 
     # BUILD HEADER
@@ -101,20 +101,20 @@ class ManageCodebookSlotsForm extends FormBase {
 
     $form['scope'] = [
       '#type' => 'item',
-      '#title' => t('<h3>Slots of Codebook <font color="DarkGreen">' . $codebook->label . '</font></h3>'),
+      '#title' => t('<h3>Response Option Slots of Codebook <font color="DarkGreen">' . $codebook->label . '</font></h3>'),
     ];
     $form['subtitle'] = [
       '#type' => 'item',
-      '#title' => t('<h4>Slots maintained by <font color="DarkGreen">' . $name . ' (' . $uemail . ')</font></h4>'),
+      '#title' => t('<h4>Response Option Slots maintained by <font color="DarkGreen">' . $name . ' (' . $uemail . ')</font></h4>'),
     ];
     $form['edit_selected_slot'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Edit Selected Codebook Slot'),
+      '#value' => $this->t('Edit Selected Response Option Slot'),
       '#name' => 'edit_slot',
     ];
     $form['delete_slots'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Delete All Codebook Slots'),
+      '#value' => $this->t('Delete All Response Option Slots'),
       '#name' => 'delete_slots',
     ];
     $form['slot_table'] = [
@@ -122,9 +122,9 @@ class ManageCodebookSlotsForm extends FormBase {
       '#header' => $header,
       '#options' => $output,
       '#js_select' => FALSE,
-      '#empty' => t('No codebook slots found'),
+      '#empty' => t('No response option slots found'),
       //'#ajax' => [
-      //  'callback' => '::detectorslotAjaxCallback', 
+      //  'callback' => '::responseOptionSlotAjaxCallback', 
       //  'disable-refocus' => FALSE, 
       //  'event' => 'change',
       //  'wrapper' => 'edit-output', 
@@ -147,8 +147,7 @@ class ManageCodebookSlotsForm extends FormBase {
     return $form;
   }
 
-  /*
-  public function detectorslotAjaxCallback(array &$form, FormStateInterface $form_state) {
+  public function responseoOptionSlotAjaxCallback(array &$form, FormStateInterface $form_state) {
     $selected_rows = $form_state->getValue('slot_table');
     $rows = [];
     foreach ($selected_rows as $index => $selected) {
@@ -157,7 +156,6 @@ class ManageCodebookSlotsForm extends FormBase {
       }
     }
   }
-  */
 
   /**
    * {@inheritdoc}
@@ -177,26 +175,26 @@ class ManageCodebookSlotsForm extends FormBase {
       }
     }
 
-    // EDIT CODEBOOK SLOT
+    // EDIT RESPONSEOPTION SLOT
     if ($button_name === 'edit_slot') {
       if (sizeof($rows) < 1) {
-        \Drupal::messenger()->addMessage(t("Select the exact codebook slot to be edited."));      
+        \Drupal::messenger()->addMessage(t("Select the exact response option slot to be edited."));      
       } else if ((sizeof($rows) > 1)) {
-        \Drupal::messenger()->addMessage(t("Select only one codebook slot to edit. No more than one slot can be edited at once."));      
+        \Drupal::messenger()->addMessage(t("Select only one response option slot to edit. No more than one slot can be edited at once."));      
       } else {
         $first = array_shift($rows);
-        $url = Url::fromRoute('sir.edit_codebook_slot');
-        $url->setRouteParameter('codebooksloturi', base64_encode($first));
+        $url = Url::fromRoute('sir.edit_responseoption_slot');
+        $url->setRouteParameter('responseoptionsloturi', base64_encode($first));
         $form_state->setRedirectUrl($url);
       } 
     }
 
-    // DELETE CODEBOOK SLOT
+    // DELETE RESPONSE OPTION SLOT
     if ($button_name === 'delete_slots') {
       $fusekiAPIservice = \Drupal::service('sir.api_connector');
-      $fusekiAPIservice->codebookSlotDel($this->getCodebookUri());
+      $fusekiAPIservice->responseOptionSlotDel($this->getCodebookUri());
     
-      \Drupal::messenger()->addMessage(t("Codebook slots has been deleted successfully."));
+      \Drupal::messenger()->addMessage(t("Response Option Slot(s) has/have been deleted successfully."));
       $form_state->setRedirectUrl(Utils::selectBackUrl('codebook'));
     }
 

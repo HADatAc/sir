@@ -74,7 +74,7 @@ class Utils {
         $short = "DT";
         break;
       case "codebook":
-        $short = "EX";
+        $short = "CB";
         break;
       case "responseoption":
         $short = "RO";

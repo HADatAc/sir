@@ -130,7 +130,6 @@ class FusekiAPIConnector {
     $method = 'GET';
     $api_url = $this->getApiUrl();
     $data = $this->getHeader();
-    print_r($api_url.$endpoint);
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
@@ -184,12 +183,12 @@ class FusekiAPIConnector {
 
   /**
    *  
-   *    DETECTOR_SLOTS
+   *    DETECTOR SLOTS
    * 
    */
 
   public function detectorslotList($instrumentUri) {
-    $endpoint = "/sirapi/api/detectorslot/byinstrument/".rawurlencode($instrumentUri);
+    $endpoint = "/sirapi/api/slots/detector/byinstrument/".rawurlencode($instrumentUri);
     $method = "GET";
     $api_url = $this->getApiUrl();
     $data = $this->getHeader();
@@ -197,7 +196,7 @@ class FusekiAPIConnector {
   }
 
   public function detectorslotAdd($instrumentUri,$totalDetectorSlots) {
-    $endpoint = "/sirapi/api/detectorslot/create/".rawurlencode($instrumentUri)."/".rawurlencode($totalDetectorSlots);
+    $endpoint = "/sirapi/api/slots/detector/create/".rawurlencode($instrumentUri)."/".rawurlencode($totalDetectorSlots);
     $method = "POST";
     $api_url = $this->getApiUrl();
     $data = $this->getHeader();
@@ -205,7 +204,7 @@ class FusekiAPIConnector {
   }
 
   public function detectorslotDel($detectorslotUri) {
-    $endpoint = "/sirapi/api/detectorslot/delete/".rawurlencode($detectorslotUri);
+    $endpoint = "/sirapi/api/slots/detector/delete/".rawurlencode($detectorslotUri);
     $method = 'POST';
     $api_url = $this->getApiUrl();
     $data = $this->getHeader();
@@ -213,7 +212,7 @@ class FusekiAPIConnector {
   }
 
   public function detectorslotReset($detectorslotUri) {
-    $endpoint = "/sirapi/api/detector/detach/".rawurlencode($detectorslotUri);    
+    $endpoint = "/sirapi/api/slots/detector/detach/".rawurlencode($detectorslotUri);    
     $method = 'GET';
     $api_url = $this->getApiUrl();
     $data = $this->getHeader();
@@ -293,7 +292,7 @@ class FusekiAPIConnector {
   }
 
   public function detectorAttach($detectorUri,$detectorslotUri) {
-    $endpoint = "/sirapi/api/detector/attach/".rawurlencode($detectorUri)."/".rawurlencode($detectorslotUri);
+    $endpoint = "/sirapi/api/slots/detector/attach/".rawurlencode($detectorUri)."/".rawurlencode($detectorslotUri);
     $method = 'GET';
     $api_url = $this->getApiUrl();
     $data = $this->getHeader();
@@ -337,35 +336,35 @@ class FusekiAPIConnector {
   }
 
   /** 
-   *   CODEBOOK SLOT
+   *   RESPONSEOPTION SLOT
    */
 
-  public function codebookSlotList($codebookUri) {
-    $endpoint = "/sirapi/api/codebookslot/bycodebook/".rawurlencode($codebookUri);
+  public function responseOptionSlotList($codebookUri) {
+    $endpoint = "/sirapi/api/slots/responseoption/bycodebook/".rawurlencode($codebookUri);
     $method = "GET";
     $api_url = $this->getApiUrl();
     $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
-  public function codebookSlotAdd($codebookUri,$totalCodebookSlots) {
-    $endpoint = "/sirapi/api/codebookslot/create/".rawurlencode($codebookUri)."/".rawurlencode($totalCodebookSlots);
+  public function responseOptionSlotAdd($codebookUri,$totalCodebookSlots) {
+    $endpoint = "/sirapi/api/slots/responseoption/create/".rawurlencode($codebookUri)."/".rawurlencode($totalCodebookSlots);
     $method = "POST";
     $api_url = $this->getApiUrl();
     $data = $this->getHeader();
     return $this->perform_http_request($method,$api_url.$endpoint,$data);          
   }
 
-  public function codebookSlotDel($codebookSlotUri) {
-    $endpoint = "/sirapi/api/codebookslot/delete/".rawurlencode($codebookSlotUri);
+  public function responseOptionSlotDel($responseOptionSlotUri) {
+    $endpoint = "/sirapi/api/slots/responseoption/delete/".rawurlencode($responseOptionSlotUri);
     $method = 'POST';
     $api_url = $this->getApiUrl();
     $data = $this->getHeader();
-    return $this->perform_http_request($method,$api_url.$endpoint,$data);          
+    return $this->perform_http_request($method,$api_url.$endpoint,$data); 
   }
 
-  public function codebookSlotReset($codebookSlotUri) {
-    $endpoint = "/sirapi/api/responseoption/detach/".rawurlencode($codebookSlotUri);    
+  public function responseOptionSlotReset($responseOptionSlotUri) {
+    $endpoint = "/sirapi/api/slots/responseoption/detach/".rawurlencode($responseOptionSlotUri);    
     $method = 'GET';
     $api_url = $this->getApiUrl();
     $data = $this->getHeader();
@@ -408,8 +407,8 @@ class FusekiAPIConnector {
     return $this->perform_http_request($method,$api_url.$endpoint,$data);   
   }
 
-  public function responseOptionAttach($responseOptionUri,$codebookSlotUri) {
-    $endpoint = "/sirapi/api/responseoption/attach/".rawurlencode($responseOptionUri)."/".rawurlencode($codebookSlotUri);
+  public function responseOptionAttach($responseOptionUri,$responseOptionSlotUri) {
+    $endpoint = "/sirapi/api/slots/responseoption/attach/".rawurlencode($responseOptionUri)."/".rawurlencode($responseOptionSlotUri);
     $method = 'GET';
     $api_url = $this->getApiUrl();
     $data = $this->getHeader();

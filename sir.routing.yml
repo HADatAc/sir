@@ -236,40 +236,40 @@ sir.edit_codebook:
 
 # Response Option CRUD options
 
-sir.manage_codebook_slots:
-  path: 'sir/manage/codebookslot/{codebookuri}'
+sir.manage_responseoption_slots:
+  path: 'sir/manage/responseoptionslot/{codebookuri}'
   defaults:
-    _form: '\Drupal\sir\Form\ManageCodebookSlotsForm'
-    _title: 'Manage Codebook Slots'    
+    _form: '\Drupal\sir\Form\ManageResponseOptionSlotsForm'
+    _title: 'Manage Response Option Slots'    
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    
   options:
     no_cache: 'TRUE'
 
-sir.add_codebook_slots:
-  path: 'sir/manage/addcodebookslots/{codebookuri}'
+sir.add_responseoptionslots:
+  path: 'sir/manage/addresponseoptionslots/{codebookuri}'
   defaults:
-    _form: '\Drupal\sir\Form\AddCodebookSlotsForm'
-    _title: "Create Codebook's Slots"    
+    _form: '\Drupal\sir\Form\AddResponseOptionSlotsForm'
+    _title: "Create Codebook's Response Option Slots"    
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    
   options:
     no_cache: 'TRUE'
 
-sir.edit_codebook_slot:
-  path: 'sir/manage/editcodebookslot/{codebooksloturi}'
+sir.edit_responseoption_slot:
+  path: 'sir/manage/editresponseoptionslot/{responseoptionsloturi}'
   defaults:
-    _form: '\Drupal\sir\Form\EditCodebookSlotForm'
-    _title: "Edit Codebook's Slot"    
+    _form: '\Drupal\sir\Form\EditResponseOptionSlotForm'
+    _title: "Edit Response Option Slot"    
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    
   options:
     no_cache: 'TRUE'
 
-sir.codebook_slot_response_option_autocomplete:
+sir.responseoptionslot_response_option_autocomplete:
   path: '/sir/manage/responseoption/autocomplete'
   defaults:
     _controller: '\Drupal\sir\Controller\JsonApiResponseOptionController::handleAutocomplete'
@@ -278,7 +278,7 @@ sir.codebook_slot_response_option_autocomplete:
     _permission: 'access content'
 
 sir.add_response_option:
-  path: 'sir/manage/addresponseoption/{codebooksloturi}'
+  path: 'sir/manage/addresponseoption/{responseoptionsloturi}'
   defaults:
     _form: '\Drupal\sir\Form\AddResponseOptionForm'
     _title: 'Add Response Option'    

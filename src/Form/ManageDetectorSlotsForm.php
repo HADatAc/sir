@@ -69,7 +69,8 @@ class ManageDetectorSlotsForm extends FormBase {
 
     $header = [
       'detectorslot_priority' => t('Priority'),
-      'detectorslot_content' => t("Item's Content"),
+      'detectorslot_content' => t("Item Stem's Content"),
+      'detectorslot_codebook' => t("Item's Codebook"),
       'detectorslot_detector' => t("Item's URI"),
     ];
 
@@ -79,13 +80,17 @@ class ManageDetectorSlotsForm extends FormBase {
     foreach ($detectorslots as $detectorslot) {
       $detector = NULL;
       $content = "";
+      $codebook = "";
       if ($detectorslot->hasDetector != null) {
         $rawdetector = $fusekiAPIservice->getUri($detectorslot->hasDetector);
         $objdetector = json_decode($rawdetector);
         if ($objdetector->isSuccessful) {
           $detector = $objdetector->body;
-          if (isset($detector->hasContent)) {
-            $content = $detector->hasContent;
+          if (isset($detector->detectorStem->hasContent)) {
+            $content = $detector->detectorStem->hasContent;
+          }
+          if (isset($detector->codebook->label)) {
+            $codebook = $detector->codebook->label;
           } 
         }
       }
@@ -96,7 +101,8 @@ class ManageDetectorSlotsForm extends FormBase {
       $output[$detectorslot->uri] = [
         'detectorslot_priority' => $detectorslot->hasPriority,     
         'detectorslot_content' => $content,     
-        'detectorslot_detector' => $detectorUriStr,     
+        'detectorslot_codebook' => $codebook,
+        'detectorslot_detector' => $detectorUriStr     
       ];
     }
 

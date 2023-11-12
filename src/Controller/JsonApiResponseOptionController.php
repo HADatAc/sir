@@ -24,7 +24,7 @@ class JsonApiResponseOptionController extends ControllerBase{
     }
     $keyword = Xss::filter($input);
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $response_option_list = $fusekiAPIservice->responseOptionListByKeyword($keyword);
+    $response_option_list = $fusekiAPIservice->listByKeyword('responseoption',$keyword,10,0);
     $obj = json_decode($response_option_list);
     $responseoptions = [];
     if ($obj->isSuccessful) {

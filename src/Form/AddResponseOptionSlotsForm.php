@@ -6,7 +6,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 
-class AddCodebookSlotsForm extends FormBase {
+class AddResponseOptionSlotsForm extends FormBase {
 
   protected $codebookUri;
 
@@ -87,16 +87,16 @@ class AddCodebookSlotsForm extends FormBase {
 
     try {
       $fusekiAPIservice = \Drupal::service('sir.api_connector');
-      $fusekiAPIservice->codebookSlotAdd($this->getCodebookUri(),$form_state->getValue('slot_total_number'));
+      $fusekiAPIservice->responseOptionSlotAdd($this->getCodebookUri(),$form_state->getValue('slot_total_number'));
     
       \Drupal::messenger()->addMessage(t("Codebook Slots has been added successfully."));
-      $url = Url::fromRoute('sir.manage_codebook_slots');
+      $url = Url::fromRoute('sir.manage_responseoption_slots');
       $url->setRouteParameter('codebookuri', base64_encode($this->getCodebookUri()));
       $form_state->setRedirectUrl($url);
 
     } catch(\Exception $e){
       \Drupal::messenger()->addMessage(t("An error occurred while adding the Codebook slots: ".$e->getMessage()));
-      $url = Url::fromRoute('sir.manage_codebook_slots');
+      $url = Url::fromRoute('sir.manage_responseoption_slots');
       $url->setRouteParameter('codebookuri', base64_encode($this->getCodebookUri()));
       $form_state->setRedirectUrl($url);
     }

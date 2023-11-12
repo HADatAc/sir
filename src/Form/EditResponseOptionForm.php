@@ -59,7 +59,7 @@ class EditResponseOptionForm extends FormBase {
     } else {
       \Drupal::messenger()->addMessage(t("Failed to retrieve Response Option."));
       $url = Url::fromRoute('sir.manage_response_options');
-      # $url->setRouteParameter('codebookuri', base64_encode($this->getResponseOption()->ofCodebook));
+      # $url->setRouteParameter('responseoptionkuri', base64_encode($this->getResponseOption()->ofResponseOption));
       $form_state->setRedirectUrl($url);
     }
 

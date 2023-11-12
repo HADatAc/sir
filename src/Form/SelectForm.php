@@ -111,8 +111,8 @@ class SelectForm extends FormBase {
       case "detectorstem":
         $this->single_class_name = "Item Stem";
         $this->plural_class_name = "Item Stems";
-        $header = Detector::generateHeader();
-        $output = Detector::generateOutput($this->getList());    
+        $header = DetectorStem::generateHeader();
+        $output = DetectorStem::generateOutput($this->getList());    
         break;
 
       // DETECTOR
@@ -178,15 +178,15 @@ class SelectForm extends FormBase {
     if ($this->element_type == 'instrument') {
         $form['manage_detectorslots'] = [
         '#type' => 'submit',
-        '#value' => $this->t('Manage DetectorSlots of Selected Questionnaire'),
+        '#value' => $this->t('Manage Detector Slots of Selected Questionnaire'),
         '#name' => 'manage_detectorslots',
       ];
     }
     if ($this->element_type == 'codebook') {
-      $form['manage_codebook_slots'] = [
+      $form['manage_responseoptionslots'] = [
         '#type' => 'submit',
-        '#value' => $this->t('Manage Slots of Selected Codebook'),
-        '#name' => 'manage_codebook_slots',
+        '#value' => $this->t('Manage Response Option Slots of Selected Codebook'),
+        '#name' => 'manage_responseoptionslots',
       ];  
     }
     $form['element_table'] = [
@@ -254,7 +254,7 @@ class SelectForm extends FormBase {
         $url = Url::fromRoute('sir.add_codebook');
       } else if ($this->element_type == 'responseoption') {
         $url = Url::fromRoute('sir.add_response_option');
-        $url->setRouteParameter('codebooksloturi', 'EMPTY');
+        $url->setRouteParameter('responseoptionsloturi', 'EMPTY');
       }
       $form_state->setRedirectUrl($url);
     }  
@@ -320,15 +320,15 @@ class SelectForm extends FormBase {
       }
     }  
     
-    // MANAGE CODEBOOK SLOTS
-    if ($button_name === 'manage_codebook_slots') {
+    // MANAGE RESPONSE OPTION SLOTS
+    if ($button_name === 'manage_responseoptionslots') {
       if (sizeof($rows) < 1) {
-        \Drupal::messenger()->addMessage(t("Select the exact codebook which codebook slots are going to be managed."));      
+        \Drupal::messenger()->addMessage(t("Select the exact codebook which response option slots are going to be managed."));      
       } else if ((sizeof($rows) > 1)) {
-        \Drupal::messenger()->addMessage(t("The codebook slot of no more than one codebook can be managed at once."));      
+        \Drupal::messenger()->addMessage(t("The response option slots of no more than one codebook can be managed at once."));      
       } else {
         $first = array_shift($rows);
-        $url = Url::fromRoute('sir.manage_codebook_slots', ['codebookuri' => base64_encode($first)]);
+        $url = Url::fromRoute('sir.manage_responseoption_slots', ['codebookuri' => base64_encode($first)]);
         $form_state->setRedirectUrl($url);
       } 
       return;
