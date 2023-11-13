@@ -8,10 +8,10 @@ use Symfony\Component\HttpFoundation\Request;
 use Drupal\Component\Utility\Xss;
 
 /**
- * Class JsonApiResponseOptionController
+ * Class JsonApiCodebookController
  * @package Drupal\sir\Controller
  */
-class JsonApiResponseOptionController extends ControllerBase{
+class JsonApiCodebookController extends ControllerBase{
 
   /**
    * @return JsonResponse
@@ -24,16 +24,16 @@ class JsonApiResponseOptionController extends ControllerBase{
     }
     $keyword = Xss::filter($input);
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $response_option_list = $fusekiAPIservice->listByKeyword('responseoption',$keyword,10,0);
-    $obj = json_decode($response_option_list);
-    $responseoptions = [];
+    $codebook_list = $fusekiAPIservice->listByKeyword('codebook',$keyword,10,0);
+    $obj = json_decode($codebook_list);
+    $codebooks = [];
     if ($obj->isSuccessful) {
-      $responseoptions = $obj->body;
+      $codebooks = $obj->body;
     }
-    foreach ($responseoptions as $responseoption) {
+    foreach ($codebooks as $codebook) {
       $results[] = [
-        'value' => $responseoption->hasContent . ' [' . $responseoption->uri . ']',
-        'label' => $responseoption->hasContent,
+        'value' => $codebook->label . ' [' . $codebook->uri . ']',
+        'label' => $codebook->label,
       ];
     }
     return new JsonResponse($results);

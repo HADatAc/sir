@@ -6,16 +6,16 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 
-class AddCodebookSlotsForm extends FormBase {
+class AddResponseOptionSlotsForm extends FormBase {
 
-  protected $experienceUri;
+  protected $codebookUri;
 
-  public function getExperienceUri() {
-    return $this->experienceUri;
+  public function getCodebookUri() {
+    return $this->codebookUri;
   }
 
-  public function setExperienceUri($uri) {
-    return $this->experienceUri = $uri; 
+  public function setCodebookUri($uri) {
+    return $this->codebookUri = $uri; 
   }
 
   /**
@@ -28,20 +28,20 @@ class AddCodebookSlotsForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $experienceuri = NULL) {
-    $uri=$experienceuri ?? 'default';
+  public function buildForm(array $form, FormStateInterface $form_state, $codebookuri = NULL) {
+    $uri=$codebookuri ?? 'default';
     $uri_decode=base64_decode($uri);
-    $this->setExperienceUri($uri_decode);
+    $this->setCodebookUri($uri_decode);
 
     $form['slot_instrument'] = [
       '#type' => 'textfield',
-      '#title' => t('Experience URI'),
-      '#value' => $this->getExperienceUri(),
+      '#title' => t('Codebook URI'),
+      '#value' => $this->getCodebookUri(),
       '#disabled' => TRUE,
     ];
     $form['slot_total_number'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Specify the total number of slots for this experience'),
+      '#title' => $this->t('Specify the total number of slots for this codebook'),
     ];
     $form['save_submit'] = [
       '#type' => 'submit',
@@ -80,24 +80,24 @@ class AddCodebookSlotsForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $url = Url::fromRoute('sir.manage_experiences');
+      $url = Url::fromRoute('sir.manage_codebooks');
       $form_state->setRedirectUrl($url);
       return;
     } 
 
     try {
       $fusekiAPIservice = \Drupal::service('sir.api_connector');
-      $fusekiAPIservice->codebookSlotAdd($this->getExperienceUri(),$form_state->getValue('slot_total_number'));
+      $fusekiAPIservice->responseOptionSlotAdd($this->getCodebookUri(),$form_state->getValue('slot_total_number'));
     
       \Drupal::messenger()->addMessage(t("Codebook Slots has been added successfully."));
-      $url = Url::fromRoute('sir.manage_codebook_slots');
-      $url->setRouteParameter('experienceuri', base64_encode($this->getExperienceUri()));
+      $url = Url::fromRoute('sir.manage_responseoption_slots');
+      $url->setRouteParameter('codebookuri', base64_encode($this->getCodebookUri()));
       $form_state->setRedirectUrl($url);
 
     } catch(\Exception $e){
       \Drupal::messenger()->addMessage(t("An error occurred while adding the Codebook slots: ".$e->getMessage()));
-      $url = Url::fromRoute('sir.manage_codebook_slots');
-      $url->setRouteParameter('experienceuri', base64_encode($this->getExperienceUri()));
+      $url = Url::fromRoute('sir.manage_responseoption_slots');
+      $url->setRouteParameter('codebookuri', base64_encode($this->getCodebookUri()));
       $form_state->setRedirectUrl($url);
     }
 

@@ -11,9 +11,10 @@
      */
 
     const DETECTOR                        = VSTOI::VSTOI . "Detector";
+    const DETECTOR_STEM                   = VSTOI::VSTOI . "DetectorStem";
     const INSTRUMENT                      = VSTOI::VSTOI . "Instrument";
     const QUESTIONNAIRE                   = VSTOI::VSTOI . "Questionnaire";
-    const EXPERIENCE                      = VSTOI::VSTOI . "Experience";
+    const CODEBOOK                        = VSTOI::VSTOI . "Codebook";
     const ITEM                            = VSTOI::VSTOI . "Item";
     const PSYCHOMETRIC_QUESTIONNAIRE      = VSTOI::VSTOI . "PsychometricQuestionnaire";
     const RESPONSE_OPTION                 = VSTOI::VSTOI . "ResponseOption";
@@ -27,15 +28,15 @@
     const HAS_SERIAL_NUMBER               = VSTOI::VSTOI . "hasSerialNumber";
     const HAS_WEB_DOCUMENTATION           = VSTOI::VSTOI . "hasWebDocumentation";
     const HAS_CONTENT                     = VSTOI::VSTOI . "hasContent";
-    const HAS_EXPERIENCE                  = VSTOI::VSTOI . "hasExperience";
+    const HAS_CODEBOOK                    = VSTOI::VSTOI . "hasCodebook";
     const HAS_INSTRUCTION                 = VSTOI::VSTOI . "hasInstruction";
     const HAS_LANGUAGE                    = VSTOI::VSTOI . "hasLanguage";
     const HAS_PRIORITY                    = VSTOI::VSTOI . "hasPriority";
     const HAS_SHORT_NAME                  = VSTOI::VSTOI . "hasShortName";
     const HAS_STATUS                      = VSTOI::VSTOI . "hasStatus";
-    const HAS_SIR_MAINTAINER_EMAIL        = VSTOI::VSTOI . "hasSIRMaintainerEmail";
+    const HAS_SIR_manager_EMAIL           = VSTOI::VSTOI . "hasSIRManagerEmail";
     const HAS_VERSION                     = VSTOI::VSTOI . "hasVersion";
-    const OF_EXPERIENCE                   = VSTOI::VSTOI . "ofExperience";
+    const OF_CODEBOOK                     = VSTOI::VSTOI . "ofCodebook";
 
 
   }

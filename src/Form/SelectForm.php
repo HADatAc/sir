@@ -5,9 +5,10 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\sir\ListMaintainerEmailPage;
+use Drupal\sir\ListManagerEmailPage;
+use Drupal\sir\Entity\DetectorStem;
 use Drupal\sir\Entity\Detector;
-use Drupal\sir\Entity\Experience;
+use Drupal\sir\Entity\Codebook;
 use Drupal\sir\Entity\Instrument;
 use Drupal\sir\Entity\ResponseOption;
 
@@ -22,9 +23,9 @@ class SelectForm extends FormBase {
 
   public $element_type;
 
-  public $maintainer_email;
+  public $manager_email;
 
-  public $maintainer_name;
+  public $manager_name;
 
   public $single_class_name;
 
@@ -55,18 +56,17 @@ class SelectForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $elementtype=NULL, $page=NULL, $pagesize=NULL) {
 
-    // GET MAINTAINER EMAIL
-    $this->maintainer_email = \Drupal::currentUser()->getEmail();
+    // GET manager EMAIL
+    $this->manager_email = \Drupal::currentUser()->getEmail();
     $uid = \Drupal::currentUser()->id();
     $user = \Drupal\user\Entity\User::load($uid);
-    $this->maintainer_name = $user->name->value;
+    $this->manager_name = $user->name->value;
 
-    
     // GET TOTAL NUMBER OF ELEMENTS AND TOTAL NUMBER OF PAGES
     $this->element_type = $elementtype;
     $this->setListSize(-1);
     if ($this->element_type != NULL) {
-      $this->setListSize(ListMaintainerEmailPage::total($this->element_type, $this->maintainer_email));
+      $this->setListSize(ListManagerEmailPage::total($this->element_type, $this->manager_email));
     }
     if (gettype($this->list_size) == 'string') {
       $total_pages = "0";
@@ -81,19 +81,19 @@ class SelectForm extends FormBase {
     // CREATE LINK FOR NEXT PAGE AND PREVIOUS PAGE
     if ($page < $total_pages) {
       $next_page = $page + 1;
-      $next_page_link = ListMaintainerEmailPage::link($this->element_type, $next_page, $pagesize);
+      $next_page_link = ListManagerEmailPage::link($this->element_type, $next_page, $pagesize);
     } else {
       $next_page_link = '';
     }
     if ($page > 1) {
       $previous_page = $page - 1;
-      $previous_page_link = ListMaintainerEmailPage::link($this->element_type, $previous_page, $pagesize);
+      $previous_page_link = ListManagerEmailPage::link($this->element_type, $previous_page, $pagesize);
     } else {
       $previous_page_link = '';
     }
 
     // RETRIEVE ELEMENTS
-    $this->setList(ListMaintainerEmailPage::exec($this->element_type, $this->maintainer_email, $page, $pagesize));
+    $this->setList(ListManagerEmailPage::exec($this->element_type, $this->manager_email, $page, $pagesize));
 
     $this->single_class_name = "";
     $this->plural_class_name = "";
@@ -107,6 +107,14 @@ class SelectForm extends FormBase {
         $output = Instrument::generateOutput($this->getList());    
         break;
 
+      // DETECTORSTEM
+      case "detectorstem":
+        $this->single_class_name = "Item Stem";
+        $this->plural_class_name = "Item Stems";
+        $header = DetectorStem::generateHeader();
+        $output = DetectorStem::generateOutput($this->getList());    
+        break;
+
       // DETECTOR
       case "detector":
         $this->single_class_name = "Item";
@@ -115,12 +123,12 @@ class SelectForm extends FormBase {
         $output = Detector::generateOutput($this->getList());    
         break;
 
-      // EXPERIENCE
-      case "experience":
-        $this->single_class_name = "Experience";
-        $this->plural_class_name = "Experiences";
-        $header = Experience::generateHeader();
-        $output = Experience::generateOutput($this->getList());    
+     // CODEBOOK
+      case "codebook":
+        $this->single_class_name = "Codebook";
+        $this->plural_class_name = "Codebooks";
+        $header = Codebook::generateHeader();
+        $output = Codebook::generateOutput($this->getList());    
         break;
 
       // RESPONSE OPTION
@@ -143,18 +151,18 @@ class SelectForm extends FormBase {
     ];
     $form['page_subtitle'] = [
       '#type' => 'item',
-      '#title' => $this->t('<h4>' . $this->plural_class_name . ' maintained by <font color="DarkGreen">' . $this->maintainer_name . ' (' . $this->maintainer_email . ')</font></h4>'),
+      '#title' => $this->t('<h4>' . $this->plural_class_name . ' maintained by <font color="DarkGreen">' . $this->manager_name . ' (' . $this->manager_email . ')</font></h4>'),
     ];
     $form['add_element'] = [
       '#type' => 'submit',
       '#value' => $this->t('Add New ' . $this->single_class_name),
       '#name' => 'add_element',
     ];
-    if ($this->element_type == 'detector') {
-      $form['derive_detector'] = [
+    if ($this->element_type == 'detectorstem') {
+      $form['derive_detectorstem'] = [
         '#type' => 'submit',
-        '#value' => $this->t('Derive New Item From Selected Item'),
-        '#name' => 'derive_detector',
+        '#value' => $this->t('Derive New Item Stem from Selected'),
+        '#name' => 'derive_detectorstem',
       ];
     }
     $form['edit_selected_element'] = [
@@ -168,17 +176,17 @@ class SelectForm extends FormBase {
       '#name' => 'delete_element',
     ];
     if ($this->element_type == 'instrument') {
-        $form['manage_attachments'] = [
+        $form['manage_detectorslots'] = [
         '#type' => 'submit',
-        '#value' => $this->t('Manage Attachments of Selected Questionnaire'),
-        '#name' => 'manage_attachments',
+        '#value' => $this->t('Manage Detector Slots of Selected Questionnaire'),
+        '#name' => 'manage_detectorslots',
       ];
     }
-    if ($this->element_type == 'experience') {
-      $form['manage_codebook_slots'] = [
+    if ($this->element_type == 'codebook') {
+      $form['manage_responseoptionslots'] = [
         '#type' => 'submit',
-        '#value' => $this->t('Manage Slots of Selected Experience'),
-        '#name' => 'manage_codebook_slots',
+        '#value' => $this->t('Manage Response Option Slots of Selected Codebook'),
+        '#name' => 'manage_responseoptionslots',
       ];  
     }
     $form['element_table'] = [
@@ -192,8 +200,8 @@ class SelectForm extends FormBase {
       '#theme' => 'list-page',
       '#items' => [
         'page' => strval($page),
-        'first' => ListMaintainerEmailPage::link($this->element_type, 1, $pagesize),
-        'last' => ListMaintainerEmailPage::link($this->element_type, $total_pages, $pagesize),
+        'first' => ListManagerEmailPage::link($this->element_type, 1, $pagesize),
+        'last' => ListManagerEmailPage::link($this->element_type, $total_pages, $pagesize),
         'previous' => $previous_page_link,
         'next' => $next_page_link,
         'last_page' => strval($total_pages),
@@ -235,15 +243,18 @@ class SelectForm extends FormBase {
     if ($button_name === 'add_element') {
       if ($this->element_type == 'instrument') {
         $url = Url::fromRoute('sir.add_instrument');
+      } else if ($this->element_type == 'detectorstem') {
+        $url = Url::fromRoute('sir.add_detectorstem');
+        $url->setRouteParameter('sourcedetectorstemuri', 'EMPTY');
       } else if ($this->element_type == 'detector') {
         $url = Url::fromRoute('sir.add_detector');
         $url->setRouteParameter('sourcedetectoruri', 'EMPTY');
-        $url->setRouteParameter('attachmenturi', 'EMPTY');  
-      } else if ($this->element_type == 'experience') {
-        $url = Url::fromRoute('sir.add_experience');
+        $url->setRouteParameter('detectorsloturi', 'EMPTY');  
+      } else if ($this->element_type == 'codebook') {
+        $url = Url::fromRoute('sir.add_codebook');
       } else if ($this->element_type == 'responseoption') {
         $url = Url::fromRoute('sir.add_response_option');
-        $url->setRouteParameter('codebooksloturi', 'EMPTY');
+        $url->setRouteParameter('responseoptionsloturi', 'EMPTY');
       }
       $form_state->setRedirectUrl($url);
     }  
@@ -258,10 +269,12 @@ class SelectForm extends FormBase {
         $first = array_shift($rows);
         if ($this->element_type == 'instrument') {
           $url = Url::fromRoute('sir.edit_instrument', ['instrumenturi' => base64_encode($first)]);
+        } else if ($this->element_type == 'detectorstem') {
+          $url = Url::fromRoute('sir.edit_detectorstem', ['detectorstemuri' => base64_encode($first)]);
         } else if ($this->element_type == 'detector') {
           $url = Url::fromRoute('sir.edit_detector', ['detectoruri' => base64_encode($first)]);
-        } else if ($this->element_type == 'experience') {
-          $url = Url::fromRoute('sir.edit_experience', ['experienceuri' => base64_encode($first)]);
+        } else if ($this->element_type == 'codebook') {
+          $url = Url::fromRoute('sir.edit_codebook', ['codebookuri' => base64_encode($first)]);
         } else if ($this->element_type == 'responseoption') {
           $url = Url::fromRoute('sir.edit_response_option', ['responseoptionuri' => base64_encode($first)]);
         }
@@ -278,12 +291,14 @@ class SelectForm extends FormBase {
         foreach($rows as $uri) {
           if ($this->element_type == 'instrument') {
             $fusekiAPIservice->instrumentDel($uri);
+          } else if ($this->element_type == 'detectorstem') {
+            $fusekiAPIservice->detectorStemDel($uri);
           } else if ($this->element_type == 'detector') {
             $fusekiAPIservice->detectorDel($uri);
-          } else if ($this->element_type == 'experience') {
-            $fusekiAPIservice->experienceDel($uri);
+         } else if ($this->element_type == 'codebook') {
+            $fusekiAPIservice->codebookDel($uri);
           } else if ($this->element_type == 'responseoption') {
-            $fusekiAPIservice->responseoptionDel($uri);
+            $fusekiAPIservice->responseOptionDel($uri);
           }
         }
         \Drupal::messenger()->addMessage(t("Selected " . $this->plural_class_name . " has/have been deleted successfully."));      
@@ -291,43 +306,43 @@ class SelectForm extends FormBase {
     }  
 
     // DERIVE DETECTOR
-    if ($button_name === 'derive_detector') {
+    if ($button_name === 'derive_detectorstem') {
       if (sizeof($rows) < 1) {
-        \Drupal::messenger()->addMessage(t("Select the exact item to be derived."));      
+        \Drupal::messenger()->addMessage(t("Select the exact item stem to be derived."));      
       } else if ((sizeof($rows) > 1)) {
-        \Drupal::messenger()->addMessage(t("Select only one item to be derived. No more than one item can be derived at once."));      
+        \Drupal::messenger()->addMessage(t("Select only one item stem to be derived. No more than one item stem can be derived at once."));      
       } else {
         $first = array_shift($rows);
-        $url = Url::fromRoute('sir.add_detector');
-        $url->setRouteParameter('sourcedetectoruri', base64_encode($first));
-        $url->setRouteParameter('attachmenturi', 'EMPTY');
+        $url = Url::fromRoute('sir.add_detectorstem');
+        $url->setRouteParameter('sourcedetectorstemuri', base64_encode($first));
+        $url->setRouteParameter('detectorsloturi', 'EMPTY');
         $form_state->setRedirectUrl($url);
       }
     }  
     
-    // MANAGE CODEBOOK SLOTS
-    if ($button_name === 'manage_codebook_slots') {
+    // MANAGE RESPONSE OPTION SLOTS
+    if ($button_name === 'manage_responseoptionslots') {
       if (sizeof($rows) < 1) {
-        \Drupal::messenger()->addMessage(t("Select the exact experience which codebook slots are going to be managed."));      
+        \Drupal::messenger()->addMessage(t("Select the exact codebook which response option slots are going to be managed."));      
       } else if ((sizeof($rows) > 1)) {
-        \Drupal::messenger()->addMessage(t("The codebook slot of no more than one experience can be managed at once."));      
+        \Drupal::messenger()->addMessage(t("The response option slots of no more than one codebook can be managed at once."));      
       } else {
         $first = array_shift($rows);
-        $url = Url::fromRoute('sir.manage_codebook_slots', ['experienceuri' => base64_encode($first)]);
+        $url = Url::fromRoute('sir.manage_responseoption_slots', ['codebookuri' => base64_encode($first)]);
         $form_state->setRedirectUrl($url);
       } 
       return;
     }
     
-    // MANAGE ATTACHMENTS
-    if ($button_name === 'manage_attachments') {
+    // MANAGE DETECTOR_SLOTS
+    if ($button_name === 'manage_detectorslots') {
       if (sizeof($rows) < 1) {
-        \Drupal::messenger()->addMessage(t("Select the exact questionnaire which attachments are going to be managed."));      
+        \Drupal::messenger()->addMessage(t("Select the exact questionnaire which detectorslots are going to be managed."));      
       } else if ((sizeof($rows) > 1)) {
         \Drupal::messenger()->addMessage(t("Select only one questionnaire. Items of no more than one questionnaire can be managed at once."));      
       } else {
         $first = array_shift($rows);
-        $url = Url::fromRoute('sir.manage_attachments', ['instrumenturi' => base64_encode($first)]);
+        $url = Url::fromRoute('sir.manage_detectorslots', ['instrumenturi' => base64_encode($first)]);
         $form_state->setRedirectUrl($url);
       } 
     }

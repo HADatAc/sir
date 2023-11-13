@@ -205,7 +205,7 @@ class EditInstrumentForm extends FormBase {
         '"hasSubjectRelationshipField":"'.$form_state->getValue('instrument_subject_relationship_field').'",'.
         '"hasPageNumber":"'.$form_state->getValue('instrument_page_number').'",'.
         '"hasCopyrightNotice":"'.$form_state->getValue('instrument_copyright_notice').'",'.
-        '"hasSIRMaintainerEmail":"'.$useremail.'"}';
+        '"hasSIRManagerEmail":"'.$useremail.'"}';
 
       // UPDATE BY DELETING AND CREATING
       $fusekiAPIservice = \Drupal::service('sir.api_connector');

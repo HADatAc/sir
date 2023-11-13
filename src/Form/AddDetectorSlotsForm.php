@@ -6,7 +6,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 
-class AddAttachmentsForm extends FormBase {
+class AddDetectorSlotsForm extends FormBase {
 
   protected $instrumentUri;
 
@@ -22,7 +22,7 @@ class AddAttachmentsForm extends FormBase {
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'add_attachments_form';
+    return 'add_detectorslots_form';
   }
 
   /**
@@ -33,13 +33,13 @@ class AddAttachmentsForm extends FormBase {
     $uri_decode=base64_decode($uri);
     $this->setInstrumentUri($uri_decode);
 
-    $form['attachment_instrument'] = [
+    $form['detectorslot_instrument'] = [
       '#type' => 'textfield',
       '#title' => t('Instrument URI'),
       '#value' => $this->getInstrumentUri(),
       '#disabled' => TRUE,
     ];
-    $form['attachment_total_number'] = [
+    $form['detectorslot_total_number'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Specify the total number of items for this questionnaire'),
     ];
@@ -66,8 +66,8 @@ class AddAttachmentsForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name != 'back') {
-      if(strlen($form_state->getValue('attachment_total_number')) < 1) {
-        $form_state->setErrorByName('attachment_total_number', $this->t('Please specify a number of items greater than zero.'));
+      if(strlen($form_state->getValue('detectorslot_total_number')) < 1) {
+        $form_state->setErrorByName('detectorslot_total_number', $this->t('Please specify a number of items greater than zero.'));
       }
     }
   }
@@ -87,16 +87,16 @@ class AddAttachmentsForm extends FormBase {
 
     try{
       $fusekiAPIservice = \Drupal::service('sir.api_connector');
-      $fusekiAPIservice->attachmentAdd($this->getInstrumentUri(),$form_state->getValue('attachment_total_number'));
+      $fusekiAPIservice->detectorslotAdd($this->getInstrumentUri(),$form_state->getValue('detectorslot_total_number'));
     
-      \Drupal::messenger()->addMessage(t("Attachments has been added successfully."));
-      $url = Url::fromRoute('sir.manage_attachments');
+      \Drupal::messenger()->addMessage(t("DetectorSlots has been added successfully."));
+      $url = Url::fromRoute('sir.manage_detectorslots');
       $url->setRouteParameter('instrumenturi', base64_encode($this->getInstrumentUri()));
       $form_state->setRedirectUrl($url);
 
     }catch(\Exception $e){
-      \Drupal::messenger()->addMessage(t("An error occurred while adding the Attachment: ".$e->getMessage()));
-      $url = Url::fromRoute('sir.manage_attachments');
+      \Drupal::messenger()->addMessage(t("An error occurred while adding the DetectorSlot: ".$e->getMessage()));
+      $url = Url::fromRoute('sir.manage_detectorslots');
       $url->setRouteParameter('instrumenturi', base64_encode($this->getInstrumentUri()));
       $form_state->setRedirectUrl($url);
     }

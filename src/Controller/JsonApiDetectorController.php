@@ -9,7 +9,7 @@ use Drupal\Component\Utility\Xss;
 //use Drupal\Core\Entity\Element\EntityAutocomplete;
 
 /**
- * Class JsonApiExperienceController
+ * Class JsonApiCodebookController
  * @package Drupal\sir\Controller
  */
 class JsonApiDetectorController extends ControllerBase{
@@ -25,7 +25,7 @@ class JsonApiDetectorController extends ControllerBase{
     }
     $input = Xss::filter($input);
     $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $detector_list = $fusekiAPIservice->detectorListByKeyword($input);
+    $detector_list = $fusekiAPIservice->listByKeyword('detector',$input,10,0);
     $obj = json_decode($detector_list);
     $detectors = [];
     if ($obj->isSuccessful) {
@@ -41,8 +41,8 @@ class JsonApiDetectorController extends ControllerBase{
       //  'label' => implode(' ', $label),
       //];
       $results[] = [
-        'value' => $detector->hasContent . ' [' . $detector->uri . ']',
-        'label' => $detector->hasContent,
+        'value' => $detector->detectorStem->hasContent . '  -- CB: '  . $detector->codebook->label . ' [' . $detector->uri . ']',
+        'label' => $detector->detectorStem->hasContent . '  -- CB: '  . $detector->codebook->label,
       ];
     }
 

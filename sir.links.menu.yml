@@ -9,7 +9,7 @@ sir.top_level:
     _permission: 'access content'
     
 sir.search:
-  title: Search
+  title: Search Questionnaire Elements
   description: Search SIR Elements
   route_name: sir.index
   parent: sir.top_level
@@ -34,6 +34,21 @@ sir.manage_instruments:
     _permission: 'access content'
     _role: 'authenticated'
 
+sir.manage_detectorstems :
+  title: Manage Item Stems 
+  description: Manage Item Stems
+  route_name: sir.select_element
+  route_parameters:
+    elementtype: 'detectorstem'
+    page: '1'
+    pagesize: '10'
+  parent: sir.top_level
+  menu_name: main
+  weight: 3
+  requirements:
+    _permission: 'access content'
+    _role: 'authenticated'
+
 sir.manage_detectors :
   title: Manage Items 
   description: Manage Items
@@ -44,22 +59,22 @@ sir.manage_detectors :
     pagesize: '10'
   parent: sir.top_level
   menu_name: main
-  weight: 3
+  weight: 4
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
 
-sir.manage_experiences :
-  title: Manage Experiences 
-  description: Manage experiences and their corresponding Response Options
+sir.manage_codebooks :
+  title: Manage Codebooks 
+  description: Manage codebooks and their corresponding Response Options
   route_name: sir.select_element
   route_parameters:
-    elementtype: 'experience'
+    elementtype: 'codebook'
     page: '1'
     pagesize: '10'
   parent: sir.top_level
   menu_name: main
-  weight: 4
+  weight: 5
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -74,7 +89,7 @@ sir.manage_responseoptions :
     pagesize: '10'
   parent: sir.top_level
   menu_name: main
-  weight: 5
+  weight: 6
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -85,7 +100,7 @@ sir.uri_describe:
   route_name: sir.element_uri
   parent: sir.top_level
   menu_name: main
-  weight: 6
+  weight: 7
   requirements:
     _permission: 'access content'
     

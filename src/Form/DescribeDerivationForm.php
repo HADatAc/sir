@@ -18,7 +18,7 @@
 
   protected $source;
 
-  protected $experience;
+  protected $codebook;
 
   public function getElement() {
     return $this->element;
@@ -36,12 +36,12 @@
     return $this->source = $obj; 
   }
 
-  public function getExperience() {
-    return $this->experience;
+  public function getCodebook() {
+    return $this->codebook;
   }
 
-  public function setExperience($obj) {
-    return $this->experience = $obj; 
+  public function setCodebook($obj) {
+    return $this->codebook = $obj; 
   }
 
   /**
@@ -71,12 +71,12 @@
     $this->setElement($api->parseObjectResponse($api->getUri($full_uri),'getUri'));
     if ($this->getElement() == NULL || $this->getElement() == "") {
       $hascoType = "";
-      $maintainer = "NONE";
+      $manager = "NONE";
       $this->setSource(NULL); 
-      $this->setExperience(NULL); 
+      $this->setCodebook(NULL); 
     } else {
       $hascoType = $this->getElement()->hascoTypeUri;
-      $maintainer = $this->getElement()->hasSIRMaintainerEmail;
+      $manager = $this->getElement()->hasSIRManagerEmail;
       if ($hascoType == VSTOI::DETECTOR) {
         if ($this->getElement()->wasDerivedFrom != NULL) {
             $this->setSource($api->parseObjectResponse($api->getUri($this->getElement()->wasDerivedFrom),'getUri'));
@@ -97,9 +97,9 @@
       '#title' => '<hr><h3>Provenance</h3>',
     ];
 
-    $form['element_maintainer_email'] = [
+    $form['element_manager_email'] = [
         '#type' => 'item',
-        '#title' => '<b>Maintainer Email</b>: ' . $maintainer,
+        '#title' => '<b>manager Email</b>: ' . $manager,
     ];
 
     $derivations = $tables->getGenerationActivities();

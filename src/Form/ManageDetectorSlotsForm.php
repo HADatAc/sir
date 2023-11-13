@@ -8,7 +8,7 @@ use Drupal\Core\Url;
 use Drupal\sir\Utils;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
-class ManageAttachmentsForm extends FormBase {
+class ManageDetectorSlotsForm extends FormBase {
 
   protected $instrumentUri;
 
@@ -24,7 +24,7 @@ class ManageAttachmentsForm extends FormBase {
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'manage_attachments_form';
+    return 'manage_detectorslots_form';
   }
 
   /**
@@ -51,16 +51,16 @@ class ManageAttachmentsForm extends FormBase {
       $instrument = $objinstrument->body;
     }
 
-    // RETRIEVE ATTACHMENTS BY INSTRUMENT
-    $attachment_list = $fusekiAPIservice->attachmentList($this->getInstrumentUri());
-    $obj = json_decode($attachment_list);
-    $attachments = [];
+    // RETRIEVE DETECTOR_SLOTS BY INSTRUMENT
+    $detectorslot_list = $fusekiAPIservice->detectorslotList($this->getInstrumentUri());
+    $obj = json_decode($detectorslot_list);
+    $detectorslots = [];
     if ($obj->isSuccessful) {
-      $attachments = $obj->body;
+      $detectorslots = $obj->body;
     }
 
-    if (sizeof($attachments) <= 0) {
-      return new RedirectResponse(Url::fromRoute('sir.add_attachments', ['instrumenturi' => base64_encode($this->getInstrumentUri())])->toString());
+    if (sizeof($detectorslots) <= 0) {
+      return new RedirectResponse(Url::fromRoute('sir.add_detectorslots', ['instrumenturi' => base64_encode($this->getInstrumentUri())])->toString());
     }
 
     #dpm($detectors);
@@ -68,35 +68,41 @@ class ManageAttachmentsForm extends FormBase {
     # BUILD HEADER
 
     $header = [
-      'attachment_priority' => t('Priority'),
-      'attachment_content' => t("Item's Content"),
-      'attachment_detector' => t("Item's URI"),
+      'detectorslot_priority' => t('Priority'),
+      'detectorslot_content' => t("Item Stem's Content"),
+      'detectorslot_codebook' => t("Item's Codebook"),
+      'detectorslot_detector' => t("Item's URI"),
     ];
 
     # POPULATE DATA
 
     $output = array();
-    foreach ($attachments as $attachment) {
+    foreach ($detectorslots as $detectorslot) {
       $detector = NULL;
       $content = "";
-      if ($attachment->hasDetector != null) {
-        $rawdetector = $fusekiAPIservice->getUri($attachment->hasDetector);
+      $codebook = "";
+      if ($detectorslot->hasDetector != null) {
+        $rawdetector = $fusekiAPIservice->getUri($detectorslot->hasDetector);
         $objdetector = json_decode($rawdetector);
         if ($objdetector->isSuccessful) {
           $detector = $objdetector->body;
-          if (isset($detector->hasContent)) {
-            $content = $detector->hasContent;
+          if (isset($detector->detectorStem->hasContent)) {
+            $content = $detector->detectorStem->hasContent;
+          }
+          if (isset($detector->codebook->label)) {
+            $codebook = $detector->codebook->label;
           } 
         }
       }
       $detectorUriStr = "";
-      if ($attachment->hasDetector != NULL && $attachment->hasDetector != '') {
-        $detectorUriStr = Utils::namespaceUri($attachment->hasDetector);
+      if ($detectorslot->hasDetector != NULL && $detectorslot->hasDetector != '') {
+        $detectorUriStr = Utils::namespaceUri($detectorslot->hasDetector);
       }
-      $output[$attachment->uri] = [
-        'attachment_priority' => $attachment->hasPriority,     
-        'attachment_content' => $content,     
-        'attachment_detector' => $detectorUriStr,     
+      $output[$detectorslot->uri] = [
+        'detectorslot_priority' => $detectorslot->hasPriority,     
+        'detectorslot_content' => $content,     
+        'detectorslot_codebook' => $codebook,
+        'detectorslot_detector' => $detectorUriStr     
       ];
     }
 
@@ -104,29 +110,29 @@ class ManageAttachmentsForm extends FormBase {
 
     $form['scope'] = [
       '#type' => 'item',
-      '#title' => t('<h3>Attachments of Instrument <font color="DarkGreen">' . $instrument->label . '</font></h3>'),
+      '#title' => t('<h3>DetectorSlots of Instrument <font color="DarkGreen">' . $instrument->label . '</font></h3>'),
     ];
     $form['subtitle'] = [
       '#type' => 'item',
-      '#title' => t('<h4>Attachments maintained by <font color="DarkGreen">' . $name . ' (' . $uemail . ')</font></h4>'),
+      '#title' => t('<h4>DetectorSlots maintained by <font color="DarkGreen">' . $name . ' (' . $uemail . ')</font></h4>'),
     ];
-    $form['edit_selected_attachment'] = [
+    $form['edit_selected_detectorslot'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Edit Selected Attachment'),
-      '#name' => 'edit_attachment',
+      '#value' => $this->t('Edit Selected DetectorSlot'),
+      '#name' => 'edit_detectorslot',
     ];
-    $form['delete_attachments'] = [
+    $form['delete_detectorslots'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Delete All Attachments'),
-      '#name' => 'delete_attachments',
+      '#value' => $this->t('Delete All DetectorSlots'),
+      '#name' => 'delete_detectorslots',
     ];
-    $form['attachment_table'] = [
+    $form['detectorslot_table'] = [
       '#type' => 'tableselect',
       '#header' => $header,
       '#options' => $output,
       '#empty' => t('No response options found'),
       //'#ajax' => [
-      //  'callback' => '::attachmentAjaxCallback', 
+      //  'callback' => '::detectorslotAjaxCallback', 
       //  'disable-refocus' => FALSE, 
       //  'event' => 'change',
       //  'wrapper' => 'edit-output', 
@@ -149,8 +155,8 @@ class ManageAttachmentsForm extends FormBase {
     return $form;
   }
 
-  public function attachmentAjaxCallback(array &$form, FormStateInterface $form_state) {
-    $selected_rows = $form_state->getValue('attachment_table');
+  public function detectorslotAjaxCallback(array &$form, FormStateInterface $form_state) {
+    $selected_rows = $form_state->getValue('detectorslot_table');
     $rows = [];
     foreach ($selected_rows as $index => $selected) {
       if ($selected) {
@@ -169,7 +175,7 @@ class ManageAttachmentsForm extends FormBase {
     $button_name = $triggering_element['#name'];
   
     // RETRIEVE SELECTED ROWS, IF ANY
-    $selected_rows = $form_state->getValue('attachment_table');
+    $selected_rows = $form_state->getValue('detectorslot_table');
     $rows = [];
     foreach ($selected_rows as $index => $selected) {
       if ($selected) {
@@ -177,26 +183,26 @@ class ManageAttachmentsForm extends FormBase {
       }
     }
 
-    // EDIT ATTACHMENT
-    if ($button_name === 'edit_attachment') {
+    // EDIT DETECTOR_SLOT
+    if ($button_name === 'edit_detectorslot') {
       if (sizeof($rows) < 1) {
-        \Drupal::messenger()->addMessage(t("Select the exact attachment to be edited."));      
+        \Drupal::messenger()->addMessage(t("Select the exact detectorslot to be edited."));      
       } else if ((sizeof($rows) > 1)) {
-        \Drupal::messenger()->addMessage(t("Select only one attachment to edit. No more than one attachment can be edited at once."));      
+        \Drupal::messenger()->addMessage(t("Select only one detectorslot to edit. No more than one detectorslot can be edited at once."));      
       } else {
         $first = array_shift($rows);
-        $url = Url::fromRoute('sir.edit_attachment');
-        $url->setRouteParameter('attachmenturi', base64_encode($first));
+        $url = Url::fromRoute('sir.edit_detectorslot');
+        $url->setRouteParameter('detectorsloturi', base64_encode($first));
         $form_state->setRedirectUrl($url);
       } 
     }
 
-    // DELETE ATTACHMENTS
-    if ($button_name === 'delete_attachments') {
+    // DELETE DETECTOR_SLOTS
+    if ($button_name === 'delete_detectorslots') {
       $fusekiAPIservice = \Drupal::service('sir.api_connector');
-      $fusekiAPIservice->attachmentDel($this->getInstrumentUri());
+      $fusekiAPIservice->detectorslotDel($this->getInstrumentUri());
     
-      \Drupal::messenger()->addMessage(t("Attachments has been deleted successfully."));
+      \Drupal::messenger()->addMessage(t("DetectorSlots has been deleted successfully."));
       $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
     }
 

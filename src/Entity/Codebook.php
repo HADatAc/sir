@@ -6,7 +6,7 @@ use Drupal\sir\Entity\Tables;
 use Drupal\sir\Utils;
 use Drupal\sir\Vocabulary\SIRGUI;
 
-class Experience {
+class Codebook {
 
   public static function generateHeader() {
 

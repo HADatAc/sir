@@ -5,7 +5,7 @@ namespace Drupal\sir\Entity;
 use Drupal\sir\Utils;
 use Drupal\sir\Vocabulary\SIRGUI;
 
-class Attachment {
+class DetectorSlot {
 
   public static function generateHeader() {
 

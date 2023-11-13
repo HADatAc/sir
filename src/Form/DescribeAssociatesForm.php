@@ -4,7 +4,7 @@
 
  use Drupal\Core\Form\FormBase;
  use Drupal\Core\Form\FormStateInterface;
- use Drupal\sir\Entity\Attachment;
+ use Drupal\sir\Entity\DetectorSlot;
  use Drupal\sir\Utils;
  use Drupal\sir\Vocabulary\SIRGUI;
  use Drupal\sir\Vocabulary\VSTOI;
@@ -59,7 +59,7 @@
           if ($this->getElement() != NULL) {
             //var_dump($this->getElement());
             if ($this->getElement()->hascoTypeUri == VSTOI::INSTRUMENT) {
-              $this->setAssociates($api->parseObjectResponse($api->attachmentList($this->getElement()->uri),'attachmentList'));
+              $this->setAssociates($api->parseObjectResponse($api->detectorslotList($this->getElement()->uri),'detectorslotList'));
             }
           }
         }
@@ -78,8 +78,8 @@
 
         } else {
           
-          $header = Attachment::generateHeader();
-          $output = Attachment::generateOutput($this->getAssociates());    
+          $header = DetectorSlot::generateHeader();
+          $output = DetectorSlot::generateOutput($this->getAssociates());    
 
           //$form['associates_detectors_header'] = [
           //  '#type' => 'item',

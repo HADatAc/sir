@@ -59,7 +59,7 @@ class EditResponseOptionForm extends FormBase {
     } else {
       \Drupal::messenger()->addMessage(t("Failed to retrieve Response Option."));
       $url = Url::fromRoute('sir.manage_response_options');
-      # $url->setRouteParameter('experienceuri', base64_encode($this->getResponseOption()->ofExperience));
+      # $url->setRouteParameter('responseoptionkuri', base64_encode($this->getResponseOption()->ofResponseOption));
       $form_state->setRedirectUrl($url);
     }
 
@@ -140,12 +140,13 @@ class EditResponseOptionForm extends FormBase {
         '"hasLanguage":"'.$form_state->getValue('responseoption_language').'",'.
         '"hasVersion":"'.$form_state->getValue('responseoption_version').'",'.
         '"comment":"'.$form_state->getValue('responseoption_description').'",'.
-        '"hasSIRMaintainerEmail":"'.$useremail.'"}';
+        '"hasSIRManagerEmail":"'.$useremail.'"}';
 
       // UPDATE BY DELETING AND CREATING
       $fusekiAPIservice = \Drupal::service('sir.api_connector');
-      $fusekiAPIservice->responseoptionDel($this->getResponseOption()->uri);
-      $fusekiAPIservice->responseoptionAdd($responseOptionJSON);
+      //dpm($this->getResponseOption()->uri);
+      $fusekiAPIservice->responseOptionDel($this->getResponseOption()->uri);
+      $fusekiAPIservice->responseOptionAdd($responseOptionJSON);
     
       \Drupal::messenger()->addMessage(t("Response Option has been updated successfully."));
       $form_state->setRedirectUrl(Utils::selectBackUrl('responseoption'));
