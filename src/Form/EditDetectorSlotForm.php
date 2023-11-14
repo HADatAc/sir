@@ -5,7 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\sir\Utils;
+use Drupal\rep\Utils;
 
 class EditDetectorSlotForm extends FormBase {
 
@@ -44,8 +44,8 @@ class EditDetectorSlotForm extends FormBase {
     $uri_decode=base64_decode($uri);
     $this->setDetectorSlotUri($uri_decode);
 
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $rawresponse = $fusekiAPIservice->getUri($this->getDetectorSlotUri());
+    $api = \Drupal::service('rep.api_connector');
+    $rawresponse = $api->getUri($this->getDetectorSlotUri());
     $obj = json_decode($rawresponse);
 
     $content = "";
@@ -162,8 +162,8 @@ class EditDetectorSlotForm extends FormBase {
     if ($button_name === 'reset_detector') {
       // RESET DETECTOR
       if ($this->getDetectorSlotUri() != NULL) {
-        $fusekiAPIservice = \Drupal::service('sir.api_connector');
-        $fusekiAPIservice->detectorslotReset($this->getDetectorSlotUri());
+        $api = \Drupal::service('rep.api_connector');
+        $api->detectorslotReset($this->getDetectorSlotUri());
       } 
 
       $url = Url::fromRoute('sir.manage_detectorslots');
@@ -175,8 +175,8 @@ class EditDetectorSlotForm extends FormBase {
     try{
       // UPDATE DETECTOR
       if ($this->getDetectorSlotUri() != NULL) {
-        $fusekiAPIservice = \Drupal::service('sir.api_connector');
-        $fusekiAPIservice->detectorAttach(Utils::uriFromAutocomplete($form_state->getValue('detectorslot_detector')),$this->getDetectorSlotUri());
+        $api = \Drupal::service('rep.api_connector');
+        $api->detectorAttach(Utils::uriFromAutocomplete($form_state->getValue('detectorslot_detector')),$this->getDetectorSlotUri());
       } 
 
       \Drupal::messenger()->addMessage(t("DetectorSlot has been updated successfully."));

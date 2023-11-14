@@ -23,8 +23,8 @@ class JsonApiCodebookController extends ControllerBase{
       return new JsonResponse($results);
     }
     $keyword = Xss::filter($input);
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $codebook_list = $fusekiAPIservice->listByKeyword('codebook',$keyword,10,0);
+    $api = \Drupal::service('rep.api_connector');
+    $codebook_list = $api->listByKeyword('codebook',$keyword,10,0);
     $obj = json_decode($codebook_list);
     $codebooks = [];
     if ($obj->isSuccessful) {

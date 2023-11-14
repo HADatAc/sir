@@ -4,10 +4,10 @@ namespace Drupal\sir\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\sir\Constant;
-use Drupal\sir\Utils;
-use Drupal\sir\Entity\Tables;
-use Drupal\sir\Vocabulary\VSTOI;
+use Drupal\rep\Constant;
+use Drupal\rep\Utils;
+use Drupal\rep\Entity\Tables;
+use Drupal\rep\Vocabulary\VSTOI;
 
 class AddInstrumentForm extends FormBase {
 
@@ -149,8 +149,8 @@ class AddInstrumentForm extends FormBase {
         '"hasCopyrightNotice":"'.$form_state->getValue('instrument_copyright_notice').'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
 
-      $fusekiAPIservice = \Drupal::service('sir.api_connector');
-      $fusekiAPIservice->instrumentAdd($instrumentJson);    
+      $api = \Drupal::service('rep.api_connector');
+      $api->instrumentAdd($instrumentJson);    
       \Drupal::messenger()->addMessage(t("Instruction has been added successfully."));
       $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
 

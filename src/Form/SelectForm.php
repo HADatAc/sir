@@ -5,7 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\sir\ListManagerEmailPage;
+use Drupal\rep\ListManagerEmailPage;
 use Drupal\sir\Entity\DetectorStem;
 use Drupal\sir\Entity\Detector;
 use Drupal\sir\Entity\Codebook;
@@ -287,18 +287,18 @@ class SelectForm extends FormBase {
       if (sizeof($rows) <= 0) {
         \Drupal::messenger()->addMessage(t("At least one " . $this->single_class_name . " needs to be selected to be deleted."));      
       } else {
-        $fusekiAPIservice = \Drupal::service('sir.api_connector');
+        $api = \Drupal::service('rep.api_connector');
         foreach($rows as $uri) {
           if ($this->element_type == 'instrument') {
-            $fusekiAPIservice->instrumentDel($uri);
+            $api->instrumentDel($uri);
           } else if ($this->element_type == 'detectorstem') {
-            $fusekiAPIservice->detectorStemDel($uri);
+            $api->detectorStemDel($uri);
           } else if ($this->element_type == 'detector') {
-            $fusekiAPIservice->detectorDel($uri);
+            $api->detectorDel($uri);
          } else if ($this->element_type == 'codebook') {
-            $fusekiAPIservice->codebookDel($uri);
+            $api->codebookDel($uri);
           } else if ($this->element_type == 'responseoption') {
-            $fusekiAPIservice->responseOptionDel($uri);
+            $api->responseOptionDel($uri);
           }
         }
         \Drupal::messenger()->addMessage(t("Selected " . $this->plural_class_name . " has/have been deleted successfully."));      
@@ -349,7 +349,7 @@ class SelectForm extends FormBase {
     
     // BACK TO MAIN PAGE
     if ($button_name === 'back') {
-      $url = Url::fromRoute('sir.index');
+      $url = Url::fromRoute('sir.search');
       $form_state->setRedirectUrl($url);
     }  
 

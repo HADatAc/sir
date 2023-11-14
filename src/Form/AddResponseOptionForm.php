@@ -5,9 +5,9 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\sir\Utils;
-use Drupal\sir\Entity\Tables;
-use Drupal\sir\Vocabulary\VSTOI;
+use Drupal\rep\Utils;
+use Drupal\rep\Entity\Tables;
+use Drupal\rep\Vocabulary\VSTOI;
 
 class AddResponseOptionForm extends FormBase {
 
@@ -52,8 +52,8 @@ class AddResponseOptionForm extends FormBase {
       $this->setResponseOptionSlotUri($uri_decode);
 
       // RETRIEVE RESPONSEOPTION SLOT
-      $fusekiAPIservice = \Drupal::service('sir.api_connector');
-      $rawresponse = $fusekiAPIservice->getUri($this->getResponseOptionSlotUri());
+      $api = \Drupal::service('rep.api_connector');
+      $rawresponse = $api->getUri($this->getResponseOptionSlotUri());
       $obj = json_decode($rawresponse);
       if ($obj->isSuccessful) {
         $this->setResponseOptionSlot($obj->body);
@@ -151,10 +151,10 @@ class AddResponseOptionForm extends FormBase {
         '"comment":"'.$form_state->getValue('responseoption_description').'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
 
-      $fusekiAPIservice = \Drupal::service('sir.api_connector');
-      $fusekiAPIservice->responseOptionAdd($responseOptionJSON);
+      $api = \Drupal::service('rep.api_connector');
+      $api->responseOptionAdd($responseOptionJSON);
       if ($this->getResponseOptionSlotUri() != NULL && $this->getResponseOptionSlot() != NULL && $this->getResponseOptionSlot()->belongsTo != NULL) {
-        $fusekiAPIservice->responseOptionAttach($newResponseOptionUri,$this->getResponseOptionSlotUri());
+        $api->responseOptionAttach($newResponseOptionUri,$this->getResponseOptionSlotUri());
       }
       
       \Drupal::messenger()->addMessage(t("Response Option has been added successfully."));

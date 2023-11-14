@@ -2,9 +2,9 @@
 
 namespace Drupal\sir\Entity;
 
-use Drupal\sir\Entity\Tables;
-use Drupal\sir\Vocabulary\SIRGUI;
-use Drupal\sir\Utils;
+use Drupal\rep\Entity\Tables;
+use Drupal\rep\Vocabulary\REPGUI;
+use Drupal\rep\Utils;
 
 class Instrument {
 
@@ -56,14 +56,14 @@ class Instrument {
       }
       $root_url = \Drupal::request()->getBaseUrl();
       $encodedUri = rawurlencode(rawurlencode($element->uri));
-      $totxt = '<a href="'. $root_url . SIRGUI::DOWNLOAD . 'plain'. '/'. $encodedUri . '">TXT</a>';
-      $tohtml = '<a href="'. $root_url . SIRGUI::DOWNLOAD . 'html'. '/'. $encodedUri . '">HTML</a>';
-      $topdf = '<a href="'. $root_url . SIRGUI::DOWNLOAD . 'pdf'. '/'. $encodedUri . '">PDF</a>';
-      //$tordf = '<a href="'. $root_url . SIRGUI::DOWNLOAD . 'rdf'. '/'. $encodedUri . '">RDF</a>';
+      $totxt = '<a href="'. $root_url . REPGUI::DOWNLOAD . 'plain'. '/'. $encodedUri . '">TXT</a>';
+      $tohtml = '<a href="'. $root_url . REPGUI::DOWNLOAD . 'html'. '/'. $encodedUri . '">HTML</a>';
+      $topdf = '<a href="'. $root_url . REPGUI::DOWNLOAD . 'pdf'. '/'. $encodedUri . '">PDF</a>';
+      //$tordf = '<a href="'. $root_url . REPGUI::DOWNLOAD . 'rdf'. '/'. $encodedUri . '">RDF</a>';
       $tordf = ' ';
-      $tofhir = '<a href="'. $root_url . SIRGUI::DOWNLOAD . 'fhir'. '/'. $encodedUri . '">FHIR</a>';
+      $tofhir = '<a href="'. $root_url . REPGUI::DOWNLOAD . 'fhir'. '/'. $encodedUri . '">FHIR</a>';
       $output[$element->uri] = [
-        'element_uri' => t('<a href="'.$root_url.SIRGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),     
+        'element_uri' => t('<a href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),     
         'element_abbreviation' => $shortName,     
         'element_name' => t($label . $version),     
         'element_language' => $lang,

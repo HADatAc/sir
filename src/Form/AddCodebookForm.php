@@ -4,9 +4,9 @@ namespace Drupal\sir\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\sir\Utils;
-use Drupal\sir\Entity\Tables;
-use Drupal\sir\Vocabulary\VSTOI;
+use Drupal\rep\Utils;
+use Drupal\rep\Entity\Tables;
+use Drupal\rep\Vocabulary\VSTOI;
 
 class AddCodebookForm extends FormBase {
 
@@ -99,8 +99,8 @@ class AddCodebookForm extends FormBase {
         '"comment":"' . $form_state->getValue('codebook_description') . '",' . 
         '"hasSIRManagerEmail":"' . $uemail . '"}';
 
-      $fusekiAPIservice = \Drupal::service('sir.api_connector');
-      $fusekiAPIservice->codebookAdd($codebookJSON);
+      $api = \Drupal::service('rep.api_connector');
+      $api->codebookAdd($codebookJSON);
       \Drupal::messenger()->addMessage(t("Codebook has been added successfully."));      
       $form_state->setRedirectUrl(Utils::selectBackUrl('codebook'));
 

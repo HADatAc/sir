@@ -4,10 +4,10 @@ namespace Drupal\sir\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\sir\Constant;
-use Drupal\sir\Utils;
-use Drupal\sir\Entity\Tables;
-use Drupal\sir\Vocabulary\VSTOI;
+use Drupal\rep\Constant;
+use Drupal\rep\Utils;
+use Drupal\rep\Entity\Tables;
+use Drupal\rep\Vocabulary\VSTOI;
 
 class EditInstrumentForm extends FormBase {
 
@@ -50,8 +50,8 @@ class EditInstrumentForm extends FormBase {
     $languages = $tables->getLanguages();
     $informants = $tables->getInformants();
 
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $rawresponse = $fusekiAPIservice->getUri($this->getInstrumentUri());
+    $api = \Drupal::service('rep.api_connector');
+    $rawresponse = $api->getUri($this->getInstrumentUri());
     $obj = json_decode($rawresponse);
         //dpm($obj);
     if ($obj->isSuccessful) {
@@ -208,9 +208,9 @@ class EditInstrumentForm extends FormBase {
         '"hasSIRManagerEmail":"'.$useremail.'"}';
 
       // UPDATE BY DELETING AND CREATING
-      $fusekiAPIservice = \Drupal::service('sir.api_connector');
-      $fusekiAPIservice->instrumentDel($this->getInstrumentUri());
-      $newInstrument = $fusekiAPIservice->instrumentAdd($instrumentJson);
+      $api = \Drupal::service('rep.api_connector');
+      $api->instrumentDel($this->getInstrumentUri());
+      $newInstrument = $api->instrumentAdd($instrumentJson);
     
       \Drupal::messenger()->addMessage(t("Instrument has been updated successfully."));
       $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));

@@ -5,7 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\sir\Utils;
+use Drupal\rep\Utils;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class ManageResponseOptionSlotsForm extends FormBase {
@@ -43,8 +43,8 @@ class ManageResponseOptionSlotsForm extends FormBase {
     $name = $user->name->value;
 
     // RETRIEVE CODEBOOK BY URI
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $rawcodebook = $fusekiAPIservice->getUri($this->getCodebookUri());
+    $api = \Drupal::service('rep.api_connector');
+    $rawcodebook = $api->getUri($this->getCodebookUri());
     $objcodebook = json_decode($rawcodebook);
     $codebook = NULL;
     if ($objcodebook->isSuccessful) {
@@ -52,7 +52,7 @@ class ManageResponseOptionSlotsForm extends FormBase {
     }
 
     // RETRIEVE RESPONSEOPTION SLOTS BY CODEBOOK
-    $slot_list = $fusekiAPIservice->responseOptionSlotList($this->getCodebookUri());
+    $slot_list = $api->responseOptionSlotList($this->getCodebookUri());
     $obj = json_decode($slot_list);
     $slots = [];
     if ($obj->isSuccessful) {
@@ -77,7 +77,7 @@ class ManageResponseOptionSlotsForm extends FormBase {
     foreach ($slots as $slot) {
       $content = "";
       if ($slot->hasResponseOption != null) {
-        $rawresponseoption = $fusekiAPIservice->getUri($slot->hasResponseOption);
+        $rawresponseoption = $api->getUri($slot->hasResponseOption);
         $objresponseoption = json_decode($rawresponseoption);
         if ($objresponseoption->isSuccessful) {
           $responseoption = $objresponseoption->body;
@@ -191,8 +191,8 @@ class ManageResponseOptionSlotsForm extends FormBase {
 
     // DELETE RESPONSE OPTION SLOT
     if ($button_name === 'delete_slots') {
-      $fusekiAPIservice = \Drupal::service('sir.api_connector');
-      $fusekiAPIservice->responseOptionSlotDel($this->getCodebookUri());
+      $api = \Drupal::service('rep.api_connector');
+      $api->responseOptionSlotDel($this->getCodebookUri());
     
       \Drupal::messenger()->addMessage(t("Response Option Slot(s) has/have been deleted successfully."));
       $form_state->setRedirectUrl(Utils::selectBackUrl('codebook'));

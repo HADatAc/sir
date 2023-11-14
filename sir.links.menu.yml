@@ -1,17 +1,17 @@
     
 sir.top_level:
-  title: Advanced
-  description: Manage Repository
-  route_name: sir.index
+  title: Questionnaire Elements
+  description: Manage Questionnaire Elements
+  route_name: rep.about
   menu_name: main
-  weight: 100
+  weight: 70
   requirements:
     _permission: 'access content'
     
 sir.search:
   title: Search Questionnaire Elements
   description: Search SIR Elements
-  route_name: sir.index
+  route_name: sir.search
   parent: sir.top_level
   menu_name: main
   enabled: 1
@@ -90,37 +90,6 @@ sir.manage_responseoptions :
   parent: sir.top_level
   menu_name: main
   weight: 6
-  requirements:
-    _permission: 'access content'
-    _role: 'authenticated'
-
-sir.uri_describe:
-  title: Describe URI
-  description: Describe URI
-  route_name: sir.element_uri
-  parent: sir.top_level
-  menu_name: main
-  weight: 7
-  requirements:
-    _permission: 'access content'
-    
-sir.about:
-  title: About
-  description: About
-  route_name: sir.about
-  parent: sir.top_level
-  menu_name: main
-  weight: 12
-  requirements:
-    _permission: 'access content'
-
-sir.admin_settings_link:
-  title: Configuration
-  description: SIR Settings
-  menu_name: main 
-  route_name: sir.admin_settings_custom
-  parent: sir.top_level
-  weight: 10
   requirements:
     _permission: 'access content'
     _role: 'authenticated'

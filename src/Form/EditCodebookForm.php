@@ -4,9 +4,9 @@ namespace Drupal\sir\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\sir\Utils;
-use Drupal\sir\Entity\Tables;
-use Drupal\sir\Vocabulary\VSTOI;
+use Drupal\rep\Utils;
+use Drupal\rep\Entity\Tables;
+use Drupal\rep\Vocabulary\VSTOI;
 
 class EditCodebookForm extends FormBase {
 
@@ -48,8 +48,8 @@ class EditCodebookForm extends FormBase {
     $tables = new Tables;
     $languages = $tables->getLanguages();
 
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $rawresponse = $fusekiAPIservice->getUri($this->getCodebookUri());
+    $api = \Drupal::service('rep.api_connector');
+    $rawresponse = $api->getUri($this->getCodebookUri());
     $obj = json_decode($rawresponse);
     
     if ($obj->isSuccessful) {
@@ -142,9 +142,9 @@ class EditCodebookForm extends FormBase {
         '"hasSIRManagerEmail":"'.$useremail.'"}';
 
       // UPDATE BY DELETING AND CREATING
-      $fusekiAPIservice = \Drupal::service('sir.api_connector');
-      $fusekiAPIservice->codebookDel($this->getCodebook()->uri);
-      $fusekiAPIservice->codebookAdd($codebookJson);
+      $api = \Drupal::service('rep.api_connector');
+      $api->codebookDel($this->getCodebook()->uri);
+      $api->codebookAdd($codebookJson);
     
       \Drupal::messenger()->addMessage(t("Codebook has been updated successfully."));
       $form_state->setRedirectUrl(Utils::selectBackUrl('codebook'));

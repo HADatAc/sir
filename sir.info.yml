@@ -1,6 +1,9 @@
-name: Semantic Instrument Repository
-description: Repository for managing semantic description of instruments including questionnaires, physical instruments, and model
+name: Instrument Elements
+description: UI for the management of instrument elements including questionnaires, physical instruments, and model
 package: Semantic Tools
 core_version_requirement: ^8 || ^9
 type: module 
-configure: sir.admin_settings
+dependencies:
+  - drupal:rep
+version: '0.6.0'
+configure: reo.admin_settings

@@ -86,8 +86,8 @@ class AddResponseOptionSlotsForm extends FormBase {
     } 
 
     try {
-      $fusekiAPIservice = \Drupal::service('sir.api_connector');
-      $fusekiAPIservice->responseOptionSlotAdd($this->getCodebookUri(),$form_state->getValue('slot_total_number'));
+      $api = \Drupal::service('rep.api_connector');
+      $api->responseOptionSlotAdd($this->getCodebookUri(),$form_state->getValue('slot_total_number'));
     
       \Drupal::messenger()->addMessage(t("Codebook Slots has been added successfully."));
       $url = Url::fromRoute('sir.manage_responseoption_slots');

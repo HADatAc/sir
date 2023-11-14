@@ -5,7 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\sir\Utils;
+use Drupal\rep\Utils;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class ManageDetectorSlotsForm extends FormBase {
@@ -43,8 +43,8 @@ class ManageDetectorSlotsForm extends FormBase {
     $name = $user->name->value;
 
     // RETRIEVE INSTRUMENT BY URI
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $rawinstrument = $fusekiAPIservice->getUri($this->getInstrumentUri());
+    $api = \Drupal::service('rep.api_connector');
+    $rawinstrument = $api->getUri($this->getInstrumentUri());
     $objinstrument = json_decode($rawinstrument);
     $instrument = NULL;
     if ($objinstrument->isSuccessful) {
@@ -52,7 +52,7 @@ class ManageDetectorSlotsForm extends FormBase {
     }
 
     // RETRIEVE DETECTOR_SLOTS BY INSTRUMENT
-    $detectorslot_list = $fusekiAPIservice->detectorslotList($this->getInstrumentUri());
+    $detectorslot_list = $api->detectorslotList($this->getInstrumentUri());
     $obj = json_decode($detectorslot_list);
     $detectorslots = [];
     if ($obj->isSuccessful) {
@@ -82,7 +82,7 @@ class ManageDetectorSlotsForm extends FormBase {
       $content = "";
       $codebook = "";
       if ($detectorslot->hasDetector != null) {
-        $rawdetector = $fusekiAPIservice->getUri($detectorslot->hasDetector);
+        $rawdetector = $api->getUri($detectorslot->hasDetector);
         $objdetector = json_decode($rawdetector);
         if ($objdetector->isSuccessful) {
           $detector = $objdetector->body;
@@ -199,8 +199,8 @@ class ManageDetectorSlotsForm extends FormBase {
 
     // DELETE DETECTOR_SLOTS
     if ($button_name === 'delete_detectorslots') {
-      $fusekiAPIservice = \Drupal::service('sir.api_connector');
-      $fusekiAPIservice->detectorslotDel($this->getInstrumentUri());
+      $api = \Drupal::service('rep.api_connector');
+      $api->detectorslotDel($this->getInstrumentUri());
     
       \Drupal::messenger()->addMessage(t("DetectorSlots has been deleted successfully."));
       $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));

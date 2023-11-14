@@ -5,7 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\sir\Utils;
+use Drupal\rep\Utils;
 
 class EditResponseOptionSlotForm extends FormBase {
 
@@ -44,8 +44,8 @@ class EditResponseOptionSlotForm extends FormBase {
     $uri_decode=base64_decode($uri);
     $this->setResponseOptionSlotUri($uri_decode);
 
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $rawresponse = $fusekiAPIservice->getUri($this->getResponseOptionSlotUri());
+    $api = \Drupal::service('rep.api_connector');
+    $rawresponse = $api->getUri($this->getResponseOptionSlotUri());
     $obj = json_decode($rawresponse);
 
     $content = "";
@@ -141,8 +141,8 @@ class EditResponseOptionSlotForm extends FormBase {
     if ($button_name === 'reset_response_option') {
       // RESET responseOption
       if ($this->getResponseOptionSlotUri() != NULL) {
-        $fusekiAPIservice = \Drupal::service('sir.api_connector');
-        $fusekiAPIservice->responseOptionSlotReset($this->getResponseOptionSlotUri());
+        $api = \Drupal::service('rep.api_connector');
+        $api->responseOptionSlotReset($this->getResponseOptionSlotUri());
       } 
 
       $url = Url::fromRoute('sir.manage_responseoption_slots');
@@ -154,8 +154,8 @@ class EditResponseOptionSlotForm extends FormBase {
     try {
       // UPDATE responseOption
       if ($this->getResponseOptionSlotUri() != NULL) {
-        $fusekiAPIservice = \Drupal::service('sir.api_connector');
-        $fusekiAPIservice->responseOptionAttach(Utils::uriFromAutocomplete($form_state->getValue('responseoption_slot_response_option')),$this->getResponseOptionSlotUri());
+        $api = \Drupal::service('rep.api_connector');
+        $api->responseOptionAttach(Utils::uriFromAutocomplete($form_state->getValue('responseoption_slot_response_option')),$this->getResponseOptionSlotUri());
       } 
 
       \Drupal::messenger()->addMessage(t("Response Option Slot has been updated successfully."));

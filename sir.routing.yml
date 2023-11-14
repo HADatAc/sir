@@ -1,14 +1,17 @@
 
-# Landing page
 
-sir.index:
-  path: 'sir'
+sir.search:
+  path: 'sir/list/{elementtype}/{keyword}/{language}/{page}/{pagesize}'
   defaults:
-    _controller: '\Drupal\sir\Controller\InitializationController::index'
-    _title: 'SIR'    
+    _form: '\Drupal\sir\Form\ListForm'
+    elementtype: 'instrument'
+    keyword: '_'
+    language: '_'
+    page: '1'
+    pagesize: '12'
   requirements:
     _permission: 'access content'
-  #  _custom_access_check: 'TRUE'    
+    _custom_access_check: 'TRUE'    
   options:
     no_cache: 'TRUE'
 
@@ -84,7 +87,7 @@ sir.edit_instrument:
 sir.download_instrument:
   path: 'sir/download/{type}/{instrument}'
   defaults:
-    _controller: '\Drupal\sir\Controller\UtilsController::download'
+    _controller: '\Drupal\rep\Controller\UtilsController::download'
   requirements:
     _permission: 'access content'
     instrument: .+    
@@ -133,7 +136,6 @@ sir.detectorslot_detector_autocomplete:
     _format: json
   requirements:
     _permission: 'access content'
-
 
 # Detector Stem CRUD options
 
@@ -296,63 +298,6 @@ sir.edit_response_option:
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    
-  options:
-    no_cache: 'TRUE'
-
-# Configuration option
-
-sir.admin_settings_custom:
-  path: 'admin/config/sir'
-  defaults:
-    _form: '\Drupal\sir\Form\SIRSettingsForm'
-    _title: 'SIR Settings Form'
-  requirements:
-    _permission: 'administer site configuration'
-  options:
-    _admin_route: TRUE
-    no_cache: 'TRUE'
-
-sir.admin_ip_settings_custom:
-  path: 'admin/config/sir/ip'
-  defaults:
-    _form: '\Drupal\sir\Form\IPForm'
-    _title: 'SIR IP Settings Form'
-  requirements:
-    _permission: 'administer site IP configuration'
-  options:
-    _admin_route: TRUE
-    no_cache: 'TRUE'
-
-sir.admin_namespace_settings_custom:
-  path: 'admin/config/sir/namespace'
-  defaults:
-    _form: '\Drupal\sir\Form\SIRNameSpaceForm'
-    _title: 'SIR NameSpace Management Form'
-  requirements:
-    _permission: 'administer site NameSpace configuration'
-  options:
-    _admin_route: TRUE
-    no_cache: 'TRUE'
-
-sir.repo_info:
-  path: 'sir/repo/info'
-  defaults:
-    _form: '\Drupal\sir\Form\RepoInfoForm'
-    _title: 'Current Repository Configuration'    
-  requirements:
-    _permission: 'access content'
-    _custom_access_check: 'TRUE'    
-  options:
-    no_cache: 'TRUE'
-
-# About
-
-sir.about:
-  path: 'sir/about'
-  defaults:
-    _form: '\Drupal\sir\Form\About'
-  requirements:
-    _permission: 'access content'
   options:
     no_cache: 'TRUE'
 

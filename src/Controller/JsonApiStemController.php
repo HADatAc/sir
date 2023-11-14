@@ -24,8 +24,8 @@ class JsonApiStemController extends ControllerBase{
     }
     $keyword = Xss::filter($input);
     //dpm($keyword);
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $stem_list = $fusekiAPIservice->listByKeyword('detectorstem',$keyword,10,0);
+    $api = \Drupal::service('rep.api_connector');
+    $stem_list = $api->listByKeyword('detectorstem',$keyword,10,0);
     $obj = json_decode($stem_list);
     $stems = [];
     if ($obj->isSuccessful) {

@@ -86,8 +86,8 @@ class AddDetectorSlotsForm extends FormBase {
     } 
 
     try{
-      $fusekiAPIservice = \Drupal::service('sir.api_connector');
-      $fusekiAPIservice->detectorslotAdd($this->getInstrumentUri(),$form_state->getValue('detectorslot_total_number'));
+      $api = \Drupal::service('rep.api_connector');
+      $api->detectorslotAdd($this->getInstrumentUri(),$form_state->getValue('detectorslot_total_number'));
     
       \Drupal::messenger()->addMessage(t("DetectorSlots has been added successfully."));
       $url = Url::fromRoute('sir.manage_detectorslots');
