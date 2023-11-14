@@ -3,7 +3,7 @@
 sir.search:
   path: 'sir/list/{elementtype}/{keyword}/{language}/{page}/{pagesize}'
   defaults:
-    _form: '\Drupal\sir\Form\ListForm'
+    _form: '\Drupal\sir\Form\SIRListForm'
     elementtype: 'instrument'
     keyword: '_'
     language: '_'
@@ -20,7 +20,7 @@ sir.search:
 sir.list_element:
   path: 'sir/list/{elementtype}/{keyword}/{language}/{page}/{pagesize}'
   defaults:
-    _form: '\Drupal\sir\Form\ListForm'
+    _form: '\Drupal\sir\Form\SIRListForm'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    
@@ -30,7 +30,7 @@ sir.list_element:
 sir.select_element:
   path: 'sir/select/{elementtype}/{page}/{pagesize}'
   defaults:
-    _form: '\Drupal\sir\Form\SelectForm'
+    _form: '\Drupal\sir\Form\SIRSelectForm'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    

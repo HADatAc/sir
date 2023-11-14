@@ -12,7 +12,7 @@ use Drupal\sir\Entity\Codebook;
 use Drupal\sir\Entity\Instrument;
 use Drupal\sir\Entity\ResponseOption;
 
-class SelectForm extends FormBase {
+class SIRSelectForm extends FormBase {
 
   /**
    * {@inheritdoc}

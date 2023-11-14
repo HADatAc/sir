@@ -11,7 +11,7 @@ use Drupal\sir\Entity\Codebook;
 use Drupal\sir\Entity\Instrument;
 use Drupal\sir\Entity\ResponseOption;
 
-class ListForm extends FormBase {
+class SIRListForm extends FormBase {
 
   /**
    * {@inheritdoc}
