@@ -6,6 +6,8 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\rep\ListManagerEmailPage;
+use Drupal\sir\Entity\AnnotationStem;
+use Drupal\sir\Entity\Annotation;
 use Drupal\sir\Entity\DetectorStem;
 use Drupal\sir\Entity\Detector;
 use Drupal\sir\Entity\Codebook;
@@ -137,6 +139,22 @@ class SIRSelectForm extends FormBase {
         $this->plural_class_name = "Response Options";
         $header = ResponseOption::generateHeader();
         $output = ResponseOption::generateOutput($this->getList());    
+        break;
+
+      // ANNOTATION STEM
+      case "annotationstem":
+        $this->single_class_name = "Annotation Stem";
+        $this->plural_class_name = "Annotation Stems";
+        $header = AnnotationStem::generateHeader();
+        $output = AnnotationSten::generateOutput($this->getList());    
+        break;
+
+      // ANNOTATION
+      case "annotation":
+        $this->single_class_name = "Annotation";
+        $this->plural_class_name = "Annotations";
+        $header = Annotation::generateHeader();
+        $output = Annotation::generateOutput($this->getList());    
         break;
 
       default:

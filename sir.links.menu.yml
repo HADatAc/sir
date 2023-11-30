@@ -94,3 +94,33 @@ sir.manage_responseoptions :
     _permission: 'access content'
     _role: 'authenticated'
 
+sir.manage_annotationstems :
+  title: Manage Annotation Stems 
+  description: Manage Annotation Stems
+  route_name: sir.select_element
+  route_parameters:
+    elementtype: 'annotationstem'
+    page: '1'
+    pagesize: '10'
+  parent: sir.top_level
+  menu_name: main
+  weight: 7
+  requirements:
+    _permission: 'access content'
+    _role: 'authenticated'
+
+sir.manage_annotations :
+  title: Manage Annotations 
+  description: Manage Annotations
+  route_name: sir.select_element
+  route_parameters:
+    elementtype: 'annotation'
+    page: '1'
+    pagesize: '10'
+  parent: sir.top_level
+  menu_name: main
+  weight: 8
+  requirements:
+    _permission: 'access content'
+    _role: 'authenticated'
+
