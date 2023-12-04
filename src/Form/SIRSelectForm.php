@@ -6,6 +6,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\rep\ListManagerEmailPage;
+use Drupal\rep\Utils;
 use Drupal\sir\Entity\AnnotationStem;
 use Drupal\sir\Entity\Annotation;
 use Drupal\sir\Entity\DetectorStem;
@@ -146,7 +147,7 @@ class SIRSelectForm extends FormBase {
         $this->single_class_name = "Annotation Stem";
         $this->plural_class_name = "Annotation Stems";
         $header = AnnotationStem::generateHeader();
-        $output = AnnotationSten::generateOutput($this->getList());    
+        $output = AnnotationStem::generateOutput($this->getList());    
         break;
 
       // ANNOTATION
@@ -194,10 +195,15 @@ class SIRSelectForm extends FormBase {
       '#name' => 'delete_element',
     ];
     if ($this->element_type == 'instrument') {
-        $form['manage_detectorslots'] = [
+      $form['manage_detectorslots'] = [
         '#type' => 'submit',
-        '#value' => $this->t('Manage Detector Slots of Selected Questionnaire'),
+        '#value' => $this->t('Detectors of Selected'),
         '#name' => 'manage_detectorslots',
+      ];
+      $form['manage_annotations'] = [
+        '#type' => 'submit',
+        '#value' => $this->t('Annotations of Selected'),
+        '#name' => 'manage_annotations',
       ];
     }
     if ($this->element_type == 'codebook') {
@@ -273,6 +279,11 @@ class SIRSelectForm extends FormBase {
       } else if ($this->element_type == 'responseoption') {
         $url = Url::fromRoute('sir.add_response_option');
         $url->setRouteParameter('responseoptionsloturi', 'EMPTY');
+      } else if ($this->element_type == 'annotationstem') {
+        $url = Url::fromRoute('sir.add_annotationstem');
+        $url->setRouteParameter('sourceannotationstemuri', 'EMPTY');
+      } else if ($this->element_type == 'annotation') {
+        $url = Url::fromRoute('sir.add_annotation');
       }
       $form_state->setRedirectUrl($url);
     }  
@@ -295,6 +306,10 @@ class SIRSelectForm extends FormBase {
           $url = Url::fromRoute('sir.edit_codebook', ['codebookuri' => base64_encode($first)]);
         } else if ($this->element_type == 'responseoption') {
           $url = Url::fromRoute('sir.edit_response_option', ['responseoptionuri' => base64_encode($first)]);
+        } else if ($this->element_type == 'annotationstem') {
+          $url = Url::fromRoute('sir.edit_annotationstem', ['annotationstemuri' => base64_encode($first)]);
+        } else if ($this->element_type == 'annotation') {
+          $url = Url::fromRoute('sir.edit_annotation', ['annotationuri' => base64_encode($first)]);
         }
         $form_state->setRedirectUrl($url);
       } 
@@ -306,7 +321,8 @@ class SIRSelectForm extends FormBase {
         \Drupal::messenger()->addMessage(t("At least one " . $this->single_class_name . " needs to be selected to be deleted."));      
       } else {
         $api = \Drupal::service('rep.api_connector');
-        foreach($rows as $uri) {
+        foreach($rows as $shortUri) {
+          $uri = Utils::plainUri($shortUri);
           if ($this->element_type == 'instrument') {
             $api->instrumentDel($uri);
           } else if ($this->element_type == 'detectorstem') {
@@ -317,6 +333,10 @@ class SIRSelectForm extends FormBase {
             $api->codebookDel($uri);
           } else if ($this->element_type == 'responseoption') {
             $api->responseOptionDel($uri);
+          } else if ($this->element_type == 'annotationstem') {
+            $api->annotationStemDel($uri);
+          } else if ($this->element_type == 'annotation') {
+            $api->annotationDel($uri);
           }
         }
         \Drupal::messenger()->addMessage(t("Selected " . $this->plural_class_name . " has/have been deleted successfully."));      

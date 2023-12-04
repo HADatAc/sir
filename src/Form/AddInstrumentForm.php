@@ -41,10 +41,6 @@ class AddInstrumentForm extends FormBase {
       '#options' => $informants,
       '#default_value' => Constant::DEFAULT_INFORMANT,
     ];
-    $form['instrument_instructions'] = [
-      '#type' => 'textarea',
-      '#title' => $this->t('Instructions'),
-    ];
     $form['instrument_language'] = [
       '#type' => 'select',
       '#title' => $this->t('Language'),
@@ -58,26 +54,6 @@ class AddInstrumentForm extends FormBase {
     $form['instrument_description'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
-    ];
-    $form['instrument_date_field'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Date Field (Optional)'),
-    ];
-    $form['instrument_subject_id_field'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Subject ID Field (Optional)'),
-    ];
-    $form['instrument_subject_relationship_field'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Subject Relationship Field (Optional)'),
-    ];
-    $form['instrument_page_number'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Page Number (Optional)'),
-    ];
-    $form['instrument_copyright_notice'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Copyright notice (Optional)'),
     ];
     $form['save_submit'] = [
       '#type' => 'submit',
@@ -138,20 +114,14 @@ class AddInstrumentForm extends FormBase {
         '"label":"'.$form_state->getValue('instrument_name').'",'.
         '"hasShortName":"'.$form_state->getValue('instrument_abbreviation').'",'.
         '"hasInformant":"'.$form_state->getValue('instrument_informant').'",'.
-        '"hasInstruction":"'.$form_state->getValue('instrument_instructions').'",'.
         '"hasLanguage":"'.$form_state->getValue('instrument_language').'",'.
         '"hasVersion":"'.$form_state->getValue('instrument_version').'",'.
         '"comment":"'.$form_state->getValue('instrument_description').'",'.
-        '"hasDateField":"'.$form_state->getValue('instrument_date_field').'",'.
-        '"hasSubjectIDField":"'.$form_state->getValue('instrument_subject_id_field').'",'.
-        '"hasSubjectRelationshipField":"'.$form_state->getValue('instrument_subject_relationship_field').'",'.
-        '"hasPageNumber":"'.$form_state->getValue('instrument_page_number').'",'.
-        '"hasCopyrightNotice":"'.$form_state->getValue('instrument_copyright_notice').'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
 
       $api = \Drupal::service('rep.api_connector');
       $api->instrumentAdd($instrumentJson);    
-      \Drupal::messenger()->addMessage(t("Instruction has been added successfully."));
+      \Drupal::messenger()->addMessage(t("Instrument has been added successfully."));
       $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
 
     }catch(\Exception $e){

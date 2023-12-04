@@ -41,7 +41,7 @@ class AddDetectorSlotsForm extends FormBase {
     ];
     $form['detectorslot_total_number'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Specify the total number of items for this questionnaire'),
+      '#title' => $this->t('Specify number of new items to add for this questionnaire'),
     ];
     $form['save_submit'] = [
       '#type' => 'submit',
@@ -87,9 +87,10 @@ class AddDetectorSlotsForm extends FormBase {
 
     try{
       $api = \Drupal::service('rep.api_connector');
-      $api->detectorslotAdd($this->getInstrumentUri(),$form_state->getValue('detectorslot_total_number'));
-    
-      \Drupal::messenger()->addMessage(t("DetectorSlots has been added successfully."));
+      $message = $api->parseObjectResponse($api->detectorslotAdd($this->getInstrumentUri(),$form_state->getValue('detectorslot_total_number')),'detectorslotAdd');
+      if ($message != null) {
+        \Drupal::messenger()->addMessage(t("DetectorSlots has been added successfully."));
+      }
       $url = Url::fromRoute('sir.manage_detectorslots');
       $url->setRouteParameter('instrumenturi', base64_encode($this->getInstrumentUri()));
       $form_state->setRedirectUrl($url);

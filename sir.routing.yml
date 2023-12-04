@@ -66,7 +66,7 @@ sir.add_instrument:
   path: 'sir/manage/addinstrument'
   defaults:
     _form: '\Drupal\sir\Form\AddInstrumentForm'
-    _title: 'Add Questionnarie'    
+    _title: 'Add Questionnaire'    
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    
@@ -94,6 +94,30 @@ sir.download_instrument:
   options:
     no_cache: 'TRUE'    
 
+# Subcontainer CRUD options
+
+sir.add_subcontainer:
+  path: 'sir/manage/addsubcontainer/{parenturi}'
+  defaults:
+    _form: '\Drupal\sir\Form\AddSubcontainerForm'
+    _title: 'Add Subcontainer'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+sir.edit_subcontainer:
+  path: 'sir/manage/editsubcontainer/{subcontaineruri}'
+  defaults:
+    _form: '\Drupal\sir\Form\EditSubcontainerForm'
+    _title: 'Edit Subcontainer'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
 # Detector Slot CRUD options
 
 sir.manage_detectorslots:
@@ -116,6 +140,7 @@ sir.add_detectorslots:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    
   options:
+    _modal_form_layout: TRUE
     no_cache: 'TRUE'
 
 sir.edit_detectorslot:
@@ -300,4 +325,69 @@ sir.edit_response_option:
     _custom_access_check: 'TRUE'    
   options:
     no_cache: 'TRUE'
+
+# Annotation Stem CRUD options
+
+sir.add_annotationstem:
+  path: 'sir/manage/addannotationstem/{sourceannotationstemuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\AddAnnotationStemForm'
+    _title: 'Add Annotation Stem'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+sir.edit_annotationstem:
+  path: 'sir/manage/editannotationstem/{annotationstemuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\EditAnnotationStemForm'
+    _title: 'Edit Annotation Stem'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+sir.annotation_container_autocomplete:
+  path: '/sir/manage/annotation/container/autocomplete'
+  defaults:
+    _controller: '\Drupal\sir\Controller\JsonApiAnnotationContainerController::handleAutocomplete'
+    _format: json
+  requirements:
+    _permission: 'access content'
+
+sir.annotation_stem_autocomplete:
+  path: '/sir/manage/annotation/stem/autocomplete'
+  defaults:
+    _controller: '\Drupal\sir\Controller\JsonApiAnnotationStemController::handleAutocomplete'
+    _format: json
+  requirements:
+    _permission: 'access content'
+
+# Annotation CRUD options
+
+sir.add_annotation:
+  path: 'sir/manage/addannotation'
+  defaults:
+    _form: '\Drupal\sir\Form\AddAnnotationForm'
+    _title: 'Add Annotation'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+sir.edit_annotation:
+  path: 'sir/manage/editannotation/{annotationuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\EditAnnotationForm'
+    _title: 'Edit Annotation'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
 
