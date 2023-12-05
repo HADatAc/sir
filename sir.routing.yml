@@ -97,7 +97,7 @@ sir.download_instrument:
 # Subcontainer CRUD options
 
 sir.add_subcontainer:
-  path: 'sir/manage/addsubcontainer/{parenturi}'
+  path: 'sir/manage/addsubcontainer/{belongsto}'
   defaults:
     _form: '\Drupal\sir\Form\AddSubcontainerForm'
     _title: 'Add Subcontainer'    
@@ -118,24 +118,24 @@ sir.edit_subcontainer:
   options:
     no_cache: 'TRUE'
 
-# Detector Slot CRUD options
+# Container Slot CRUD options
 
-sir.manage_detectorslots:
-  path: 'sir/manage/detectorslot/{instrumenturi}'
+sir.manage_slotelements:
+  path: 'sir/manage/slotelements/{containeruri}'
   defaults:
-    _form: '\Drupal\sir\Form\ManageDetectorSlotsForm'
-    _title: 'Manage DetectorSlots'    
+    _form: '\Drupal\sir\Form\ManageSlotElementsForm'
+    _title: 'Manage Container Structure'    
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    
   options:
     no_cache: 'TRUE'
 
-sir.add_detectorslots:
-  path: 'sir/manage/adddetectorslots/{instrumenturi}'
+sir.add_containerslots:
+  path: 'sir/manage/addcontainerslots/{containeruri}'
   defaults:
-    _form: '\Drupal\sir\Form\AddDetectorSlotsForm'
-    _title: "Create Instrument's DetectorSlots"    
+    _form: '\Drupal\sir\Form\AddContainerSlotsForm'
+    _title: "Create Container Slots"    
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    
@@ -143,19 +143,19 @@ sir.add_detectorslots:
     _modal_form_layout: TRUE
     no_cache: 'TRUE'
 
-sir.edit_detectorslot:
-  path: 'sir/manage/editdetectorslots/{detectorsloturi}'
+sir.edit_containerslot:
+  path: 'sir/manage/editcontainerslots/{containersloturi}'
   defaults:
-    _form: '\Drupal\sir\Form\EditDetectorSlotForm'
-    _title: 'Edit DetectorSlot'    
+    _form: '\Drupal\sir\Form\EditContainerSlotForm'
+    _title: 'Edit ContainerSlot'    
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    
   options:
     no_cache: 'TRUE'
 
-sir.detectorslot_detector_autocomplete:
-  path: '/sir/manage/detectorslot/autocomplete'
+sir.containerslot_detector_autocomplete:
+  path: '/sir/manage/containerslot/autocomplete'
   defaults:
     _controller: '\Drupal\sir\Controller\JsonApiDetectorController::handleAutocomplete'
     _format: json
@@ -189,7 +189,7 @@ sir.edit_detectorstem:
 # Detector "Item" CRUD options
 
 sir.add_detector:
-  path: 'sir/manage/adddetector/{sourcedetectoruri}/{detectorsloturi}'
+  path: 'sir/manage/adddetector/{sourcedetectoruri}/{containersloturi}'
   defaults:
     _form: '\Drupal\sir\Form\AddDetectorForm'
     _title: 'Add Item'    
@@ -199,10 +199,10 @@ sir.add_detector:
   options:
     no_cache: 'TRUE'
 
-sir.add_detectorslot_detector:
-  path: 'sir/manage/addattachdetector/{detectorsloturi}'
+sir.add_containerslot_detector:
+  path: 'sir/manage/addattachdetector/{containersloturi}'
   defaults:
-    _form: '\Drupal\sir\Form\AddDetectorSlotDetectorForm'
+    _form: '\Drupal\sir\Form\AddContainerSlotDetectorForm'
     _title: 'Add Item'    
   requirements:
     _permission: 'access content'
@@ -261,12 +261,12 @@ sir.edit_codebook:
   options:
     no_cache: 'TRUE'
 
-# Response Option CRUD options
+# Codebook Slot CRUD options
 
-sir.manage_responseoption_slots:
-  path: 'sir/manage/responseoptionslot/{codebookuri}'
+sir.manage_codebook_slots:
+  path: 'sir/manage/codebookslot/{codebookuri}'
   defaults:
-    _form: '\Drupal\sir\Form\ManageResponseOptionSlotsForm'
+    _form: '\Drupal\sir\Form\ManageCodebookSlotsForm'
     _title: 'Manage Response Option Slots'    
   requirements:
     _permission: 'access content'
@@ -274,10 +274,10 @@ sir.manage_responseoption_slots:
   options:
     no_cache: 'TRUE'
 
-sir.add_responseoptionslots:
-  path: 'sir/manage/addresponseoptionslots/{codebookuri}'
+sir.add_codebookslots:
+  path: 'sir/manage/addcodebookslots/{codebookuri}'
   defaults:
-    _form: '\Drupal\sir\Form\AddResponseOptionSlotsForm'
+    _form: '\Drupal\sir\Form\AddCodebookSlotsForm'
     _title: "Create Codebook's Response Option Slots"    
   requirements:
     _permission: 'access content'
@@ -285,10 +285,10 @@ sir.add_responseoptionslots:
   options:
     no_cache: 'TRUE'
 
-sir.edit_responseoption_slot:
-  path: 'sir/manage/editresponseoptionslot/{responseoptionsloturi}'
+sir.edit_codebook_slot:
+  path: 'sir/manage/editcodebookslot/{codebooksloturi}'
   defaults:
-    _form: '\Drupal\sir\Form\EditResponseOptionSlotForm'
+    _form: '\Drupal\sir\Form\EditCodebookSlotForm'
     _title: "Edit Response Option Slot"    
   requirements:
     _permission: 'access content'
@@ -296,7 +296,7 @@ sir.edit_responseoption_slot:
   options:
     no_cache: 'TRUE'
 
-sir.responseoptionslot_response_option_autocomplete:
+sir.codebookslot_response_option_autocomplete:
   path: '/sir/manage/responseoption/autocomplete'
   defaults:
     _controller: '\Drupal\sir\Controller\JsonApiResponseOptionController::handleAutocomplete'
@@ -304,8 +304,10 @@ sir.responseoptionslot_response_option_autocomplete:
   requirements:
     _permission: 'access content'
 
+# Response Option CRUD options
+
 sir.add_response_option:
-  path: 'sir/manage/addresponseoption/{responseoptionsloturi}'
+  path: 'sir/manage/addresponseoption/{codebooksloturi}'
   defaults:
     _form: '\Drupal\sir\Form\AddResponseOptionForm'
     _title: 'Add Response Option'    

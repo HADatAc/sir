@@ -6,40 +6,40 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 
-class AddDetectorSlotsForm extends FormBase {
+class AddContainerSlotsForm extends FormBase {
 
-  protected $instrumentUri;
+  protected $containerUri;
 
-  public function getInstrumentUri() {
-    return $this->instrumentUri;
+  public function getContainerUri() {
+    return $this->containerUri;
   }
 
-  public function setInstrumentUri($uri) {
-    return $this->instrumentUri = $uri; 
+  public function setContainerUri($uri) {
+    return $this->containerUri = $uri; 
   }
 
   /**
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'add_detectorslots_form';
+    return 'add_containerslots_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $instrumenturi = NULL) {
-    $uri=$instrumenturi ?? 'default';
+  public function buildForm(array $form, FormStateInterface $form_state, $containeruri = NULL) {
+    $uri=$containeruri ?? 'default';
     $uri_decode=base64_decode($uri);
-    $this->setInstrumentUri($uri_decode);
+    $this->setContainerUri($uri_decode);
 
-    $form['detectorslot_instrument'] = [
+    $form['containerslot_container'] = [
       '#type' => 'textfield',
-      '#title' => t('Instrument URI'),
-      '#value' => $this->getInstrumentUri(),
+      '#title' => t('Container URI'),
+      '#value' => $this->getContainerUri(),
       '#disabled' => TRUE,
     ];
-    $form['detectorslot_total_number'] = [
+    $form['containerslot_total_number'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Specify number of new items to add for this questionnaire'),
     ];
@@ -66,8 +66,8 @@ class AddDetectorSlotsForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name != 'back') {
-      if(strlen($form_state->getValue('detectorslot_total_number')) < 1) {
-        $form_state->setErrorByName('detectorslot_total_number', $this->t('Please specify a number of items greater than zero.'));
+      if(strlen($form_state->getValue('containerslot_total_number')) < 1) {
+        $form_state->setErrorByName('containerslot_total_number', $this->t('Please specify a number of items greater than zero.'));
       }
     }
   }
@@ -80,25 +80,26 @@ class AddDetectorSlotsForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $url = Url::fromRoute('sir.manage_instruments');
+      $url = Url::fromRoute('sir.manage_slotelements');
+      $url->setRouteParameter('containeruri', base64_encode($this->getContainerUri()));
       $form_state->setRedirectUrl($url);
       return;
     } 
 
     try{
       $api = \Drupal::service('rep.api_connector');
-      $message = $api->parseObjectResponse($api->detectorslotAdd($this->getInstrumentUri(),$form_state->getValue('detectorslot_total_number')),'detectorslotAdd');
+      $message = $api->parseObjectResponse($api->containerslotAdd($this->getContainerUri(),$form_state->getValue('containerslot_total_number')),'containerslotAdd');
       if ($message != null) {
-        \Drupal::messenger()->addMessage(t("DetectorSlots has been added successfully."));
+        \Drupal::messenger()->addMessage(t("ContainerSlots has been added successfully."));
       }
-      $url = Url::fromRoute('sir.manage_detectorslots');
-      $url->setRouteParameter('instrumenturi', base64_encode($this->getInstrumentUri()));
+      $url = Url::fromRoute('sir.manage_slotelements');
+      $url->setRouteParameter('containeruri', base64_encode($this->getContainerUri()));
       $form_state->setRedirectUrl($url);
 
     }catch(\Exception $e){
-      \Drupal::messenger()->addMessage(t("An error occurred while adding the DetectorSlot: ".$e->getMessage()));
-      $url = Url::fromRoute('sir.manage_detectorslots');
-      $url->setRouteParameter('instrumenturi', base64_encode($this->getInstrumentUri()));
+      \Drupal::messenger()->addMessage(t("An error occurred while adding the ContainerSlot: ".$e->getMessage()));
+      $url = Url::fromRoute('sir.manage_slotelements');
+      $url->setRouteParameter('containeruri', base64_encode($this->getContainerUri()));
       $form_state->setRedirectUrl($url);
     }
 

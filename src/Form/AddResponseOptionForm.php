@@ -11,24 +11,24 @@ use Drupal\rep\Vocabulary\VSTOI;
 
 class AddResponseOptionForm extends FormBase {
 
-  protected $responseOptionSlotUri;
+  protected $codebookSlotUri;
 
-  protected $responseOptionSlot;
+  protected $codebookSlot;
 
-  public function getResponseOptionSlotUri() {
-    return $this->responseOptionSlotUri;
+  public function getCodebookSlotUri() {
+    return $this->codebookSlotUri;
   }
 
-  public function setResponseOptionSlotUri($uri) {
-    return $this->responseOptionSlotUri = $uri; 
+  public function setCodebookSlotUri($uri) {
+    return $this->codebookSlotUri = $uri; 
   }
 
-  public function getResponseOptionSlot() {
-    return $this->responseOptionSlot;
+  public function getCodebookSlot() {
+    return $this->codebookSlot;
   }
 
-  public function setResponseOptionSlot($uri) {
-    return $this->responseOptionSlot = $uri; 
+  public function setCodebookSlot($uri) {
+    return $this->codebookSlot = $uri; 
   }
 
   /**
@@ -41,22 +41,22 @@ class AddResponseOptionForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $responseoptionsloturi = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, $codebooksloturi = NULL) {
 
     // SAVE RESPONSEOPTION SLOT URI
-    if ($responseoptionsloturi == "EMPTY") {
-      $this->setResponseOptionSlotUri("");
-      $this->setResponseOptionSlot(NULL);
+    if ($codebooksloturi == "EMPTY") {
+      $this->setCodebookSlotUri("");
+      $this->setCodebookSlot(NULL);
     } else {
-      $uri_decode=base64_decode($responseoptionsloturi);
-      $this->setResponseOptionSlotUri($uri_decode);
+      $uri_decode=base64_decode($codebooksloturi);
+      $this->setCodebookSlotUri($uri_decode);
 
       // RETRIEVE RESPONSEOPTION SLOT
       $api = \Drupal::service('rep.api_connector');
-      $rawresponse = $api->getUri($this->getResponseOptionSlotUri());
+      $rawresponse = $api->getUri($this->getCodebookSlotUri());
       $obj = json_decode($rawresponse);
       if ($obj->isSuccessful) {
-        $this->setResponseOptionSlot($obj->body);
+        $this->setCodebookSlot($obj->body);
     }
     }
 
@@ -64,10 +64,10 @@ class AddResponseOptionForm extends FormBase {
     $tables = new Tables;
     $languages = $tables->getLanguages();
 
-    $form['responseoption_responseoption_slot'] = [
+    $form['responseoption_codebook_slot'] = [
       '#type' => 'textfield',
       '#title' => t('Response Option Slot URI'),
-      '#value' => $this->getResponseOptionSlotUri(),
+      '#value' => $this->getCodebookSlotUri(),
       '#disabled' => TRUE,
     ];
     $form['responseoption_content'] = [
@@ -128,12 +128,12 @@ class AddResponseOptionForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      if ($this->getResponseOptionSlotUri() == "") {
+      if ($this->getCodebookSlotUri() == "") {
         $form_state->setRedirectUrl(Utils::selectBackUrl('responseoption'));
         return;
       } else {
-        $url = Url::fromRoute('sir.edit_responseoption_slot');
-        $url->setRouteParameter('responseoptionsloturi', base64_encode($this->getResponseOptionSlotUri()));
+        $url = Url::fromRoute('sir.edit_codebook_slot');
+        $url->setRouteParameter('codebooksloturi', base64_encode($this->getCodebookSlotUri()));
         $form_state->setRedirectUrl($url);
         return;
       }
@@ -153,29 +153,29 @@ class AddResponseOptionForm extends FormBase {
 
       $api = \Drupal::service('rep.api_connector');
       $api->responseOptionAdd($responseOptionJSON);
-      if ($this->getResponseOptionSlotUri() != NULL && $this->getResponseOptionSlot() != NULL && $this->getResponseOptionSlot()->belongsTo != NULL) {
-        $api->responseOptionAttach($newResponseOptionUri,$this->getResponseOptionSlotUri());
+      if ($this->getCodebookSlotUri() != NULL && $this->getCodebookSlot() != NULL && $this->getCodebookSlot()->belongsTo != NULL) {
+        $api->responseOptionAttach($newResponseOptionUri,$this->getCodebookSlotUri());
       }
       
       \Drupal::messenger()->addMessage(t("Response Option has been added successfully."));
-      if ($this->getResponseOptionSlotUri() == "") {
+      if ($this->getCodebookSlotUri() == "") {
         $form_state->setRedirectUrl(Utils::selectBackUrl('responseoption'));
         return;
       } else {
-        $url = Url::fromRoute('sir.edit_responseoption_slot');
-        $url->setRouteParameter('responseoptionsloturi', base64_encode($this->getResponseOptionSlotUri()));
+        $url = Url::fromRoute('sir.edit_codebook_slot');
+        $url->setRouteParameter('codebooksloturi', base64_encode($this->getCodebookSlotUri()));
         $form_state->setRedirectUrl($url);
         return;
       }
 
     }catch(\Exception $e){
       \Drupal::messenger()->addMessage(t("An error occurred while adding the Response Option: ".$e->getMessage()));
-      if ($this->getResponseOptionSlotUri() == "") {
+      if ($this->getCodebookSlotUri() == "") {
         $form_state->setRedirectUrl(Utils::selectBackUrl('responseoption'));
         return;
       } else {
-        $url = Url::fromRoute('sir.edit_responseoption_slot');
-        $url->setRouteParameter('responseoptionsloturi', base64_encode($this->getResponseOptionSlotUri()));
+        $url = Url::fromRoute('sir.edit_codebook_slot');
+        $url->setRouteParameter('codebooksloturi', base64_encode($this->getCodebookSlotUri()));
         $form_state->setRedirectUrl($url);
         return;
       }

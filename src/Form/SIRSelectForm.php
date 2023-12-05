@@ -195,22 +195,17 @@ class SIRSelectForm extends FormBase {
       '#name' => 'delete_element',
     ];
     if ($this->element_type == 'instrument') {
-      $form['manage_detectorslots'] = [
+      $form['manage_slotelements'] = [
         '#type' => 'submit',
-        '#value' => $this->t('Detectors of Selected'),
-        '#name' => 'manage_detectorslots',
-      ];
-      $form['manage_annotations'] = [
-        '#type' => 'submit',
-        '#value' => $this->t('Annotations of Selected'),
-        '#name' => 'manage_annotations',
+        '#value' => $this->t('Manage Structure of Selected'),
+        '#name' => 'manage_slotelements',
       ];
     }
     if ($this->element_type == 'codebook') {
-      $form['manage_responseoptionslots'] = [
+      $form['manage_codebookslots'] = [
         '#type' => 'submit',
         '#value' => $this->t('Manage Response Option Slots of Selected Codebook'),
-        '#name' => 'manage_responseoptionslots',
+        '#name' => 'manage_codebookslots',
       ];  
     }
     $form['element_table'] = [
@@ -273,12 +268,12 @@ class SIRSelectForm extends FormBase {
       } else if ($this->element_type == 'detector') {
         $url = Url::fromRoute('sir.add_detector');
         $url->setRouteParameter('sourcedetectoruri', 'EMPTY');
-        $url->setRouteParameter('detectorsloturi', 'EMPTY');  
+        $url->setRouteParameter('containersloturi', 'EMPTY');  
       } else if ($this->element_type == 'codebook') {
         $url = Url::fromRoute('sir.add_codebook');
       } else if ($this->element_type == 'responseoption') {
         $url = Url::fromRoute('sir.add_response_option');
-        $url->setRouteParameter('responseoptionsloturi', 'EMPTY');
+        $url->setRouteParameter('codebooksloturi', 'EMPTY');
       } else if ($this->element_type == 'annotationstem') {
         $url = Url::fromRoute('sir.add_annotationstem');
         $url->setRouteParameter('sourceannotationstemuri', 'EMPTY');
@@ -353,34 +348,34 @@ class SIRSelectForm extends FormBase {
         $first = array_shift($rows);
         $url = Url::fromRoute('sir.add_detectorstem');
         $url->setRouteParameter('sourcedetectorstemuri', base64_encode($first));
-        $url->setRouteParameter('detectorsloturi', 'EMPTY');
+        $url->setRouteParameter('containersloturi', 'EMPTY');
         $form_state->setRedirectUrl($url);
       }
     }  
     
-    // MANAGE RESPONSE OPTION SLOTS
-    if ($button_name === 'manage_responseoptionslots') {
+    // MANAGE CODEBOOK SLOTS
+    if ($button_name === 'manage_codebookslots') {
       if (sizeof($rows) < 1) {
         \Drupal::messenger()->addMessage(t("Select the exact codebook which response option slots are going to be managed."));      
       } else if ((sizeof($rows) > 1)) {
         \Drupal::messenger()->addMessage(t("The response option slots of no more than one codebook can be managed at once."));      
       } else {
         $first = array_shift($rows);
-        $url = Url::fromRoute('sir.manage_responseoption_slots', ['codebookuri' => base64_encode($first)]);
+        $url = Url::fromRoute('sir.manage_codebook_slots', ['codebookuri' => base64_encode($first)]);
         $form_state->setRedirectUrl($url);
       } 
       return;
     }
     
-    // MANAGE DETECTOR_SLOTS
-    if ($button_name === 'manage_detectorslots') {
+    // MANAGE SLOT ELEMENTS
+    if ($button_name === 'manage_slotelements') {
       if (sizeof($rows) < 1) {
-        \Drupal::messenger()->addMessage(t("Select the exact questionnaire which detectorslots are going to be managed."));      
+        \Drupal::messenger()->addMessage(t("Select the exact questionnaire which containerslots are going to be managed."));      
       } else if ((sizeof($rows) > 1)) {
         \Drupal::messenger()->addMessage(t("Select only one questionnaire. Items of no more than one questionnaire can be managed at once."));      
       } else {
         $first = array_shift($rows);
-        $url = Url::fromRoute('sir.manage_detectorslots', ['instrumenturi' => base64_encode($first)]);
+        $url = Url::fromRoute('sir.manage_slotelements', ['containeruri' => base64_encode($first)]);
         $form_state->setRedirectUrl($url);
       } 
     }

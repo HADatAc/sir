@@ -25,9 +25,9 @@ class AddDetectorForm extends FormBase {
 
   protected $detectorStem;
 
-  protected $detectorslotUri;
+  protected $containerslotUri;
 
-  protected $detectorslot;
+  protected $containerslot;
 
   public function getSourceDetectorUri() {
     return $this->sourceDetectorUri;
@@ -53,26 +53,26 @@ class AddDetectorForm extends FormBase {
     return $this->detectorStem = $stem; 
   }
 
-  public function getDetectorSlotUri() {
-    return $this->detectorslotUri;
+  public function getContainerSlotUri() {
+    return $this->containerslotUri;
   }
 
-  public function setDetectorSlotUri($attachuri) {
-    return $this->detectorslotUri = $attachuri; 
+  public function setContainerSlotUri($attachuri) {
+    return $this->containerslotUri = $attachuri; 
   }
 
-  public function getDetectorSlot() {
-    return $this->detectorslot;
+  public function getContainerSlot() {
+    return $this->containerslot;
   }
 
-  public function setDetectorSlot($attachobj) {
-    return $this->detectorslot = $attachobj; 
+  public function setContainerSlot($attachobj) {
+    return $this->containerslot = $attachobj; 
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $sourcedetectoruri = NULL, $detectorsloturi = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, $sourcedetectoruri = NULL, $containersloturi = NULL) {
 
     // ESTABLISH API SERVICE
     $api = \Drupal::service('rep.api_connector');
@@ -98,19 +98,19 @@ class AddDetectorForm extends FormBase {
     }
     $disabledDerivationOption = ($this->getSourceDetector() === NULL);
 
-    // HANDLE DETECTOR_SLOT, IF ANY
-    $attachuri=$detectorsloturi;
+    // HANDLE CONTAINER_SLOT, IF ANY
+    $attachuri=$containersloturi;
     if ($attachuri === NULL || $attachuri === 'EMPTY') {
-      $this->setDetectorSlot(NULL);
-      $this->setDetectorSlotUri('');
+      $this->setContainerSlot(NULL);
+      $this->setContainerSlotUri('');
     } else {
       $attachuri_decode=base64_decode($attachuri);
-      $this->setDetectorSlotUri($attachuri_decode);
-      if ($this->getDetectorSlotUri() != NULL) {
-        $attachrawresponse = $api->getUri($this->getDetectorSlotUri());
+      $this->setContainerSlotUri($attachuri_decode);
+      if ($this->getContainerSlotUri() != NULL) {
+        $attachrawresponse = $api->getUri($this->getContainerSlotUri());
         $attachobj = json_decode($attachrawresponse);
         if ($attachobj->isSuccessful) {
-          $this->setDetectorSlot($attachobj->body);
+          $this->setContainerSlot($attachobj->body);
         }
       }
     }
@@ -208,12 +208,12 @@ class AddDetectorForm extends FormBase {
         '"hasSIRManagerEmail":"'.$useremail.'"}';
       $api->detectorAdd($detectorJson);
     
-      // IF IN THE CONTEXT OF AN EXISTING DETECTOR_SLOT, ATTACH THE NEWLY CREATED DETECTOR TO THE DETECTOR_SLOT
-      if ($this->getDetectorSlot() != NULL) {
-        $api->detectorAttach($newDetectorUri,$this->getDetectorSlotUri());
-        \Drupal::messenger()->addMessage(t("Detector [" . $newDetectorUri ."] has been added and attached to intrument [" . $this->getDetectorSlot()->belongsTo . "] successfully."));
-        $url = Url::fromRoute('sir.edit_detectorslot');
-        $url->setRouteParameter('detectorsloturi', base64_encode($this->getDetectorSlotUri()));
+      // IF IN THE CONTEXT OF AN EXISTING CONTAINER_SLOT, ATTACH THE NEWLY CREATED DETECTOR TO THE CONTAINER_SLOT
+      if ($this->getContainerSlot() != NULL) {
+        $api->detectorAttach($newDetectorUri,$this->getContainerSlotUri());
+        \Drupal::messenger()->addMessage(t("Detector [" . $newDetectorUri ."] has been added and attached to intrument [" . $this->getContainerSlot()->belongsTo . "] successfully."));
+        $url = Url::fromRoute('sir.edit_containerslot');
+        $url->setRouteParameter('containersloturi', base64_encode($this->getContainerSlotUri()));
         $form_state->setRedirectUrl($url);
         return;
       } else {        
@@ -222,10 +222,10 @@ class AddDetectorForm extends FormBase {
         return;
       }
     } catch(\Exception $e) {
-      if ($this->getDetectorSlot() != NULL) {
+      if ($this->getContainerSlot() != NULL) {
         \Drupal::messenger()->addMessage(t("An error occurred while adding the Detector: ".$e->getMessage()));
-        $url = Url::fromRoute('sir.edit_detectorslot');
-        $url->setRouteParameter('detectorsloturi', base64_encode($this->getDetectorSlotUri()));
+        $url = Url::fromRoute('sir.edit_containerslot');
+        $url->setRouteParameter('containersloturi', base64_encode($this->getContainerSlotUri()));
         $form_state->setRedirectUrl($url);
       } else {
         \Drupal::messenger()->addMessage(t("An error occurred while adding the Detector: ".$e->getMessage()));

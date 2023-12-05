@@ -8,7 +8,7 @@ use Drupal\Core\Url;
 use Drupal\rep\Utils;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
-class ManageResponseOptionSlotsForm extends FormBase {
+class ManageCodebookSlotsForm extends FormBase {
 
   protected $codebookUri;
 
@@ -24,7 +24,7 @@ class ManageResponseOptionSlotsForm extends FormBase {
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'manage_responseoption_slot_form';
+    return 'manage_codebook_slot_form';
   }
 
   /**
@@ -52,7 +52,7 @@ class ManageResponseOptionSlotsForm extends FormBase {
     }
 
     // RETRIEVE RESPONSEOPTION SLOTS BY CODEBOOK
-    $slot_list = $api->responseOptionSlotList($this->getCodebookUri());
+    $slot_list = $api->codebookSlotList($this->getCodebookUri());
     $obj = json_decode($slot_list);
     $slots = [];
     if ($obj->isSuccessful) {
@@ -60,7 +60,7 @@ class ManageResponseOptionSlotsForm extends FormBase {
     }
 
     if (sizeof($slots) <= 0) {
-      return new RedirectResponse(Url::fromRoute('sir.add_responseoptionslots', ['codebookuri' => base64_encode($this->getCodebookUri())])->toString());
+      return new RedirectResponse(Url::fromRoute('sir.add_codebookslots', ['codebookuri' => base64_encode($this->getCodebookUri())])->toString());
     }
 
     # BUILD HEADER
@@ -124,7 +124,7 @@ class ManageResponseOptionSlotsForm extends FormBase {
       '#js_select' => FALSE,
       '#empty' => t('No response option slots found'),
       //'#ajax' => [
-      //  'callback' => '::responseOptionSlotAjaxCallback', 
+      //  'callback' => '::codebookSlotAjaxCallback', 
       //  'disable-refocus' => FALSE, 
       //  'event' => 'change',
       //  'wrapper' => 'edit-output', 
@@ -183,8 +183,8 @@ class ManageResponseOptionSlotsForm extends FormBase {
         \Drupal::messenger()->addMessage(t("Select only one response option slot to edit. No more than one slot can be edited at once."));      
       } else {
         $first = array_shift($rows);
-        $url = Url::fromRoute('sir.edit_responseoption_slot');
-        $url->setRouteParameter('responseoptionsloturi', base64_encode($first));
+        $url = Url::fromRoute('sir.edit_codebook_slot');
+        $url->setRouteParameter('codebooksloturi', base64_encode($first));
         $form_state->setRedirectUrl($url);
       } 
     }
@@ -192,7 +192,7 @@ class ManageResponseOptionSlotsForm extends FormBase {
     // DELETE RESPONSE OPTION SLOT
     if ($button_name === 'delete_slots') {
       $api = \Drupal::service('rep.api_connector');
-      $api->responseOptionSlotDel($this->getCodebookUri());
+      $api->codebookSlotDel($this->getCodebookUri());
     
       \Drupal::messenger()->addMessage(t("Response Option Slot(s) has/have been deleted successfully."));
       $form_state->setRedirectUrl(Utils::selectBackUrl('codebook'));

@@ -11,14 +11,14 @@ use Drupal\rep\Vocabulary\VSTOI;
 
 class AddSubcontainerForm extends FormBase {
 
-  protected $iUri;
+  protected $belongsTo;
 
-  public function getParentUri() {
-    return $this->parentUri;
+  public function getBelongsTo() {
+    return $this->belongsTo;
   }
 
-  public function setParentUri($uri) {
-    return $this->parentUri = $uri; 
+  public function setBelongsTo($uri) {
+    return $this->belongsTo = $uri; 
   }
 
   /**
@@ -31,15 +31,15 @@ class AddSubcontainerForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $parenturi = NULL) {
-    $uri=$parenturi ?? 'default';
+  public function buildForm(array $form, FormStateInterface $form_state, $belongsto = NULL) {
+    $uri=$belongsto ?? 'default';
     $uri_decode=base64_decode($uri);
-    $this->setParentUri($uri_decode);
+    $this->setBelongsTo($uri_decode);
 
-    $form['subcontainer_parent'] = [
+    $form['subcontainer_belongsto'] = [
       '#type' => 'textfield',
       '#title' => t('Parent URI'),
-      '#value' => $this->getParentUri(),
+      '#value' => $this->getBelongsTo(),
       '#disabled' => TRUE,
     ];
     $form['subcontainer_name'] = [
@@ -83,8 +83,8 @@ class AddSubcontainerForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $url = Url::fromRoute('sir.manage_detectorslots');
-      $url->setRouteParameter('instrumenturi', base64_encode($this->getParentUri()));
+      $url = Url::fromRoute('sir.manage_slotelements');
+      $url->setRouteParameter('containeruri', base64_encode($this->getBelongsTo()));
       $form_state->setRedirectUrl($url);
     } 
 
@@ -96,7 +96,7 @@ class AddSubcontainerForm extends FormBase {
       $subcontainerJson = '{"uri":"'.$newSubcontainerUri.'",'.
         '"typeUri":"'.VSTOI::SUBCONTAINER.'",'.
         '"hascoTypeUri":"'.VSTOI::SUBCONTAINER.'",'.
-        '"hasParent":"'.$this->getParentUri().'",'.
+        '"belongsTo":"'.$this->getBelongsTo().'",'.
         '"label":"'.$form_state->getValue('subcontainer_name').'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
 
@@ -105,14 +105,14 @@ class AddSubcontainerForm extends FormBase {
       if ($message != null) {
         \Drupal::messenger()->addMessage(t("Subcontainer has been added successfully."));
       }
-      $url = Url::fromRoute('sir.manage_detectorslots');
-      $url->setRouteParameter('instrumenturi', base64_encode($this->getParentUri()));
+      $url = Url::fromRoute('sir.manage_slotelements');
+      $url->setRouteParameter('containeruri', base64_encode($this->getBelongsTo()));
       $form_state->setRedirectUrl($url);
 
     }catch(\Exception $e){
-      \Drupal::messenger()->addMessage(t("An error occurred while adding the DetectorSlot: ".$e->getMessage()));
-      $url = Url::fromRoute('sir.manage_detectorslots');
-      $url->setRouteParameter('instrumenturi', base64_encode($this->getParentUri()));
+      \Drupal::messenger()->addMessage(t("An error occurred while adding the ContainerSlot: ".$e->getMessage()));
+      $url = Url::fromRoute('sir.manage_slotelements');
+      $url->setRouteParameter('containeruri', base64_encode($this->getBelongsTo()));
       $form_state->setRedirectUrl($url);
     }
 

@@ -5,7 +5,7 @@ namespace Drupal\sir\Entity;
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\REPGUI;
 
-class DetectorSlot {
+class ContainerSlot {
 
   public static function generateHeader() {
 

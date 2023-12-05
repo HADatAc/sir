@@ -10,7 +10,7 @@ use Drupal\rep\Utils;
 use Drupal\Component\Serialization\Json;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
-class ManageDetectorSlotsForm extends FormBase {
+class ManageContainerSlotsForm extends FormBase {
 
   protected $instrumentUri;
 
@@ -26,7 +26,7 @@ class ManageDetectorSlotsForm extends FormBase {
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'manage_detectorslots_form';
+    return 'manage_containerslots_form';
   }
 
   /**
@@ -53,16 +53,16 @@ class ManageDetectorSlotsForm extends FormBase {
       $instrument = $objinstrument->body;
     }
 
-    // RETRIEVE DETECTOR_SLOTS BY INSTRUMENT
-    $detectorslot_list = $api->detectorslotList($this->getInstrumentUri());
-    $obj = json_decode($detectorslot_list);
-    $detectorslots = [];
+    // RETRIEVE CONTAINER_SLOTS BY INSTRUMENT
+    $containerslot_list = $api->containerslotList($this->getInstrumentUri());
+    $obj = json_decode($containerslot_list);
+    $containerslots = [];
     if ($obj->isSuccessful) {
-      $detectorslots = $obj->body;
+      $containerslots = $obj->body;
     }
 
-    #if (sizeof($detectorslots) <= 0) {
-    #  return new RedirectResponse(Url::fromRoute('sir.add_detectorslots', ['instrumenturi' => base64_encode($this->getInstrumentUri())])->toString());
+    #if (sizeof($containerslots) <= 0) {
+    #  return new RedirectResponse(Url::fromRoute('sir.add_containerslots', ['instrumenturi' => base64_encode($this->getInstrumentUri())])->toString());
     #}
 
     #dpm($detectors);
@@ -70,24 +70,24 @@ class ManageDetectorSlotsForm extends FormBase {
     # BUILD HEADER
 
     $header = [
-      'detectorslot_up' => t('Up'),
-      'detectorslot_down' => t('Down'),
-      'detectorslot_type' => t('Type'),
-      'detectorslot_priority' => t('Priority'),
-      'detectorslot_content' => t("Item Stem's Content"),
-      'detectorslot_codebook' => t("Item's Codebook"),
-      'detectorslot_detector' => t("Item's URI"),
+      'containerslot_up' => t('Up'),
+      'containerslot_down' => t('Down'),
+      'containerslot_type' => t('Type'),
+      'containerslot_priority' => t('Priority'),
+      'containerslot_content' => t("Item Stem's Content"),
+      'containerslot_codebook' => t("Item's Codebook"),
+      'containerslot_detector' => t("Item's URI"),
     ];
 
     # POPULATE DATA
 
     $output = array();
-    foreach ($detectorslots as $detectorslot) {
+    foreach ($containerslots as $containerslot) {
       $detector = NULL;
       $content = "";
       $codebook = "";
-      if ($detectorslot->hasDetector != null) {
-        $rawdetector = $api->getUri($detectorslot->hasDetector);
+      if ($containerslot->hasDetector != null) {
+        $rawdetector = $api->getUri($containerslot->hasDetector);
         $objdetector = json_decode($rawdetector);
         if ($objdetector->isSuccessful) {
           $detector = $objdetector->body;
@@ -100,25 +100,25 @@ class ManageDetectorSlotsForm extends FormBase {
         }
       }
       $priority = "";
-      if (isset($detectorslot->hasPriority)) {
-        $priority = $detectorslot->hasPriority;
+      if (isset($containerslot->hasPriority)) {
+        $priority = $containerslot->hasPriority;
       }
       $type = "";
-      if (isset($detectorslot->hostType)) {
-        $type = $detectorslot->hostType;
+      if (isset($containerslot->hostType)) {
+        $type = $containerslot->hostType;
       }
       $detectorUriStr = "";
-      if ($detectorslot->hasDetector != NULL && $detectorslot->hasDetector != '') {
-        $detectorUriStr = Utils::namespaceUri($detectorslot->hasDetector);
+      if ($containerslot->hasDetector != NULL && $containerslot->hasDetector != '') {
+        $detectorUriStr = Utils::namespaceUri($containerslot->hasDetector);
       }
-      $output[$detectorslot->uri] = [
-        'detectorslot_up' => 'Up',     
-        'detectorslot_down' => 'Down',     
-        'detectorslot_type' => Utils::namespaceUri($type),     
-        'detectorslot_priority' => $priority,     
-        'detectorslot_content' => $content,     
-        'detectorslot_codebook' => $codebook,
-        'detectorslot_detector' => $detectorUriStr     
+      $output[$containerslot->uri] = [
+        'containerslot_up' => 'Up',     
+        'containerslot_down' => 'Down',     
+        'containerslot_type' => Utils::namespaceUri($type),     
+        'containerslot_priority' => $priority,     
+        'containerslot_content' => $content,     
+        'containerslot_codebook' => $codebook,
+        'containerslot_detector' => $detectorUriStr     
       ];
     }
 
@@ -128,17 +128,17 @@ class ManageDetectorSlotsForm extends FormBase {
 
     $form['scope'] = [
       '#type' => 'item',
-      '#title' => t('<h3>DetectorSlots of Instrument <font color="DarkGreen">' . $instrument->label . '</font></h3>'),
+      '#title' => t('<h3>ContainerSlots of Instrument <font color="DarkGreen">' . $instrument->label . '</font></h3>'),
     ];
     $form['subtitle'] = [
       '#type' => 'item',
-      '#title' => t('<h4>DetectorSlots maintained by <font color="DarkGreen">' . $name . ' (' . $uemail . ')</font></h4>'),
+      '#title' => t('<h4>ContainerSlots maintained by <font color="DarkGreen">' . $name . ' (' . $uemail . ')</font></h4>'),
     ];
-    $form['add_detectorslot'] = [
+    $form['add_containerslot'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Add Detector Slot'),
-      '#name' => 'add_detectorslots',  
-      //'#url' => Url::fromRoute('sir.add_detectorslots', ['instrumenturi' => base64_encode($this->getInstrumentUri())]),
+      '#value' => $this->t('Add Container Slot'),
+      '#name' => 'add_containerslots',  
+      //'#url' => Url::fromRoute('sir.add_containerslots', ['instrumenturi' => base64_encode($this->getInstrumentUri())]),
       //'#attributes' => [
       //  'class' => ['button use-ajax js-form-submit form-submit btn btn-primary'],
       //  'data-dialog-type' => 'modal',
@@ -153,29 +153,29 @@ class ManageDetectorSlotsForm extends FormBase {
       '#value' => $this->t('Add SubContainer'),
       '#name' => 'add_subcontainer',
     ];
-    $form['edit_detectorslot'] = [
+    $form['edit_containerslot'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Edit Detector Slot'),
-      '#name' => 'edit_detectorslot',
+      '#value' => $this->t('Edit Container Slot'),
+      '#name' => 'edit_containerslot',
     ];
     $form['edit_subcontainer'] = [
       '#type' => 'submit',
       '#value' => $this->t('Edit SubContainer'),
-      '#name' => 'edit_detectorslot',
+      '#name' => 'edit_containerslot',
     ];
     $form['delete_selected_elements'] = [
       '#type' => 'submit',
       '#value' => $this->t('Delete Selected'),
-      '#name' => 'delete_detectorslots',    
+      '#name' => 'delete_containerslots',    
       '#attributes' => ['onclick' => 'if(!confirm("Really Delete?")){return false;}'],
     ];
-    $form['detectorslot_table'] = [
+    $form['containerslot_table'] = [
       '#type' => 'tableselect',
       '#header' => $header,
       '#options' => $output,
       '#empty' => t('No response options found'),
       //'#ajax' => [
-      //  'callback' => '::detectorslotAjaxCallback', 
+      //  'callback' => '::containerslotAjaxCallback', 
       //  'disable-refocus' => FALSE, 
       //  'event' => 'change',
       //  'wrapper' => 'edit-output', 
@@ -198,8 +198,8 @@ class ManageDetectorSlotsForm extends FormBase {
     return $form;
   }
 
-  public function detectorslotAjaxCallback(array &$form, FormStateInterface $form_state) {
-    $selected_rows = $form_state->getValue('detectorslot_table');
+  public function containerslotAjaxCallback(array &$form, FormStateInterface $form_state) {
+    $selected_rows = $form_state->getValue('containerslot_table');
     $rows = [];
     foreach ($selected_rows as $index => $selected) {
       if ($selected) {
@@ -218,7 +218,7 @@ class ManageDetectorSlotsForm extends FormBase {
     $button_name = $triggering_element['#name'];
   
     // RETRIEVE SELECTED ROWS, IF ANY
-    $selected_rows = $form_state->getValue('detectorslot_table');
+    $selected_rows = $form_state->getValue('containerslot_table');
     $rows = [];
     foreach ($selected_rows as $index => $selected) {
       if ($selected) {
@@ -226,9 +226,9 @@ class ManageDetectorSlotsForm extends FormBase {
       }
     }
 
-    // ADD DETECTOR_SLOT
-    if ($button_name === 'add_detectorslots') {
-      $url = Url::fromRoute('sir.add_detectorslots');
+    // ADD CONTAINER_SLOT
+    if ($button_name === 'add_containerslots') {
+      $url = Url::fromRoute('sir.add_containerslots');
       $url->setRouteParameter('instrumenturi', base64_encode($this->getInstrumentUri()));
       $form_state->setRedirectUrl($url);
     }
@@ -236,31 +236,31 @@ class ManageDetectorSlotsForm extends FormBase {
     // ADD SUBCONTAINER
     if ($button_name === 'add_subcontainer') {
       $url = Url::fromRoute('sir.add_subcontainer');
-      $url->setRouteParameter('parenturi', base64_encode($this->getInstrumentUri()));
+      $url->setRouteParameter('belongsto', base64_encode($this->getInstrumentUri()));
       $form_state->setRedirectUrl($url);
     }
 
-    // EDIT DETECTOR_SLOT
-    if ($button_name === 'edit_detectorslot') {
+    // EDIT CONTAINER_SLOT
+    if ($button_name === 'edit_containerslot') {
       if (sizeof($rows) < 1) {
-        \Drupal::messenger()->addMessage(t("Select the exact detectorslot to be edited."));      
+        \Drupal::messenger()->addMessage(t("Select the exact containerslot to be edited."));      
       } else if ((sizeof($rows) > 1)) {
-        \Drupal::messenger()->addMessage(t("Select only one detectorslot to edit. No more than one detectorslot can be edited at once."));      
+        \Drupal::messenger()->addMessage(t("Select only one containerslot to edit. No more than one containerslot can be edited at once."));      
       } else {
         $first = array_shift($rows);
-        $url = Url::fromRoute('sir.edit_detectorslot');
-        $url->setRouteParameter('detectorsloturi', base64_encode($first));
+        $url = Url::fromRoute('sir.edit_containerslot');
+        $url->setRouteParameter('containersloturi', base64_encode($first));
         $form_state->setRedirectUrl($url);
       } 
     }
 
-    // DELETE DETECTOR_SLOTS
-    if ($button_name === 'delete_detectorslots') {
+    // DELETE CONTAINER_SLOTS
+    if ($button_name === 'delete_containerslots') {
       $api = \Drupal::service('rep.api_connector');
-      $api->detectorslotDel($this->getInstrumentUri());
+      $api->containerslotDel($this->getInstrumentUri());
     
-      \Drupal::messenger()->addMessage(t("DetectorSlots has been deleted successfully."));
-      $url = Url::fromRoute('sir.manage_detectorslots');
+      \Drupal::messenger()->addMessage(t("ContainerSlots has been deleted successfully."));
+      $url = Url::fromRoute('sir.manage_slotelements');
       $url->setRouteParameter('instrumenturi', base64_encode($this->getInstrumentUri()));
       $form_state->setRedirectUrl($url);
   }
