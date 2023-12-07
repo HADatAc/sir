@@ -13,14 +13,14 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class ManageSlotElementsForm extends FormBase {
 
-  protected $containerUri;
+  protected $container;
 
-  public function getContainerUri() {
-    return $this->containerUri;
+  public function getContainer() {
+    return $this->container;
   }
 
-  public function setContainerUri($uri) {
-    return $this->containerUri = $uri; 
+  public function setContainer($container) {
+    return $this->container = $container; 
   }
 
   /**
@@ -37,8 +37,7 @@ class ManageSlotElementsForm extends FormBase {
 
     # GET CONTENT
     $uri=$containeruri ?? 'default';
-    $uri_decode=base64_decode($uri);
-    $this->setContainerUri($uri_decode);
+    $uri=base64_decode($uri);
 
     $uemail = \Drupal::currentUser()->getEmail();
     $uid = \Drupal::currentUser()->id();
@@ -47,12 +46,13 @@ class ManageSlotElementsForm extends FormBase {
 
     // RETRIEVE CONTAINER BY URI
     $api = \Drupal::service('rep.api_connector');
-    $container = $api->parseObjectResponse($api->getUri($this->getContainerUri()),'getUri');
+    $container = $api->parseObjectResponse($api->getUri($uri),'getUri');
+    $this->setContainer($container);
 
-    //dpm($container);
+    //dpm($this->getContainer());
 
     // RETRIEVE SLOT_ELEMENTS BY CONTAINER
-    $slotElements = $api->parseObjectResponse($api->slotElements($this->getContainerUri()),'slotElements');
+    $slotElements = $api->parseObjectResponse($api->slotElements($this->getContainer()->uri),'slotElements');
 
     #if (sizeof($containerslots) <= 0) {
     #  return new RedirectResponse(Url::fromRoute('sir.add_containerslots', ['containeruri' => base64_encode($this->getContainerUri())])->toString());
@@ -155,7 +155,7 @@ class ManageSlotElementsForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t("Add Detector's Slots"),
       '#name' => 'add_containerslots',  
-      //'#url' => Url::fromRoute('sir.add_containerslots', ['containeruri' => base64_encode($this->getContainerUri())]),
+      //'#url' => Url::fromRoute('sir.add_containerslots', ['containeruri' => base64_encode($this->getContainer()->uri)]),
       //'#attributes' => [
       //  'class' => ['button use-ajax js-form-submit form-submit btn btn-primary'],
       //  'data-dialog-type' => 'modal',
@@ -172,12 +172,12 @@ class ManageSlotElementsForm extends FormBase {
     ];
     $form['edit_containerslot'] = [
       '#type' => 'submit',
-      '#value' => $this->t("Edit Detector's Slot"),
+      '#value' => $this->t("Edit Selected Detector's Slot"),
       '#name' => 'edit_containerslot',
     ];
     $form['edit_subcontainer'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Edit SubContainer'),
+      '#value' => $this->t('Edit Selected SubContainer'),
       '#name' => 'edit_subcontainer',
     ];
     $form['delete_selected_elements'] = [
@@ -188,7 +188,7 @@ class ManageSlotElementsForm extends FormBase {
     ];
     $form['manage_annotations'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Manage annotations of Selected'),
+      '#value' => $this->t('Manage Annotations'),
       '#name' => 'manage_annotations',
     ];
     $form['slotelement_table'] = [
@@ -209,7 +209,7 @@ class ManageSlotElementsForm extends FormBase {
     ];
     $form['submit'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Back'),
+      '#value' => $this->t('Back to Questionnaire Management'),
       '#name' => 'back',
     ];
     $form['bottom_space'] = [
@@ -227,6 +227,21 @@ class ManageSlotElementsForm extends FormBase {
       if ($selected) {
         $rows[$index] = $index;
       }
+    }
+  }
+
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    $submitted_values = $form_state->cleanValues()->getValues();
+    $triggering_element = $form_state->getTriggeringElement();
+    $button_name = $triggering_element['#name'];
+
+    if ($button_name != 'back' && $button_name != 'manage_annotations') {
+      #if(strlen($form_state->getValue('responseoption_content')) < 1) {
+      #  $form_state->setErrorByName('responseoption_content', $this->t('Please enter a valid content'));
+      #}
+      #if(strlen($form_state->getValue('responseoption_language')) < 1) {
+      #  $form_state->setErrorByName('responseoption_language', $this->t('Please enter a valid language'));
+      #}
     }
   }
 
@@ -251,14 +266,14 @@ class ManageSlotElementsForm extends FormBase {
     // ADD CONTAINER_SLOT
     if ($button_name === 'add_containerslots') {
       $url = Url::fromRoute('sir.add_containerslots');
-      $url->setRouteParameter('containeruri', base64_encode($this->getContainerUri()));
+      $url->setRouteParameter('containeruri', base64_encode($this->getContainer()->uri));
       $form_state->setRedirectUrl($url);
     }
 
     // ADD SUBCONTAINER
     if ($button_name === 'add_subcontainer') {
       $url = Url::fromRoute('sir.add_subcontainer');
-      $url->setRouteParameter('belongsto', base64_encode($this->getContainerUri()));
+      $url->setRouteParameter('belongsto', base64_encode($this->getContainer()->uri));
       $form_state->setRedirectUrl($url);
     }
 
@@ -302,14 +317,21 @@ class ManageSlotElementsForm extends FormBase {
         }
         \Drupal::messenger()->addMessage(t("ContainerSlots has been deleted successfully."));
         $url = Url::fromRoute('sir.manage_slotelements');
-        $url->setRouteParameter('containeruri', base64_encode($this->getContainerUri()));
+        $url->setRouteParameter('containeruri', base64_encode($this->getContainer()->uri));
         $form_state->setRedirectUrl($url);
         } 
     }
 
+    // MANAGE CONTAINER'S ANNOTATIONS
+    if ($button_name === 'manage_annotations') {
+      $url = Url::fromRoute('sir.manage_container_annotations');
+      $url->setRouteParameter('containeruri', base64_encode($this->getContainer()->uri));
+      $form_state->setRedirectUrl($url);
+    }
+
     // GO PARENT CONTAINER
     if ($button_name === 'go_parent_container') {
-      $url = Url::fromRoute('sir.manage_slotelements', ['containeruri' => base64_encode($container->belongsTo)]);
+      $url = Url::fromRoute('sir.manage_slotelements', ['containeruri' => base64_encode($this->getContainer()->belongsTo)]);
       $form_state->setRedirectUrl($url);
     }
 

@@ -381,6 +381,17 @@ sir.add_annotation:
   options:
     no_cache: 'TRUE'
 
+sir.manage_container_annotations:
+  path: 'sir/manage/containerannotations/{containeruri}'
+  defaults:
+    _form: '\Drupal\sir\Form\ManageContainerAnnotationsForm'
+    _title: 'Manage Container Annotations'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
 sir.edit_annotation:
   path: 'sir/manage/editannotation/{annotationuri}'
   defaults:
