@@ -4,14 +4,16 @@ namespace Drupal\sir\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\sir\ListKeywordLanguagePage;
+use Drupal\rep\ListKeywordLanguagePage;
+use Drupal\sir\Entity\AnnotationStem;
+use Drupal\sir\Entity\Annotation;
 use Drupal\sir\Entity\DetectorStem;
 use Drupal\sir\Entity\Detector;
 use Drupal\sir\Entity\Codebook;
 use Drupal\sir\Entity\Instrument;
 use Drupal\sir\Entity\ResponseOption;
 
-class ListForm extends FormBase {
+class SIRListForm extends FormBase {
 
   /**
    * {@inheritdoc}
@@ -113,6 +115,20 @@ class ListForm extends FormBase {
         $class_name = "Response Options";
         $header = ResponseOption::generateHeader();
         $output = ResponseOption::generateOutput($this->getList());    
+        break;
+
+      // ANNOTATION STEM
+      case "annotationstem":
+        $class_name = "Annotaiton Stems";
+        $header = AnnotationStem::generateHeader();
+        $output = AnnotationStem::generateOutput($this->getList());    
+        break;
+
+      // ANNOTATION
+      case "annotation":
+        $class_name = "Annotations";
+        $header = Annotation::generateHeader();
+        $output = Annotation::generateOutput($this->getList());    
         break;
 
       default:

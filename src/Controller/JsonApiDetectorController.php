@@ -24,8 +24,8 @@ class JsonApiDetectorController extends ControllerBase{
       return new JsonResponse($results);
     }
     $input = Xss::filter($input);
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $detector_list = $fusekiAPIservice->listByKeyword('detector',$input,10,0);
+    $api = \Drupal::service('rep.api_connector');
+    $detector_list = $api->listByKeyword('detector',$input,10,0);
     $obj = json_decode($detector_list);
     $detectors = [];
     if ($obj->isSuccessful) {

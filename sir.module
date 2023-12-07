@@ -36,6 +36,13 @@ function sir_theme($existing, $type, $theme, $path)
 use Drupal\Core\Path\AliasStorageInterface;
 
 /**
+ * Implements hook_page_attachments().
+ */
+function mymodule_page_attachments(array &$attachments) {
+  $attachments['#attached']['library'][] = 'core/drupal.dialog';
+}
+
+/**
  * Implements hook_update_N().
  */
 function sir_update_8001() {

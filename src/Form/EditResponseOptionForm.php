@@ -5,9 +5,9 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\sir\Utils;
-use Drupal\sir\Entity\Tables;
-use Drupal\sir\Vocabulary\VSTOI;
+use Drupal\rep\Utils;
+use Drupal\rep\Entity\Tables;
+use Drupal\rep\Vocabulary\VSTOI;
 
 class EditResponseOptionForm extends FormBase {
 
@@ -49,8 +49,8 @@ class EditResponseOptionForm extends FormBase {
     $tables = new Tables;
     $languages = $tables->getLanguages();
 
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $rawresponse = $fusekiAPIservice->getUri($this->getResponseOptionUri());
+    $api = \Drupal::service('rep.api_connector');
+    $rawresponse = $api->getUri($this->getResponseOptionUri());
     $obj = json_decode($rawresponse);
     
     if ($obj->isSuccessful) {
@@ -143,10 +143,10 @@ class EditResponseOptionForm extends FormBase {
         '"hasSIRManagerEmail":"'.$useremail.'"}';
 
       // UPDATE BY DELETING AND CREATING
-      $fusekiAPIservice = \Drupal::service('sir.api_connector');
+      $api = \Drupal::service('rep.api_connector');
       //dpm($this->getResponseOption()->uri);
-      $fusekiAPIservice->responseOptionDel($this->getResponseOption()->uri);
-      $fusekiAPIservice->responseOptionAdd($responseOptionJSON);
+      $api->responseOptionDel($this->getResponseOption()->uri);
+      $api->responseOptionAdd($responseOptionJSON);
     
       \Drupal::messenger()->addMessage(t("Response Option has been updated successfully."));
       $form_state->setRedirectUrl(Utils::selectBackUrl('responseoption'));

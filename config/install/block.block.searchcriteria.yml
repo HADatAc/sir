@@ -1,4 +1,3 @@
-uuid: 1316853a-78f7-4e38-a631-b3359d874980
 langcode: en
 status: true
 dependencies:
@@ -7,6 +6,8 @@ dependencies:
     - system
   theme:
     - bootstrap_barrio_subtheme
+_core:
+  default_config_hash: p-v7i2lbZCaaJNKgBAlqT7m5wHmUTP2TkKxxMm_UVRk
 id: searchcriteria
 theme: bootstrap_barrio_subtheme
 region: sidebar_first
@@ -15,11 +16,11 @@ provider: null
 plugin: search_block
 settings:
   id: search_block
-  label: 'Search Criteria'
+  label: 'Search Instrument Criteria'
   label_display: visible
   provider: sir
 visibility:
   request_path:
     id: request_path
     negate: false
-    pages: '/sir/list/*'
+    pages: "/sir/list/*\r\n/sir/list"

@@ -8,10 +8,10 @@ use Symfony\Component\HttpFoundation\Request;
 use Drupal\Component\Utility\Xss;
 
 /**
- * Class JsonApiCodebookController
+ * Class JsonApiAnnotationStemController
  * @package Drupal\sir\Controller
  */
-class JsonApiCodebookController extends ControllerBase{
+class JsonApiAnnotationStemController extends ControllerBase{
 
   /**
    * @return JsonResponse
@@ -23,17 +23,19 @@ class JsonApiCodebookController extends ControllerBase{
       return new JsonResponse($results);
     }
     $keyword = Xss::filter($input);
+    //dpm($keyword);
     $api = \Drupal::service('rep.api_connector');
-    $codebook_list = $api->listByKeyword('codebook',$keyword,10,0);
-    $obj = json_decode($codebook_list);
-    $codebooks = [];
+    $stem_list = $api->listByKeyword('annotationstem',$keyword,10,0);
+    $obj = json_decode($stem_list);
+    $stems = [];
     if ($obj->isSuccessful) {
-      $codebooks = $obj->body;
+      $stems = $obj->body;
     }
-    foreach ($codebooks as $codebook) {
+    //dpm($stems);
+    foreach ($stems as $stem) {
       $results[] = [
-        'value' => $codebook->label . ' [' . $codebook->uri . ']',
-        'label' => $codebook->label,
+        'value' => $stem->hasContent . ' [' . $stem->uri . ']',
+        'label' => $stem->hasContent,
       ];
     }
     return new JsonResponse($results);

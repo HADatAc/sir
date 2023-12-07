@@ -4,10 +4,10 @@ namespace Drupal\sir\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\sir\Constant;
-use Drupal\sir\Utils;
-use Drupal\sir\Entity\Tables;
-use Drupal\sir\Vocabulary\VSTOI;
+use Drupal\rep\Constant;
+use Drupal\rep\Utils;
+use Drupal\rep\Entity\Tables;
+use Drupal\rep\Vocabulary\VSTOI;
 
 class EditInstrumentForm extends FormBase {
 
@@ -50,10 +50,10 @@ class EditInstrumentForm extends FormBase {
     $languages = $tables->getLanguages();
     $informants = $tables->getInformants();
 
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $rawresponse = $fusekiAPIservice->getUri($this->getInstrumentUri());
+    $api = \Drupal::service('rep.api_connector');
+    $rawresponse = $api->getUri($this->getInstrumentUri());
     $obj = json_decode($rawresponse);
-        //dpm($obj);
+    
     if ($obj->isSuccessful) {
       $this->setInstrument($obj->body);
     } else {
@@ -87,11 +87,6 @@ class EditInstrumentForm extends FormBase {
       '#options' => $informants,
       '#default_value' => $hasInformant,
     ];
-    $form['instrument_instructions'] = [
-      '#type' => 'textarea',
-      '#title' => $this->t('Instructions'),
-      '#default_value' => $this->getInstrument()->hasInstruction,
-    ];
     $form['instrument_language'] = [
       '#type' => 'select',
       '#title' => $this->t('Language'),
@@ -107,31 +102,6 @@ class EditInstrumentForm extends FormBase {
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
       '#default_value' => $this->getInstrument()->comment,
-    ];
-    $form['instrument_date_field'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Date Field (Optional)'),
-      '#default_value' => $this->getInstrument()->hasDateField,
-    ];
-    $form['instrument_subject_id_field'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Subject ID Field (Optional)'),
-      '#default_value' => $this->getInstrument()->hasSubjectIDField,
-    ];
-    $form['instrument_subject_relationship_field'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Subject Relationship Field (Optional)'),
-      '#default_value' => $this->getInstrument()->hasSubjectRelationshipField,
-    ];
-    $form['instrument_page_number'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Page Number (Optional)'),
-      '#default_value' => $this->getInstrument()->hasPageNumber,
-    ];
-    $form['instrument_copyright_notice'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Copyright notice (Optional)'),
-      '#default_value' => $this->getInstrument()->hasCopyrightNotice,
     ];
     $form['update_submit'] = [
       '#type' => 'submit',
@@ -196,21 +166,15 @@ class EditInstrumentForm extends FormBase {
         '"label":"'.$form_state->getValue('instrument_name').'",'.
         '"hasShortName":"'.$form_state->getValue('instrument_abbreviation').'",'.
         '"hasInformant":"'.$form_state->getValue('instrument_informant').'",'.
-        '"hasInstruction":"'.$form_state->getValue('instrument_instructions').'",'.
         '"hasLanguage":"'.$form_state->getValue('instrument_language').'",'.
         '"hasVersion":"'.$form_state->getValue('instrument_version').'",'.
         '"comment":"'.$form_state->getValue('instrument_description').'",'.
-        '"hasDateField":"'.$form_state->getValue('instrument_date_field').'",'.
-        '"hasSubjectIDField":"'.$form_state->getValue('instrument_subject_id_field').'",'.
-        '"hasSubjectRelationshipField":"'.$form_state->getValue('instrument_subject_relationship_field').'",'.
-        '"hasPageNumber":"'.$form_state->getValue('instrument_page_number').'",'.
-        '"hasCopyrightNotice":"'.$form_state->getValue('instrument_copyright_notice').'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
 
       // UPDATE BY DELETING AND CREATING
-      $fusekiAPIservice = \Drupal::service('sir.api_connector');
-      $fusekiAPIservice->instrumentDel($this->getInstrumentUri());
-      $newInstrument = $fusekiAPIservice->instrumentAdd($instrumentJson);
+      $api = \Drupal::service('rep.api_connector');
+      $api->instrumentDel($this->getInstrumentUri());
+      $newInstrument = $api->instrumentAdd($instrumentJson);
     
       \Drupal::messenger()->addMessage(t("Instrument has been updated successfully."));
       $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));

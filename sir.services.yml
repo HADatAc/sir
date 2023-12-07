@@ -1,6 +1,6 @@
 services:
-  sir.api_connector:
-    class: Drupal\sir\FusekiAPIConnector
+  rep.api_connector:
+    class: Drupal\rep\FusekiAPIConnector
     arguments: ['@http_client_factory']
   sir.custom_access_check:
     class: Drupal\sir\Access\CustomAccessCheck

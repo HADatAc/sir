@@ -5,14 +5,17 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\sir\ListManagerEmailPage;
+use Drupal\rep\ListManagerEmailPage;
+use Drupal\rep\Utils;
+use Drupal\sir\Entity\AnnotationStem;
+use Drupal\sir\Entity\Annotation;
 use Drupal\sir\Entity\DetectorStem;
 use Drupal\sir\Entity\Detector;
 use Drupal\sir\Entity\Codebook;
 use Drupal\sir\Entity\Instrument;
 use Drupal\sir\Entity\ResponseOption;
 
-class SelectForm extends FormBase {
+class SIRSelectForm extends FormBase {
 
   /**
    * {@inheritdoc}
@@ -139,6 +142,22 @@ class SelectForm extends FormBase {
         $output = ResponseOption::generateOutput($this->getList());    
         break;
 
+      // ANNOTATION STEM
+      case "annotationstem":
+        $this->single_class_name = "Annotation Stem";
+        $this->plural_class_name = "Annotation Stems";
+        $header = AnnotationStem::generateHeader();
+        $output = AnnotationStem::generateOutput($this->getList());    
+        break;
+
+      // ANNOTATION
+      case "annotation":
+        $this->single_class_name = "Annotation";
+        $this->plural_class_name = "Annotations";
+        $header = Annotation::generateHeader();
+        $output = Annotation::generateOutput($this->getList());    
+        break;
+
       default:
         $this->single_class_name = "Object of Unknown Type";
         $this->plural_class_name = "Objects of Unknown Types";
@@ -176,17 +195,17 @@ class SelectForm extends FormBase {
       '#name' => 'delete_element',
     ];
     if ($this->element_type == 'instrument') {
-        $form['manage_detectorslots'] = [
+      $form['manage_slotelements'] = [
         '#type' => 'submit',
-        '#value' => $this->t('Manage Detector Slots of Selected Questionnaire'),
-        '#name' => 'manage_detectorslots',
+        '#value' => $this->t('Manage Structure of Selected'),
+        '#name' => 'manage_slotelements',
       ];
     }
     if ($this->element_type == 'codebook') {
-      $form['manage_responseoptionslots'] = [
+      $form['manage_codebookslots'] = [
         '#type' => 'submit',
         '#value' => $this->t('Manage Response Option Slots of Selected Codebook'),
-        '#name' => 'manage_responseoptionslots',
+        '#name' => 'manage_codebookslots',
       ];  
     }
     $form['element_table'] = [
@@ -249,12 +268,17 @@ class SelectForm extends FormBase {
       } else if ($this->element_type == 'detector') {
         $url = Url::fromRoute('sir.add_detector');
         $url->setRouteParameter('sourcedetectoruri', 'EMPTY');
-        $url->setRouteParameter('detectorsloturi', 'EMPTY');  
+        $url->setRouteParameter('containersloturi', 'EMPTY');  
       } else if ($this->element_type == 'codebook') {
         $url = Url::fromRoute('sir.add_codebook');
       } else if ($this->element_type == 'responseoption') {
         $url = Url::fromRoute('sir.add_response_option');
-        $url->setRouteParameter('responseoptionsloturi', 'EMPTY');
+        $url->setRouteParameter('codebooksloturi', 'EMPTY');
+      } else if ($this->element_type == 'annotationstem') {
+        $url = Url::fromRoute('sir.add_annotationstem');
+        $url->setRouteParameter('sourceannotationstemuri', 'EMPTY');
+      } else if ($this->element_type == 'annotation') {
+        $url = Url::fromRoute('sir.add_annotation');
       }
       $form_state->setRedirectUrl($url);
     }  
@@ -277,6 +301,10 @@ class SelectForm extends FormBase {
           $url = Url::fromRoute('sir.edit_codebook', ['codebookuri' => base64_encode($first)]);
         } else if ($this->element_type == 'responseoption') {
           $url = Url::fromRoute('sir.edit_response_option', ['responseoptionuri' => base64_encode($first)]);
+        } else if ($this->element_type == 'annotationstem') {
+          $url = Url::fromRoute('sir.edit_annotationstem', ['annotationstemuri' => base64_encode($first)]);
+        } else if ($this->element_type == 'annotation') {
+          $url = Url::fromRoute('sir.edit_annotation', ['annotationuri' => base64_encode($first)]);
         }
         $form_state->setRedirectUrl($url);
       } 
@@ -287,18 +315,23 @@ class SelectForm extends FormBase {
       if (sizeof($rows) <= 0) {
         \Drupal::messenger()->addMessage(t("At least one " . $this->single_class_name . " needs to be selected to be deleted."));      
       } else {
-        $fusekiAPIservice = \Drupal::service('sir.api_connector');
-        foreach($rows as $uri) {
+        $api = \Drupal::service('rep.api_connector');
+        foreach($rows as $shortUri) {
+          $uri = Utils::plainUri($shortUri);
           if ($this->element_type == 'instrument') {
-            $fusekiAPIservice->instrumentDel($uri);
+            $api->instrumentDel($uri);
           } else if ($this->element_type == 'detectorstem') {
-            $fusekiAPIservice->detectorStemDel($uri);
+            $api->detectorStemDel($uri);
           } else if ($this->element_type == 'detector') {
-            $fusekiAPIservice->detectorDel($uri);
+            $api->detectorDel($uri);
          } else if ($this->element_type == 'codebook') {
-            $fusekiAPIservice->codebookDel($uri);
+            $api->codebookDel($uri);
           } else if ($this->element_type == 'responseoption') {
-            $fusekiAPIservice->responseOptionDel($uri);
+            $api->responseOptionDel($uri);
+          } else if ($this->element_type == 'annotationstem') {
+            $api->annotationStemDel($uri);
+          } else if ($this->element_type == 'annotation') {
+            $api->annotationDel($uri);
           }
         }
         \Drupal::messenger()->addMessage(t("Selected " . $this->plural_class_name . " has/have been deleted successfully."));      
@@ -315,41 +348,41 @@ class SelectForm extends FormBase {
         $first = array_shift($rows);
         $url = Url::fromRoute('sir.add_detectorstem');
         $url->setRouteParameter('sourcedetectorstemuri', base64_encode($first));
-        $url->setRouteParameter('detectorsloturi', 'EMPTY');
+        $url->setRouteParameter('containersloturi', 'EMPTY');
         $form_state->setRedirectUrl($url);
       }
     }  
     
-    // MANAGE RESPONSE OPTION SLOTS
-    if ($button_name === 'manage_responseoptionslots') {
+    // MANAGE CODEBOOK SLOTS
+    if ($button_name === 'manage_codebookslots') {
       if (sizeof($rows) < 1) {
         \Drupal::messenger()->addMessage(t("Select the exact codebook which response option slots are going to be managed."));      
       } else if ((sizeof($rows) > 1)) {
         \Drupal::messenger()->addMessage(t("The response option slots of no more than one codebook can be managed at once."));      
       } else {
         $first = array_shift($rows);
-        $url = Url::fromRoute('sir.manage_responseoption_slots', ['codebookuri' => base64_encode($first)]);
+        $url = Url::fromRoute('sir.manage_codebook_slots', ['codebookuri' => base64_encode($first)]);
         $form_state->setRedirectUrl($url);
       } 
       return;
     }
     
-    // MANAGE DETECTOR_SLOTS
-    if ($button_name === 'manage_detectorslots') {
+    // MANAGE SLOT ELEMENTS
+    if ($button_name === 'manage_slotelements') {
       if (sizeof($rows) < 1) {
-        \Drupal::messenger()->addMessage(t("Select the exact questionnaire which detectorslots are going to be managed."));      
+        \Drupal::messenger()->addMessage(t("Select the exact questionnaire which containerslots are going to be managed."));      
       } else if ((sizeof($rows) > 1)) {
         \Drupal::messenger()->addMessage(t("Select only one questionnaire. Items of no more than one questionnaire can be managed at once."));      
       } else {
         $first = array_shift($rows);
-        $url = Url::fromRoute('sir.manage_detectorslots', ['instrumenturi' => base64_encode($first)]);
+        $url = Url::fromRoute('sir.manage_slotelements', ['containeruri' => base64_encode($first)]);
         $form_state->setRedirectUrl($url);
       } 
     }
     
     // BACK TO MAIN PAGE
     if ($button_name === 'back') {
-      $url = Url::fromRoute('sir.index');
+      $url = Url::fromRoute('sir.search');
       $form_state->setRedirectUrl($url);
     }  
 

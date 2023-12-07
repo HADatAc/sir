@@ -6,10 +6,10 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\Core\Routing\TrustedRedirectResponse;
-use Drupal\sir\Entity\Tables;
-use Drupal\sir\Constant;
-use Drupal\sir\Utils;
-use Drupal\sir\Vocabulary\VSTOI;
+use Drupal\rep\Entity\Tables;
+use Drupal\rep\Constant;
+use Drupal\rep\Utils;
+use Drupal\rep\Vocabulary\VSTOI;
 
 class EditDetectorStemForm extends FormBase {
 
@@ -187,9 +187,9 @@ class EditDetectorStemForm extends FormBase {
         '"hasSIRManagerEmail":"'.$useremail.'"}';
 
       // UPDATE BY DELETING AND CREATING
-      $fusekiAPIservice = \Drupal::service('sir.api_connector');
-      $fusekiAPIservice->detectorStemDel($this->getDetectorStemUri());
-      $updatedDetectorStem = $fusekiAPIservice->detectorStemAdd($detectorStemJson);    
+      $api = \Drupal::service('rep.api_connector');
+      $api->detectorStemDel($this->getDetectorStemUri());
+      $updatedDetectorStem = $api->detectorStemAdd($detectorStemJson);    
       \Drupal::messenger()->addMessage(t("Detector Stem has been updated successfully."));
       $form_state->setRedirectUrl(Utils::selectBackUrl('detectorstem'));
 
@@ -200,8 +200,8 @@ class EditDetectorStemForm extends FormBase {
   }
 
   public function retrieveDetectorStem($detectorStemUri) {
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $rawresponse = $fusekiAPIservice->getUri($detectorStemUri);
+    $api = \Drupal::service('rep.api_connector');
+    $rawresponse = $api->getUri($detectorStemUri);
     $obj = json_decode($rawresponse);
     if ($obj->isSuccessful) {
       return $obj->body;

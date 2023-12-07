@@ -8,10 +8,10 @@ use Symfony\Component\HttpFoundation\Request;
 use Drupal\Component\Utility\Xss;
 
 /**
- * Class JsonApiCodebookController
+ * Class JsonApiAnnotationContainerController
  * @package Drupal\sir\Controller
  */
-class JsonApiCodebookController extends ControllerBase{
+class JsonApiAnnotationContainerController extends ControllerBase{
 
   /**
    * @return JsonResponse
@@ -23,17 +23,19 @@ class JsonApiCodebookController extends ControllerBase{
       return new JsonResponse($results);
     }
     $keyword = Xss::filter($input);
+    //dpm($keyword);
     $api = \Drupal::service('rep.api_connector');
-    $codebook_list = $api->listByKeyword('codebook',$keyword,10,0);
-    $obj = json_decode($codebook_list);
-    $codebooks = [];
+    $container_list = $api->listByKeyword('instrument',$keyword,10,0);
+    $obj = json_decode($container_list);
+    $containers = [];
     if ($obj->isSuccessful) {
-      $codebooks = $obj->body;
+      $containers = $obj->body;
     }
-    foreach ($codebooks as $codebook) {
+    //dpm($containers);
+    foreach ($containers as $container) {
       $results[] = [
-        'value' => $codebook->label . ' [' . $codebook->uri . ']',
-        'label' => $codebook->label,
+        'value' => $container->label . ' [' . $container->uri . ']',
+        'label' => $container->label,
       ];
     }
     return new JsonResponse($results);

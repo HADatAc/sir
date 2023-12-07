@@ -2,9 +2,9 @@
 
 namespace Drupal\sir\Entity;
 
-use Drupal\sir\Entity\Tables;
-use Drupal\sir\Utils;
-use Drupal\sir\Vocabulary\SIRGUI;
+use Drupal\rep\Entity\Tables;
+use Drupal\rep\Utils;
+use Drupal\rep\Vocabulary\REPGUI;
 
 class Codebook {
 
@@ -50,7 +50,7 @@ class Codebook {
         $version = $element->hasVersion;
       }
       $output[$element->uri] = [
-        'element_uri' => t('<a href="'.$root_url.SIRGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),     
+        'element_uri' => t('<a href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),     
         'element_name' => $label,     
         'element_language' => $lang,
         'element_version' => $version,

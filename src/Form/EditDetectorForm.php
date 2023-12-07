@@ -6,10 +6,10 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\Core\Routing\TrustedRedirectResponse;
-use Drupal\sir\Entity\Tables;
-use Drupal\sir\Constant;
-use Drupal\sir\Utils;
-use Drupal\sir\Vocabulary\VSTOI;
+use Drupal\rep\Entity\Tables;
+use Drupal\rep\Constant;
+use Drupal\rep\Utils;
+use Drupal\rep\Vocabulary\VSTOI;
 
 class EditDetectorForm extends FormBase {
 
@@ -155,9 +155,9 @@ class EditDetectorForm extends FormBase {
         '"hasSIRManagerEmail":"'.$useremail.'"}';
 
       // UPDATE BY DELETING AND CREATING
-      $fusekiAPIservice = \Drupal::service('sir.api_connector');
-      $fusekiAPIservice->detectorDel($this->getDetectorUri());
-      $updatedDetector = $fusekiAPIservice->detectorAdd($detectorJson);    
+      $api = \Drupal::service('rep.api_connector');
+      $api->detectorDel($this->getDetectorUri());
+      $updatedDetector = $api->detectorAdd($detectorJson);    
       \Drupal::messenger()->addMessage(t("Detector has been updated successfully."));
       $form_state->setRedirectUrl(Utils::selectBackUrl('detector'));
 
@@ -168,8 +168,8 @@ class EditDetectorForm extends FormBase {
   }
 
   public function retrieveDetector($detectorUri) {
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
-    $rawresponse = $fusekiAPIservice->getUri($detectorUri);
+    $api = \Drupal::service('rep.api_connector');
+    $rawresponse = $api->getUri($detectorUri);
     $obj = json_decode($rawresponse);
     if ($obj->isSuccessful) {
       return $obj->body;

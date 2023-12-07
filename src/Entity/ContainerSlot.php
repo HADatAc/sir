@@ -2,10 +2,10 @@
 
 namespace Drupal\sir\Entity;
 
-use Drupal\sir\Utils;
-use Drupal\sir\Vocabulary\SIRGUI;
+use Drupal\rep\Utils;
+use Drupal\rep\Vocabulary\REPGUI;
 
-class DetectorSlot {
+class ContainerSlot {
 
   public static function generateHeader() {
 
@@ -24,7 +24,7 @@ class DetectorSlot {
 
     //dpm($list);
 
-    $api = \Drupal::service('sir.api_connector');
+    $api = \Drupal::service('rep.api_connector');
     $output = array();
     if ($list != NULL && sizeof($list) > 0) {
       foreach ($list as $element) {
@@ -39,7 +39,7 @@ class DetectorSlot {
             $detector = $api->parseObjectResponse($api->getUri($element->hasDetector), 'getUri');
             if ($detector != NULL) {
               $nsUri = Utils::namespaceUri($detector->uri);
-              $detectorStr =  t('<a href="'.$root_url.SIRGUI::DESCRIBE_PAGE.base64_encode($detector->uri).'">'.$nsUri.'</a>');
+              $detectorStr =  t('<a href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($detector->uri).'">'.$nsUri.'</a>');
             }
           }
         }

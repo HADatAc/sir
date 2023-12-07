@@ -5,10 +5,10 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\sir\Constant;
-use Drupal\sir\Utils;
-use Drupal\sir\Entity\Tables;
-use Drupal\sir\Vocabulary\VSTOI;
+use Drupal\rep\Constant;
+use Drupal\rep\Utils;
+use Drupal\rep\Entity\Tables;
+use Drupal\rep\Vocabulary\VSTOI;
 
 class AddDetectorStemForm extends FormBase {
 
@@ -45,7 +45,7 @@ class AddDetectorStemForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state, $sourcedetectorstemuri = NULL) {
 
     // ESTABLISH API SERVICE
-    $fusekiAPIservice = \Drupal::service('sir.api_connector');
+    $api = \Drupal::service('rep.api_connector');
 
     // HANDLE SOURCE DETECTOR STEM,  IF ANY
     $sourceuri=$sourcedetectorstemuri;
@@ -55,7 +55,7 @@ class AddDetectorStemForm extends FormBase {
     } else {
       $sourceuri_decode=base64_decode($sourceuri);
       $this->setSourceDetectorStemUri($sourceuri_decode);
-      $rawresponse = $fusekiAPIservice->getUri($this->getSourceDetectorStemUri());
+      $rawresponse = $api->getUri($this->getSourceDetectorStemUri());
       $obj = json_decode($rawresponse);
       if ($obj->isSuccessful) {
         $this->setSourceDetectorStem($obj->body);
@@ -179,8 +179,8 @@ class AddDetectorStemForm extends FormBase {
         '"wasDerivedFrom":"'.$wasDerivedFrom.'",'.
         '"wasGeneratedBy":"'.$wasGeneratedBy.'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
-      $fusekiAPIservice = \Drupal::service('sir.api_connector');
-      $message = $fusekiAPIservice->detectorStemAdd($detectorStemJson);
+      $api = \Drupal::service('rep.api_connector');
+      $message = $api->detectorStemAdd($detectorStemJson);
       \Drupal::messenger()->addMessage(t("Added a new Detector Stem with URI: ".$newDetectorStemUri));
       $form_state->setRedirectUrl(Utils::selectBackUrl('detectorstem'));
   

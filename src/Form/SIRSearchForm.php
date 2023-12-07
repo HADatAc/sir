@@ -7,9 +7,9 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\RedirectCommand;
-use Drupal\sir\Entity\Tables;
-use Drupal\sir\Vocabulary\HASCO;
-use Drupal\sir\Vocabulary\VSTOI;
+use Drupal\rep\Entity\Tables;
+use Drupal\rep\Vocabulary\HASCO;
+use Drupal\rep\Vocabulary\VSTOI;
 
 class SIRSearchForm extends FormBase {
 
@@ -129,9 +129,10 @@ class SIRSearchForm extends FormBase {
         'instrument' => $this->t('Questionnaires'),
         'detectorstem' => $this->t('Item Stems'),
         'detector' => $this->t('Items'),
-        'codebook' => $this->t('Codebook'),
-        'responseoption' => $this->t('Response Option'),
-//        'semanticvariable' => $this->t('Semantic Variable'),
+        'codebook' => $this->t('Codebooks'),
+        'responseoption' => $this->t('Response Options'),
+        'annotationstem' => $this->t('Annotation Stems'),
+        'annotation' => $this->t('Annotations'),
       ],
       '#default_value' => $this->getElementType(),
       '#ajax' => [
