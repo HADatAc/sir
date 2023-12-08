@@ -15,12 +15,22 @@ class ManageSlotElementsForm extends FormBase {
 
   protected $container;
 
+  protected $uriType;
+
   public function getContainer() {
     return $this->container;
   }
 
   public function setContainer($container) {
     return $this->container = $container; 
+  }
+
+  public function getUriType() {
+    return $this->uriType;
+  }
+
+  public function setUriType($uriType) {
+    return $this->uriType = $uriType; 
   }
 
   /**
@@ -73,6 +83,7 @@ class ManageSlotElementsForm extends FormBase {
     # POPULATE DATA
 
     $output = array();
+    $uriType = array();
     if ($slotElements != NULL) {
       foreach ($slotElements as $slotElement) {
         $detector = NULL;
@@ -125,8 +136,10 @@ class ManageSlotElementsForm extends FormBase {
           'containerslot_priority' => $priority,     
           'containerslot_element' => t($element),     
         ];
+        $uriType[$slotElement->uri] = ['type' => $slotElement->hascoTypeUri,];
       }
     }
+    $this->setUriType($uriType);
 
     # PUT FORM TOGETHER
 
@@ -136,17 +149,6 @@ class ManageSlotElementsForm extends FormBase {
       '#type' => 'item',
       '#title' => t('<h3>Slots Elements of Container <font color="DarkGreen">' . $container->label . '</font></h3>'),
     ];
-    if ($container->hascoTypeUri == VSTOI::SUBCONTAINER) {
-      $form['go_parent_container'] = [
-        '#type' => 'submit',
-        '#value' => $this->t("Go Parent Container"),
-        '#name' => 'go_parent_container',
-      ];  
-      $form['space'] = [
-        '#type' => 'item',
-        '#title' => t(' '),
-      ];
-    }
     $form['subtitle'] = [
       '#type' => 'item',
       '#title' => t('<h4>ContainerSlots maintained by <font color="DarkGreen">' . $username . ' (' . $uemail . ')</font></h4>'),
@@ -170,15 +172,10 @@ class ManageSlotElementsForm extends FormBase {
       '#value' => $this->t('Add SubContainer'),
       '#name' => 'add_subcontainer',
     ];
-    $form['edit_containerslot'] = [
+    $form['edit_slotelement'] = [
       '#type' => 'submit',
-      '#value' => $this->t("Edit Selected Detector's Slot"),
-      '#name' => 'edit_containerslot',
-    ];
-    $form['edit_subcontainer'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Edit Selected SubContainer'),
-      '#name' => 'edit_subcontainer',
+      '#value' => $this->t("Edit Selected"),
+      '#name' => 'edit_slotelement',
     ];
     $form['delete_selected_elements'] = [
       '#type' => 'submit',
@@ -207,6 +204,13 @@ class ManageSlotElementsForm extends FormBase {
       //  ],
       //]    
     ];
+    if ($container->hascoTypeUri == VSTOI::SUBCONTAINER) {
+      $form['go_parent_container'] = [
+        '#type' => 'submit',
+        '#value' => $this->t("Back to Parent"),
+        '#name' => 'go_parent_container',
+      ];  
+    }
     $form['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Back to Questionnaire Management'),
@@ -277,30 +281,24 @@ class ManageSlotElementsForm extends FormBase {
       $form_state->setRedirectUrl($url);
     }
 
-    // EDIT CONTAINER_SLOT
-    if ($button_name === 'edit_containerslot') {
+    // EDIT SLOT_ELEMENT
+    if ($button_name === 'edit_slotelement') {
       if (sizeof($rows) < 1) {
         \Drupal::messenger()->addMessage(t("Select the exact containerslot to be edited."));      
       } else if ((sizeof($rows) > 1)) {
         \Drupal::messenger()->addMessage(t("Select only one containerslot to edit. No more than one containerslot can be edited at once."));      
       } else {
         $first = array_shift($rows);
-        $url = Url::fromRoute('sir.edit_containerslot');
-        $url->setRouteParameter('containersloturi', base64_encode($first));
-        $form_state->setRedirectUrl($url);
-      } 
-    }
+        $type = reset($this->getUriType()[$first]);
+        if ($type == VSTOI::SUBCONTAINER) {
+          $url = Url::fromRoute('sir.manage_slotelements', ['containeruri' => base64_encode($first)]);
+          $form_state->setRedirectUrl($url);  
+        } else {
+          $url = Url::fromRoute('sir.edit_containerslot');
+          $url->setRouteParameter('containersloturi', base64_encode($first));
+          $form_state->setRedirectUrl($url);
+        };
 
-    // EDIT SUBCONTAINER
-    if ($button_name === 'edit_subcontainer') {
-      if (sizeof($rows) < 1) {
-        \Drupal::messenger()->addMessage(t("Select the exact subcontainer to be edited."));      
-      } else if ((sizeof($rows) > 1)) {
-        \Drupal::messenger()->addMessage(t("Select only one subcontainer to edit. No more than one subcontainer can be edited at once."));      
-      } else {
-        $first = array_shift($rows);
-        $url = Url::fromRoute('sir.manage_slotelements', ['containeruri' => base64_encode($first)]);
-        $form_state->setRedirectUrl($url);
       } 
     }
 
