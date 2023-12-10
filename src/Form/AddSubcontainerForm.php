@@ -42,9 +42,13 @@ class AddSubcontainerForm extends FormBase {
       '#value' => $this->getBelongsTo(),
       '#disabled' => TRUE,
     ];
+    $form['subcontainer_priority'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t("Priority (e.g., 'Section 1.1')"),
+    ];
     $form['subcontainer_name'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Name'),
+      '#title' => $this->t("Name (e.g., 'Demographics', 'Lab Results')"),
     ];
     $form['save_submit'] = [
       '#type' => 'submit',
@@ -86,6 +90,7 @@ class AddSubcontainerForm extends FormBase {
       $url = Url::fromRoute('sir.manage_slotelements');
       $url->setRouteParameter('containeruri', base64_encode($this->getBelongsTo()));
       $form_state->setRedirectUrl($url);
+      return;
     } 
 
     try{
@@ -98,6 +103,7 @@ class AddSubcontainerForm extends FormBase {
         '"hascoTypeUri":"'.VSTOI::SUBCONTAINER.'",'.
         '"belongsTo":"'.$this->getBelongsTo().'",'.
         '"label":"'.$form_state->getValue('subcontainer_name').'",'.
+        '"hasPriority":"'.$form_state->getValue('subcontainer_priority').'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
 
       $api = \Drupal::service('rep.api_connector');

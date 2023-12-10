@@ -68,6 +68,7 @@ class ManageSlotElementsForm extends FormBase {
     #  return new RedirectResponse(Url::fromRoute('sir.add_containerslots', ['containeruri' => base64_encode($this->getContainerUri())])->toString());
     #}
 
+    //dpm($container);
     //dpm($slotElements);
 
     # BUILD HEADER
@@ -188,6 +189,11 @@ class ManageSlotElementsForm extends FormBase {
       '#value' => $this->t('Manage Annotations'),
       '#name' => 'manage_annotations',
     ];
+    $form['manage_subcontainer_structure'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Manage Structure of Selected'),
+      '#name' => 'manage_subcontainer_structure',    
+    ];
     $form['slotelement_table'] = [
       '#type' => 'tableselect',
       '#header' => $header,
@@ -239,14 +245,30 @@ class ManageSlotElementsForm extends FormBase {
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
 
-    if ($button_name != 'back' && $button_name != 'manage_annotations') {
-      #if(strlen($form_state->getValue('responseoption_content')) < 1) {
-      #  $form_state->setErrorByName('responseoption_content', $this->t('Please enter a valid content'));
-      #}
-      #if(strlen($form_state->getValue('responseoption_language')) < 1) {
-      #  $form_state->setErrorByName('responseoption_language', $this->t('Please enter a valid language'));
-      #}
+    // RETRIEVE SELECTED ROWS, IF ANY
+    $selected_rows = $form_state->getValue('slotelement_table');
+    $rows = [];
+    foreach ($selected_rows as $index => $selected) {
+      if ($selected) {
+        $rows[$index] = $index;
+      }
     }
+
+    // VERIFY MANAGE SUBCONTAINER
+    if ($button_name === 'manage_subcontainer_structure') {
+      if (sizeof($rows) < 1) {
+      $form_state->setErrorByName('', $this->t('Select the exact subcontainer to be edited.'));
+      } else if ((sizeof($rows) > 1)) {
+        $form_state->setErrorByName('', $this->t('Select only one subcontainer to edit. No more than one subcontainer can be edited at once.'));
+      } else {
+        $first = array_shift($rows);
+        $type = reset($this->getUriType()[$first]);
+        if ($type != VSTOI::SUBCONTAINER) {
+          $form_state->setErrorByName($first, $this->t('This option if for subcontainers only. '));
+        };
+      } 
+    }
+
   }
 
   /**
@@ -291,7 +313,7 @@ class ManageSlotElementsForm extends FormBase {
         $first = array_shift($rows);
         $type = reset($this->getUriType()[$first]);
         if ($type == VSTOI::SUBCONTAINER) {
-          $url = Url::fromRoute('sir.manage_slotelements', ['containeruri' => base64_encode($first)]);
+          $url = Url::fromRoute('sir.edit_subcontainer', ['subcontaineruri' => base64_encode($first)]);
           $form_state->setRedirectUrl($url);  
         } else {
           $url = Url::fromRoute('sir.edit_containerslot');
@@ -299,6 +321,24 @@ class ManageSlotElementsForm extends FormBase {
           $form_state->setRedirectUrl($url);
         };
 
+      } 
+    }
+
+    // MANAGE SUBCONTAINER
+    if ($button_name === 'manage_subcontainer_structure') {
+      if (sizeof($rows) < 1) {
+        \Drupal::messenger()->addMessage(t("Select the exact subcontainer to be edited."));      
+      } else if ((sizeof($rows) > 1)) {
+        \Drupal::messenger()->addMessage(t("Select only one subcontainer to edit. No more than one subcontainer can be edited at once."));      
+      } else {
+        $first = array_shift($rows);
+        $type = reset($this->getUriType()[$first]);
+        if ($type == VSTOI::SUBCONTAINER) {
+          $url = Url::fromRoute('sir.manage_slotelements', ['containeruri' => base64_encode($first)]);
+          $form_state->setRedirectUrl($url);  
+        } else {
+          \Drupal::messenger()->addMessage(t("This option if for subcontainers only. "));      
+        };
       } 
     }
 
