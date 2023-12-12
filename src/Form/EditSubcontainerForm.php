@@ -13,12 +13,22 @@ class EditSubcontainerForm extends FormBase {
 
   protected $subcontainer;
 
+  protected array $crumbs;
+
   public function getSubcontainer() {
     return $this->subcontainer;
   }
 
   public function setSubcontainer($sub) {
     return $this->subcontainer = $sub; 
+  }
+
+  public function getBreadcrumbs() {
+    return $this->crumbs;
+  }
+
+  public function setBreadcrumbs(array $crumbs) {
+    return $this->crumbs = $crumbs; 
   }
 
   /**
@@ -31,15 +41,25 @@ class EditSubcontainerForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $subcontaineruri = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, $subcontaineruri = NULL, $breadcrumbs = NULL) {
+
+    // SETUP CONTEXT
     $uri=$subcontaineruri ?? 'default';
     $subUri=base64_decode($uri);
+    if ($breadcrumbs == "_") {
+      $crumbs = array();
+    } else {
+      $crumbs = explode('|',$breadcrumbs);
+    }
+    $this->setBreadcrumbs($crumbs);
+
+    // LOAD SUBCONTAINER
     $api = \Drupal::service('rep.api_connector');
     $this->setSubcontainer($api->parseObjectresponse($api->getUri($subUri),'getUri'));   
     if ($this->getSubcontainer() == NULL) {
       \Drupal::messenger()->addMessage(t("Failed to retrieve Subcontainer."));
-      $url = Url::fromRoute('sir.manage_slotelements', ['containeruri' => base64_encode($subcontaineruri)]);
-      $form_state->setRedirectUrl($url);
+      $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
+      return;
     }
 
     //dpm($this->getSubcontainer());
@@ -58,6 +78,19 @@ class EditSubcontainerForm extends FormBase {
       $name = $this->getSubcontainer()->label;
     }
 
+    $path = "";
+    $length = count($this->getBreadcrumbs());
+    for ($i = 0; $i < $length; $i++) {
+        $path .= '<font color="DarkGreen">' . $this->getBreadcrumbs()[$i] . '</font>';
+        if ($i < $length - 1) {
+            $path .= ' > ';
+        }
+    }
+
+    $form['scope'] = [
+      '#type' => 'item',
+      '#title' => t('<h3>Subcontainer of Container ' . $path . '</h3>'),
+    ];
     $form['subcontainer_belongsto'] = [
       '#type' => 'textfield',
       '#title' => t('Parent URI'),
@@ -112,7 +145,7 @@ class EditSubcontainerForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $form_state->setRedirectUrl(Utils::selectBackUrl('subcontainer'));
+      $this->backToSlotElement($form_state);
       return;
     } 
 
@@ -130,7 +163,7 @@ class EditSubcontainerForm extends FormBase {
       if (isset($this->getSubcontainer()->hasNext)) {
         $subcontainerJson .= '"hasNext":"'.$this->getSubcontainer()->hasNext.'",';
       }
-        $subcontainerJson .= '"hasSIRManagerEmail":"'.$useremail.'"}';
+      $subcontainerJson .= '"hasSIRManagerEmail":"'.$useremail.'"}';
 
       // UPDATE BY DELETING AND CREATING
       $api = \Drupal::service('rep.api_connector');
@@ -139,17 +172,27 @@ class EditSubcontainerForm extends FormBase {
       if ($msg == NULL) {
         \Drupal::messenger()->addMessage(t("Subcontainer has been updated successfully."));
       }
-      $url = Url::fromRoute('sir.manage_slotelements');
-      $url->setRouteParameter('containeruri', base64_encode($this->getSubcontainer()->belongsTo));
-      $form_state->setRedirectUrl($url);
+      $this->backToSlotElement($form_state);
 
     }catch(\Exception $e){
       \Drupal::messenger()->addMessage(t("An error occurred while updating the Response Option: ".$e->getMessage()));
-      $url = Url::fromRoute('sir.manage_slotelements');
-      $url->setRouteParameter('containeruri', base64_encode($this->getSubcontainer()->belongsTo));
-      $form_state->setRedirectUrl($url);
+      $this->backToSlotElement($form_state);
     }
 
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  private function backToSlotElement(FormStateInterface $form_state) {
+    $breadcrumbsArg = implode('|',$this->getBreadcrumbs());
+    $url = Url::fromRoute('sir.manage_slotelements'); 
+    $url->setRouteParameter('containeruri', base64_encode($this->getSubcontainer()->belongsTo));
+    $url->setRouteParameter('breadcrumbs', $breadcrumbsArg);
+    $form_state->setRedirectUrl($url);
+    return;
+  } 
+  
+
 
 }

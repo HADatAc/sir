@@ -94,10 +94,23 @@ sir.download_instrument:
   options:
     no_cache: 'TRUE'    
 
+# Slot Element CRUD options
+
+sir.manage_slotelements:
+  path: 'sir/manage/slotelements/{containeruri}/{breadcrumbs}'
+  defaults:
+    _form: '\Drupal\sir\Form\ManageSlotElementsForm'
+    _title: 'Manage Container Structure'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
 # Subcontainer CRUD options
 
 sir.add_subcontainer:
-  path: 'sir/manage/addsubcontainer/{belongsto}'
+  path: 'sir/manage/addsubcontainer/{belongsto}/{breadcrumbs}'
   defaults:
     _form: '\Drupal\sir\Form\AddSubcontainerForm'
     _title: 'Add Subcontainer'    
@@ -108,7 +121,7 @@ sir.add_subcontainer:
     no_cache: 'TRUE'
 
 sir.edit_subcontainer:
-  path: 'sir/manage/editsubcontainer/{subcontaineruri}'
+  path: 'sir/manage/editsubcontainer/{subcontaineruri}/{breadcrumbs}'
   defaults:
     _form: '\Drupal\sir\Form\EditSubcontainerForm'
     _title: 'Edit Subcontainer'    
@@ -120,19 +133,8 @@ sir.edit_subcontainer:
 
 # Container Slot CRUD options
 
-sir.manage_slotelements:
-  path: 'sir/manage/slotelements/{containeruri}'
-  defaults:
-    _form: '\Drupal\sir\Form\ManageSlotElementsForm'
-    _title: 'Manage Container Structure'    
-  requirements:
-    _permission: 'access content'
-    _custom_access_check: 'TRUE'    
-  options:
-    no_cache: 'TRUE'
-
 sir.add_containerslots:
-  path: 'sir/manage/addcontainerslots/{containeruri}'
+  path: 'sir/manage/addcontainerslots/{containeruri}/{breadcrumbs}'
   defaults:
     _form: '\Drupal\sir\Form\AddContainerSlotsForm'
     _title: "Create Container Slots"    
@@ -144,7 +146,7 @@ sir.add_containerslots:
     no_cache: 'TRUE'
 
 sir.edit_containerslot:
-  path: 'sir/manage/editcontainerslots/{containersloturi}'
+  path: 'sir/manage/editcontainerslots/{containersloturi}/{breadcrumbs}'
   defaults:
     _form: '\Drupal\sir\Form\EditContainerSlotForm'
     _title: 'Edit ContainerSlot'    
@@ -382,7 +384,7 @@ sir.add_annotation:
     no_cache: 'TRUE'
 
 sir.manage_container_annotations:
-  path: 'sir/manage/containerannotations/{containeruri}'
+  path: 'sir/manage/containerannotations/{containeruri}/{breadcrumbs}'
   defaults:
     _form: '\Drupal\sir\Form\ManageContainerAnnotationsForm'
     _title: 'Manage Container Annotations'    

@@ -13,12 +13,22 @@ class AddSubcontainerForm extends FormBase {
 
   protected $belongsTo;
 
+  protected array $crumbs;
+
   public function getBelongsTo() {
     return $this->belongsTo;
   }
 
   public function setBelongsTo($uri) {
     return $this->belongsTo = $uri; 
+  }
+
+  public function getBreadcrumbs() {
+    return $this->crumbs;
+  }
+
+  public function setBreadcrumbs(array $crumbs) {
+    return $this->crumbs = $crumbs; 
   }
 
   /**
@@ -31,11 +41,33 @@ class AddSubcontainerForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $belongsto = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, $belongsto = NULL, $breadcrumbs = NULL) {
+
+    // SETUP CONTEXT
     $uri=$belongsto ?? 'default';
     $uri_decode=base64_decode($uri);
     $this->setBelongsTo($uri_decode);
+    if ($breadcrumbs == "_") {
+      $crumbs = array();
+    } else {
+      $crumbs = explode('|',$breadcrumbs);
+    }
+    $this->setBreadcrumbs($crumbs);
 
+    // BUILD FORM
+    $path = "";
+    $length = count($this->getBreadcrumbs());
+    for ($i = 0; $i < $length; $i++) {
+        $path .= '<font color="DarkGreen">' . $this->getBreadcrumbs()[$i] . '</font>';
+        if ($i < $length - 1) {
+            $path .= ' > ';
+        }
+    }
+
+    $form['scope'] = [
+      '#type' => 'item',
+      '#title' => t('<h3>Subcontainer of Container ' . $path . '</h3>'),
+    ];
     $form['subcontainer_belongsto'] = [
       '#type' => 'textfield',
       '#title' => t('Parent URI'),
@@ -87,9 +119,7 @@ class AddSubcontainerForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $url = Url::fromRoute('sir.manage_slotelements');
-      $url->setRouteParameter('containeruri', base64_encode($this->getBelongsTo()));
-      $form_state->setRedirectUrl($url);
+      $this->backToSlotElement($form_state);
       return;
     } 
 
@@ -111,17 +141,24 @@ class AddSubcontainerForm extends FormBase {
       if ($message != null) {
         \Drupal::messenger()->addMessage(t("Subcontainer has been added successfully."));
       }
-      $url = Url::fromRoute('sir.manage_slotelements');
-      $url->setRouteParameter('containeruri', base64_encode($this->getBelongsTo()));
-      $form_state->setRedirectUrl($url);
-
+      $this->backToSlotElement($form_state);
     }catch(\Exception $e){
       \Drupal::messenger()->addMessage(t("An error occurred while adding the ContainerSlot: ".$e->getMessage()));
-      $url = Url::fromRoute('sir.manage_slotelements');
-      $url->setRouteParameter('containeruri', base64_encode($this->getBelongsTo()));
-      $form_state->setRedirectUrl($url);
+      $this->backToSlotElement($form_state);
     }
 
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  private function backToSlotElement(FormStateInterface $form_state) {
+    $breadcrumbsArg = implode('|',$this->getBreadcrumbs());
+    $url = Url::fromRoute('sir.manage_slotelements'); 
+    $url->setRouteParameter('containeruri', base64_encode($this->getBelongsTo()));
+    $url->setRouteParameter('breadcrumbs', $breadcrumbsArg);
+    $form_state->setRedirectUrl($url);
+    return;
+  } 
+  
 }

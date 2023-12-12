@@ -10,12 +10,22 @@ class AddContainerSlotsForm extends FormBase {
 
   protected $containerUri;
 
+  protected array $crumbs;
+
   public function getContainerUri() {
     return $this->containerUri;
   }
 
   public function setContainerUri($uri) {
     return $this->containerUri = $uri; 
+  }
+
+  public function getBreadcrumbs() {
+    return $this->crumbs;
+  }
+
+  public function setBreadcrumbs(array $crumbs) {
+    return $this->crumbs = $crumbs; 
   }
 
   /**
@@ -28,11 +38,33 @@ class AddContainerSlotsForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $containeruri = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, $containeruri = NULL, $breadcrumbs = NULL) {
+
+    // SETUP CONTEXT
     $uri=$containeruri ?? 'default';
     $uri_decode=base64_decode($uri);
     $this->setContainerUri($uri_decode);
+    if ($breadcrumbs == "_") {
+      $crumbs = array();
+    } else {
+      $crumbs = explode('|',$breadcrumbs);
+    }
+    $this->setBreadcrumbs($crumbs);
 
+    // BUILD FORM
+    $path = "";
+    $length = count($this->getBreadcrumbs());
+    for ($i = 0; $i < $length; $i++) {
+        $path .= '<font color="DarkGreen">' . $this->getBreadcrumbs()[$i] . '</font>';
+        if ($i < $length - 1) {
+            $path .= ' > ';
+        }
+    }
+
+    $form['scope'] = [
+      '#type' => 'item',
+      '#title' => t('<h3>Adding Container Slots of Container ' . $path . '</h3>'),
+    ];
     $form['containerslot_container'] = [
       '#type' => 'textfield',
       '#title' => t('Container URI'),
@@ -61,7 +93,7 @@ class AddContainerSlotsForm extends FormBase {
     return $form;
   }
 
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state, $breadcrumbs = NULL) {
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
 
@@ -80,9 +112,7 @@ class AddContainerSlotsForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $url = Url::fromRoute('sir.manage_slotelements');
-      $url->setRouteParameter('containeruri', base64_encode($this->getContainerUri()));
-      $form_state->setRedirectUrl($url);
+      $this->backToSlotElement($form_state);
       return;
     } 
 
@@ -92,17 +122,27 @@ class AddContainerSlotsForm extends FormBase {
       if ($message != null) {
         \Drupal::messenger()->addMessage(t("ContainerSlots has been added successfully."));
       }
-      $url = Url::fromRoute('sir.manage_slotelements');
-      $url->setRouteParameter('containeruri', base64_encode($this->getContainerUri()));
-      $form_state->setRedirectUrl($url);
+      $this->backToSlotElement($form_state);
+      return;
 
     }catch(\Exception $e){
       \Drupal::messenger()->addMessage(t("An error occurred while adding the ContainerSlot: ".$e->getMessage()));
-      $url = Url::fromRoute('sir.manage_slotelements');
-      $url->setRouteParameter('containeruri', base64_encode($this->getContainerUri()));
-      $form_state->setRedirectUrl($url);
+      $this->backToSlotElement($form_state);
+      return;
     }
 
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  private function backToSlotElement(FormStateInterface $form_state) {
+    $breadcrumbsArg = implode('|',$this->getBreadcrumbs());
+    $url = Url::fromRoute('sir.manage_slotelements'); 
+    $url->setRouteParameter('containeruri', base64_encode($this->getContainerUri()));
+    $url->setRouteParameter('breadcrumbs', $breadcrumbsArg);
+    $form_state->setRedirectUrl($url);
+    return;
+  } 
 
 }
