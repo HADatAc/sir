@@ -56,6 +56,8 @@ class EditAnnotationForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $annotationuri = NULL) {
+
+    // HANDLE CURRENT ANNOTATION
     $uri=$annotationuri;
     $uri_decode=base64_decode($uri);
     $uri_full=Utils::plainUri($uri_decode);
@@ -189,7 +191,7 @@ class EditAnnotationForm extends FormBase {
       $form_state->setRedirectUrl(Utils::selectBackUrl('annotation'));
 
     }catch(\Exception $e){
-      \Drupal::messenger()->addMessage(t("An error occurred while updating the Annotation: ".$e->getMessage()));
+      \Drupal::messenger()->addWarning(t("An error occurred while updating the Annotation: ".$e->getMessage()));
       $form_state->setRedirectUrl(Utils::selectBackUrl('annotationstem'));
     }
   }

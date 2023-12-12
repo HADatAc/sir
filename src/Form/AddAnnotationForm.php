@@ -25,6 +25,8 @@ class AddAnnotationForm extends FormBase {
 
   protected $annotationStem;
 
+  protected $crumbs;
+
   public function getContainer() {
     return $this->container;
   }
@@ -103,7 +105,6 @@ class AddAnnotationForm extends FormBase {
     $api = \Drupal::service('rep.api_connector');
 
     if ($button_name != 'back') {
-
       if ($form_state->getValue('annotation_stem') == NULL || $form_state->getValue('annotation_stem') == '') {
         $form_state->setErrorByName('annotation_stem', $this->t('Annotation stem value is empty. Please enter a valid stem.'));
       }
@@ -140,7 +141,7 @@ class AddAnnotationForm extends FormBase {
 
       $useremail = \Drupal::currentUser()->getEmail();
 
-      // CREATE A NEW DETECTOR
+      // CREATE A NEW ANNOTATION
       $newAnnotationUri = Utils::uriGen('annotation');
       $annotationJson = '{"uri":"'.$newAnnotationUri.'",'.
         '"typeUri":"'.VSTOI::ANNOTATION.'",'.
@@ -158,7 +159,7 @@ class AddAnnotationForm extends FormBase {
       return;
 
     } catch(\Exception $e) {
-      \Drupal::messenger()->addMessage(t("An error occurred while adding the Annotation: ".$e->getMessage()));
+      \Drupal::messenger()->addError(t("An error occurred while adding the Annotation: ".$e->getMessage()));
       $form_state->setRedirectUrl(Utils::selectBackUrl('annotation'));
     }
 

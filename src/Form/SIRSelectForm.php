@@ -186,15 +186,28 @@ class SIRSelectForm extends FormBase {
     }
     $form['edit_selected_element'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Edit Selected ' . $this->single_class_name),
+      '#value' => $this->t('Edit Selected'),
+      //'#value' => $this->t('Edit Selected ' . $this->single_class_name),
       '#name' => 'edit_element',
     ];
     $form['delete_selected_element'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Delete Selected ' . $this->plural_class_name),
+      '#value' => $this->t('Delete Selected'),
+      //'#value' => $this->t('Delete Selected ' . $this->plural_class_name),
       '#name' => 'delete_element',
+      '#attributes' => ['onclick' => 'if(!confirm("Really Delete?")){return false;}'],
     ];
     if ($this->element_type == 'instrument') {
+      //$form['instrument_import'] = [
+      //  '#type' => 'submit',
+      //  '#value' => $this->t('Import'),
+      //  '#name' => 'instrument_import',
+      //];
+      //$form['instrument_export'] = [
+      //  '#type' => 'submit',
+      //  '#value' => $this->t('Export Selected'),
+      //  '#name' => 'instrument_export',
+      //];
       $form['manage_slotelements'] = [
         '#type' => 'submit',
         '#value' => $this->t('Manage Structure of Selected'),
@@ -286,9 +299,9 @@ class SIRSelectForm extends FormBase {
     // EDIT ELEMENT
     if ($button_name === 'edit_element') {
       if (sizeof($rows) < 1) {
-        \Drupal::messenger()->addMessage(t("Select the exact " . $this->single_class_name . " to be edited."));      
+        \Drupal::messenger()->addWarning(t("Select the exact " . $this->single_class_name . " to be edited."));      
       } else if ((sizeof($rows) > 1)) {
-        \Drupal::messenger()->addMessage(t("No more than one " . $this->single_class_name . " can be edited at once."));      
+        \Drupal::messenger()->addWarning(t("No more than one " . $this->single_class_name . " can be edited at once."));      
       } else {
         $first = array_shift($rows);
         if ($this->element_type == 'instrument') {
@@ -313,7 +326,8 @@ class SIRSelectForm extends FormBase {
     // DELETE ELEMENT
     if ($button_name === 'delete_element') {
       if (sizeof($rows) <= 0) {
-        \Drupal::messenger()->addMessage(t("At least one " . $this->single_class_name . " needs to be selected to be deleted."));      
+        \Drupal::messenger()->addWarning(t("At least one " . $this->single_class_name . " needs to be selected to be deleted."));      
+        return;
       } else {
         $api = \Drupal::service('rep.api_connector');
         foreach($rows as $shortUri) {
@@ -335,34 +349,41 @@ class SIRSelectForm extends FormBase {
           }
         }
         \Drupal::messenger()->addMessage(t("Selected " . $this->plural_class_name . " has/have been deleted successfully."));      
+        return;
       }
     }  
 
     // DERIVE DETECTOR
     if ($button_name === 'derive_detectorstem') {
       if (sizeof($rows) < 1) {
-        \Drupal::messenger()->addMessage(t("Select the exact item stem to be derived."));      
+        \Drupal::messenger()->addWarning(t("Select the exact item stem to be derived."));      
+        return;
       } else if ((sizeof($rows) > 1)) {
-        \Drupal::messenger()->addMessage(t("Select only one item stem to be derived. No more than one item stem can be derived at once."));      
+        \Drupal::messenger()->addWarning(t("Select only one item stem to be derived. No more than one item stem can be derived at once."));      
+        return;
       } else {
         $first = array_shift($rows);
         $url = Url::fromRoute('sir.add_detectorstem');
         $url->setRouteParameter('sourcedetectorstemuri', base64_encode($first));
         $url->setRouteParameter('containersloturi', 'EMPTY');
         $form_state->setRedirectUrl($url);
+        return;
       }
     }  
     
     // MANAGE CODEBOOK SLOTS
     if ($button_name === 'manage_codebookslots') {
       if (sizeof($rows) < 1) {
-        \Drupal::messenger()->addMessage(t("Select the exact codebook which response option slots are going to be managed."));      
+        \Drupal::messenger()->addWarning(t("Select the exact codebook which response option slots are going to be managed."));      
+        return;
       } else if ((sizeof($rows) > 1)) {
-        \Drupal::messenger()->addMessage(t("The response option slots of no more than one codebook can be managed at once."));      
+        \Drupal::messenger()->addWarning(t("Cannot manage the response option slots of more than one codebook at once."));      
+        return;
       } else {
         $first = array_shift($rows);
         $url = Url::fromRoute('sir.manage_codebook_slots', ['codebookuri' => base64_encode($first)]);
         $form_state->setRedirectUrl($url);
+        return;
       } 
       return;
     }
@@ -370,13 +391,21 @@ class SIRSelectForm extends FormBase {
     // MANAGE SLOT ELEMENTS
     if ($button_name === 'manage_slotelements') {
       if (sizeof($rows) < 1) {
-        \Drupal::messenger()->addMessage(t("Select the exact questionnaire which containerslots are going to be managed."));      
+        \Drupal::messenger()->addWarning(t("Select the exact questionnaire which containerslots are going to be managed."));      
+        return;
       } else if ((sizeof($rows) > 1)) {
-        \Drupal::messenger()->addMessage(t("Select only one questionnaire. Items of no more than one questionnaire can be managed at once."));      
+        \Drupal::messenger()->addWarning(t("Select only one questionnaire. Items of no more than one questionnaire can be managed at once."));      
+        return;
       } else {
-        $first = array_shift($rows);
-        $url = Url::fromRoute('sir.manage_slotelements', ['containeruri' => base64_encode($first)]);
+        $first = array_shift($rows);     
+        $api = \Drupal::service('rep.api_connector');
+        $container = $api->parseObjectResponse($api->getUri($first),'getUri');    
+        $url = Url::fromRoute('sir.manage_slotelements', 
+          ['containeruri' => base64_encode($first),
+           'breadcrumbs' => $container->label,
+          ]);
         $form_state->setRedirectUrl($url);
+        return;
       } 
     }
     
@@ -384,7 +413,10 @@ class SIRSelectForm extends FormBase {
     if ($button_name === 'back') {
       $url = Url::fromRoute('sir.search');
       $form_state->setRedirectUrl($url);
+      return;
     }  
+
+    return;
 
   }
   

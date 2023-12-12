@@ -13,6 +13,8 @@ class EditContainerSlotForm extends FormBase {
 
   protected $containerslot;
 
+  protected array $crumbs;
+
   public function getContainerSlotUri() {
     return $this->containerslotUri;
   }
@@ -29,6 +31,14 @@ class EditContainerSlotForm extends FormBase {
     return $this->containerslot = $obj; 
   }
 
+  public function getBreadcrumbs() {
+    return $this->crumbs;
+  }
+
+  public function setBreadcrumbs(array $crumbs) {
+    return $this->crumbs = $crumbs; 
+  }
+
   /**
    * {@inheritdoc}
    */
@@ -39,10 +49,18 @@ class EditContainerSlotForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $containersloturi = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, $containersloturi = NULL, $breadcrumbs = NULL) {
+
+    // SETUP CONTEXT
     $uri=$containersloturi;
     $uri_decode=base64_decode($uri);
     $this->setContainerSlotUri($uri_decode);
+    if ($breadcrumbs == "_") {
+      $crumbs = array();
+    } else {
+      $crumbs = explode('|',$breadcrumbs);
+    }
+    $this->setBreadcrumbs($crumbs);
 
     $api = \Drupal::service('rep.api_connector');
     $this->setContainerSlot($api->parseObjectResponse($api->getUri($this->getContainerSlotUri()),'getUri'));
@@ -60,6 +78,20 @@ class EditContainerSlotForm extends FormBase {
       $form_state->setRedirectUrl($url);
     }
 
+    // BUILD FORM
+    $path = "";
+    $length = count($this->getBreadcrumbs());
+    for ($i = 0; $i < $length; $i++) {
+        $path .= '<font color="DarkGreen">' . $this->getBreadcrumbs()[$i] . '</font>';
+        if ($i < $length - 1) {
+            $path .= ' > ';
+        }
+    }
+
+    $form['scope'] = [
+      '#type' => 'item',
+      '#title' => t('<h3>Editing Container Slot of Container ' . $path . '</h3>'),
+    ];
     $form['containerslot_uri'] = [
       '#type' => 'textfield',
       '#title' => t('ContainerSlot URI'),
@@ -144,9 +176,7 @@ class EditContainerSlotForm extends FormBase {
     $uemail = \Drupal::currentUser()->getEmail();
 
     if ($button_name === 'back') {
-      $url = Url::fromRoute('sir.manage_slotelements');
-      $url->setRouteParameter('containeruri', base64_encode($this->getContainerSlot()->belongsTo));
-      $form_state->setRedirectUrl($url);
+      $this->backToSlotElement($form_state);
       return;
     } 
 
@@ -164,11 +194,8 @@ class EditContainerSlotForm extends FormBase {
         $api = \Drupal::service('rep.api_connector');
         $api->containerslotReset($this->getContainerSlotUri());
       } 
-
-      $url = Url::fromRoute('sir.manage_slotelements');
-      $url->setRouteParameter('containeruri', base64_encode($this->getContainerSlot()->belongsTo));
-      $form_state->setRedirectUrl($url);
-      return;
+      $this->backToSlotElement($form_state);
+      return;    
     } 
 
     try{
@@ -179,17 +206,26 @@ class EditContainerSlotForm extends FormBase {
       } 
 
       \Drupal::messenger()->addMessage(t("ContainerSlot has been updated successfully."));
-      $url = Url::fromRoute('sir.manage_slotelements');
-      $url->setRouteParameter('containeruri', base64_encode($this->getContainerSlot()->belongsTo));
-      $form_state->setRedirectUrl($url);
+      $this->backToSlotElement($form_state);
+      return;
 
     }catch(\Exception $e){
       \Drupal::messenger()->addMessage(t("An error occurred while updating the containerslot: ".$e->getMessage()));
-      $url = Url::fromRoute('sir.manage_slotelements');
-      $url->setRouteParameter('containeruri', base64_encode($this->getContainerSlot()->belongsTo));
-      $form_state->setRedirectUrl($url);
+      $this->backToSlotElement($form_state);
+      return;
     }
-
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  private function backToSlotElement(FormStateInterface $form_state) {
+    $breadcrumbsArg = implode('|',$this->getBreadcrumbs());
+    $url = Url::fromRoute('sir.manage_slotelements'); 
+    $url->setRouteParameter('containeruri', base64_encode($this->getContainerSlot()->belongsTo));
+    $url->setRouteParameter('breadcrumbs', $breadcrumbsArg);
+    $form_state->setRedirectUrl($url);
+    return;
+  } 
 
 }

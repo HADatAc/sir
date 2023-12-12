@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 class ManageContainerAnnotationsForm extends FormBase {
 
   protected $container;
+  protected array $crumbs;
 
   public $topleftOriginal;
   public $topcenterOriginal;
@@ -32,6 +33,14 @@ class ManageContainerAnnotationsForm extends FormBase {
     return $this->container = $container; 
   }
 
+  public function getBreadcrumbs() {
+    return $this->crumbs;
+  }
+
+  public function setBreadcrumbs(array $crumbs) {
+    return $this->crumbs = $crumbs; 
+  }
+
   /**
    * {@inheritdoc}
    */
@@ -42,11 +51,17 @@ class ManageContainerAnnotationsForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $containeruri = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, $containeruri = NULL, $breadcrumbs = NULL) {
 
-    # GET CONTENT
+    // SET CONTEXT
     $uri=$containeruri ?? 'default';
     $uri=base64_decode($uri);
+    if ($breadcrumbs == "_") {
+      $crumbs = array();
+    } else {
+      $crumbs = explode('|',$breadcrumbs);
+    }
+    $this->setBreadcrumbs($crumbs);
 
     $uemail = \Drupal::currentUser()->getEmail();
     $uid = \Drupal::currentUser()->id();
@@ -57,8 +72,8 @@ class ManageContainerAnnotationsForm extends FormBase {
     $api = \Drupal::service('rep.api_connector');
     $container = $api->parseObjectResponse($api->getUri($uri),'getUri');
     if ($container == NULL) {
-      \Drupal::messenger()->addMessage(t("Cannot read annotations from null container."));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('annotation'));
+      \Drupal::messenger()->addError(t("Cannot read annotations from null container."));
+      $this->backToSlotElement($form_state);
     }
     $this->setContainer($container);
 
@@ -99,9 +114,18 @@ class ManageContainerAnnotationsForm extends FormBase {
     //dpm($topleftLabel);
     //dpm($topcenterLabel);
 
+    $path = "";
+    $length = count($this->getBreadcrumbs());
+    for ($i = 0; $i < $length; $i++) {
+        $path .= '<font color="DarkGreen">' . $this->getBreadcrumbs()[$i] . '</font>';
+        if ($i < $length - 1) {
+            $path .= ' > ';
+        }
+    }
+
     $form['scope'] = [
       '#type' => 'item',
-      '#title' => t('<h3>Annotations of Container <font color="DarkGreen">' . $container->label . '</font></h3>'),
+      '#title' => t('<h3>Annotations of Container ' . $path . '</h3>'),
     ];
     $form['subtitle'] = [
       '#type' => 'item',
@@ -304,88 +328,102 @@ class ManageContainerAnnotationsForm extends FormBase {
         $msg .= $this->saveAnnotation(
           $form_state->getValue('annotation_topleft'),
           $this->topleftOriginal,
-          VSTOI::PAGE_TOP_LEFT);
+          VSTOI::PAGE_TOP_LEFT,
+          $form_state);
         $msg .= $this->saveAnnotation(
           $form_state->getValue('annotation_topcenter'),
           $this->topcenterOriginal,
-          VSTOI::PAGE_TOP_CENTER);
+          VSTOI::PAGE_TOP_CENTER,
+          $form_state);
         $msg .= $this->saveAnnotation(
           $form_state->getValue('annotation_topright'),
           $this->toprightOriginal,
-          VSTOI::PAGE_TOP_RIGHT);
+          VSTOI::PAGE_TOP_RIGHT,
+          $form_state);
         $msg .= $this->saveAnnotation(
           $form_state->getValue('annotation_linebelowtop'),
           $this->linebelowtopOriginal,
-          VSTOI::PAGE_LINE_BELOW_TOP);
+          VSTOI::PAGE_LINE_BELOW_TOP,
+          $form_state);
         $msg .= $this->saveAnnotation(
           $form_state->getValue('annotation_lineabovebottom'),
           $this->lineabovebottomOriginal,
-          VSTOI::PAGE_LINE_ABOVE_BOTTOM);
+          VSTOI::PAGE_LINE_ABOVE_BOTTOM,
+          $form_state);
         $msg .= $this->saveAnnotation(
           $form_state->getValue('annotation_bottomleft'),
           $this->bottomleftOriginal,
-          VSTOI::PAGE_BOTTOM_LEFT);
+          VSTOI::PAGE_BOTTOM_LEFT,
+          $form_state);
         $msg .= $this->saveAnnotation(
           $form_state->getValue('annotation_bottomcenter'),
           $this->bottomcenterOriginal,
-          VSTOI::PAGE_BOTTOM_CENTER);
+          VSTOI::PAGE_BOTTOM_CENTER,
+          $form_state);
         $msg .= $this->saveAnnotation(
           $form_state->getValue('annotation_bottomright'),
           $this->bottomrightOriginal,
-          VSTOI::PAGE_BOTTOM_RIGHT);
+          VSTOI::PAGE_BOTTOM_RIGHT,
+          $form_state);
       } else {
         $msg .= $this->saveAnnotation(
           $form_state->getValue('annotation_topleft'),
           $this->topleftOriginal,
-          VSTOI::TOP_LEFT);
+          VSTOI::TOP_LEFT,
+          $form_state);
         $msg .= $this->saveAnnotation(
           $form_state->getValue('annotation_topcenter'),
           $this->topcenterOriginal,
-          VSTOI::TOP_CENTER);
+          VSTOI::TOP_CENTER,
+          $form_state);
         $msg .= $this->saveAnnotation(
           $form_state->getValue('annotation_topright'),
           $this->toprightOriginal,
-          VSTOI::TOP_RIGHT);
+          VSTOI::TOP_RIGHT,
+          $form_state);
         $msg .= $this->saveAnnotation(
           $form_state->getValue('annotation_linebelowtop'),
           $this->linebelowtopOriginal,
-          VSTOI::LINE_BELOW_TOP);
+          VSTOI::LINE_BELOW_TOP,
+          $form_state);
         $msg .= $this->saveAnnotation(
           $form_state->getValue('annotation_lineabovebottom'),
           $this->lineabovebottomOriginal,
-          VSTOI::LINE_ABOVE_BOTTOM);
+          VSTOI::LINE_ABOVE_BOTTOM,
+          $form_state);
         $msg .= $this->saveAnnotation(
           $form_state->getValue('annotation_bottomleft'),
           $this->bottomleftOriginal,
-          VSTOI::BOTTOM_LEFT);
+          VSTOI::BOTTOM_LEFT,
+          $form_state);
         $msg .= $this->saveAnnotation(
           $form_state->getValue('annotation_bottomcenter'),
           $this->bottomcenterOriginal,
-          VSTOI::BOTTOM_CENTER);
+          VSTOI::BOTTOM_CENTER,
+          $form_state);
         $msg .= $this->saveAnnotation(
           $form_state->getValue('annotation_bottomright'),
           $this->bottomrightOriginal,
-          VSTOI::BOTTOM_RIGHT);
+          VSTOI::BOTTOM_RIGHT,
+          $form_state);
       }
 
       if ($msg != "") {
         \Drupal::messenger()->addMessage(t($msg));
       }      
-      $url = Url::fromRoute('sir.manage_slotelements', ['containeruri' => base64_encode($this->getContainer()->uri)]);
-      $form_state->setRedirectUrl($url);
+      $this->backToSlotElement($form_state);
     }
 
     // BACK TO MAIN PAGE
     if ($button_name === 'back') {
-      $url = Url::fromRoute('sir.manage_slotelements', ['containeruri' => base64_encode($this->getContainer()->uri)]);
-      $form_state->setRedirectUrl($url);
+      $this->backToSlotElement($form_state);
     }  
   }
   
   /**
    * {@inheritdoc}
    */
-  private function saveAnnotation($newValue, $original, $position) {
+  private function saveAnnotation($newValue, $original, $position, FormStateInterface $form_state) {
 
     $api = \Drupal::service('rep.api_connector');
 
@@ -417,8 +455,8 @@ class ManageContainerAnnotationsForm extends FormBase {
         return "Annotation added for ".Utils::namespaceUri($position).". ";
 
       } catch(\Exception $e) {
-        \Drupal::messenger()->addMessage(t("An error occurred while adding the Annotation: ".$e->getMessage()));
-        $form_state->setRedirectUrl(Utils::selectBackUrl('annotation'));
+        \Drupal::messenger()->addError(t("An error occurred while adding the Annotation: ".$e->getMessage()));
+        $this->backToSlotElement($form_state);
       }
 
     } else {
@@ -440,8 +478,8 @@ class ManageContainerAnnotationsForm extends FormBase {
             return "Annotation deleted for ".Utils::namespaceUri($position).". ";
 
           } catch(\Exception $e){
-            \Drupal::messenger()->addMessage(t("An error occurred while updating the Annotation: ".$e->getMessage()));
-            $form_state->setRedirectUrl(Utils::selectBackUrl('annotationstem'));
+            \Drupal::messenger()->addError(t("An error occurred while updating the Annotation: ".$e->getMessage()));
+            $this->backToSlotElement($form_state);
           }  
         } else {
 
@@ -468,12 +506,25 @@ class ManageContainerAnnotationsForm extends FormBase {
             return "Annotation updated for ".Utils::namespaceUri($position).". ";
 
           } catch(\Exception $e){
-            \Drupal::messenger()->addMessage(t("An error occurred while updating the Annotation: ".$e->getMessage()));
-            $form_state->setRedirectUrl(Utils::selectBackUrl('annotationstem'));
+            \Drupal::messenger()->addError(t("An error occurred while updating the Annotation: ".$e->getMessage()));
+            $this->backToSlotElement($form_state);
           }  
 
         }
       }
     }
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  private function backToSlotElement(FormStateInterface $form_state) {
+    $breadcrumbsArg = implode('|',$this->getBreadcrumbs());
+    $url = Url::fromRoute('sir.manage_slotelements'); 
+    $url->setRouteParameter('containeruri', base64_encode($this->getContainer()->uri));
+    $url->setRouteParameter('breadcrumbs', $breadcrumbsArg);
+    $form_state->setRedirectUrl($url);
+    return;
+  } 
+  
 }

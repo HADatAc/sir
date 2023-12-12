@@ -5,22 +5,22 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\rep\Constant;
 use Drupal\rep\Utils;
+use Drupal\rep\Entity\Tables;
 use Drupal\rep\Vocabulary\VSTOI;
 
-class AddSubcontainerForm extends FormBase {
+class EditSubcontainerForm extends FormBase {
 
-  protected $belongsTo;
+  protected $subcontainer;
 
   protected array $crumbs;
 
-  public function getBelongsTo() {
-    return $this->belongsTo;
+  public function getSubcontainer() {
+    return $this->subcontainer;
   }
 
-  public function setBelongsTo($uri) {
-    return $this->belongsTo = $uri; 
+  public function setSubcontainer($sub) {
+    return $this->subcontainer = $sub; 
   }
 
   public function getBreadcrumbs() {
@@ -35,18 +35,17 @@ class AddSubcontainerForm extends FormBase {
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'add_subcontainer_form';
+    return 'edit_subcontainer_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $belongsto = NULL, $breadcrumbs = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, $subcontaineruri = NULL, $breadcrumbs = NULL) {
 
     // SETUP CONTEXT
-    $uri=$belongsto ?? 'default';
-    $uri_decode=base64_decode($uri);
-    $this->setBelongsTo($uri_decode);
+    $uri=$subcontaineruri ?? 'default';
+    $subUri=base64_decode($uri);
     if ($breadcrumbs == "_") {
       $crumbs = array();
     } else {
@@ -54,7 +53,31 @@ class AddSubcontainerForm extends FormBase {
     }
     $this->setBreadcrumbs($crumbs);
 
-    // BUILD FORM
+    // LOAD SUBCONTAINER
+    $api = \Drupal::service('rep.api_connector');
+    $this->setSubcontainer($api->parseObjectresponse($api->getUri($subUri),'getUri'));   
+    if ($this->getSubcontainer() == NULL) {
+      \Drupal::messenger()->addMessage(t("Failed to retrieve Subcontainer."));
+      $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
+      return;
+    }
+
+    //dpm($this->getSubcontainer());
+
+    $belongTo = "";
+    if ($this->getSubcontainer()->belongsTo != NULL) {
+      $belongsTo = $this->getSubcontainer()->belongsTo;
+    }
+    $priority = "";
+    if ($this->getSubcontainer()->hasPriority != NULL) {
+      $priority = $this->getSubcontainer()->hasPriority;
+    }
+
+    $name = "";
+    if ($this->getSubcontainer()->label != NULL) {
+      $name = $this->getSubcontainer()->label;
+    }
+
     $path = "";
     $length = count($this->getBreadcrumbs());
     for ($i = 0; $i < $length; $i++) {
@@ -71,20 +94,22 @@ class AddSubcontainerForm extends FormBase {
     $form['subcontainer_belongsto'] = [
       '#type' => 'textfield',
       '#title' => t('Parent URI'),
-      '#value' => $this->getBelongsTo(),
+      '#default_value' => $belongsTo,
       '#disabled' => TRUE,
     ];
     $form['subcontainer_priority'] = [
       '#type' => 'textfield',
       '#title' => $this->t("Priority (e.g., 'Section 1.1')"),
+      '#default_value' => $priority,
     ];
     $form['subcontainer_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t("Name (e.g., 'Demographics', 'Lab Results')"),
+      '#default_value' => $name,
     ];
-    $form['save_submit'] = [
+    $form['update_submit'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Save'),
+      '#value' => $this->t('Update'),
       '#name' => 'save',
     ];
     $form['cancel_submit'] = [
@@ -101,12 +126,13 @@ class AddSubcontainerForm extends FormBase {
   }
 
   public function validateForm(array &$form, FormStateInterface $form_state) {
+    $submitted_values = $form_state->cleanValues()->getValues();
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
 
     if ($button_name != 'back') {
       if(strlen($form_state->getValue('subcontainer_name')) < 1) {
-        $form_state->setErrorByName('subcontainer_name', $this->t('Please provide a name for the new subcontainer.'));
+        $form_state->setErrorByName('subcontainer_name', $this->t('Please enter a valid name'));
       }
     }
   }
@@ -124,26 +150,32 @@ class AddSubcontainerForm extends FormBase {
     } 
 
     try{
-      $api = \Drupal::service('rep.api_connector');
-
       $useremail = \Drupal::currentUser()->getEmail();
-      $newSubcontainerUri = Utils::uriGen('subcontainer');
-      $subcontainerJson = '{"uri":"'.$newSubcontainerUri.'",'.
+      $subcontainerJson = '{"uri":"'.$this->getSubcontainer()->uri.'",'.
         '"typeUri":"'.VSTOI::SUBCONTAINER.'",'.
         '"hascoTypeUri":"'.VSTOI::SUBCONTAINER.'",'.
-        '"belongsTo":"'.$this->getBelongsTo().'",'.
+        '"belongsTo":"'.$this->getSubcontainer()->belongsTo.'",'.
         '"label":"'.$form_state->getValue('subcontainer_name').'",'.
-        '"hasPriority":"'.$form_state->getValue('subcontainer_priority').'",'.
-        '"hasSIRManagerEmail":"'.$useremail.'"}';
+        '"hasPriority":"'.$form_state->getValue('subcontainer_priority').'",';
+      if (isset($this->getSubcontainer()->hasPrevious)) {
+        $subcontainerJson .= '"hasPrevious":"'.$this->getSubcontainer()->hasPrevious.'",';
+      } 
+      if (isset($this->getSubcontainer()->hasNext)) {
+        $subcontainerJson .= '"hasNext":"'.$this->getSubcontainer()->hasNext.'",';
+      }
+      $subcontainerJson .= '"hasSIRManagerEmail":"'.$useremail.'"}';
 
+      // UPDATE BY DELETING AND CREATING
       $api = \Drupal::service('rep.api_connector');
-      $message = $api->parseObjectResponse($api->subcontainerAdd($subcontainerJson),'subcontainerAdd');
-      if ($message != null) {
-        \Drupal::messenger()->addMessage(t("Subcontainer has been added successfully."));
+      $msg = $api->parseObjectResponse($api->subcontainerUpdate($subcontainerJson),'subcontainerUpdate');
+    
+      if ($msg == NULL) {
+        \Drupal::messenger()->addMessage(t("Subcontainer has been updated successfully."));
       }
       $this->backToSlotElement($form_state);
+
     }catch(\Exception $e){
-      \Drupal::messenger()->addMessage(t("An error occurred while adding the ContainerSlot: ".$e->getMessage()));
+      \Drupal::messenger()->addMessage(t("An error occurred while updating the Response Option: ".$e->getMessage()));
       $this->backToSlotElement($form_state);
     }
 
@@ -155,10 +187,12 @@ class AddSubcontainerForm extends FormBase {
   private function backToSlotElement(FormStateInterface $form_state) {
     $breadcrumbsArg = implode('|',$this->getBreadcrumbs());
     $url = Url::fromRoute('sir.manage_slotelements'); 
-    $url->setRouteParameter('containeruri', base64_encode($this->getBelongsTo()));
+    $url->setRouteParameter('containeruri', base64_encode($this->getSubcontainer()->belongsTo));
     $url->setRouteParameter('breadcrumbs', $breadcrumbsArg);
     $form_state->setRedirectUrl($url);
     return;
   } 
   
+
+
 }
