@@ -1,7 +1,6 @@
-    
 sir.top_level:
-  title: Questionnaire Elements
-  description: Manage Questionnaire Elements
+  title: Instrument Elements
+  description: Manage Instrument Elements
   route_name: rep.about
   menu_name: main
   weight: 70
@@ -9,7 +8,7 @@ sir.top_level:
     _permission: 'access content'
     
 sir.search:
-  title: Search Questionnaire Elements
+  title: Search Instrument Elements
   description: Search SIR Elements
   route_name: sir.search
   parent: sir.top_level
@@ -19,9 +18,39 @@ sir.search:
   requirements:
    _permission: 'access content'
 
+sir.divider1:
+  title: '_________________________________'
+  parent: sir.top_level
+  menu_name: main
+  weight: 9
+  route_name: '<none>'
+
+sir.manage_ins_files:
+  title: Manage INS Templates
+  description: Manage INS Templates
+  route_name: rep.select_mt_element
+  route_parameters:
+    elementtype: 'ins'
+    page: '1'
+    pagesize: '10'
+    studyuri: 'none'
+  parent: sir.top_level
+  menu_name: main
+  weight: 10
+  requirements:
+    _permission: 'access content'
+    _role: 'authenticated'
+
+sir.divider2:
+  title: '_________________________________'
+  parent: sir.top_level
+  menu_name: main
+  weight: 19
+  route_name: '<none>'
+  
 sir.manage_instruments:
-  title: Manage Questionnaires
-  description: Manage Questionnaries
+  title: Manage Instruments
+  description: Manage Instruments
   route_name: sir.select_element
   route_parameters:
     elementtype: 'instrument'
@@ -29,14 +58,14 @@ sir.manage_instruments:
     pagesize: '10'
   parent: sir.top_level
   menu_name: main
-  weight: 2
+  weight: 20
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
 
 sir.manage_detectorstems :
-  title: Manage Item Stems 
-  description: Manage Item Stems
+  title: Manage Detector Stems 
+  description: Manage Detector Stems
   route_name: sir.select_element
   route_parameters:
     elementtype: 'detectorstem'
@@ -44,14 +73,14 @@ sir.manage_detectorstems :
     pagesize: '10'
   parent: sir.top_level
   menu_name: main
-  weight: 3
+  weight: 21
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
 
 sir.manage_detectors :
-  title: Manage Items 
-  description: Manage Items
+  title: Manage Detectors 
+  description: Manage Detectors
   route_name: sir.select_element
   route_parameters:
     elementtype: 'detector'
@@ -59,7 +88,7 @@ sir.manage_detectors :
     pagesize: '10'
   parent: sir.top_level
   menu_name: main
-  weight: 4
+  weight: 22
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -74,7 +103,7 @@ sir.manage_codebooks :
     pagesize: '10'
   parent: sir.top_level
   menu_name: main
-  weight: 5
+  weight: 23
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -89,7 +118,7 @@ sir.manage_responseoptions :
     pagesize: '10'
   parent: sir.top_level
   menu_name: main
-  weight: 6
+  weight: 24
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -104,7 +133,7 @@ sir.manage_annotationstems :
     pagesize: '10'
   parent: sir.top_level
   menu_name: main
-  weight: 7
+  weight: 25
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -119,7 +148,7 @@ sir.manage_annotations :
     pagesize: '10'
   parent: sir.top_level
   menu_name: main
-  weight: 8
+  weight: 26
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
