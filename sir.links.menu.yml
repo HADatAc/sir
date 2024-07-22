@@ -31,6 +31,7 @@ sir.manage_ins_files:
   route_name: rep.select_mt_element
   route_parameters:
     elementtype: 'ins'
+    mode: 'table'
     page: '1'
     pagesize: '10'
     studyuri: 'none'
