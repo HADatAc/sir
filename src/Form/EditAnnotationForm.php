@@ -5,6 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Constant;
@@ -88,7 +89,7 @@ class EditAnnotationForm extends FormBase {
       '#type' => 'textfield',
       '#title' => $this->t('Instrument'),
       '#default_value' => $containerLabel,
-      '#autocomplete_route_name' => 'sir.annotation_container_autocomplete',
+      '#disabled' => TRUE,
     ];
     $form['annotation_position'] = [
       '#type' => 'select',
@@ -154,7 +155,7 @@ class EditAnnotationForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $form_state->setRedirectUrl(Utils::selectBackUrl('annotation'));
+      self::backUrl();
       return;
     } 
 
@@ -188,12 +189,25 @@ class EditAnnotationForm extends FormBase {
       $api->annotationDel($this->getAnnotationUri());
       $updatedAnnotation = $api->annotationAdd($annotationJson);    
       \Drupal::messenger()->addMessage(t("Annotation has been updated successfully."));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('annotation'));
+      self::backUrl();
+      return;
 
     }catch(\Exception $e){
-      \Drupal::messenger()->addWarning(t("An error occurred while updating the Annotation: ".$e->getMessage()));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('annotationstem'));
+      \Drupal::messenger()->addError(t("An error occurred while updating the Annotation: ".$e->getMessage()));
+      self::backUrl();
+      return;
     }
   }
+
+  function backUrl() {
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.edit_annotation');
+    if ($previousUrl) {
+      $response = new RedirectResponse($previousUrl);
+      $response->send();
+      return;
+    }
+  }
+  
 
 }

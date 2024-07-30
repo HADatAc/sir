@@ -5,6 +5,8 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Drupal\rep\Utils;
 
 class AddCodebookSlotsForm extends FormBase {
 
@@ -80,8 +82,7 @@ class AddCodebookSlotsForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $url = Url::fromRoute('sir.manage_codebooks');
-      $form_state->setRedirectUrl($url);
+      self::backUrl();
       return;
     } 
 
@@ -95,12 +96,22 @@ class AddCodebookSlotsForm extends FormBase {
       $form_state->setRedirectUrl($url);
 
     } catch(\Exception $e){
-      \Drupal::messenger()->addMessage(t("An error occurred while adding the Codebook slots: ".$e->getMessage()));
-      $url = Url::fromRoute('sir.manage_codebook_slots');
-      $url->setRouteParameter('codebookuri', base64_encode($this->getCodebookUri()));
-      $form_state->setRedirectUrl($url);
+      \Drupal::messenger()->addError(t("An error occurred while adding the Codebook slots: ".$e->getMessage()));
+      self::backUrl();
+      return;
     }
 
   }
+
+  function backUrl() {
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.manage_codebook_slots');
+    if ($previousUrl) {
+      $response = new RedirectResponse($previousUrl);
+      $response->send();
+      return;
+    }
+  }
+  
 
 }

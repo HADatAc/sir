@@ -6,10 +6,10 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormBuilder;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\VSTOI;
 use Drupal\Component\Serialization\Json;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class ManageSlotElementsForm extends FormBase {
 
@@ -78,6 +78,9 @@ class ManageSlotElementsForm extends FormBase {
 
     // RETRIEVE SLOT_ELEMENTS BY CONTAINER
     $slotElements = $api->parseObjectResponse($api->slotElements($this->getContainer()->uri),'slotElements');
+
+    // RETRIEVE PREFERRED TERM FOR INSTRUMENT
+    $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument');
 
     #if (sizeof($containerslots) <= 0) {
     #  return new RedirectResponse(Url::fromRoute('sir.add_containerslots', ['containeruri' => base64_encode($this->getContainerUri())])->toString());
@@ -202,6 +205,11 @@ class ManageSlotElementsForm extends FormBase {
       '#value' => $this->t('Manage Annotations'),
       '#name' => 'manage_annotations',
     ];
+    $form['manage_annotation_placement'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Manage Annotation Placement'),
+      '#name' => 'manage_annotation_placement',
+    ];
     $form['manage_subcontainer_structure'] = [
       '#type' => 'submit',
       '#value' => $this->t('Manage Structure of Selected'),
@@ -230,7 +238,7 @@ class ManageSlotElementsForm extends FormBase {
     }
     $form['submit'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Back to Questionnaire Management'),
+      '#value' => $this->t('Back to ' . $preferred_instrument . ' Management'),
       '#name' => 'back',
     ];
     $form['bottom_space'] = [
@@ -403,6 +411,19 @@ class ManageSlotElementsForm extends FormBase {
     // MANAGE CONTAINER'S ANNOTATIONS
     if ($button_name === 'manage_annotations') {
       $breadcrumbsArg = implode('|',$this->getBreadcrumbs());
+      $url = Url::fromRoute('sir.manage_annotations');
+      $url->setRouteParameter('elementtype', 'annotation');
+      $url->setRouteParameter('page', '1');
+      $url->setRouteParameter('pagesize', '10');
+      $url->setRouteParameter('containeruri', base64_encode($this->getContainer()->uri));
+      $url->setRouteParameter('breadcrumbs', $breadcrumbsArg);
+      $form_state->setRedirectUrl($url);
+      return;
+    }
+
+    // MANAGE CONTAINER'S ANNOTATION PLACEMENT
+    if ($button_name === 'manage_annotation_placement') {
+      $breadcrumbsArg = implode('|',$this->getBreadcrumbs());
       $url = Url::fromRoute('sir.manage_container_annotations');
       $url->setRouteParameter('containeruri', base64_encode($this->getContainer()->uri));
       $url->setRouteParameter('breadcrumbs', $breadcrumbsArg);
@@ -429,7 +450,8 @@ class ManageSlotElementsForm extends FormBase {
 
     // BACK TO MAIN PAGE
     if ($button_name === 'back') {
-      $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
+      self::backUrl();
+      return;
     }  
   }
   
@@ -451,5 +473,16 @@ class ManageSlotElementsForm extends FormBase {
     return $url;
   }
   
+  function backUrl() {
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.manage_slotelements');
+    if ($previousUrl) {
+      $response = new RedirectResponse($previousUrl);
+      $response->send();
+      return;
+    }
+  }
+  
+
 
 }

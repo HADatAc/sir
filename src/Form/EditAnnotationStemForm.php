@@ -5,6 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Constant;
@@ -160,7 +161,7 @@ class EditAnnotationStemForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $form_state->setRedirectUrl(Utils::selectBackUrl('annotationstem'));
+      self::backUrl();
       return;
     } 
 
@@ -192,12 +193,13 @@ class EditAnnotationStemForm extends FormBase {
       $api->annotationStemDel($this->getAnnotationStemUri());
       $updatedAnnotationStem = $api->annotationStemAdd($annotationStemJson);    
       \Drupal::messenger()->addMessage(t("Annotation Stem has been updated successfully."));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('annotationstem'));
+      self::backUrl();
+      return;
 
     }catch(\Exception $e){
       \Drupal::messenger()->addMessage(t("An error occurred while updating the Annotation Stem: ".$e->getMessage()));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('annotationstem'));
-    }
+      self::backUrl();
+      return;    }
   }
 
   public function retrieveAnnotationStem($annotationStemUri) {
@@ -209,5 +211,16 @@ class EditAnnotationStemForm extends FormBase {
     }
     return NULL; 
   }
+
+  function backUrl() {
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.edit_annotationstem');
+    if ($previousUrl) {
+      $response = new RedirectResponse($previousUrl);
+      $response->send();
+      return;
+    }
+  }
+  
 
 }

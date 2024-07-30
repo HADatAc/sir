@@ -138,19 +138,3 @@ sir.manage_annotationstems :
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
-
-sir.manage_annotations :
-  title: Manage Annotations 
-  description: Manage Annotations
-  route_name: sir.select_element
-  route_parameters:
-    elementtype: 'annotation'
-    page: '1'
-    pagesize: '10'
-  parent: sir.top_level
-  menu_name: main
-  weight: 26
-  requirements:
-    _permission: 'access content'
-    _role: 'authenticated'
-

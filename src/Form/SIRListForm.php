@@ -79,26 +79,29 @@ class SIRListForm extends FormBase {
     // RETRIEVE ELEMENTS
     $this->setList(ListKeywordLanguagePage::exec($elementtype, $keyword, $language, $page, $pagesize));
 
+    $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument');
+    $preferred_detector = \Drupal::config('rep.settings')->get('preferred_detector');
+
     $class_name = "";
     switch ($elementtype) {
 
       // INSTRUMENT
       case "instrument":
-        $class_name = "Instruments";
+        $class_name = $preferred_instrument . "s";
         $header = Instrument::generateHeader();
         $output = Instrument::generateOutput($this->getList());    
         break;
 
       // DETECTOR STEM
       case "detectorstem":
-        $class_name = "Detector Stems";
+        $class_name = $preferred_detector . " Stems";
         $header = DetectorStem::generateHeader();
         $output = DetectorStem::generateOutput($this->getList());    
         break;
 
       // DETECTOR
       case "detector":
-        $class_name = "Detectors";
+        $class_name = $preferred_detector . "s";
         $header = Detector::generateHeader();
         $output = Detector::generateOutput($this->getList());    
         break;

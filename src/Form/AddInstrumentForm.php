@@ -4,6 +4,8 @@ namespace Drupal\sir\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\Constant;
 use Drupal\rep\Utils;
 use Drupal\rep\Entity\Tables;
@@ -70,7 +72,6 @@ class AddInstrumentForm extends FormBase {
       '#title' => t('<br><br>'),
     ];
 
-
     return $form;
   }
 
@@ -101,9 +102,9 @@ class AddInstrumentForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
+      self::backUrl();
       return;
-    } 
+  } 
 
     try{
       $useremail = \Drupal::currentUser()->getEmail();
@@ -122,13 +123,27 @@ class AddInstrumentForm extends FormBase {
       $api = \Drupal::service('rep.api_connector');
       $api->instrumentAdd($instrumentJson);    
       \Drupal::messenger()->addMessage(t("Instrument has been added successfully."));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
+      self::backUrl();
+      return;
 
     }catch(\Exception $e){
       \Drupal::messenger()->addMessage(t("An error occurred while adding instrument: ".$e->getMessage()));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
-    }
+      self::backUrl();
+      return;
+ }
 
   }
+
+  function backUrl() {
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.add_instrument');
+    if ($previousUrl) {
+      $response = new RedirectResponse($previousUrl);
+      $response->send();
+      return;
+    }
+  }
+  
+
 
 }

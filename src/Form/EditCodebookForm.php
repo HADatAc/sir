@@ -4,9 +4,11 @@ namespace Drupal\sir\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\rep\Utils;
+use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Vocabulary\VSTOI;
+use Drupal\rep\Utils;
 
 class EditCodebookForm extends FormBase {
 
@@ -56,8 +58,9 @@ class EditCodebookForm extends FormBase {
       $this->setCodebook($obj->body);
       #dpm($this->getCodebook());
     } else {
-      \Drupal::messenger()->addMessage(t("Failed to retrieve Codebook."));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('codebook'));
+      \Drupal::messenger()->addError(t("Failed to retrieve Codebook."));
+      self::backUrl();
+      return;  
     }
 
     $form['codebook_name'] = [
@@ -125,8 +128,8 @@ class EditCodebookForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $form_state->setRedirectUrl(Utils::selectBackUrl('codebook'));
-      return;
+      self::backUrl();
+      return;  
     } 
 
     try{
@@ -147,13 +150,27 @@ class EditCodebookForm extends FormBase {
       $api->codebookAdd($codebookJson);
     
       \Drupal::messenger()->addMessage(t("Codebook has been updated successfully."));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('codebook'));
+      self::backUrl();
+      return;  
 
     }catch(\Exception $e){
-      \Drupal::messenger()->addMessage(t("An error occurred while updating Codebook: ".$e->getMessage()));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('codebook'));
+      \Drupal::messenger()->addError(t("An error occurred while updating Codebook: ".$e->getMessage()));
+      self::backUrl();
+      return;  
     }
 
   }
+
+  function backUrl() {
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.edit_codebook');
+    if ($previousUrl) {
+      $response = new RedirectResponse($previousUrl);
+      $response->send();
+      return;
+    }
+  }
+
+
 
 }

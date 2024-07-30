@@ -5,6 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\Utils;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Vocabulary\VSTOI;
@@ -57,19 +58,21 @@ class AddResponseOptionForm extends FormBase {
       $obj = json_decode($rawresponse);
       if ($obj->isSuccessful) {
         $this->setCodebookSlot($obj->body);
-    }
+      }
     }
 
     // RETRIEVE TABLES
     $tables = new Tables;
     $languages = $tables->getLanguages();
 
-    $form['responseoption_codebook_slot'] = [
-      '#type' => 'textfield',
-      '#title' => t('Response Option Slot URI'),
-      '#value' => $this->getCodebookSlotUri(),
-      '#disabled' => TRUE,
-    ];
+    if ($this->getCodebookSlotUri() != NULL && $this->getCodebookSlotUri() != "") {
+      $form['responseoption_codebook_slot'] = [
+        '#type' => 'textfield',
+        '#title' => t('Being created in the context of the following Response Option Slot URI'),
+        '#value' => $this->getCodebookSlotUri(),
+        '#disabled' => TRUE,
+      ];
+    }
     $form['responseoption_content'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Content'),
@@ -129,7 +132,7 @@ class AddResponseOptionForm extends FormBase {
 
     if ($button_name === 'back') {
       if ($this->getCodebookSlotUri() == "") {
-        $form_state->setRedirectUrl(Utils::selectBackUrl('responseoption'));
+        self::backUrl();
         return;
       } else {
         $url = Url::fromRoute('sir.edit_codebook_slot');
@@ -159,7 +162,7 @@ class AddResponseOptionForm extends FormBase {
       
       \Drupal::messenger()->addMessage(t("Response Option has been added successfully."));
       if ($this->getCodebookSlotUri() == "") {
-        $form_state->setRedirectUrl(Utils::selectBackUrl('responseoption'));
+        self::backUrl();
         return;
       } else {
         $url = Url::fromRoute('sir.edit_codebook_slot');
@@ -169,9 +172,9 @@ class AddResponseOptionForm extends FormBase {
       }
 
     }catch(\Exception $e){
-      \Drupal::messenger()->addMessage(t("An error occurred while adding the Response Option: ".$e->getMessage()));
+      \Drupal::messenger()->addError(t("An error occurred while adding the Response Option: ".$e->getMessage()));
       if ($this->getCodebookSlotUri() == "") {
-        $form_state->setRedirectUrl(Utils::selectBackUrl('responseoption'));
+        self::backUrl();
         return;
       } else {
         $url = Url::fromRoute('sir.edit_codebook_slot');
@@ -182,5 +185,17 @@ class AddResponseOptionForm extends FormBase {
     }
 
   }
+
+  function backUrl() {
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.add_response_option');
+    if ($previousUrl) {
+      $response = new RedirectResponse($previousUrl);
+      $response->send();
+      return;
+    }
+  }
+  
+
 
 }

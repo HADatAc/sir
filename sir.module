@@ -1,4 +1,10 @@
 <?php
+
+use Drupal\Core\Path\AliasStorageInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Routing\RouteProviderInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
 /**
  * Implements hook_theme
  */
@@ -33,12 +39,39 @@ function sir_theme($existing, $type, $theme, $path)
     ];
 }
 
-use Drupal\Core\Path\AliasStorageInterface;
+
+/**
+ * Implements hook_menu_links_discovered_alter().
+ */
+function sir_menu_links_discovered_alter(&$links) {
+
+    //\Drupal::logger('sir_notices')->notice('menu_links_discovered_alter function called.');
+
+    $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument');
+    $preferred_detector = \Drupal::config('rep.settings')->get('preferred_detector');
+
+    if (isset($links['sir.top_level'])) {
+      $links['sir.top_level']['title'] = $preferred_instrument . ' Element';
+    }
+    if (isset($links['sir.search'])) {
+        $links['sir.search']['title'] = 'Search ' . $preferred_instrument . ' Elements';
+    }
+    if (isset($links['sir.manage_instruments'])) {
+        $links['sir.manage_instruments']['title'] = 'Manage ' . $preferred_instrument . 's';
+    }
+    if (isset($links['sir.manage_detectorstems'])) {
+        $links['sir.manage_detectorstems']['title'] = 'Manage ' . $preferred_detector . ' Stems';
+    }
+    if (isset($links['sir.manage_detectors'])) {
+        $links['sir.manage_detectors']['title'] = 'Manage ' . $preferred_detector . 's';
+    }
+
+}
 
 /**
  * Implements hook_page_attachments().
  */
-function mymodule_page_attachments(array &$attachments) {
+function sir_page_attachments(array &$attachments) {
   $attachments['#attached']['library'][] = 'core/drupal.dialog';
 }
 

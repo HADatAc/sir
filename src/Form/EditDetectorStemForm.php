@@ -5,6 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Constant;
@@ -66,8 +67,9 @@ class EditDetectorStemForm extends FormBase {
     $wasGeneratedBy = Constant::DEFAULT_WAS_GENERATED_BY;
     $this->setDetectorStem($this->retrieveDetectorStem($this->getDetectorStemUri()));
     if ($this->getDetectorStem() == NULL) {
-      \Drupal::messenger()->addMessage(t("Failed to retrieve Detector Stem."));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('detectorstem'));
+      \Drupal::messenger()->addError(t("Failed to retrieve Detector Stem."));
+      self::backUrl();
+      return;
     } else {
       $wasGeneratedBy = $this->getDetectorStem()->wasGeneratedBy;
       if ($this->getDetectorStem()->wasDerivedFrom != NULL) {
@@ -159,7 +161,7 @@ class EditDetectorStemForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $form_state->setRedirectUrl(Utils::selectBackUrl('detectorstem'));
+      self::backUrl();
       return;
     } 
 
@@ -191,11 +193,13 @@ class EditDetectorStemForm extends FormBase {
       $api->detectorStemDel($this->getDetectorStemUri());
       $updatedDetectorStem = $api->detectorStemAdd($detectorStemJson);    
       \Drupal::messenger()->addMessage(t("Detector Stem has been updated successfully."));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('detectorstem'));
+      self::backUrl();
+      return;
 
     }catch(\Exception $e){
-      \Drupal::messenger()->addMessage(t("An error occurred while updating the Detector Stem: ".$e->getMessage()));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('detectorstem'));
+      \Drupal::messenger()->addError(t("An error occurred while updating the Detector Stem: ".$e->getMessage()));
+      self::backUrl();
+      return;
     }
   }
 
@@ -207,6 +211,16 @@ class EditDetectorStemForm extends FormBase {
       return $obj->body;
     }
     return NULL; 
+  }
+
+  function backUrl() {
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.edit_detectorstem');
+    if ($previousUrl) {
+      $response = new RedirectResponse($previousUrl);
+      $response->send();
+      return;
+    }
   }
 
 }

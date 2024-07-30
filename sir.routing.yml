@@ -373,7 +373,7 @@ sir.annotation_stem_autocomplete:
 # Annotation CRUD options
 
 sir.add_annotation:
-  path: 'sir/manage/addannotation'
+  path: 'sir/manage/addannotation/{containeruri}/{breadcrumbs}'
   defaults:
     _form: '\Drupal\sir\Form\AddAnnotationForm'
     _title: 'Add Annotation'    
@@ -395,10 +395,20 @@ sir.manage_container_annotations:
     no_cache: 'TRUE'
 
 sir.edit_annotation:
-  path: 'sir/manage/editannotation/{annotationuri}'
+  path: 'sir/manage/editannotation/{annotationuri}/{containeruri}/{breadcrumbs}'
   defaults:
     _form: '\Drupal\sir\Form\EditAnnotationForm'
     _title: 'Edit Annotation'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+sir.manage_annotations:
+  path: 'sir/manage/annotations/{page}/{pagesize}/{containeruri}/{breadcrumbs}'
+  defaults:
+    _form: '\Drupal\sir\Form\ManageAnnotationsForm'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    

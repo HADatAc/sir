@@ -5,6 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Constant;
@@ -63,8 +64,9 @@ class EditDetectorForm extends FormBase {
     $codebookLabel = '';
     $this->setDetector($this->retrieveDetector($this->getDetectorUri()));
     if ($this->getDetector() == NULL) {
-      \Drupal::messenger()->addMessage(t("Failed to retrieve Detector."));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('detector'));
+      \Drupal::messenger()->addError(t("Failed to retrieve Detector."));
+      self::backUrl();
+      return;
     } else {
       if ($this->getDetector()->detectorStem != NULL) {
         $stemLabel = $this->getDetector()->detectorStem->hasContent . ' [' . $this->getDetector()->detectorStem->uri . ']';
@@ -128,7 +130,7 @@ class EditDetectorForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $form_state->setRedirectUrl(Utils::selectBackUrl('detector'));
+      self::backUrl();
       return;
     } 
 
@@ -159,11 +161,13 @@ class EditDetectorForm extends FormBase {
       $api->detectorDel($this->getDetectorUri());
       $updatedDetector = $api->detectorAdd($detectorJson);    
       \Drupal::messenger()->addMessage(t("Detector has been updated successfully."));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('detector'));
+      self::backUrl();
+      return;
 
     }catch(\Exception $e){
-      \Drupal::messenger()->addMessage(t("An error occurred while updating the Detector: ".$e->getMessage()));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('detector'));
+      \Drupal::messenger()->addError(t("An error occurred while updating the Detector: ".$e->getMessage()));
+      self::backUrl();
+      return;
     }
   }
 
@@ -175,6 +179,16 @@ class EditDetectorForm extends FormBase {
       return $obj->body;
     }
     return NULL; 
+  }
+
+  function backUrl() {
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.edit_detector');
+    if ($previousUrl) {
+      $response = new RedirectResponse($previousUrl);
+      $response->send();
+      return;
+    }
   }
 
 }

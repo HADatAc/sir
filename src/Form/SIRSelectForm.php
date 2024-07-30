@@ -100,28 +100,32 @@ class SIRSelectForm extends FormBase {
 
     $this->single_class_name = "";
     $this->plural_class_name = "";
+
+    $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument');
+    $preferred_detector = \Drupal::config('rep.settings')->get('preferred_detector');
+
     switch ($this->element_type) {
 
       // INSTRUMENT
       case "instrument":
-        $this->single_class_name = "Questionnaire";
-        $this->plural_class_name = "Questionnaires";
+        $this->single_class_name = $preferred_instrument;
+        $this->plural_class_name = $preferred_instrument . "s";
         $header = Instrument::generateHeader();
         $output = Instrument::generateOutput($this->getList());    
         break;
 
       // DETECTORSTEM
       case "detectorstem":
-        $this->single_class_name = "Item Stem";
-        $this->plural_class_name = "Item Stems";
+        $this->single_class_name = $preferred_detector . " Stem";
+        $this->plural_class_name = $preferred_detector . " Stems";
         $header = DetectorStem::generateHeader();
         $output = DetectorStem::generateOutput($this->getList());    
         break;
 
       // DETECTOR
       case "detector":
-        $this->single_class_name = "Item";
-        $this->plural_class_name = "Items";
+        $this->single_class_name = $preferred_detector;
+        $this->plural_class_name = $preferred_detector . "s";
         $header = Detector::generateHeader();
         $output = Detector::generateOutput($this->getList());    
         break;
@@ -151,12 +155,12 @@ class SIRSelectForm extends FormBase {
         break;
 
       // ANNOTATION
-      case "annotation":
-        $this->single_class_name = "Annotation";
-        $this->plural_class_name = "Annotations";
-        $header = Annotation::generateHeader();
-        $output = Annotation::generateOutput($this->getList());    
-        break;
+      //case "annotation":
+      //  $this->single_class_name = "Annotation";
+      //  $this->plural_class_name = "Annotations";
+      //  $header = Annotation::generateHeader();
+      //  $output = Annotation::generateOutput($this->getList());    
+      //  break;
 
       default:
         $this->single_class_name = "Object of Unknown Type";
@@ -180,7 +184,7 @@ class SIRSelectForm extends FormBase {
     if ($this->element_type == 'detectorstem') {
       $form['derive_detectorstem'] = [
         '#type' => 'submit',
-        '#value' => $this->t('Derive New Item Stem from Selected'),
+        '#value' => $this->t('Derive New ' . $preferred_detector. ' Stem from Selected'),
         '#name' => 'derive_detectorstem',
       ];
     }
@@ -262,6 +266,10 @@ class SIRSelectForm extends FormBase {
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
   
+    // SET USER ID AND PREVIOUS URL FOR TRACKING STORE URLS
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = \Drupal::request()->getRequestUri();
+
     // RETRIEVE SELECTED ROWS, IF ANY
     $selected_rows = $form_state->getValue('element_table');
     $rows = [];
@@ -274,24 +282,30 @@ class SIRSelectForm extends FormBase {
     // ADD ELEMENT
     if ($button_name === 'add_element') {
       if ($this->element_type == 'instrument') {
+        Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_instrument');
         $url = Url::fromRoute('sir.add_instrument');
       } else if ($this->element_type == 'detectorstem') {
+        Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_detectorstem');
         $url = Url::fromRoute('sir.add_detectorstem');
         $url->setRouteParameter('sourcedetectorstemuri', 'EMPTY');
       } else if ($this->element_type == 'detector') {
+        Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_detector');
         $url = Url::fromRoute('sir.add_detector');
         $url->setRouteParameter('sourcedetectoruri', 'EMPTY');
         $url->setRouteParameter('containersloturi', 'EMPTY');  
       } else if ($this->element_type == 'codebook') {
+        Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_codebook');
         $url = Url::fromRoute('sir.add_codebook');
       } else if ($this->element_type == 'responseoption') {
+        Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_response_option');
         $url = Url::fromRoute('sir.add_response_option');
         $url->setRouteParameter('codebooksloturi', 'EMPTY');
       } else if ($this->element_type == 'annotationstem') {
+        Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_annotationstem');
         $url = Url::fromRoute('sir.add_annotationstem');
         $url->setRouteParameter('sourceannotationstemuri', 'EMPTY');
-      } else if ($this->element_type == 'annotation') {
-        $url = Url::fromRoute('sir.add_annotation');
+      //} else if ($this->element_type == 'annotation') {
+      //  $url = Url::fromRoute('sir.add_annotation');
       }
       $form_state->setRedirectUrl($url);
     }  
@@ -305,19 +319,26 @@ class SIRSelectForm extends FormBase {
       } else {
         $first = array_shift($rows);
         if ($this->element_type == 'instrument') {
+          Utils::trackingStoreUrls($uid, $previousUrl, 'sir.edit_instrument');
           $url = Url::fromRoute('sir.edit_instrument', ['instrumenturi' => base64_encode($first)]);
         } else if ($this->element_type == 'detectorstem') {
+          Utils::trackingStoreUrls($uid, $previousUrl, 'sir.edit_detectorstem');
           $url = Url::fromRoute('sir.edit_detectorstem', ['detectorstemuri' => base64_encode($first)]);
         } else if ($this->element_type == 'detector') {
+          Utils::trackingStoreUrls($uid, $previousUrl, 'sir.edit_detector');
           $url = Url::fromRoute('sir.edit_detector', ['detectoruri' => base64_encode($first)]);
         } else if ($this->element_type == 'codebook') {
+          Utils::trackingStoreUrls($uid, $previousUrl, 'sir.edit_codebook');
           $url = Url::fromRoute('sir.edit_codebook', ['codebookuri' => base64_encode($first)]);
         } else if ($this->element_type == 'responseoption') {
+          Utils::trackingStoreUrls($uid, $previousUrl, 'sir.edit_response_option');
           $url = Url::fromRoute('sir.edit_response_option', ['responseoptionuri' => base64_encode($first)]);
         } else if ($this->element_type == 'annotationstem') {
+          Utils::trackingStoreUrls($uid, $previousUrl, 'sir.edit_annotationstem');
           $url = Url::fromRoute('sir.edit_annotationstem', ['annotationstemuri' => base64_encode($first)]);
-        } else if ($this->element_type == 'annotation') {
-          $url = Url::fromRoute('sir.edit_annotation', ['annotationuri' => base64_encode($first)]);
+        //} else if ($this->element_type == 'annotation') {
+        //  Utils::trackingStoreUrls($uid, $previousUrl, 'sir.edit_annotation');
+        //  $url = Url::fromRoute('sir.edit_annotation', ['annotationuri' => base64_encode($first)]);
         }
         $form_state->setRedirectUrl($url);
       } 
@@ -344,8 +365,8 @@ class SIRSelectForm extends FormBase {
             $api->responseOptionDel($uri);
           } else if ($this->element_type == 'annotationstem') {
             $api->annotationStemDel($uri);
-          } else if ($this->element_type == 'annotation') {
-            $api->annotationDel($uri);
+          //} else if ($this->element_type == 'annotation') {
+          //  $api->annotationDel($uri);
           }
         }
         \Drupal::messenger()->addMessage(t("Selected " . $this->plural_class_name . " has/have been deleted successfully."));      
@@ -363,6 +384,7 @@ class SIRSelectForm extends FormBase {
         return;
       } else {
         $first = array_shift($rows);
+        Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_detectorstem');
         $url = Url::fromRoute('sir.add_detectorstem');
         $url->setRouteParameter('sourcedetectorstemuri', base64_encode($first));
         $url->setRouteParameter('containersloturi', 'EMPTY');
@@ -381,6 +403,7 @@ class SIRSelectForm extends FormBase {
         return;
       } else {
         $first = array_shift($rows);
+        Utils::trackingStoreUrls($uid, $previousUrl, 'sir.manage_codebook_slots');
         $url = Url::fromRoute('sir.manage_codebook_slots', ['codebookuri' => base64_encode($first)]);
         $form_state->setRedirectUrl($url);
         return;
@@ -400,6 +423,7 @@ class SIRSelectForm extends FormBase {
         $first = array_shift($rows);     
         $api = \Drupal::service('rep.api_connector');
         $container = $api->parseObjectResponse($api->getUri($first),'getUri');    
+        Utils::trackingStoreUrls($uid, $previousUrl, 'sir.manage_slotelements');
         $url = Url::fromRoute('sir.manage_slotelements', 
           ['containeruri' => base64_encode($first),
            'breadcrumbs' => $container->label,

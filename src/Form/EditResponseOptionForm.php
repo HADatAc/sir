@@ -5,6 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\Utils;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Vocabulary\VSTOI;
@@ -55,12 +56,10 @@ class EditResponseOptionForm extends FormBase {
     
     if ($obj->isSuccessful) {
       $this->setResponseOption($obj->body);
-      #dpm($this->getResponseOption());
     } else {
-      \Drupal::messenger()->addMessage(t("Failed to retrieve Response Option."));
-      $url = Url::fromRoute('sir.manage_response_options');
-      # $url->setRouteParameter('responseoptionkuri', base64_encode($this->getResponseOption()->ofResponseOption));
-      $form_state->setRedirectUrl($url);
+      \Drupal::messenger()->addError(t("Failed to retrieve Response Option."));
+      self::backUrl();
+      return;   
     }
 
     $form['responseoption_content'] = [
@@ -126,7 +125,7 @@ class EditResponseOptionForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $form_state->setRedirectUrl(Utils::selectBackUrl('responseoption'));
+      self::backUrl();
       return;
     } 
 
@@ -149,13 +148,25 @@ class EditResponseOptionForm extends FormBase {
       $api->responseOptionAdd($responseOptionJSON);
     
       \Drupal::messenger()->addMessage(t("Response Option has been updated successfully."));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('responseoption'));
+      self::backUrl();
+      return;
 
     }catch(\Exception $e){
       \Drupal::messenger()->addMessage(t("An error occurred while updating the Response Option: ".$e->getMessage()));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('responseoption'));
+      self::backUrl();
+      return;
     }
 
   }
 
+  function backUrl() {
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.edit_response_option');
+    if ($previousUrl) {
+      $response = new RedirectResponse($previousUrl);
+      $response->send();
+      return;
+    }
+  }
+  
 }

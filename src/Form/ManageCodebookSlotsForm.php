@@ -5,8 +5,8 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\rep\Utils;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Drupal\rep\Utils;
 
 class ManageCodebookSlotsForm extends FormBase {
 
@@ -166,6 +166,10 @@ class ManageCodebookSlotsForm extends FormBase {
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
   
+    // SET USER ID AND PREVIOUS URL FOR TRACKING STORE URLS
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = \Drupal::request()->getRequestUri();
+
     // RETRIEVE SELECTED ROWS, IF ANY
     $selected_rows = $form_state->getValue('slot_table');
     $rows = [];
@@ -178,11 +182,12 @@ class ManageCodebookSlotsForm extends FormBase {
     // EDIT RESPONSEOPTION SLOT
     if ($button_name === 'edit_slot') {
       if (sizeof($rows) < 1) {
-        \Drupal::messenger()->addMessage(t("Select the exact response option slot to be edited."));      
+        \Drupal::messenger()->addWarning(t("Select the exact response option slot to be edited."));      
       } else if ((sizeof($rows) > 1)) {
-        \Drupal::messenger()->addMessage(t("Select only one response option slot to edit. No more than one slot can be edited at once."));      
+        \Drupal::messenger()->addWarning(t("Select only one response option slot to edit. No more than one slot can be edited at once."));      
       } else {
         $first = array_shift($rows);
+        Utils::trackingStoreUrls($uid, $previousUrl, 'sir.edit_codebook_slot');
         $url = Url::fromRoute('sir.edit_codebook_slot');
         $url->setRouteParameter('codebooksloturi', base64_encode($first));
         $form_state->setRedirectUrl($url);
@@ -195,13 +200,26 @@ class ManageCodebookSlotsForm extends FormBase {
       $api->codebookSlotDel($this->getCodebookUri());
     
       \Drupal::messenger()->addMessage(t("Response Option Slot(s) has/have been deleted successfully."));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('codebook'));
+      self::backUrl();
+      return;  
     }
 
     // BACK TO MAIN PAGE
     if ($button_name === 'back') {
-      $form_state->setRedirectUrl(Utils::selectBackUrl('codebook'));
+      self::backUrl();
+      return;  
     }  
   }
+ 
+  function backUrl() {
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.manage_codebook_slots');
+    if ($previousUrl) {
+      $response = new RedirectResponse($previousUrl);
+      $response->send();
+      return;
+    }
+  }
   
+
 }

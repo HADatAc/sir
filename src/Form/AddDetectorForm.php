@@ -5,6 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\Constant;
 use Drupal\rep\Utils;
 use Drupal\rep\Entity\Tables;
@@ -185,7 +186,7 @@ class AddDetectorForm extends FormBase {
     $api = \Drupal::service('rep.api_connector');
 
     if ($button_name === 'back') {
-      $form_state->setRedirectUrl(Utils::selectBackUrl('detector'));
+      self::backUrl();
       return;
     } 
 
@@ -218,19 +219,30 @@ class AddDetectorForm extends FormBase {
         return;
       } else {        
         \Drupal::messenger()->addMessage(t("Detector has been added successfully."));
-        $form_state->setRedirectUrl(Utils::selectBackUrl('detector'));
+        self::backUrl();
         return;
       }
     } catch(\Exception $e) {
       if ($this->getContainerSlot() != NULL) {
-        \Drupal::messenger()->addMessage(t("An error occurred while adding the Detector: ".$e->getMessage()));
+        \Drupal::messenger()->addError(t("An error occurred while adding the Detector: ".$e->getMessage()));
         $url = Url::fromRoute('sir.edit_containerslot');
         $url->setRouteParameter('containersloturi', base64_encode($this->getContainerSlotUri()));
         $form_state->setRedirectUrl($url);
       } else {
-        \Drupal::messenger()->addMessage(t("An error occurred while adding the Detector: ".$e->getMessage()));
-        $form_state->setRedirectUrl(Utils::selectBackUrl('detector'));
-        }
+        \Drupal::messenger()->addError(t("An error occurred while adding the Detector: ".$e->getMessage()));
+        self::backUrl();
+        return;
+      }
+    }
+  }
+
+  function backUrl() {
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.add_detector');
+    if ($previousUrl) {
+      $response = new RedirectResponse($previousUrl);
+      $response->send();
+      return;
     }
   }
 

@@ -5,6 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\Utils;
 
 class EditCodebookSlotForm extends FormBase {
@@ -121,9 +122,14 @@ class EditCodebookSlotForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    // RETRIEVE TRIGGERING ELEMENT
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
 
+    // SET USER ID AND PREVIOUS URL FOR TRACKING STORE URLS
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = \Drupal::request()->getRequestUri();
+    
     if ($button_name === 'back') {
       $url = Url::fromRoute('sir.manage_codebook_slots');
       $url->setRouteParameter('codebookuri', base64_encode($this->getCodebookSlot()->belongsTo));
@@ -132,6 +138,7 @@ class EditCodebookSlotForm extends FormBase {
     } 
 
     if ($button_name === 'new_response_option') {
+      Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_response_option');
       $url = Url::fromRoute('sir.add_response_option');
       $url->setRouteParameter('codebooksloturi', base64_encode($this->getCodebookSlotUri())); 
       $form_state->setRedirectUrl($url);

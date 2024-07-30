@@ -5,6 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\Constant;
 use Drupal\rep\Utils;
 use Drupal\rep\Entity\Tables;
@@ -151,7 +152,7 @@ class AddDetectorStemForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $form_state->setRedirectUrl(Utils::selectBackUrl('detectorstem'));
+      self::backUrl();
       return;
     } 
 
@@ -182,11 +183,23 @@ class AddDetectorStemForm extends FormBase {
       $api = \Drupal::service('rep.api_connector');
       $message = $api->detectorStemAdd($detectorStemJson);
       \Drupal::messenger()->addMessage(t("Added a new Detector Stem with URI: ".$newDetectorStemUri));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('detectorstem'));
+      self::backUrl();
+      return;
   
     } catch(\Exception $e) {
-        \Drupal::messenger()->addMessage(t("An error occurred while adding the Detector Stem: ".$e->getMessage()));
-        $form_state->setRedirectUrl(Utils::selectBackUrl('detectorstem'));
+        \Drupal::messenger()->addError(t("An error occurred while adding the Detector Stem: ".$e->getMessage()));
+        self::backUrl();
+        return;
+      }
+  }
+
+  function backUrl() {
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.add_detectorstem');
+    if ($previousUrl) {
+      $response = new RedirectResponse($previousUrl);
+      $response->send();
+      return;
     }
   }
 

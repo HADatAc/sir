@@ -4,6 +4,8 @@ namespace Drupal\sir\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\Utils;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Vocabulary\VSTOI;
@@ -83,9 +85,9 @@ class AddCodebookForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $form_state->setRedirectUrl(Utils::selectBackUrl('codebook'));
+      self::backUrl();
       return;
-    } 
+  } 
 
     try {
       $uemail = \Drupal::currentUser()->getEmail();
@@ -102,13 +104,25 @@ class AddCodebookForm extends FormBase {
       $api = \Drupal::service('rep.api_connector');
       $api->codebookAdd($codebookJSON);
       \Drupal::messenger()->addMessage(t("Codebook has been added successfully."));      
-      $form_state->setRedirectUrl(Utils::selectBackUrl('codebook'));
+      self::backUrl();
+      return;
 
     }catch(\Exception $e){
       \Drupal::messenger()->addMessage(t("An error occurred while adding an codebook: ".$e->getMessage()));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('codebook'));
+      self::backUrl();
+      return;  
     }
 
+  }
+
+  function backUrl() {
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.add_codebook');
+    if ($previousUrl) {
+      $response = new RedirectResponse($previousUrl);
+      $response->send();
+      return;
+    }
   }
 
 }

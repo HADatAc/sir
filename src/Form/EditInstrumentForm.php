@@ -4,6 +4,8 @@ namespace Drupal\sir\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\Constant;
 use Drupal\rep\Utils;
 use Drupal\rep\Entity\Tables;
@@ -57,8 +59,9 @@ class EditInstrumentForm extends FormBase {
     if ($obj->isSuccessful) {
       $this->setInstrument($obj->body);
     } else {
-      \Drupal::messenger()->addMessage(t("Failed to retrieve Instrument."));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
+      \Drupal::messenger()->addError(t("Failed to retrieve Instrument."));
+      self::backUrl();
+      return;
     }
 
     $hasInformant = Constant::DEFAULT_INFORMANT;
@@ -152,7 +155,7 @@ class EditInstrumentForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
+      self::backUrl();
       return;
     } 
 
@@ -177,13 +180,26 @@ class EditInstrumentForm extends FormBase {
       $newInstrument = $api->instrumentAdd($instrumentJson);
     
       \Drupal::messenger()->addMessage(t("Instrument has been updated successfully."));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
+      self::backUrl();
+      return;
 
     }catch(\Exception $e){
-      \Drupal::messenger()->addMessage(t("An error occurred while updating the Instrument: ".$e->getMessage()));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
+      \Drupal::messenger()->addError(t("An error occurred while updating the Instrument: ".$e->getMessage()));
+      self::backUrl();
+      return;
     }
 
   }
+
+  function backUrl() {
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.edit_instrument');
+    if ($previousUrl) {
+      $response = new RedirectResponse($previousUrl);
+      $response->send();
+      return;
+    }
+  }
+  
 
 }

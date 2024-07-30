@@ -121,14 +121,17 @@ class SIRSearchForm extends FormBase {
       $this->setPageSize((int)$pathElements[7]);
     }
 
+    $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument');
+    $preferred_detector = \Drupal::config('rep.settings')->get('preferred_detector');
+
     $form['search_element_type'] = [
       '#type' => 'select',
       '#title' => $this->t('Element Type'),
       '#required' => TRUE,
       '#options' => [
-        'instrument' => $this->t('Questionnaires'),
-        'detectorstem' => $this->t('Item Stems'),
-        'detector' => $this->t('Items'),
+        'instrument' => $this->t($preferred_instrument . 's'),
+        'detectorstem' => $this->t($preferred_detector . ' Stems'),
+        'detector' => $this->t($preferred_detector . 's'),
         'codebook' => $this->t('Codebooks'),
         'responseoption' => $this->t('Response Options'),
         'annotationstem' => $this->t('Annotation Stems'),
