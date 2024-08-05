@@ -58,6 +58,7 @@ class EditInstrumentForm extends FormBase {
     
     if ($obj->isSuccessful) {
       $this->setInstrument($obj->body);
+      //dpm($this->getInstrument());
     } else {
       \Drupal::messenger()->addError(t("Failed to retrieve Instrument."));
       self::backUrl();

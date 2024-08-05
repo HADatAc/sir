@@ -110,7 +110,7 @@ class AddInstrumentForm extends FormBase {
       $useremail = \Drupal::currentUser()->getEmail();
       $newInstrumentUri = Utils::uriGen('instrument');
       $instrumentJson = '{"uri":"'.$newInstrumentUri.'",'.
-        '"typeUri":"'.VSTOI::QUESTIONNAIRE.'",'.
+        '"superUri":"'.VSTOI::INSTRUMENT.'",'.
         '"hascoTypeUri":"'.VSTOI::INSTRUMENT.'",'.
         '"label":"'.$form_state->getValue('instrument_name').'",'.
         '"hasShortName":"'.$form_state->getValue('instrument_abbreviation').'",'.

@@ -1,7 +1,7 @@
 sir.top_level:
   title: Instrument Elements
   description: Manage Instrument Elements
-  route_name: rep.about
+  route_name: rep.home
   menu_name: main
   weight: 70
   requirements:

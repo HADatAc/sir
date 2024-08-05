@@ -130,7 +130,7 @@ class AddSubcontainerForm extends FormBase {
       $useremail = \Drupal::currentUser()->getEmail();
       $newSubcontainerUri = Utils::uriGen('subcontainer');
       $subcontainerJson = '{"uri":"'.$newSubcontainerUri.'",'.
-        '"typeUri":"'.VSTOI::SUBCONTAINER.'",'.
+        '"superUri":"'.VSTOI::SUBCONTAINER.'",'.
         '"hascoTypeUri":"'.VSTOI::SUBCONTAINER.'",'.
         '"belongsTo":"'.$this->getBelongsTo().'",'.
         '"label":"'.$form_state->getValue('subcontainer_name').'",'.

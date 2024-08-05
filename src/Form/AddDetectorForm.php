@@ -91,7 +91,7 @@ class AddDetectorForm extends FormBase {
       $obj = json_decode($rawresponse);
       if ($obj->isSuccessful) {
         $this->setSourceDetector($obj->body);
-        #dpm($this->getDetector());
+        //dpm($this->getDetector());
       } else {
         $this->setSourceDetector(NULL);
         $this->setSourceDetectorUri('');
@@ -202,7 +202,7 @@ class AddDetectorForm extends FormBase {
       // CREATE A NEW DETECTOR
       $newDetectorUri = Utils::uriGen('detector');
       $detectorJson = '{"uri":"'.$newDetectorUri.'",'.
-        '"typeUri":"'.VSTOI::DETECTOR.'",'.
+        '"superUri":"'.VSTOI::DETECTOR.'",'.
         '"hascoTypeUri":"'.VSTOI::DETECTOR.'",'.
         '"hasDetectorStem":"'.$this->getDetectorStem()->uri.'",'.
         '"hasCodebook":"'.$hasCodebook.'",'.

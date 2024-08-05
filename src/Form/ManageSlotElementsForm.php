@@ -95,6 +95,7 @@ class ManageSlotElementsForm extends FormBase {
       'containerslot_up' => t('Up'),
       'containerslot_down' => t('Down'),
       'containerslot_type' => t('Type'),
+      'containerslot_id' => t('ID'),
       'containerslot_priority' => t('Priority'),
       'containerslot_element' => t("Element"),
     ];
@@ -105,57 +106,70 @@ class ManageSlotElementsForm extends FormBase {
     $uriType = array();
     if ($slotElements != NULL) {
       foreach ($slotElements as $slotElement) {
-        $detector = NULL;
-        $content = " ";
-        $codebook = " ";
-        $detectorUri = " ";
-        $type = " ";
-        $element = " ";
-        if (isset($slotElement->hascoTypeUri)) {
+        if ($slotElement != NULL) {
+          $detector = NULL;
+          $content = " ";
+          $codebook = " ";
+          $detectorUri = " ";
+          $type = " ";
+          $element = " ";
+          $uri = "uri"; // this variable is used as index, thus it cannot be am empty string
+          if (isset($slotElement->uri) && ($slotElement->uri != NULL)) {
+            $uri = $slotElement->uri;
+          }
+          if (isset($slotElement->hascoTypeUri)) {
 
-          // PROCESS SLOTS THAT ARE CONTAINER SLOTS
-          if ($slotElement->hascoTypeUri == VSTOI::CONTAINER_SLOT) {
-            $type = Utils::namespaceUri(VSTOI::DETECTOR);
-            if ($slotElement->hasDetector != null) {
-              $detector = $api->parseObjectResponse($api->getUri($slotElement->hasDetector),'getUri');
-              if ($detector != NULL) {
-                if (isset($detector->uri)) {
-                  $detectorUri = '<b>URI</b>: [' . Utils::namespaceUri($slotElement->hasDetector) . "] ";
+            // PROCESS SLOTS THAT ARE CONTAINER SLOTS
+            if ($slotElement->hascoTypeUri == VSTOI::CONTAINER_SLOT) {
+              $type = Utils::namespaceUri(VSTOI::DETECTOR);
+              if ($slotElement->hasDetector != null) {
+                $detector = $api->parseObjectResponse($api->getUri($slotElement->hasDetector),'getUri');
+                if ($detector != NULL) {
+                  if (isset($detector->uri)) {
+                    $detectorUri = '<b>URI</b>: [' . Utils::namespaceUri($slotElement->hasDetector) . "] ";
+                  }
+                  if (isset($detector->detectorStem->hasContent)) {
+                    $content = '<b>Item</b>: [' . $detector->detectorStem->hasContent . "]";
+                  }
+                  if (isset($detector->codebook->label)) {
+                    $codebook = '<b>CB</b>: [' . $detector->codebook->label . "]";
+                  } 
                 }
-                if (isset($detector->detectorStem->hasContent)) {
-                  $content = '<b>Item</b>: [' . $detector->detectorStem->hasContent . "]";
-                }
-                if (isset($detector->codebook->label)) {
-                  $codebook = '<b>CB</b>: [' . $detector->codebook->label . "]";
-                } 
               }
-            }
-            $element = $detectorUri . " " . $content . " " . $codebook;
+              $element = $detectorUri . " " . $content . " " . $codebook;
 
-          // PROCESS SLOTS THAT ARE SUBCONTAINERS
-          } else if ($slotElement->hascoTypeUri == VSTOI::SUBCONTAINER) {
-            $type = Utils::namespaceUri($slotElement->hascoTypeUri);
-            $name = " ";
-            if (isset($slotElement->label)) {
-              $name = '<b>Name</b>: ' . $slotElement->label;
-            } 
-            $element = $name;
-          } else {
-            $type = "(UNKNOWN)";
+            // PROCESS SLOTS THAT ARE SUBCONTAINERS
+            } else if ($slotElement->hascoTypeUri == VSTOI::SUBCONTAINER) {
+              $type = Utils::namespaceUri($slotElement->hascoTypeUri);
+              $name = " ";
+              if (isset($slotElement->label)) {
+                $name = '<b>Name</b>: ' . $slotElement->label;
+              } 
+              $element = $name;
+            } else {
+              $type = "(UNKNOWN)";
+            }
           }
         }
         $priority = " ";
         if (isset($slotElement->hasPriority)) {
           $priority = $slotElement->hasPriority;
         }
-        $output[$slotElement->uri] = [
+        $label = " ";
+        if (isset($slotElement->label)) {
+          $label = $slotElement->label;
+        }
+        $output[$uri] = [
           'containerslot_up' => 'Up',     
           'containerslot_down' => 'Down',     
-          'containerslot_type' => $type,     
+          'containerslot_type' => $type,    
+          'containerslot_id' => $label, 
           'containerslot_priority' => $priority,     
           'containerslot_element' => t($element),     
         ];
-        $uriType[$slotElement->uri] = ['type' => $slotElement->hascoTypeUri,];
+        if (isset($slotElement->hascoTypeUri)) {
+          $uriType[$uri] = ['type' => $slotElement->hascoTypeUri,];
+        }
       }
     }
     $this->setUriType($uriType);
@@ -396,14 +410,14 @@ class ManageSlotElementsForm extends FormBase {
         //dpm($rows);
         foreach($rows as $shortUri) {
           $uri = Utils::plainUri($shortUri);
-          $api->slotelementDel($uri);
+          $api->elementDel('slotelement',$uri);
         }
         \Drupal::messenger()->addMessage(t("ContainerSlots has been deleted successfully."));
-        $breadcrumbsArg = implode('|',$this->getBreadcrumbs());
-        $url = Url::fromRoute('sir.edit_subcontainer');
-        $url->setRouteParameter('subcontaineruri', base64_encode($this->getContainer()->uri));
-        $url->setRouteParameter('breadcrumbs', $breadcrumbsArg);
-        $form_state->setRedirectUrl($url);  
+        //$breadcrumbsArg = implode('|',$this->getBreadcrumbs());
+        //$url = Url::fromRoute('sir.edit_subcontainer');
+        //$url->setRouteParameter('subcontaineruri', base64_encode($this->getContainer()->uri));
+        //$url->setRouteParameter('breadcrumbs', $breadcrumbsArg);
+        //$form_state->setRedirectUrl($url);  
         return;
       } 
     }

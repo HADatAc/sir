@@ -65,17 +65,18 @@ class EditSubcontainerForm extends FormBase {
 
     //dpm($this->getSubcontainer());
 
-    $belongTo = "";
-    if ($this->getSubcontainer()->belongsTo != NULL) {
+    $belongsTo = "";
+    if (isset($this->getSubcontainer()->belongsTo) && $this->getSubcontainer()->belongsTo != NULL) {
       $belongsTo = $this->getSubcontainer()->belongsTo;
     }
+    
     $priority = "";
-    if ($this->getSubcontainer()->hasPriority != NULL) {
+    if (isset($this->getSubcontainer()->hasPriority) && $this->getSubcontainer()->hasPriority != NULL) {
       $priority = $this->getSubcontainer()->hasPriority;
     }
 
     $name = "";
-    if ($this->getSubcontainer()->label != NULL) {
+    if (isset($this->getSubcontainer()->label) && $this->getSubcontainer()->label != NULL) {
       $name = $this->getSubcontainer()->label;
     }
 
@@ -179,13 +180,15 @@ class EditSubcontainerForm extends FormBase {
       \Drupal::messenger()->addMessage(t("An error occurred while updating the Response Option: ".$e->getMessage()));
       $this->backToSlotElement($form_state);
     }
-
   }
 
   /**
    * {@inheritdoc}
    */
   private function backToSlotElement(FormStateInterface $form_state) {
+    if (!isset($this->getSubcontainer()->belongsTo)) {
+      return;
+    }
     $breadcrumbsArg = implode('|',$this->getBreadcrumbs());
     $url = Url::fromRoute('sir.manage_slotelements'); 
     $url->setRouteParameter('containeruri', base64_encode($this->getSubcontainer()->belongsTo));
@@ -193,7 +196,5 @@ class EditSubcontainerForm extends FormBase {
     $form_state->setRedirectUrl($url);
     return;
   } 
-  
-
 
 }

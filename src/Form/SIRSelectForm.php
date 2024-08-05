@@ -98,6 +98,8 @@ class SIRSelectForm extends FormBase {
     // RETRIEVE ELEMENTS
     $this->setList(ListManagerEmailPage::exec($this->element_type, $this->manager_email, $page, $pagesize));
 
+    dpm($this->getList());
+
     $this->single_class_name = "";
     $this->plural_class_name = "";
 

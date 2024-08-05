@@ -59,6 +59,8 @@ class ManageCodebookSlotsForm extends FormBase {
       $slots = $obj->body;
     }
 
+    //dpm($slots);
+
     if (sizeof($slots) <= 0) {
       return new RedirectResponse(Url::fromRoute('sir.add_codebookslots', ['codebookuri' => base64_encode($this->getCodebookUri())])->toString());
     }
