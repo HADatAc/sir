@@ -5,11 +5,9 @@ dependencies:
     - sir
     - system
   theme:
-    - bootstrap_barrio_subtheme
-_core:
-  default_config_hash: p-v7i2lbZCaaJNKgBAlqT7m5wHmUTP2TkKxxMm_UVRk
+    - hasco_barrio
 id: searchcriteria
-theme: bootstrap_barrio_subtheme
+theme: hasco_barrio
 region: sidebar_first
 weight: 0
 provider: null

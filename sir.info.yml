@@ -1,7 +1,7 @@
 name: Instrument Elements
 description: GUI for managing instrument elements including questionnaires, physical instruments, and model stored in a HAScO API
 package: Semantic Tools
-core_version_requirement: ^8 || ^9
+core_version_requirement: ^9 || ^10
 type: module 
 dependencies:
   - drupal:rep
