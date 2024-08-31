@@ -1,14 +1,11 @@
 
 
 sir.search:
-  path: 'sir/list/{elementtype}/{keyword}/{language}/{page}/{pagesize}'
+  path: 'sir/list/{mode}/{elementtype}'
   defaults:
-    _form: '\Drupal\sir\Form\SIRListForm'
+    _form: '\Drupal\rep\Form\TreeForm'
+    mode: 'browse'
     elementtype: 'instrument'
-    keyword: '_'
-    language: '_'
-    page: '1'
-    pagesize: '12'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    

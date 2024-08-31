@@ -95,7 +95,15 @@ class SIRSearchForm extends FormBase {
     $this->setLanguage('');
     $this->setPage(1);
     $this->setPageSize(12);
-    if (sizeof($pathElements) >= 8) {
+
+    // IT IS A CLASS ELEMENT if size of path elements is equal 5
+    if (sizeof($pathElements) == 5) {
+
+      // ELEMENT TYPE
+      $this->setElementType($pathElements[4]);
+
+    // IT IS AN INSTANCE ELEMENT if size of path elements is equal 8
+    } else if (sizeof($pathElements) >= 8) {
 
       // ELEMENT TYPE
       $this->setElementType($pathElements[3]);
@@ -177,6 +185,7 @@ class SIRSearchForm extends FormBase {
    * {@inheritdoc}
    */
   private function redirectUrl(FormStateInterface $form_state) {
+
     $this->setKeyword($form_state->getValue('search_keyword'));
     if ($this->getKeyword() == NULL || $this->getKeyword() == '') {
       $this->setKeyword("_");
@@ -185,6 +194,18 @@ class SIRSearchForm extends FormBase {
     if ($this->getLanguage() == NULL || $this->getLanguage() == '' || $this->getLanguage() == 'ANY') {
       $this->setLanguage("_");
     }
+
+    // IF ELEMENT TYPE IS CLASS
+    if (($form_state->getValue('search_element_type') == 'instrument') ||
+        ($form_state->getValue('search_element_type') == 'detectorstem') ||
+        ($form_state->getValue('search_element_type') == 'detector')) {
+      $url = Url::fromRoute('rep.browse_tree');
+      $url->setRouteParameter('mode', 'browse');
+      $url->setRouteParameter('elementtype', $form_state->getValue('search_element_type'));
+      return $url;
+    }
+
+    // IF ELEMENT TYPE IS INSTANCE
     $url = Url::fromRoute('sir.list_element');
     $url->setRouteParameter('elementtype', $form_state->getValue('search_element_type'));
     $url->setRouteParameter('keyword', $this->getKeyword());
