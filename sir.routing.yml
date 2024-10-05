@@ -63,7 +63,6 @@ sir.add_instrument:
   path: 'sir/manage/addinstrument'
   defaults:
     _form: '\Drupal\sir\Form\AddInstrumentForm'
-    _title: 'Add Questionnaire'    
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    
@@ -74,7 +73,6 @@ sir.edit_instrument:
   path: 'sir/manage/editinstrument/{instrumenturi}'
   defaults:
     _form: '\Drupal\sir\Form\EditInstrumentForm'
-    _title: 'Edit Questionnarie'    
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'

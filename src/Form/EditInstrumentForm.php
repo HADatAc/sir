@@ -44,8 +44,7 @@ class EditInstrumentForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $instrumenturi = NULL) {
-    $uri=$instrumenturi;
-    $uri_decode=base64_decode($uri);
+    $uri_decode=base64_decode($instrumenturi);
     $this->setInstrumentUri($uri_decode);
 
     $tables = new Tables;
