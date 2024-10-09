@@ -61,11 +61,17 @@ class AddInstrumentForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Save'),
       '#name' => 'save',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'save-button'],
+      ],
     ];
     $form['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -104,7 +110,7 @@ class AddInstrumentForm extends FormBase {
     if ($button_name === 'back') {
       self::backUrl();
       return;
-  } 
+  }
 
     try{
       $useremail = \Drupal::currentUser()->getEmail();
@@ -121,7 +127,7 @@ class AddInstrumentForm extends FormBase {
         '"hasSIRManagerEmail":"'.$useremail.'"}';
 
       $api = \Drupal::service('rep.api_connector');
-      $api->instrumentAdd($instrumentJson);    
+      $api->instrumentAdd($instrumentJson);
       \Drupal::messenger()->addMessage(t("Instrument has been added successfully."));
       self::backUrl();
       return;
@@ -143,7 +149,7 @@ class AddInstrumentForm extends FormBase {
       return;
     }
   }
-  
+
 
 
 }

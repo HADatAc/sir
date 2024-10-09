@@ -24,7 +24,7 @@ class ManageSlotElementsForm extends FormBase {
   }
 
   public function setContainer($container) {
-    return $this->container = $container; 
+    return $this->container = $container;
   }
 
   public function getUriType() {
@@ -32,7 +32,7 @@ class ManageSlotElementsForm extends FormBase {
   }
 
   public function setUriType($uriType) {
-    return $this->uriType = $uriType; 
+    return $this->uriType = $uriType;
   }
 
   public function getBreadcrumbs() {
@@ -40,7 +40,7 @@ class ManageSlotElementsForm extends FormBase {
   }
 
   public function setBreadcrumbs(array $crumbs) {
-    return $this->crumbs = $crumbs; 
+    return $this->crumbs = $crumbs;
   }
 
   /**
@@ -133,7 +133,7 @@ class ManageSlotElementsForm extends FormBase {
                   }
                   if (isset($detector->codebook->label)) {
                     $codebook = '<b>CB</b>: [' . $detector->codebook->label . "]";
-                  } 
+                  }
                 }
               }
               $element = $detectorUri . " " . $content . " " . $codebook;
@@ -144,7 +144,7 @@ class ManageSlotElementsForm extends FormBase {
               $name = " ";
               if (isset($slotElement->label)) {
                 $name = '<b>Name</b>: ' . $slotElement->label;
-              } 
+              }
               $element = $name;
             } else {
               $type = "(UNKNOWN)";
@@ -160,12 +160,12 @@ class ManageSlotElementsForm extends FormBase {
           $label = $slotElement->label;
         }
         $output[$uri] = [
-          'containerslot_up' => 'Up',     
-          'containerslot_down' => 'Down',     
-          'containerslot_type' => $type,    
-          'containerslot_id' => $label, 
-          'containerslot_priority' => $priority,     
-          'containerslot_element' => t($element),     
+          'containerslot_up' => 'Up',
+          'containerslot_down' => 'Down',
+          'containerslot_type' => $type,
+          'containerslot_id' => $label,
+          'containerslot_priority' => $priority,
+          'containerslot_element' => t($element),
         ];
         if (isset($slotElement->hascoTypeUri)) {
           $uriType[$uri] = ['type' => $slotElement->hascoTypeUri,];
@@ -196,41 +196,59 @@ class ManageSlotElementsForm extends FormBase {
     $form['add_containerslot'] = [
       '#type' => 'submit',
       '#value' => $this->t("Add Detector's Slots"),
-      '#name' => 'add_containerslots',  
+      '#name' => 'add_containerslots',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'add-element-button'],
+      ],
     ];
     $form['add_subcontainer'] = [
       '#type' => 'submit',
       '#value' => $this->t('Add SubContainer'),
       '#name' => 'add_subcontainer',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'add-element-button'],
+      ],
     ];
     $form['edit_slotelement'] = [
       '#type' => 'submit',
       '#value' => $this->t("Edit Selected"),
       '#name' => 'edit_slotelement',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'edit-element-button'],
+      ],
     ];
     $form['delete_selected_elements'] = [
       '#type' => 'submit',
       '#value' => $this->t('Delete Selected'),
-      '#name' => 'delete_containerslots',    
-      '#attributes' => ['onclick' => 'if(!confirm("Really Delete?")){return false;}'],
+      '#name' => 'delete_containerslots',
+      '#attributes' => [
+        'onclick' => 'if(!confirm("Really Delete?")){return false;}',
+        'class' => ['btn', 'btn-primary', 'delete-element-button'],
+      ],
     ];
     $form['manage_annotations'] = [
       '#type' => 'submit',
       '#value' => $this->t('Manage Annotations'),
       '#name' => 'manage_annotations',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'manage_annotations-button'],
+      ],
     ];
     $form['manage_annotation_placement'] = [
       '#type' => 'submit',
       '#value' => $this->t('Manage Annotation Placement'),
       '#name' => 'manage_annotation_placement',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'manage_annotation_placement'],
+      ],
     ];
     $form['manage_subcontainer_structure'] = [
       '#type' => 'submit',
       '#value' => $this->t('Manage Structure of Selected'),
-      '#name' => 'manage_subcontainer_structure',    
-      '#attributes' => 
-        ['class' =>  
-          ['button', 'js-form-submit', 'form-submit', 'btn', 'btn-success'],
+      '#name' => 'manage_subcontainer_structure',
+      '#attributes' =>
+        ['class' =>
+          ['button', 'js-form-submit', 'form-submit', 'btn', 'btn-success', 'manage_slotelements-button'],
         ],
 ];
     $form['slotelement_table'] = [
@@ -244,16 +262,19 @@ class ManageSlotElementsForm extends FormBase {
         '#type' => 'submit',
         '#value' => $this->t("Back to Parent"),
         '#name' => 'go_parent_container',
-        '#attributes' => 
-          ['class' =>  
-            ['button', 'js-form-submit', 'form-submit', 'btn', 'btn-success'],
+        '#attributes' =>
+          ['class' =>
+            ['button', 'js-form-submit', 'form-submit', 'btn', 'btn-success', 'back_parent-button'],
           ],
-      ];  
+      ];
     }
     $form['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Back to ' . $preferred_instrument . ' Management'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'back-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -279,7 +300,7 @@ class ManageSlotElementsForm extends FormBase {
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
 
-    /** 
+    /**
     // RETRIEVE SELECTED ROWS, IF ANY
     $selected_rows = $form_state->getValue('slotelement_table');
     $rows = [];
@@ -290,7 +311,7 @@ class ManageSlotElementsForm extends FormBase {
     }
     */
 
-    /** 
+    /**
     // VERIFY MANAGE SUBCONTAINER
     if ($button_name === 'manage_subcontainer_structure') {
       if (sizeof($rows) < 1) {
@@ -303,7 +324,7 @@ class ManageSlotElementsForm extends FormBase {
         if ($type != VSTOI::SUBCONTAINER) {
           $form_state->setWarningByName($first, $this->t('This option if for subcontainers only. '));
         };
-      } 
+      }
     }
     */
 
@@ -311,13 +332,13 @@ class ManageSlotElementsForm extends FormBase {
 
   /**
    * {@inheritdoc}
-   */   
+   */
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
     // RETRIEVE TRIGGERING BUTTON
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
-  
+
     // RETRIEVE SELECTED ROWS, IF ANY
     $selected_rows = $form_state->getValue('slotelement_table');
     $rows = [];
@@ -328,7 +349,7 @@ class ManageSlotElementsForm extends FormBase {
     }
 
     // BUILD BACK URL INCLUDING BREADCRUMBS
-    $backUrl = Url::fromRoute('sir.manage_slotelements', 
+    $backUrl = Url::fromRoute('sir.manage_slotelements',
     ['containeruri' => base64_encode($this->getContainer()->uri),
      'breadcrumbs' => base64_encode(implode('|',$this->getBreadcrumbs())),]);
 
@@ -353,9 +374,9 @@ class ManageSlotElementsForm extends FormBase {
     // EDIT SLOT_ELEMENT
     if ($button_name === 'edit_slotelement') {
       if (sizeof($rows) < 1) {
-        \Drupal::messenger()->addWarning(t("Select the exact containerslot to be edited."));      
+        \Drupal::messenger()->addWarning(t("Select the exact containerslot to be edited."));
       } else if ((sizeof($rows) > 1)) {
-        \Drupal::messenger()->addWarning(t("Select only one containerslot to edit. No more than one containerslot can be edited at once."));      
+        \Drupal::messenger()->addWarning(t("Select only one containerslot to edit. No more than one containerslot can be edited at once."));
       } else {
         $first = array_shift($rows);
         $type = reset($this->getUriType()[$first]);
@@ -364,23 +385,23 @@ class ManageSlotElementsForm extends FormBase {
           $url = Url::fromRoute('sir.edit_subcontainer');
           $url->setRouteParameter('subcontaineruri', base64_encode($first));
           $url->setRouteParameter('breadcrumbs', $breadcrumbsArg);
-          $form_state->setRedirectUrl($url);  
+          $form_state->setRedirectUrl($url);
         } else {
           $url = Url::fromRoute('sir.edit_containerslot');
           $url->setRouteParameter('containersloturi', base64_encode($first));
           $url->setRouteParameter('breadcrumbs', $breadcrumbsArg);
           $form_state->setRedirectUrl($url);
         };
-      } 
+      }
       return;
     }
 
     // MANAGE SUBCONTAINER
     if ($button_name === 'manage_subcontainer_structure') {
       if (sizeof($rows) < 1) {
-        \Drupal::messenger()->addWarning(t("Select the exact subcontainer to be edited."));      
+        \Drupal::messenger()->addWarning(t("Select the exact subcontainer to be edited."));
       } else if ((sizeof($rows) > 1)) {
-        \Drupal::messenger()->addWarning(t("Select only one subcontainer to edit. No more than one subcontainer can be edited at once."));      
+        \Drupal::messenger()->addWarning(t("Select only one subcontainer to edit. No more than one subcontainer can be edited at once."));
       } else {
         $first = array_shift($rows);
         $type = reset($this->getUriType()[$first]);
@@ -388,15 +409,15 @@ class ManageSlotElementsForm extends FormBase {
           $api = \Drupal::service('rep.api_connector');
           $subcontainer = $api->parseObjectResponse($api->getUri($first),'getUri');
           $newCrumbs = $this->getBreadcrumbs();
-          $newCrumbs[] = $subcontainer->label;    
-          $url = Url::fromRoute('sir.manage_slotelements', 
+          $newCrumbs[] = $subcontainer->label;
+          $url = Url::fromRoute('sir.manage_slotelements',
             ['containeruri' => base64_encode($first),
              'breadcrumbs' => implode('|',$newCrumbs),]);
-          $form_state->setRedirectUrl($url);  
+          $form_state->setRedirectUrl($url);
         } else {
-          \Drupal::messenger()->addWarning(t("This option if for subcontainers only. "));      
+          \Drupal::messenger()->addWarning(t("This option if for subcontainers only. "));
         };
-      } 
+      }
       return;
     }
 
@@ -404,7 +425,7 @@ class ManageSlotElementsForm extends FormBase {
     if ($button_name === 'delete_containerslots') {
       if (sizeof($rows) < 1) {
         \Drupal::messenger()->addMessage(t("Select slots to be deleted."));
-        return;      
+        return;
       } else {
         $api = \Drupal::service('rep.api_connector');
         //dpm($rows);
@@ -417,9 +438,9 @@ class ManageSlotElementsForm extends FormBase {
         //$url = Url::fromRoute('sir.edit_subcontainer');
         //$url->setRouteParameter('subcontaineruri', base64_encode($this->getContainer()->uri));
         //$url->setRouteParameter('breadcrumbs', $breadcrumbsArg);
-        //$form_state->setRedirectUrl($url);  
+        //$form_state->setRedirectUrl($url);
         return;
-      } 
+      }
     }
 
     // MANAGE CONTAINER'S ANNOTATIONS
@@ -455,7 +476,7 @@ class ManageSlotElementsForm extends FormBase {
         $this->setBreadcrumbs($newCrumbs);
         $breadcrumbsArg = implode('|',$this->getBreadcrumbs());
       }
-      $url = Url::fromRoute('sir.manage_slotelements'); 
+      $url = Url::fromRoute('sir.manage_slotelements');
       $url->setRouteParameter('containeruri', base64_encode($this->getContainer()->belongsTo));
       $url->setRouteParameter('breadcrumbs', $breadcrumbsArg);
       $form_state->setRedirectUrl($url);
@@ -466,9 +487,9 @@ class ManageSlotElementsForm extends FormBase {
     if ($button_name === 'back') {
       self::backUrl();
       return;
-    }  
+    }
   }
-  
+
   /**
    * {@inheritdoc}
    */
@@ -481,12 +502,12 @@ class ManageSlotElementsForm extends FormBase {
       $this->setBreadcrumbs($newCrumbs);
       $breadcrumbsArg = implode('|',$this->getBreadcrumbs());
     }
-    $url = Url::fromRoute('sir.manage_slotelements'); 
+    $url = Url::fromRoute('sir.manage_slotelements');
     $url->setRouteParameter('containeruri', base64_encode($containeruri));
     $url->setRouteParameter('breadcrumbs', $breadcrumbsArg);
     return $url;
   }
-  
+
   function backUrl() {
     $uid = \Drupal::currentUser()->id();
     $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.manage_slotelements');
@@ -496,7 +517,7 @@ class ManageSlotElementsForm extends FormBase {
       return;
     }
   }
-  
+
 
 
 }

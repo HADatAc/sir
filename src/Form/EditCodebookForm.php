@@ -21,7 +21,7 @@ class EditCodebookForm extends FormBase {
   }
 
   public function setCodebookUri($uri) {
-    return $this->codebookUri = $uri; 
+    return $this->codebookUri = $uri;
   }
 
   public function getCodebook() {
@@ -29,7 +29,7 @@ class EditCodebookForm extends FormBase {
   }
 
   public function setCodebook($cb) {
-    return $this->codebook = $cb; 
+    return $this->codebook = $cb;
   }
 
   /**
@@ -53,14 +53,14 @@ class EditCodebookForm extends FormBase {
     $api = \Drupal::service('rep.api_connector');
     $rawresponse = $api->getUri($this->getCodebookUri());
     $obj = json_decode($rawresponse);
-    
+
     if ($obj->isSuccessful) {
       $this->setCodebook($obj->body);
       #dpm($this->getCodebook());
     } else {
       \Drupal::messenger()->addError(t("Failed to retrieve Codebook."));
       self::backUrl();
-      return;  
+      return;
     }
 
     $form['codebook_name'] = [
@@ -88,11 +88,17 @@ class EditCodebookForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Update'),
       '#name' => 'save',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'save-button'],
+      ],
     ];
     $form['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -129,8 +135,8 @@ class EditCodebookForm extends FormBase {
 
     if ($button_name === 'back') {
       self::backUrl();
-      return;  
-    } 
+      return;
+    }
 
     try{
       $useremail = \Drupal::currentUser()->getEmail();
@@ -148,15 +154,15 @@ class EditCodebookForm extends FormBase {
       $api = \Drupal::service('rep.api_connector');
       $api->codebookDel($this->getCodebook()->uri);
       $api->codebookAdd($codebookJson);
-    
+
       \Drupal::messenger()->addMessage(t("Codebook has been updated successfully."));
       self::backUrl();
-      return;  
+      return;
 
     }catch(\Exception $e){
       \Drupal::messenger()->addError(t("An error occurred while updating Codebook: ".$e->getMessage()));
       self::backUrl();
-      return;  
+      return;
     }
 
   }

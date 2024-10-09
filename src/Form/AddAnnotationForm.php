@@ -33,7 +33,7 @@ class AddAnnotationForm extends FormBase {
   }
 
   public function setContainer($obj) {
-    return $this->container = $obj; 
+    return $this->container = $obj;
   }
 
   public function getAnnotationStem() {
@@ -41,7 +41,7 @@ class AddAnnotationForm extends FormBase {
   }
 
   public function setAnnotationStem($stem) {
-    return $this->annotationStem = $stem; 
+    return $this->annotationStem = $stem;
   }
 
   public function getBreadcrumbs() {
@@ -49,7 +49,7 @@ class AddAnnotationForm extends FormBase {
   }
 
   public function setBreadcrumbs(array $crumbs) {
-    return $this->crumbs = $crumbs; 
+    return $this->crumbs = $crumbs;
   }
 
   /**
@@ -80,7 +80,7 @@ class AddAnnotationForm extends FormBase {
       $this->backToSlotElement($form_state);
     }
     $this->setContainer($container);
-    
+
     // ESTABLISH API SERVICE
     $api = \Drupal::service('rep.api_connector');
 
@@ -123,11 +123,17 @@ class AddAnnotationForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Save'),
       '#name' => 'save',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'save-button'],
+      ],
     ];
     $form['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -171,14 +177,14 @@ class AddAnnotationForm extends FormBase {
     if ($button_name === 'back') {
       self::backUrl();
       return;
-    } 
+    }
 
     try {
 
       $belongsTo = '';
       if ($form_state->getValue('annotation_container') != NULL && $form_state->getValue('annotation_container') != '') {
         $belongsTo = Utils::uriFromAutocomplete($form_state->getValue('annotation_container'));
-      } 
+      }
 
       $useremail = \Drupal::currentUser()->getEmail();
 
@@ -194,7 +200,7 @@ class AddAnnotationForm extends FormBase {
         '"belongsTo":"'.$belongsTo.'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
       $api->annotationAdd($annotationJson);
-    
+
       \Drupal::messenger()->addMessage(t("Annotation has been added successfully."));
       self::backUrl();
       return;
@@ -219,7 +225,7 @@ class AddAnnotationForm extends FormBase {
       return;
     }
   }
-  
+
 
 
 }

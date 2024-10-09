@@ -21,7 +21,7 @@ class AddResponseOptionForm extends FormBase {
   }
 
   public function setCodebookSlotUri($uri) {
-    return $this->codebookSlotUri = $uri; 
+    return $this->codebookSlotUri = $uri;
   }
 
   public function getCodebookSlot() {
@@ -29,7 +29,7 @@ class AddResponseOptionForm extends FormBase {
   }
 
   public function setCodebookSlot($uri) {
-    return $this->codebookSlot = $uri; 
+    return $this->codebookSlot = $uri;
   }
 
   /**
@@ -95,11 +95,17 @@ class AddResponseOptionForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Save'),
       '#name' => 'save',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'save-button'],
+      ],
     ];
     $form['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -140,7 +146,7 @@ class AddResponseOptionForm extends FormBase {
         $form_state->setRedirectUrl($url);
         return;
       }
-    } 
+    }
 
     try {
       $useremail = \Drupal::currentUser()->getEmail();
@@ -159,7 +165,7 @@ class AddResponseOptionForm extends FormBase {
       if ($this->getCodebookSlotUri() != NULL && $this->getCodebookSlot() != NULL && $this->getCodebookSlot()->belongsTo != NULL) {
         $api->responseOptionAttach($newResponseOptionUri,$this->getCodebookSlotUri());
       }
-      
+
       \Drupal::messenger()->addMessage(t("Response Option has been added successfully."));
       if ($this->getCodebookSlotUri() == "") {
         self::backUrl();
@@ -195,7 +201,7 @@ class AddResponseOptionForm extends FormBase {
       return;
     }
   }
-  
+
 
 
 }

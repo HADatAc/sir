@@ -27,7 +27,7 @@ class EditAnnotationForm extends FormBase {
   }
 
   public function setAnnotationUri($uri) {
-    return $this->annotationUri = $uri; 
+    return $this->annotationUri = $uri;
   }
 
   public function getAnnotation() {
@@ -35,7 +35,7 @@ class EditAnnotationForm extends FormBase {
   }
 
   public function setAnnotation($obj) {
-    return $this->annotation = $obj; 
+    return $this->annotation = $obj;
   }
 
   public function getInstrument() {
@@ -43,7 +43,7 @@ class EditAnnotationForm extends FormBase {
   }
 
   public function setInstrument($obj) {
-    return $this->instrument = $obj; 
+    return $this->instrument = $obj;
   }
 
   /**
@@ -65,8 +65,8 @@ class EditAnnotationForm extends FormBase {
     $this->setAnnotationUri($uri_full);
 
     // ESTABLISH API SERVICE
-    $api = \Drupal::service('rep.api_connector');  
-    
+    $api = \Drupal::service('rep.api_connector');
+
     $this->setAnnotation($api->parseObjectResponse($api->getUri($this->getAnnotationUri()), 'getUri'));
     $this->setInstrument($api->parseObjectResponse($api->getUri($this->getAnnotation()->belongsTo), 'getUri'));
 
@@ -117,11 +117,17 @@ class EditAnnotationForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Update'),
       '#name' => 'save',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'save-button'],
+      ],
     ];
     $form['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -157,20 +163,20 @@ class EditAnnotationForm extends FormBase {
     if ($button_name === 'back') {
       self::backUrl();
       return;
-    } 
+    }
 
     $container = '';
     if ($form_state->getValue('annotation_container') != NULL && $form_state->getValue('annotation_container') != '') {
       $container = Utils::uriFromAutocomplete($form_state->getValue('annotation_container'));
-    } 
+    }
 
     $stem = '';
     if ($form_state->getValue('annotation_stem') != NULL && $form_state->getValue('annotation_stem') != '') {
       $stem = Utils::uriFromAutocomplete($form_state->getValue('annotation_stem'));
-    } 
+    }
 
     try{
-  
+
       $uid = \Drupal::currentUser()->id();
       $useremail = \Drupal::currentUser()->getEmail();
 
@@ -187,7 +193,7 @@ class EditAnnotationForm extends FormBase {
       // UPDATE BY DELETING AND CREATING
       $api = \Drupal::service('rep.api_connector');
       $api->annotationDel($this->getAnnotationUri());
-      $updatedAnnotation = $api->annotationAdd($annotationJson);    
+      $updatedAnnotation = $api->annotationAdd($annotationJson);
       \Drupal::messenger()->addMessage(t("Annotation has been updated successfully."));
       self::backUrl();
       return;
@@ -208,6 +214,6 @@ class EditAnnotationForm extends FormBase {
       return;
     }
   }
-  
+
 
 }

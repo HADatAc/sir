@@ -47,11 +47,17 @@ class AddCodebookForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Save'),
       '#name' => 'save',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'save-button'],
+      ],
     ];
     $form['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -87,30 +93,30 @@ class AddCodebookForm extends FormBase {
     if ($button_name === 'back') {
       self::backUrl();
       return;
-  } 
+  }
 
     try {
       $uemail = \Drupal::currentUser()->getEmail();
       $newCodebookUri = Utils::uriGen('codebook');
-      $codebookJSON = '{"uri":"'.$newCodebookUri.'",' . 
+      $codebookJSON = '{"uri":"'.$newCodebookUri.'",' .
         '"typeUri":"'.VSTOI::CODEBOOK.'",'.
         '"hascoTypeUri":"'.VSTOI::CODEBOOK.'",'.
-        '"label":"' . $form_state->getValue('codebook_name') . '",' . 
-        '"hasLanguage":"' . $form_state->getValue('codebook_language') . '",' . 
-        '"hasVersion":"' . $form_state->getValue('codebook_version') . '",' . 
-        '"comment":"' . $form_state->getValue('codebook_description') . '",' . 
+        '"label":"' . $form_state->getValue('codebook_name') . '",' .
+        '"hasLanguage":"' . $form_state->getValue('codebook_language') . '",' .
+        '"hasVersion":"' . $form_state->getValue('codebook_version') . '",' .
+        '"comment":"' . $form_state->getValue('codebook_description') . '",' .
         '"hasSIRManagerEmail":"' . $uemail . '"}';
 
       $api = \Drupal::service('rep.api_connector');
       $api->codebookAdd($codebookJSON);
-      \Drupal::messenger()->addMessage(t("Codebook has been added successfully."));      
+      \Drupal::messenger()->addMessage(t("Codebook has been added successfully."));
       self::backUrl();
       return;
 
     }catch(\Exception $e){
       \Drupal::messenger()->addMessage(t("An error occurred while adding an codebook: ".$e->getMessage()));
       self::backUrl();
-      return;  
+      return;
     }
 
   }
