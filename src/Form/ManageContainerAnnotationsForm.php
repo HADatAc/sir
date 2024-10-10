@@ -30,7 +30,7 @@ class ManageContainerAnnotationsForm extends FormBase {
   }
 
   public function setContainer($container) {
-    return $this->container = $container; 
+    return $this->container = $container;
   }
 
   public function getBreadcrumbs() {
@@ -38,7 +38,7 @@ class ManageContainerAnnotationsForm extends FormBase {
   }
 
   public function setBreadcrumbs(array $crumbs) {
-    return $this->crumbs = $crumbs; 
+    return $this->crumbs = $crumbs;
   }
 
   /**
@@ -188,7 +188,7 @@ class ManageContainerAnnotationsForm extends FormBase {
         '#default_value' => $bottomrightLabel,
         '#autocomplete_route_name' => 'sir.annotation_stem_autocomplete',
       ];
-    } else {      
+    } else {
       $form['annotation_topleft'] = [
         '#type' => 'textfield',
         '#title' => $this->t('TopLeft'),
@@ -246,11 +246,17 @@ class ManageContainerAnnotationsForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Save'),
       '#name' => 'save',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'save-button'],
+      ],
     ];
     $form['back'] = [
       '#type' => 'submit',
       '#value' => $this->t('Back'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'back-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -262,7 +268,7 @@ class ManageContainerAnnotationsForm extends FormBase {
 
   /**
    * {@inheritdoc}
-   */   
+   */
   public function retrieveAnnotation(String $position) {
     $api = \Drupal::service('rep.api_connector');
     $rawelement = $api->annotationByContainerAndPosition($this->getContainer()->uri,$position);
@@ -278,13 +284,13 @@ class ManageContainerAnnotationsForm extends FormBase {
 
   /**
    * {@inheritdoc}
-   */   
+   */
   public function labelPreparation($annotation) {
 
     if ($annotation == NULL ||
         $annotation->uri == NULL || $annotation->uri == "" ||
-        $annotation->annotationStem == NULL || 
-        $annotation->annotationStem->hasContent == NULL || 
+        $annotation->annotationStem == NULL ||
+        $annotation->annotationStem->hasContent == NULL ||
         $annotation->annotationStem->hasContent == "") {
       return "";
     }
@@ -311,7 +317,7 @@ class ManageContainerAnnotationsForm extends FormBase {
 
   /**
    * {@inheritdoc}
-   */   
+   */
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
     // RETRIEVE TRIGGERING BUTTON
@@ -410,16 +416,16 @@ class ManageContainerAnnotationsForm extends FormBase {
 
       if ($msg != "") {
         \Drupal::messenger()->addMessage(t($msg));
-      }      
+      }
       $this->backToSlotElement($form_state);
     }
 
     // BACK TO MAIN PAGE
     if ($button_name === 'back') {
       $this->backToSlotElement($form_state);
-    }  
+    }
   }
-  
+
   /**
    * {@inheritdoc}
    */
@@ -437,7 +443,7 @@ class ManageContainerAnnotationsForm extends FormBase {
 
       // ADD NEW ANNOTATION
       try {
-  
+
         $belongsTo = $this->getContainer()->uri;
         $useremail = \Drupal::currentUser()->getEmail();
 
@@ -451,7 +457,7 @@ class ManageContainerAnnotationsForm extends FormBase {
           '"belongsTo":"'.$belongsTo.'",'.
           '"hasSIRManagerEmail":"'.$useremail.'"}';
         $api->annotationAdd($annotationJson);
-      
+
         return "Annotation added for ".Utils::namespaceUri($position).". ";
 
       } catch(\Exception $e) {
@@ -460,10 +466,10 @@ class ManageContainerAnnotationsForm extends FormBase {
       }
 
     } else {
- 
+
       // UPDATE EXISTING ANNOTATION
 
-      // UPDATE IF CURRENT AND ORIGINAL ANNOTATION STEM URIS ARE DIFFERENT 
+      // UPDATE IF CURRENT AND ORIGINAL ANNOTATION STEM URIS ARE DIFFERENT
       if ($annotationStemUri != $original->annotationStem->uri) {
 
         // DELETE EXISTING ANNOTATION
@@ -471,7 +477,7 @@ class ManageContainerAnnotationsForm extends FormBase {
             ($original->annotationStem->uri != NULL && $original->annotationStem->uri != "")) {
 
           try {
-      
+
             // DELETE ANNOTATION
             $api = \Drupal::service('rep.api_connector');
             $api->annotationDel($original->uri);
@@ -480,11 +486,11 @@ class ManageContainerAnnotationsForm extends FormBase {
           } catch(\Exception $e){
             \Drupal::messenger()->addError(t("An error occurred while updating the Annotation: ".$e->getMessage()));
             $this->backToSlotElement($form_state);
-          }  
+          }
         } else {
 
           try {
-      
+
             $uid = \Drupal::currentUser()->id();
             $useremail = \Drupal::currentUser()->getEmail();
 
@@ -502,13 +508,13 @@ class ManageContainerAnnotationsForm extends FormBase {
             // UPDATE BY DELETING AND CREATING
             $api = \Drupal::service('rep.api_connector');
             $api->annotationDel($original->uri);
-            $updatedAnnotation = $api->annotationAdd($annotationJson);    
+            $updatedAnnotation = $api->annotationAdd($annotationJson);
             return "Annotation updated for ".Utils::namespaceUri($position).". ";
 
           } catch(\Exception $e){
             \Drupal::messenger()->addError(t("An error occurred while updating the Annotation: ".$e->getMessage()));
             $this->backToSlotElement($form_state);
-          }  
+          }
 
         }
       }
@@ -520,11 +526,11 @@ class ManageContainerAnnotationsForm extends FormBase {
    */
   private function backToSlotElement(FormStateInterface $form_state) {
     $breadcrumbsArg = implode('|',$this->getBreadcrumbs());
-    $url = Url::fromRoute('sir.manage_slotelements'); 
+    $url = Url::fromRoute('sir.manage_slotelements');
     $url->setRouteParameter('containeruri', base64_encode($this->getContainer()->uri));
     $url->setRouteParameter('breadcrumbs', $breadcrumbsArg);
     $form_state->setRedirectUrl($url);
     return;
-  } 
-  
+  }
+
 }
