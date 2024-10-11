@@ -29,7 +29,7 @@ class AddAnnotationStemForm extends FormBase {
   }
 
   public function setSourceAnnotationStemUri($uri) {
-    return $this->sourceAnnotationStemUri = $uri; 
+    return $this->sourceAnnotationStemUri = $uri;
   }
 
   public function getSourceAnnotationStem() {
@@ -37,7 +37,7 @@ class AddAnnotationStemForm extends FormBase {
   }
 
   public function setSourceAnnotationStem($obj) {
-    return $this->sourceAnnotationStem = $obj; 
+    return $this->sourceAnnotationStem = $obj;
   }
 
   /**
@@ -111,11 +111,17 @@ class AddAnnotationStemForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Save'),
       '#name' => 'save',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'save-button'],
+      ],
     ];
     $form['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -154,7 +160,7 @@ class AddAnnotationStemForm extends FormBase {
     if ($button_name === 'back') {
       self::backUrl();
       return;
-    } 
+    }
 
     try {
 
@@ -185,7 +191,7 @@ class AddAnnotationStemForm extends FormBase {
       \Drupal::messenger()->addMessage(t("Added a new Annotation Stem with URI: ".$newAnnotationStemUri));
       self::backUrl();
       return;
-  
+
     } catch(\Exception $e) {
         \Drupal::messenger()->addMessage(t("An error occurred while adding the Annotation Stem: ".$e->getMessage()));
         self::backUrl();
@@ -202,6 +208,6 @@ class AddAnnotationStemForm extends FormBase {
       return;
     }
   }
-  
+
 
 }

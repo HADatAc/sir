@@ -25,7 +25,7 @@ function sir_theme($existing, $type, $theme, $path)
         ],
         'list-page' => [
             'variables' => array(
-                'items' => array(          
+                'items' => array(
                     'offset' => '',
                     'first' => '',
                     'last' => '',
@@ -73,6 +73,7 @@ function sir_menu_links_discovered_alter(&$links) {
  */
 function sir_page_attachments(array &$attachments) {
   $attachments['#attached']['library'][] = 'core/drupal.dialog';
+  $attachments['#attached']['library'][] = 'rep/rep_js_css';
 }
 
 /**

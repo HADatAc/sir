@@ -21,7 +21,7 @@ class EditContainerSlotForm extends FormBase {
   }
 
   public function setContainerSlotUri($uri) {
-    return $this->containerslotUri = $uri; 
+    return $this->containerslotUri = $uri;
   }
 
   public function getContainerSlot() {
@@ -29,7 +29,7 @@ class EditContainerSlotForm extends FormBase {
   }
 
   public function setContainerSlot($obj) {
-    return $this->containerslot = $obj; 
+    return $this->containerslot = $obj;
   }
 
   public function getBreadcrumbs() {
@@ -37,7 +37,7 @@ class EditContainerSlotForm extends FormBase {
   }
 
   public function setBreadcrumbs(array $crumbs) {
-    return $this->crumbs = $crumbs; 
+    return $this->crumbs = $crumbs;
   }
 
   /**
@@ -67,7 +67,7 @@ class EditContainerSlotForm extends FormBase {
     $this->setContainerSlot($api->parseObjectResponse($api->getUri($this->getContainerSlotUri()),'getUri'));
 
     $content = "";
-    if ($this->getContainerSlot() != NULL) { 
+    if ($this->getContainerSlot() != NULL) {
       if (isset($this->getContainerSlot()->detector) &&
           isset($this->getContainerSlot()->detector->detectorStem)) {
           $content = $this->getContainerSlot()->detector->detectorStem->hasContent . ' [' . $this->getContainerSlot()->hasDetector . ']';
@@ -129,21 +129,33 @@ class EditContainerSlotForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('New Item'),
       '#name' => 'new_detector',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'add-element-button'],
+      ],
     ];
     $form['reset_detector_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Reset Item'),
       '#name' => 'reset_detector',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'reset-button'],
+      ],
     ];
     $form['update_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Update'),
       '#name' => 'save',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'save-button'],
+      ],
     ];
     $form['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -179,32 +191,32 @@ class EditContainerSlotForm extends FormBase {
     if ($button_name === 'back') {
       $this->backToSlotElement($form_state);
       return;
-    } 
+    }
 
     if ($button_name === 'new_detector') {
       $url = Url::fromRoute('sir.add_detector');
-      $url->setRouteParameter('sourcedetectoruri', 'EMPTY'); 
-      $url->setRouteParameter('containersloturi', base64_encode($this->getContainerSlotUri())); 
+      $url->setRouteParameter('sourcedetectoruri', 'EMPTY');
+      $url->setRouteParameter('containersloturi', base64_encode($this->getContainerSlotUri()));
       $form_state->setRedirectUrl($url);
       return;
-    } 
+    }
 
     if ($button_name === 'reset_detector') {
       // RESET DETECTOR
       if ($this->getContainerSlotUri() != NULL) {
         $api = \Drupal::service('rep.api_connector');
         $api->containerslotReset($this->getContainerSlotUri());
-      } 
+      }
       $this->backToSlotElement($form_state);
-      return;    
-    } 
+      return;
+    }
 
     try{
       // UPDATE DETECTOR
       if ($this->getContainerSlotUri() != NULL) {
         $api = \Drupal::service('rep.api_connector');
         $api->detectorAttach(Utils::uriFromAutocomplete($form_state->getValue('containerslot_detector')),$this->getContainerSlotUri());
-      } 
+      }
 
       \Drupal::messenger()->addMessage(t("ContainerSlot has been updated successfully."));
       $this->backToSlotElement($form_state);
@@ -222,11 +234,11 @@ class EditContainerSlotForm extends FormBase {
    */
   private function backToSlotElement(FormStateInterface $form_state) {
     $breadcrumbsArg = implode('|',$this->getBreadcrumbs());
-    $url = Url::fromRoute('sir.manage_slotelements'); 
+    $url = Url::fromRoute('sir.manage_slotelements');
     $url->setRouteParameter('containeruri', base64_encode($this->getContainerSlot()->belongsTo));
     $url->setRouteParameter('breadcrumbs', $breadcrumbsArg);
     $form_state->setRedirectUrl($url);
     return;
-  } 
+  }
 
 }

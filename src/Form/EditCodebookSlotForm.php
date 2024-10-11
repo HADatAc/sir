@@ -19,7 +19,7 @@ class EditCodebookSlotForm extends FormBase {
   }
 
   public function setCodebookSlotUri($uri) {
-    return $this->codebookSlotUri = $uri; 
+    return $this->codebookSlotUri = $uri;
   }
 
   public function getCodebookSlot() {
@@ -27,7 +27,7 @@ class EditCodebookSlotForm extends FormBase {
   }
 
   public function setCodebookSlot($obj) {
-    return $this->codebookSlot = $obj; 
+    return $this->codebookSlot = $obj;
   }
 
   /**
@@ -83,21 +83,33 @@ class EditCodebookSlotForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('New Response Option'),
       '#name' => 'new_response_option',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'add-element-button'],
+      ],
     ];
     $form['reset_responseoption_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Reset Response Option Slot'),
       '#name' => 'reset_response_option',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'reset-button'],
+      ],
     ];
     $form['update_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Update'),
       '#name' => 'save',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'save-button'],
+      ],
     ];
     $form['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -129,41 +141,41 @@ class EditCodebookSlotForm extends FormBase {
     // SET USER ID AND PREVIOUS URL FOR TRACKING STORE URLS
     $uid = \Drupal::currentUser()->id();
     $previousUrl = \Drupal::request()->getRequestUri();
-    
+
     if ($button_name === 'back') {
       $url = Url::fromRoute('sir.manage_codebook_slots');
       $url->setRouteParameter('codebookuri', base64_encode($this->getCodebookSlot()->belongsTo));
       $form_state->setRedirectUrl($url);
       return;
-    } 
+    }
 
     if ($button_name === 'new_response_option') {
       Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_response_option');
       $url = Url::fromRoute('sir.add_response_option');
-      $url->setRouteParameter('codebooksloturi', base64_encode($this->getCodebookSlotUri())); 
+      $url->setRouteParameter('codebooksloturi', base64_encode($this->getCodebookSlotUri()));
       $form_state->setRedirectUrl($url);
       return;
-    } 
+    }
 
     if ($button_name === 'reset_response_option') {
       // RESET responseOption
       if ($this->getCodebookSlotUri() != NULL) {
         $api = \Drupal::service('rep.api_connector');
         $api->codebookSlotReset($this->getCodebookSlotUri());
-      } 
+      }
 
       $url = Url::fromRoute('sir.manage_codebook_slots');
       $url->setRouteParameter('codebookuri', base64_encode($this->getCodebookSlot()->belongsTo));
       $form_state->setRedirectUrl($url);
       return;
-    } 
+    }
 
     try {
       // UPDATE responseOption
       if ($this->getCodebookSlotUri() != NULL) {
         $api = \Drupal::service('rep.api_connector');
         $api->responseOptionAttach(Utils::uriFromAutocomplete($form_state->getValue('codebook_slot_response_option')),$this->getCodebookSlotUri());
-      } 
+      }
 
       \Drupal::messenger()->addMessage(t("Response Option Slot has been updated successfully."));
       $url = Url::fromRoute('sir.manage_codebook_slots');

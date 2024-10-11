@@ -21,7 +21,7 @@ class EditResponseOptionForm extends FormBase {
   }
 
   public function setResponseOptionUri($uri) {
-    return $this->responseOptionUri = $uri; 
+    return $this->responseOptionUri = $uri;
   }
 
   public function getResponseOption() {
@@ -29,7 +29,7 @@ class EditResponseOptionForm extends FormBase {
   }
 
   public function setResponseOption($respOption) {
-    return $this->responseOption = $respOption; 
+    return $this->responseOption = $respOption;
   }
 
   /**
@@ -53,13 +53,13 @@ class EditResponseOptionForm extends FormBase {
     $api = \Drupal::service('rep.api_connector');
     $rawresponse = $api->getUri($this->getResponseOptionUri());
     $obj = json_decode($rawresponse);
-    
+
     if ($obj->isSuccessful) {
       $this->setResponseOption($obj->body);
     } else {
       \Drupal::messenger()->addError(t("Failed to retrieve Response Option."));
       self::backUrl();
-      return;   
+      return;
     }
 
     $form['responseoption_content'] = [
@@ -87,11 +87,17 @@ class EditResponseOptionForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Update'),
       '#name' => 'save',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'save-button'],
+      ],
     ];
     $form['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -127,7 +133,7 @@ class EditResponseOptionForm extends FormBase {
     if ($button_name === 'back') {
       self::backUrl();
       return;
-    } 
+    }
 
     try{
       $useremail = \Drupal::currentUser()->getEmail();
@@ -146,7 +152,7 @@ class EditResponseOptionForm extends FormBase {
       //dpm($this->getResponseOption()->uri);
       $api->responseOptionDel($this->getResponseOption()->uri);
       $api->responseOptionAdd($responseOptionJSON);
-    
+
       \Drupal::messenger()->addMessage(t("Response Option has been updated successfully."));
       self::backUrl();
       return;
@@ -168,5 +174,5 @@ class EditResponseOptionForm extends FormBase {
       return;
     }
   }
-  
+
 }

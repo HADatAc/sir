@@ -22,7 +22,7 @@ class EditInstrumentForm extends FormBase {
   }
 
   public function setInstrumentUri($uri) {
-    return $this->instrumentUri = $uri; 
+    return $this->instrumentUri = $uri;
   }
 
   public function getInstrument() {
@@ -30,7 +30,7 @@ class EditInstrumentForm extends FormBase {
   }
 
   public function setInstrument($instrument) {
-    return $this->instrument = $instrument; 
+    return $this->instrument = $instrument;
   }
 
   /**
@@ -54,7 +54,7 @@ class EditInstrumentForm extends FormBase {
     $api = \Drupal::service('rep.api_connector');
     $rawresponse = $api->getUri($this->getInstrumentUri());
     $obj = json_decode($rawresponse);
-    
+
     if ($obj->isSuccessful) {
       $this->setInstrument($obj->body);
       //dpm($this->getInstrument());
@@ -110,11 +110,17 @@ class EditInstrumentForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Update'),
       '#name' => 'save',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'save-button'],
+      ],
     ];
     $form['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -157,7 +163,7 @@ class EditInstrumentForm extends FormBase {
     if ($button_name === 'back') {
       self::backUrl();
       return;
-    } 
+    }
 
     try{
       $uid = \Drupal::currentUser()->id();
@@ -178,7 +184,7 @@ class EditInstrumentForm extends FormBase {
       $api = \Drupal::service('rep.api_connector');
       $api->instrumentDel($this->getInstrumentUri());
       $newInstrument = $api->instrumentAdd($instrumentJson);
-    
+
       \Drupal::messenger()->addMessage(t("Instrument has been updated successfully."));
       self::backUrl();
       return;
@@ -200,6 +206,6 @@ class EditInstrumentForm extends FormBase {
       return;
     }
   }
-  
+
 
 }

@@ -45,7 +45,7 @@ class ManageAnnotationsForm extends FormBase {
   }
 
   public function setList($list) {
-    return $this->list = $list; 
+    return $this->list = $list;
   }
 
   public function getListSize() {
@@ -53,7 +53,7 @@ class ManageAnnotationsForm extends FormBase {
   }
 
   public function setListSize($list_size) {
-    return $this->list_size = $list_size; 
+    return $this->list_size = $list_size;
   }
 
   public function getContainer() {
@@ -61,7 +61,7 @@ class ManageAnnotationsForm extends FormBase {
   }
 
   public function setContainer($container) {
-    return $this->container = $container; 
+    return $this->container = $container;
   }
 
   public function getBreadcrumbs() {
@@ -69,7 +69,7 @@ class ManageAnnotationsForm extends FormBase {
   }
 
   public function setBreadcrumbs(array $crumbs) {
-    return $this->crumbs = $crumbs; 
+    return $this->crumbs = $crumbs;
   }
 
   /**
@@ -106,7 +106,7 @@ class ManageAnnotationsForm extends FormBase {
     $this->setListSize(ListManagerEmailPageByContainer::total($this->getContainer()->uri,'annotation', $this->manager_email));
     if (gettype($this->list_size) == 'string') {
       $total_pages = "0";
-    } else { 
+    } else {
       if ($this->list_size % $pagesize == 0) {
         $total_pages = $this->list_size / $pagesize;
       } else {
@@ -140,7 +140,7 @@ class ManageAnnotationsForm extends FormBase {
     $this->single_class_name = "Annotation";
     $this->plural_class_name = "Annotations";
     $header = Annotation::generateHeader();
-    $output = Annotation::generateOutput($this->getList());    
+    $output = Annotation::generateOutput($this->getList());
 
     $path = "";
     $length = count($this->getBreadcrumbs());
@@ -150,7 +150,7 @@ class ManageAnnotationsForm extends FormBase {
             $path .= ' > ';
         }
     }
-    
+
     // PUT FORM TOGETHER
     $form['page_title'] = [
       '#type' => 'item',
@@ -168,17 +168,26 @@ class ManageAnnotationsForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Add New ' . $this->single_class_name),
       '#name' => 'add_element',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'add-element-button'],
+      ],
     ];
     $form['edit_selected_element'] = [
       '#type' => 'submit',
       '#value' => $this->t('Edit Selected'),
       '#name' => 'edit_element',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'edit-element-button'],
+      ],
     ];
     $form['delete_selected_element'] = [
       '#type' => 'submit',
       '#value' => $this->t('Delete Selected'),
       '#name' => 'delete_element',
-      '#attributes' => ['onclick' => 'if(!confirm("Really Delete?")){return false;}'],
+      '#attributes' => [
+        'onclick' => 'if(!confirm("Really Delete?")){return false;}',
+        'class' => ['btn', 'btn-primary', 'delete-element-button']
+      ],
     ];
     $form['element_table'] = [
       '#type' => 'tableselect',
@@ -204,23 +213,26 @@ class ManageAnnotationsForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Back'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'back-button'],
+      ],
     ];
     $form['space'] = [
       '#type' => 'item',
       '#value' => $this->t('<br><br><br>'),
     ];
- 
+
     return $form;
   }
 
   /**
    * {@inheritdoc}
-   */   
+   */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     // RETRIEVE TRIGGERING BUTTON
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
-  
+
     // SET USER ID AND PREVIOUS URL FOR TRACKING STORE URLS
     $uid = \Drupal::currentUser()->id();
     $previousUrl = \Drupal::request()->getRequestUri();
@@ -238,7 +250,7 @@ class ManageAnnotationsForm extends FormBase {
     if ($button_name === 'back') {
       $this->backToSlotElement($form_state);
       return;
-    }  
+    }
 
     // ADD ELEMENT
     if ($button_name === 'add_element') {
@@ -248,14 +260,14 @@ class ManageAnnotationsForm extends FormBase {
       $url->setRouteParameter('containeruri', base64_encode($this->getContainer()->uri));
       $url->setRouteParameter('breadcrumbs', $breadcrumbsArg);
       $form_state->setRedirectUrl($url);
-    }  
+    }
 
     // EDIT ELEMENT
     if ($button_name === 'edit_element') {
       if (sizeof($rows) < 1) {
-        \Drupal::messenger()->addWarning(t("Select the exact " . $this->single_class_name . " to be edited."));      
+        \Drupal::messenger()->addWarning(t("Select the exact " . $this->single_class_name . " to be edited."));
       } else if ((sizeof($rows) > 1)) {
-        \Drupal::messenger()->addWarning(t("No more than one " . $this->single_class_name . " can be edited at once."));      
+        \Drupal::messenger()->addWarning(t("No more than one " . $this->single_class_name . " can be edited at once."));
       } else {
         $first = array_shift($rows);
         $breadcrumbsArg = implode('|',$this->getBreadcrumbs());
@@ -265,13 +277,13 @@ class ManageAnnotationsForm extends FormBase {
         $url->setRouteParameter('containeruri', base64_encode($this->getContainer()->uri));
         $url->setRouteParameter('breadcrumbs', $breadcrumbsArg);
         $form_state->setRedirectUrl($url);
-      } 
+      }
     }
 
     // DELETE ELEMENT
     if ($button_name === 'delete_element') {
       if (sizeof($rows) <= 0) {
-        \Drupal::messenger()->addWarning(t("At least one " . $this->single_class_name . " needs to be selected to be deleted."));      
+        \Drupal::messenger()->addWarning(t("At least one " . $this->single_class_name . " needs to be selected to be deleted."));
         return;
       } else {
         $api = \Drupal::service('rep.api_connector');
@@ -279,24 +291,24 @@ class ManageAnnotationsForm extends FormBase {
           $uri = Utils::plainUri($shortUri);
           $api->annotationDel($uri);
         }
-        \Drupal::messenger()->addMessage(t("Selected " . $this->plural_class_name . " has/have been deleted successfully."));      
+        \Drupal::messenger()->addMessage(t("Selected " . $this->plural_class_name . " has/have been deleted successfully."));
         return;
       }
-    }  
+    }
     return;
   }
-  
+
   /**
    * {@inheritdoc}
    */
   private function backToSlotElement(FormStateInterface $form_state) {
     $breadcrumbsArg = implode('|',$this->getBreadcrumbs());
-    $url = Url::fromRoute('sir.manage_slotelements'); 
+    $url = Url::fromRoute('sir.manage_slotelements');
     $url->setRouteParameter('containeruri', base64_encode($this->getContainer()->uri));
     $url->setRouteParameter('breadcrumbs', $breadcrumbsArg);
     $form_state->setRedirectUrl($url);
     return;
-  } 
-  
+  }
+
 
 }

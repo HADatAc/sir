@@ -35,7 +35,7 @@ class AddDetectorForm extends FormBase {
   }
 
   public function setSourceDetectorUri($uri) {
-    return $this->sourceDetectorUri = $uri; 
+    return $this->sourceDetectorUri = $uri;
   }
 
   public function getSourceDetector() {
@@ -43,7 +43,7 @@ class AddDetectorForm extends FormBase {
   }
 
   public function setSourceDetector($obj) {
-    return $this->sourceDetector = $obj; 
+    return $this->sourceDetector = $obj;
   }
 
   public function getDetectorStem() {
@@ -51,7 +51,7 @@ class AddDetectorForm extends FormBase {
   }
 
   public function setDetectorStem($stem) {
-    return $this->detectorStem = $stem; 
+    return $this->detectorStem = $stem;
   }
 
   public function getContainerSlotUri() {
@@ -59,7 +59,7 @@ class AddDetectorForm extends FormBase {
   }
 
   public function setContainerSlotUri($attachuri) {
-    return $this->containerslotUri = $attachuri; 
+    return $this->containerslotUri = $attachuri;
   }
 
   public function getContainerSlot() {
@@ -67,7 +67,7 @@ class AddDetectorForm extends FormBase {
   }
 
   public function setContainerSlot($attachobj) {
-    return $this->containerslot = $attachobj; 
+    return $this->containerslot = $attachobj;
   }
 
   /**
@@ -139,11 +139,17 @@ class AddDetectorForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Save'),
       '#name' => 'save',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'save-button'],
+      ],
     ];
     $form['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -188,14 +194,14 @@ class AddDetectorForm extends FormBase {
     if ($button_name === 'back') {
       self::backUrl();
       return;
-    } 
+    }
 
     try {
 
       $hasCodebook = '';
       if ($form_state->getValue('detector_codebook') != NULL && $form_state->getValue('detector_codebook') != '') {
         $hasCodebook = Utils::uriFromAutocomplete($form_state->getValue('detector_codebook'));
-      } 
+      }
 
       $useremail = \Drupal::currentUser()->getEmail();
 
@@ -208,7 +214,7 @@ class AddDetectorForm extends FormBase {
         '"hasCodebook":"'.$hasCodebook.'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
       $api->detectorAdd($detectorJson);
-    
+
       // IF IN THE CONTEXT OF AN EXISTING CONTAINER_SLOT, ATTACH THE NEWLY CREATED DETECTOR TO THE CONTAINER_SLOT
       if ($this->getContainerSlot() != NULL) {
         $api->detectorAttach($newDetectorUri,$this->getContainerSlotUri());
@@ -217,7 +223,7 @@ class AddDetectorForm extends FormBase {
         $url->setRouteParameter('containersloturi', base64_encode($this->getContainerSlotUri()));
         $form_state->setRedirectUrl($url);
         return;
-      } else {        
+      } else {
         \Drupal::messenger()->addMessage(t("Detector has been added successfully."));
         self::backUrl();
         return;

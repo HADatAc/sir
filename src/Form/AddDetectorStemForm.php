@@ -29,7 +29,7 @@ class AddDetectorStemForm extends FormBase {
   }
 
   public function setSourceDetectorStemUri($uri) {
-    return $this->sourceDetectorStemUri = $uri; 
+    return $this->sourceDetectorStemUri = $uri;
   }
 
   public function getSourceDetectorStem() {
@@ -37,7 +37,7 @@ class AddDetectorStemForm extends FormBase {
   }
 
   public function setSourceDetectorStem($obj) {
-    return $this->sourceDetectorStem = $obj; 
+    return $this->sourceDetectorStem = $obj;
   }
 
   /**
@@ -111,11 +111,17 @@ class AddDetectorStemForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Save'),
       '#name' => 'save',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'save-button'],
+      ],
     ];
     $form['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -154,7 +160,7 @@ class AddDetectorStemForm extends FormBase {
     if ($button_name === 'back') {
       self::backUrl();
       return;
-    } 
+    }
 
     try {
 
@@ -185,7 +191,7 @@ class AddDetectorStemForm extends FormBase {
       \Drupal::messenger()->addMessage(t("Added a new Detector Stem with URI: ".$newDetectorStemUri));
       self::backUrl();
       return;
-  
+
     } catch(\Exception $e) {
         \Drupal::messenger()->addError(t("An error occurred while adding the Detector Stem: ".$e->getMessage()));
         self::backUrl();

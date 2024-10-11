@@ -25,7 +25,7 @@ class EditDetectorStemForm extends FormBase {
   }
 
   public function setDetectorStemUri($uri) {
-    return $this->detectorStemUri = $uri; 
+    return $this->detectorStemUri = $uri;
   }
 
   public function getDetectorStem() {
@@ -33,7 +33,7 @@ class EditDetectorStemForm extends FormBase {
   }
 
   public function setDetectorStem($obj) {
-    return $this->detectorStem = $obj; 
+    return $this->detectorStem = $obj;
   }
 
   public function getSourceDetectorStem() {
@@ -41,7 +41,7 @@ class EditDetectorStemForm extends FormBase {
   }
 
   public function setSourceDetectorStem($obj) {
-    return $this->sourceDetectorStem = $obj; 
+    return $this->sourceDetectorStem = $obj;
   }
 
   /**
@@ -74,7 +74,7 @@ class EditDetectorStemForm extends FormBase {
       $wasGeneratedBy = $this->getDetectorStem()->wasGeneratedBy;
       if ($this->getDetectorStem()->wasDerivedFrom != NULL) {
         $this->setSourceDetectorStem($this->retrieveDetectorStem($this->getDetectorStem()->wasDerivedFrom));
-        if ($this->getSourceDetectorStem() != NULL && $this->getSourceDetectorStem()->hasContent != NULL) { 
+        if ($this->getSourceDetectorStem() != NULL && $this->getSourceDetectorStem()->hasContent != NULL) {
           $sourceContent = $this->getSourceDetectorStem()->hasContent;
         }
       }
@@ -119,11 +119,17 @@ class EditDetectorStemForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Update'),
       '#name' => 'save',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'save-button'],
+      ],
     ];
     $form['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -163,10 +169,10 @@ class EditDetectorStemForm extends FormBase {
     if ($button_name === 'back') {
       self::backUrl();
       return;
-    } 
+    }
 
     try{
-  
+
       $uid = \Drupal::currentUser()->id();
       $useremail = \Drupal::currentUser()->getEmail();
 
@@ -175,7 +181,7 @@ class EditDetectorStemForm extends FormBase {
         $wasDerivedFrom = 'null';
       } else {
         $wasDerivedFrom = $this->getSourceDetectorStem()->uri;
-      } 
+      }
 
       $detectorStemJson = '{"uri":"'.$this->getDetectorStem()->uri.'",'.
         '"typeUri":"'.VSTOI::DETECTOR_STEM.'",'.
@@ -191,7 +197,7 @@ class EditDetectorStemForm extends FormBase {
       // UPDATE BY DELETING AND CREATING
       $api = \Drupal::service('rep.api_connector');
       $api->detectorStemDel($this->getDetectorStemUri());
-      $updatedDetectorStem = $api->detectorStemAdd($detectorStemJson);    
+      $updatedDetectorStem = $api->detectorStemAdd($detectorStemJson);
       \Drupal::messenger()->addMessage(t("Detector Stem has been updated successfully."));
       self::backUrl();
       return;
@@ -210,7 +216,7 @@ class EditDetectorStemForm extends FormBase {
     if ($obj->isSuccessful) {
       return $obj->body;
     }
-    return NULL; 
+    return NULL;
   }
 
   function backUrl() {

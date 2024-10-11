@@ -17,7 +17,7 @@ class ManageCodebookSlotsForm extends FormBase {
   }
 
   public function setCodebookUri($uri) {
-    return $this->codebookUri = $uri; 
+    return $this->codebookUri = $uri;
   }
 
   /**
@@ -85,7 +85,7 @@ class ManageCodebookSlotsForm extends FormBase {
           $responseoption = $objresponseoption->body;
           if (isset($responseoption->hasContent)) {
             $content = $responseoption->hasContent;
-          } 
+          }
         }
       }
       $responseOptionUriStr = "";
@@ -93,9 +93,9 @@ class ManageCodebookSlotsForm extends FormBase {
         $responseOptionUriStr = Utils::namespaceUri($slot->hasResponseOption);
       }
       $output[$slot->uri] = [
-        'slot_priority' => $slot->hasPriority,     
-        'slot_content' => $content,     
-        'slot_response_option' => $responseOptionUriStr,     
+        'slot_priority' => $slot->hasPriority,
+        'slot_content' => $content,
+        'slot_response_option' => $responseOptionUriStr,
       ];
     }
 
@@ -113,11 +113,17 @@ class ManageCodebookSlotsForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Edit Selected Response Option Slot'),
       '#name' => 'edit_slot',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'edit-element-button'],
+      ],
     ];
     $form['delete_slots'] = [
       '#type' => 'submit',
       '#value' => $this->t('Delete All Response Option Slots'),
       '#name' => 'delete_slots',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'delete-element-button'],
+      ],
     ];
     $form['slot_table'] = [
       '#type' => 'tableselect',
@@ -126,20 +132,23 @@ class ManageCodebookSlotsForm extends FormBase {
       '#js_select' => FALSE,
       '#empty' => t('No response option slots found'),
       //'#ajax' => [
-      //  'callback' => '::codebookSlotAjaxCallback', 
-      //  'disable-refocus' => FALSE, 
+      //  'callback' => '::codebookSlotAjaxCallback',
+      //  'disable-refocus' => FALSE,
       //  'event' => 'change',
-      //  'wrapper' => 'edit-output', 
+      //  'wrapper' => 'edit-output',
       //  'progress' => [
       //    'type' => 'throbber',
       //    'message' => $this->t('Verifying entry...'),
       //  ],
-      //]    
+      //]
     ];
     $form['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Back'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'back-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -161,13 +170,13 @@ class ManageCodebookSlotsForm extends FormBase {
 
   /**
    * {@inheritdoc}
-   */   
+   */
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
     // RETRIEVE TRIGGERING BUTTON
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
-  
+
     // SET USER ID AND PREVIOUS URL FOR TRACKING STORE URLS
     $uid = \Drupal::currentUser()->id();
     $previousUrl = \Drupal::request()->getRequestUri();
@@ -184,35 +193,35 @@ class ManageCodebookSlotsForm extends FormBase {
     // EDIT RESPONSEOPTION SLOT
     if ($button_name === 'edit_slot') {
       if (sizeof($rows) < 1) {
-        \Drupal::messenger()->addWarning(t("Select the exact response option slot to be edited."));      
+        \Drupal::messenger()->addWarning(t("Select the exact response option slot to be edited."));
       } else if ((sizeof($rows) > 1)) {
-        \Drupal::messenger()->addWarning(t("Select only one response option slot to edit. No more than one slot can be edited at once."));      
+        \Drupal::messenger()->addWarning(t("Select only one response option slot to edit. No more than one slot can be edited at once."));
       } else {
         $first = array_shift($rows);
         Utils::trackingStoreUrls($uid, $previousUrl, 'sir.edit_codebook_slot');
         $url = Url::fromRoute('sir.edit_codebook_slot');
         $url->setRouteParameter('codebooksloturi', base64_encode($first));
         $form_state->setRedirectUrl($url);
-      } 
+      }
     }
 
     // DELETE RESPONSE OPTION SLOT
     if ($button_name === 'delete_slots') {
       $api = \Drupal::service('rep.api_connector');
       $api->codebookSlotDel($this->getCodebookUri());
-    
+
       \Drupal::messenger()->addMessage(t("Response Option Slot(s) has/have been deleted successfully."));
       self::backUrl();
-      return;  
+      return;
     }
 
     // BACK TO MAIN PAGE
     if ($button_name === 'back') {
       self::backUrl();
-      return;  
-    }  
+      return;
+    }
   }
- 
+
   function backUrl() {
     $uid = \Drupal::currentUser()->id();
     $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.manage_codebook_slots');
@@ -222,6 +231,6 @@ class ManageCodebookSlotsForm extends FormBase {
       return;
     }
   }
-  
+
 
 }

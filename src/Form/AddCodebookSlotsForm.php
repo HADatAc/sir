@@ -17,7 +17,7 @@ class AddCodebookSlotsForm extends FormBase {
   }
 
   public function setCodebookUri($uri) {
-    return $this->codebookUri = $uri; 
+    return $this->codebookUri = $uri;
   }
 
   /**
@@ -49,11 +49,17 @@ class AddCodebookSlotsForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Save'),
       '#name' => 'save',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'save-button'],
+      ],
     ];
     $form['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -84,12 +90,12 @@ class AddCodebookSlotsForm extends FormBase {
     if ($button_name === 'back') {
       self::backUrl();
       return;
-    } 
+    }
 
     try {
       $api = \Drupal::service('rep.api_connector');
       $api->codebookSlotAdd($this->getCodebookUri(),$form_state->getValue('slot_total_number'));
-    
+
       \Drupal::messenger()->addMessage(t("Codebook Slots has been added successfully."));
       $url = Url::fromRoute('sir.manage_codebook_slots');
       $url->setRouteParameter('codebookuri', base64_encode($this->getCodebookUri()));
@@ -112,6 +118,6 @@ class AddCodebookSlotsForm extends FormBase {
       return;
     }
   }
-  
+
 
 }

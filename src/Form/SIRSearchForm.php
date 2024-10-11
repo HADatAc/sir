@@ -35,7 +35,7 @@ class SIRSearchForm extends FormBase {
   }
 
   public function setElementType($type) {
-    return $this->elementtype = $type; 
+    return $this->elementtype = $type;
   }
 
   public function getKeyword() {
@@ -43,7 +43,7 @@ class SIRSearchForm extends FormBase {
   }
 
   public function setKeyword($kw) {
-    return $this->keyword = $kw; 
+    return $this->keyword = $kw;
   }
 
   public function getLanguage() {
@@ -51,7 +51,7 @@ class SIRSearchForm extends FormBase {
   }
 
   public function setLanguage($lang) {
-    return $this->language = $lang; 
+    return $this->language = $lang;
   }
 
   public function getPage() {
@@ -59,7 +59,7 @@ class SIRSearchForm extends FormBase {
   }
 
   public function setPage($pg) {
-    return $this->page = $pg; 
+    return $this->page = $pg;
   }
 
   public function getPageSize() {
@@ -67,7 +67,7 @@ class SIRSearchForm extends FormBase {
   }
 
   public function setPageSize($pgsize) {
-    return $this->pagesize = $pgsize; 
+    return $this->pagesize = $pgsize;
   }
 
   /**
@@ -149,6 +149,9 @@ class SIRSearchForm extends FormBase {
       '#ajax' => [
         'callback' => '::ajaxSubmitForm',
       ],
+      '#attributes' => [
+        'class' => ['mt-1'],
+      ],
     ];
     $form['search_language'] = [
       '#type' => 'select',
@@ -158,15 +161,24 @@ class SIRSearchForm extends FormBase {
       '#ajax' => [
         'callback' => '::ajaxSubmitForm',
       ],
+      '#attributes' => [
+        'class' => ['mt-1'],
+      ],
     ];
     $form['search_keyword'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Keyword'),
       '#default_value' => $this->getKeyword(),
+      '#attributes' => [
+        'class' => ['mt-1'],
+      ],
     ];
     $form['search_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Search'),
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'search-button'],
+      ],
     ];
 
     return $form;
