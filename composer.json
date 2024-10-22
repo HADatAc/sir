@@ -1,5 +1,5 @@
 {
-    "name": "drupalmodules/sir",
+    "name": "hasco/sir",
     "description": "Sir module to integrate with Drupal",
     "type": "drupal-module",
     "require": {
