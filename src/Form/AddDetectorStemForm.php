@@ -5,6 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\Constant;
 use Drupal\rep\Utils;
 use Drupal\rep\Entity\Tables;
@@ -28,7 +29,7 @@ class AddDetectorStemForm extends FormBase {
   }
 
   public function setSourceDetectorStemUri($uri) {
-    return $this->sourceDetectorStemUri = $uri; 
+    return $this->sourceDetectorStemUri = $uri;
   }
 
   public function getSourceDetectorStem() {
@@ -36,7 +37,7 @@ class AddDetectorStemForm extends FormBase {
   }
 
   public function setSourceDetectorStem($obj) {
-    return $this->sourceDetectorStem = $obj; 
+    return $this->sourceDetectorStem = $obj;
   }
 
   /**
@@ -110,11 +111,17 @@ class AddDetectorStemForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Save'),
       '#name' => 'save',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'save-button'],
+      ],
     ];
     $form['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -151,9 +158,9 @@ class AddDetectorStemForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $form_state->setRedirectUrl(Utils::selectBackUrl('detectorstem'));
+      self::backUrl();
       return;
-    } 
+    }
 
     try {
 
@@ -170,7 +177,7 @@ class AddDetectorStemForm extends FormBase {
       // CREATE A NEW DETECTOR
       $newDetectorStemUri = Utils::uriGen('detectorstem');
       $detectorStemJson = '{"uri":"'.$newDetectorStemUri.'",'.
-        '"typeUri":"'.VSTOI::DETECTOR_STEM.'",'.
+        '"superUri":"'.VSTOI::DETECTOR_STEM.'",'.
         '"hascoTypeUri":"'.VSTOI::DETECTOR_STEM.'",'.
         '"hasContent":"'.$form_state->getValue('detectorstem_content').'",'.
         '"hasLanguage":"'.$form_state->getValue('detectorstem_language').'",'.
@@ -182,11 +189,23 @@ class AddDetectorStemForm extends FormBase {
       $api = \Drupal::service('rep.api_connector');
       $message = $api->detectorStemAdd($detectorStemJson);
       \Drupal::messenger()->addMessage(t("Added a new Detector Stem with URI: ".$newDetectorStemUri));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('detectorstem'));
-  
+      self::backUrl();
+      return;
+
     } catch(\Exception $e) {
-        \Drupal::messenger()->addMessage(t("An error occurred while adding the Detector Stem: ".$e->getMessage()));
-        $form_state->setRedirectUrl(Utils::selectBackUrl('detectorstem'));
+        \Drupal::messenger()->addError(t("An error occurred while adding the Detector Stem: ".$e->getMessage()));
+        self::backUrl();
+        return;
+      }
+  }
+
+  function backUrl() {
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.add_detectorstem');
+    if ($previousUrl) {
+      $response = new RedirectResponse($previousUrl);
+      $response->send();
+      return;
     }
   }
 

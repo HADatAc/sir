@@ -5,6 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\Constant;
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\VSTOI;
@@ -20,7 +21,7 @@ class AddSubcontainerForm extends FormBase {
   }
 
   public function setBelongsTo($uri) {
-    return $this->belongsTo = $uri; 
+    return $this->belongsTo = $uri;
   }
 
   public function getBreadcrumbs() {
@@ -28,7 +29,7 @@ class AddSubcontainerForm extends FormBase {
   }
 
   public function setBreadcrumbs(array $crumbs) {
-    return $this->crumbs = $crumbs; 
+    return $this->crumbs = $crumbs;
   }
 
   /**
@@ -86,11 +87,17 @@ class AddSubcontainerForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Save'),
       '#name' => 'save',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'save-button'],
+      ],
     ];
     $form['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -121,7 +128,7 @@ class AddSubcontainerForm extends FormBase {
     if ($button_name === 'back') {
       $this->backToSlotElement($form_state);
       return;
-    } 
+    }
 
     try{
       $api = \Drupal::service('rep.api_connector');
@@ -129,7 +136,7 @@ class AddSubcontainerForm extends FormBase {
       $useremail = \Drupal::currentUser()->getEmail();
       $newSubcontainerUri = Utils::uriGen('subcontainer');
       $subcontainerJson = '{"uri":"'.$newSubcontainerUri.'",'.
-        '"typeUri":"'.VSTOI::SUBCONTAINER.'",'.
+        '"superUri":"'.VSTOI::SUBCONTAINER.'",'.
         '"hascoTypeUri":"'.VSTOI::SUBCONTAINER.'",'.
         '"belongsTo":"'.$this->getBelongsTo().'",'.
         '"label":"'.$form_state->getValue('subcontainer_name').'",'.
@@ -154,11 +161,11 @@ class AddSubcontainerForm extends FormBase {
    */
   private function backToSlotElement(FormStateInterface $form_state) {
     $breadcrumbsArg = implode('|',$this->getBreadcrumbs());
-    $url = Url::fromRoute('sir.manage_slotelements'); 
+    $url = Url::fromRoute('sir.manage_slotelements');
     $url->setRouteParameter('containeruri', base64_encode($this->getBelongsTo()));
     $url->setRouteParameter('breadcrumbs', $breadcrumbsArg);
     $form_state->setRedirectUrl($url);
     return;
-  } 
-  
+  }
+
 }

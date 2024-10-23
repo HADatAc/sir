@@ -5,6 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Constant;
@@ -26,7 +27,7 @@ class EditAnnotationForm extends FormBase {
   }
 
   public function setAnnotationUri($uri) {
-    return $this->annotationUri = $uri; 
+    return $this->annotationUri = $uri;
   }
 
   public function getAnnotation() {
@@ -34,7 +35,7 @@ class EditAnnotationForm extends FormBase {
   }
 
   public function setAnnotation($obj) {
-    return $this->annotation = $obj; 
+    return $this->annotation = $obj;
   }
 
   public function getInstrument() {
@@ -42,7 +43,7 @@ class EditAnnotationForm extends FormBase {
   }
 
   public function setInstrument($obj) {
-    return $this->instrument = $obj; 
+    return $this->instrument = $obj;
   }
 
   /**
@@ -64,8 +65,8 @@ class EditAnnotationForm extends FormBase {
     $this->setAnnotationUri($uri_full);
 
     // ESTABLISH API SERVICE
-    $api = \Drupal::service('rep.api_connector');  
-    
+    $api = \Drupal::service('rep.api_connector');
+
     $this->setAnnotation($api->parseObjectResponse($api->getUri($this->getAnnotationUri()), 'getUri'));
     $this->setInstrument($api->parseObjectResponse($api->getUri($this->getAnnotation()->belongsTo), 'getUri'));
 
@@ -88,7 +89,7 @@ class EditAnnotationForm extends FormBase {
       '#type' => 'textfield',
       '#title' => $this->t('Instrument'),
       '#default_value' => $containerLabel,
-      '#autocomplete_route_name' => 'sir.annotation_container_autocomplete',
+      '#disabled' => TRUE,
     ];
     $form['annotation_position'] = [
       '#type' => 'select',
@@ -116,11 +117,17 @@ class EditAnnotationForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Update'),
       '#name' => 'save',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'save-button'],
+      ],
     ];
     $form['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -154,22 +161,22 @@ class EditAnnotationForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $form_state->setRedirectUrl(Utils::selectBackUrl('annotation'));
+      self::backUrl();
       return;
-    } 
+    }
 
     $container = '';
     if ($form_state->getValue('annotation_container') != NULL && $form_state->getValue('annotation_container') != '') {
       $container = Utils::uriFromAutocomplete($form_state->getValue('annotation_container'));
-    } 
+    }
 
     $stem = '';
     if ($form_state->getValue('annotation_stem') != NULL && $form_state->getValue('annotation_stem') != '') {
       $stem = Utils::uriFromAutocomplete($form_state->getValue('annotation_stem'));
-    } 
+    }
 
     try{
-  
+
       $uid = \Drupal::currentUser()->id();
       $useremail = \Drupal::currentUser()->getEmail();
 
@@ -186,14 +193,27 @@ class EditAnnotationForm extends FormBase {
       // UPDATE BY DELETING AND CREATING
       $api = \Drupal::service('rep.api_connector');
       $api->annotationDel($this->getAnnotationUri());
-      $updatedAnnotation = $api->annotationAdd($annotationJson);    
+      $updatedAnnotation = $api->annotationAdd($annotationJson);
       \Drupal::messenger()->addMessage(t("Annotation has been updated successfully."));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('annotation'));
+      self::backUrl();
+      return;
 
     }catch(\Exception $e){
-      \Drupal::messenger()->addWarning(t("An error occurred while updating the Annotation: ".$e->getMessage()));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('annotationstem'));
+      \Drupal::messenger()->addError(t("An error occurred while updating the Annotation: ".$e->getMessage()));
+      self::backUrl();
+      return;
     }
   }
+
+  function backUrl() {
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.edit_annotation');
+    if ($previousUrl) {
+      $response = new RedirectResponse($previousUrl);
+      $response->send();
+      return;
+    }
+  }
+
 
 }

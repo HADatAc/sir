@@ -1,0 +1,12 @@
+{
+    "name": "hasco/sir",
+    "description": "Sir module to integrate with Drupal",
+    "type": "drupal-module",
+    "require": {
+        "php": ">=8.3",
+        "drupal/core": "^10"
+    },
+    "license": "Apache-2.0",
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

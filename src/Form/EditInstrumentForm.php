@@ -4,6 +4,8 @@ namespace Drupal\sir\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\Constant;
 use Drupal\rep\Utils;
 use Drupal\rep\Entity\Tables;
@@ -20,7 +22,7 @@ class EditInstrumentForm extends FormBase {
   }
 
   public function setInstrumentUri($uri) {
-    return $this->instrumentUri = $uri; 
+    return $this->instrumentUri = $uri;
   }
 
   public function getInstrument() {
@@ -28,7 +30,7 @@ class EditInstrumentForm extends FormBase {
   }
 
   public function setInstrument($instrument) {
-    return $this->instrument = $instrument; 
+    return $this->instrument = $instrument;
   }
 
   /**
@@ -42,8 +44,7 @@ class EditInstrumentForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $instrumenturi = NULL) {
-    $uri=$instrumenturi;
-    $uri_decode=base64_decode($uri);
+    $uri_decode=base64_decode($instrumenturi);
     $this->setInstrumentUri($uri_decode);
 
     $tables = new Tables;
@@ -53,12 +54,14 @@ class EditInstrumentForm extends FormBase {
     $api = \Drupal::service('rep.api_connector');
     $rawresponse = $api->getUri($this->getInstrumentUri());
     $obj = json_decode($rawresponse);
-    
+
     if ($obj->isSuccessful) {
       $this->setInstrument($obj->body);
+      //dpm($this->getInstrument());
     } else {
-      \Drupal::messenger()->addMessage(t("Failed to retrieve Instrument."));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
+      \Drupal::messenger()->addError(t("Failed to retrieve Instrument."));
+      self::backUrl();
+      return;
     }
 
     $hasInformant = Constant::DEFAULT_INFORMANT;
@@ -107,11 +110,17 @@ class EditInstrumentForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Update'),
       '#name' => 'save',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'save-button'],
+      ],
     ];
     $form['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -152,9 +161,9 @@ class EditInstrumentForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
+      self::backUrl();
       return;
-    } 
+    }
 
     try{
       $uid = \Drupal::currentUser()->id();
@@ -175,15 +184,28 @@ class EditInstrumentForm extends FormBase {
       $api = \Drupal::service('rep.api_connector');
       $api->instrumentDel($this->getInstrumentUri());
       $newInstrument = $api->instrumentAdd($instrumentJson);
-    
+
       \Drupal::messenger()->addMessage(t("Instrument has been updated successfully."));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
+      self::backUrl();
+      return;
 
     }catch(\Exception $e){
-      \Drupal::messenger()->addMessage(t("An error occurred while updating the Instrument: ".$e->getMessage()));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
+      \Drupal::messenger()->addError(t("An error occurred while updating the Instrument: ".$e->getMessage()));
+      self::backUrl();
+      return;
     }
 
   }
+
+  function backUrl() {
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.edit_instrument');
+    if ($previousUrl) {
+      $response = new RedirectResponse($previousUrl);
+      $response->send();
+      return;
+    }
+  }
+
 
 }

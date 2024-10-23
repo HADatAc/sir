@@ -4,9 +4,11 @@ namespace Drupal\sir\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\rep\Utils;
+use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Vocabulary\VSTOI;
+use Drupal\rep\Utils;
 
 class EditCodebookForm extends FormBase {
 
@@ -19,7 +21,7 @@ class EditCodebookForm extends FormBase {
   }
 
   public function setCodebookUri($uri) {
-    return $this->codebookUri = $uri; 
+    return $this->codebookUri = $uri;
   }
 
   public function getCodebook() {
@@ -27,7 +29,7 @@ class EditCodebookForm extends FormBase {
   }
 
   public function setCodebook($cb) {
-    return $this->codebook = $cb; 
+    return $this->codebook = $cb;
   }
 
   /**
@@ -51,13 +53,14 @@ class EditCodebookForm extends FormBase {
     $api = \Drupal::service('rep.api_connector');
     $rawresponse = $api->getUri($this->getCodebookUri());
     $obj = json_decode($rawresponse);
-    
+
     if ($obj->isSuccessful) {
       $this->setCodebook($obj->body);
       #dpm($this->getCodebook());
     } else {
-      \Drupal::messenger()->addMessage(t("Failed to retrieve Codebook."));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('codebook'));
+      \Drupal::messenger()->addError(t("Failed to retrieve Codebook."));
+      self::backUrl();
+      return;
     }
 
     $form['codebook_name'] = [
@@ -85,11 +88,17 @@ class EditCodebookForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Update'),
       '#name' => 'save',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'save-button'],
+      ],
     ];
     $form['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -125,9 +134,9 @@ class EditCodebookForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $form_state->setRedirectUrl(Utils::selectBackUrl('codebook'));
+      self::backUrl();
       return;
-    } 
+    }
 
     try{
       $useremail = \Drupal::currentUser()->getEmail();
@@ -145,15 +154,29 @@ class EditCodebookForm extends FormBase {
       $api = \Drupal::service('rep.api_connector');
       $api->codebookDel($this->getCodebook()->uri);
       $api->codebookAdd($codebookJson);
-    
+
       \Drupal::messenger()->addMessage(t("Codebook has been updated successfully."));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('codebook'));
+      self::backUrl();
+      return;
 
     }catch(\Exception $e){
-      \Drupal::messenger()->addMessage(t("An error occurred while updating Codebook: ".$e->getMessage()));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('codebook'));
+      \Drupal::messenger()->addError(t("An error occurred while updating Codebook: ".$e->getMessage()));
+      self::backUrl();
+      return;
     }
 
   }
+
+  function backUrl() {
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.edit_codebook');
+    if ($previousUrl) {
+      $response = new RedirectResponse($previousUrl);
+      $response->send();
+      return;
+    }
+  }
+
+
 
 }

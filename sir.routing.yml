@@ -1,14 +1,11 @@
 
 
 sir.search:
-  path: 'sir/list/{elementtype}/{keyword}/{language}/{page}/{pagesize}'
+  path: 'sir/list/{mode}/{elementtype}'
   defaults:
-    _form: '\Drupal\sir\Form\SIRListForm'
+    _form: '\Drupal\rep\Form\TreeForm'
+    mode: 'browse'
     elementtype: 'instrument'
-    keyword: '_'
-    language: '_'
-    page: '1'
-    pagesize: '12'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    
@@ -66,7 +63,6 @@ sir.add_instrument:
   path: 'sir/manage/addinstrument'
   defaults:
     _form: '\Drupal\sir\Form\AddInstrumentForm'
-    _title: 'Add Questionnaire'    
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    
@@ -77,7 +73,6 @@ sir.edit_instrument:
   path: 'sir/manage/editinstrument/{instrumenturi}'
   defaults:
     _form: '\Drupal\sir\Form\EditInstrumentForm'
-    _title: 'Edit Questionnarie'    
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'
@@ -373,7 +368,7 @@ sir.annotation_stem_autocomplete:
 # Annotation CRUD options
 
 sir.add_annotation:
-  path: 'sir/manage/addannotation'
+  path: 'sir/manage/addannotation/{containeruri}/{breadcrumbs}'
   defaults:
     _form: '\Drupal\sir\Form\AddAnnotationForm'
     _title: 'Add Annotation'    
@@ -395,10 +390,20 @@ sir.manage_container_annotations:
     no_cache: 'TRUE'
 
 sir.edit_annotation:
-  path: 'sir/manage/editannotation/{annotationuri}'
+  path: 'sir/manage/editannotation/{annotationuri}/{containeruri}/{breadcrumbs}'
   defaults:
     _form: '\Drupal\sir\Form\EditAnnotationForm'
     _title: 'Edit Annotation'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+sir.manage_annotations:
+  path: 'sir/manage/annotations/{page}/{pagesize}/{containeruri}/{breadcrumbs}'
+  defaults:
+    _form: '\Drupal\sir\Form\ManageAnnotationsForm'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'    

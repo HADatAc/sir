@@ -5,6 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\Utils;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Vocabulary\VSTOI;
@@ -20,7 +21,7 @@ class EditResponseOptionForm extends FormBase {
   }
 
   public function setResponseOptionUri($uri) {
-    return $this->responseOptionUri = $uri; 
+    return $this->responseOptionUri = $uri;
   }
 
   public function getResponseOption() {
@@ -28,7 +29,7 @@ class EditResponseOptionForm extends FormBase {
   }
 
   public function setResponseOption($respOption) {
-    return $this->responseOption = $respOption; 
+    return $this->responseOption = $respOption;
   }
 
   /**
@@ -52,15 +53,13 @@ class EditResponseOptionForm extends FormBase {
     $api = \Drupal::service('rep.api_connector');
     $rawresponse = $api->getUri($this->getResponseOptionUri());
     $obj = json_decode($rawresponse);
-    
+
     if ($obj->isSuccessful) {
       $this->setResponseOption($obj->body);
-      #dpm($this->getResponseOption());
     } else {
-      \Drupal::messenger()->addMessage(t("Failed to retrieve Response Option."));
-      $url = Url::fromRoute('sir.manage_response_options');
-      # $url->setRouteParameter('responseoptionkuri', base64_encode($this->getResponseOption()->ofResponseOption));
-      $form_state->setRedirectUrl($url);
+      \Drupal::messenger()->addError(t("Failed to retrieve Response Option."));
+      self::backUrl();
+      return;
     }
 
     $form['responseoption_content'] = [
@@ -88,11 +87,17 @@ class EditResponseOptionForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Update'),
       '#name' => 'save',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'save-button'],
+      ],
     ];
     $form['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -126,9 +131,9 @@ class EditResponseOptionForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $form_state->setRedirectUrl(Utils::selectBackUrl('responseoption'));
+      self::backUrl();
       return;
-    } 
+    }
 
     try{
       $useremail = \Drupal::currentUser()->getEmail();
@@ -147,15 +152,27 @@ class EditResponseOptionForm extends FormBase {
       //dpm($this->getResponseOption()->uri);
       $api->responseOptionDel($this->getResponseOption()->uri);
       $api->responseOptionAdd($responseOptionJSON);
-    
+
       \Drupal::messenger()->addMessage(t("Response Option has been updated successfully."));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('responseoption'));
+      self::backUrl();
+      return;
 
     }catch(\Exception $e){
       \Drupal::messenger()->addMessage(t("An error occurred while updating the Response Option: ".$e->getMessage()));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('responseoption'));
+      self::backUrl();
+      return;
     }
 
+  }
+
+  function backUrl() {
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.edit_response_option');
+    if ($previousUrl) {
+      $response = new RedirectResponse($previousUrl);
+      $response->send();
+      return;
+    }
   }
 
 }

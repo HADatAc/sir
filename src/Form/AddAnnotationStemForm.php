@@ -5,6 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\Constant;
 use Drupal\rep\Utils;
 use Drupal\rep\Entity\Tables;
@@ -28,7 +29,7 @@ class AddAnnotationStemForm extends FormBase {
   }
 
   public function setSourceAnnotationStemUri($uri) {
-    return $this->sourceAnnotationStemUri = $uri; 
+    return $this->sourceAnnotationStemUri = $uri;
   }
 
   public function getSourceAnnotationStem() {
@@ -36,7 +37,7 @@ class AddAnnotationStemForm extends FormBase {
   }
 
   public function setSourceAnnotationStem($obj) {
-    return $this->sourceAnnotationStem = $obj; 
+    return $this->sourceAnnotationStem = $obj;
   }
 
   /**
@@ -110,11 +111,17 @@ class AddAnnotationStemForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Save'),
       '#name' => 'save',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'save-button'],
+      ],
     ];
     $form['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -151,9 +158,9 @@ class AddAnnotationStemForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $form_state->setRedirectUrl(Utils::selectBackUrl('annotationstem'));
+      self::backUrl();
       return;
-    } 
+    }
 
     try {
 
@@ -182,12 +189,25 @@ class AddAnnotationStemForm extends FormBase {
       $api = \Drupal::service('rep.api_connector');
       $message = $api->annotationStemAdd($annotationStemJson);
       \Drupal::messenger()->addMessage(t("Added a new Annotation Stem with URI: ".$newAnnotationStemUri));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('annotationstem'));
-  
+      self::backUrl();
+      return;
+
     } catch(\Exception $e) {
         \Drupal::messenger()->addMessage(t("An error occurred while adding the Annotation Stem: ".$e->getMessage()));
-        $form_state->setRedirectUrl(Utils::selectBackUrl('annotationstem'));
+        self::backUrl();
+        return;
+      }
+  }
+
+  function backUrl() {
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.add_annotationstem');
+    if ($previousUrl) {
+      $response = new RedirectResponse($previousUrl);
+      $response->send();
+      return;
     }
   }
+
 
 }

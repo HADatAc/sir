@@ -5,6 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\Utils;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Vocabulary\VSTOI;
@@ -20,7 +21,7 @@ class EditSubcontainerForm extends FormBase {
   }
 
   public function setSubcontainer($sub) {
-    return $this->subcontainer = $sub; 
+    return $this->subcontainer = $sub;
   }
 
   public function getBreadcrumbs() {
@@ -28,7 +29,7 @@ class EditSubcontainerForm extends FormBase {
   }
 
   public function setBreadcrumbs(array $crumbs) {
-    return $this->crumbs = $crumbs; 
+    return $this->crumbs = $crumbs;
   }
 
   /**
@@ -55,7 +56,7 @@ class EditSubcontainerForm extends FormBase {
 
     // LOAD SUBCONTAINER
     $api = \Drupal::service('rep.api_connector');
-    $this->setSubcontainer($api->parseObjectresponse($api->getUri($subUri),'getUri'));   
+    $this->setSubcontainer($api->parseObjectresponse($api->getUri($subUri),'getUri'));
     if ($this->getSubcontainer() == NULL) {
       \Drupal::messenger()->addMessage(t("Failed to retrieve Subcontainer."));
       $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
@@ -64,17 +65,18 @@ class EditSubcontainerForm extends FormBase {
 
     //dpm($this->getSubcontainer());
 
-    $belongTo = "";
-    if ($this->getSubcontainer()->belongsTo != NULL) {
+    $belongsTo = "";
+    if (isset($this->getSubcontainer()->belongsTo) && $this->getSubcontainer()->belongsTo != NULL) {
       $belongsTo = $this->getSubcontainer()->belongsTo;
     }
+
     $priority = "";
-    if ($this->getSubcontainer()->hasPriority != NULL) {
+    if (isset($this->getSubcontainer()->hasPriority) && $this->getSubcontainer()->hasPriority != NULL) {
       $priority = $this->getSubcontainer()->hasPriority;
     }
 
     $name = "";
-    if ($this->getSubcontainer()->label != NULL) {
+    if (isset($this->getSubcontainer()->label) && $this->getSubcontainer()->label != NULL) {
       $name = $this->getSubcontainer()->label;
     }
 
@@ -111,11 +113,17 @@ class EditSubcontainerForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Update'),
       '#name' => 'save',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'save-button'],
+      ],
     ];
     $form['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -147,7 +155,7 @@ class EditSubcontainerForm extends FormBase {
     if ($button_name === 'back') {
       $this->backToSlotElement($form_state);
       return;
-    } 
+    }
 
     try{
       $useremail = \Drupal::currentUser()->getEmail();
@@ -159,7 +167,7 @@ class EditSubcontainerForm extends FormBase {
         '"hasPriority":"'.$form_state->getValue('subcontainer_priority').'",';
       if (isset($this->getSubcontainer()->hasPrevious)) {
         $subcontainerJson .= '"hasPrevious":"'.$this->getSubcontainer()->hasPrevious.'",';
-      } 
+      }
       if (isset($this->getSubcontainer()->hasNext)) {
         $subcontainerJson .= '"hasNext":"'.$this->getSubcontainer()->hasNext.'",';
       }
@@ -168,7 +176,7 @@ class EditSubcontainerForm extends FormBase {
       // UPDATE BY DELETING AND CREATING
       $api = \Drupal::service('rep.api_connector');
       $msg = $api->parseObjectResponse($api->subcontainerUpdate($subcontainerJson),'subcontainerUpdate');
-    
+
       if ($msg == NULL) {
         \Drupal::messenger()->addMessage(t("Subcontainer has been updated successfully."));
       }
@@ -178,21 +186,21 @@ class EditSubcontainerForm extends FormBase {
       \Drupal::messenger()->addMessage(t("An error occurred while updating the Response Option: ".$e->getMessage()));
       $this->backToSlotElement($form_state);
     }
-
   }
 
   /**
    * {@inheritdoc}
    */
   private function backToSlotElement(FormStateInterface $form_state) {
+    if (!isset($this->getSubcontainer()->belongsTo)) {
+      return;
+    }
     $breadcrumbsArg = implode('|',$this->getBreadcrumbs());
-    $url = Url::fromRoute('sir.manage_slotelements'); 
+    $url = Url::fromRoute('sir.manage_slotelements');
     $url->setRouteParameter('containeruri', base64_encode($this->getSubcontainer()->belongsTo));
     $url->setRouteParameter('breadcrumbs', $breadcrumbsArg);
     $form_state->setRedirectUrl($url);
     return;
-  } 
-  
-
+  }
 
 }

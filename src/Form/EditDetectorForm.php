@@ -5,6 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Constant;
@@ -24,7 +25,7 @@ class EditDetectorForm extends FormBase {
   }
 
   public function setDetectorUri($uri) {
-    return $this->detectorUri = $uri; 
+    return $this->detectorUri = $uri;
   }
 
   public function getDetector() {
@@ -32,7 +33,7 @@ class EditDetectorForm extends FormBase {
   }
 
   public function setDetector($obj) {
-    return $this->detector = $obj; 
+    return $this->detector = $obj;
   }
 
   public function getSourceDetector() {
@@ -40,7 +41,7 @@ class EditDetectorForm extends FormBase {
   }
 
   public function setSourceDetector($obj) {
-    return $this->sourceDetector = $obj; 
+    return $this->sourceDetector = $obj;
   }
 
   /**
@@ -63,8 +64,9 @@ class EditDetectorForm extends FormBase {
     $codebookLabel = '';
     $this->setDetector($this->retrieveDetector($this->getDetectorUri()));
     if ($this->getDetector() == NULL) {
-      \Drupal::messenger()->addMessage(t("Failed to retrieve Detector."));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('detector'));
+      \Drupal::messenger()->addError(t("Failed to retrieve Detector."));
+      self::backUrl();
+      return;
     } else {
       if ($this->getDetector()->detectorStem != NULL) {
         $stemLabel = $this->getDetector()->detectorStem->hasContent . ' [' . $this->getDetector()->detectorStem->uri . ']';
@@ -92,11 +94,17 @@ class EditDetectorForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Update'),
       '#name' => 'save',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'save-button'],
+      ],
     ];
     $form['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -128,24 +136,24 @@ class EditDetectorForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $form_state->setRedirectUrl(Utils::selectBackUrl('detector'));
+      self::backUrl();
       return;
-    } 
+    }
 
     try{
-  
+
       $uid = \Drupal::currentUser()->id();
       $useremail = \Drupal::currentUser()->getEmail();
 
       $hasStem = '';
       if ($form_state->getValue('detector_stem') != NULL && $form_state->getValue('detector_stem') != '') {
         $hasStem = Utils::uriFromAutocomplete($form_state->getValue('detector_stem'));
-      } 
+      }
 
       $hasCodebook = '';
       if ($form_state->getValue('detector_codebook') != NULL && $form_state->getValue('detector_codebook') != '') {
         $hasCodebook = Utils::uriFromAutocomplete($form_state->getValue('detector_codebook'));
-      } 
+      }
 
       $detectorJson = '{"uri":"'.$this->getDetector()->uri.'",'.
         '"typeUri":"'.VSTOI::DETECTOR.'",'.
@@ -157,13 +165,15 @@ class EditDetectorForm extends FormBase {
       // UPDATE BY DELETING AND CREATING
       $api = \Drupal::service('rep.api_connector');
       $api->detectorDel($this->getDetectorUri());
-      $updatedDetector = $api->detectorAdd($detectorJson);    
+      $updatedDetector = $api->detectorAdd($detectorJson);
       \Drupal::messenger()->addMessage(t("Detector has been updated successfully."));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('detector'));
+      self::backUrl();
+      return;
 
     }catch(\Exception $e){
-      \Drupal::messenger()->addMessage(t("An error occurred while updating the Detector: ".$e->getMessage()));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('detector'));
+      \Drupal::messenger()->addError(t("An error occurred while updating the Detector: ".$e->getMessage()));
+      self::backUrl();
+      return;
     }
   }
 
@@ -174,7 +184,17 @@ class EditDetectorForm extends FormBase {
     if ($obj->isSuccessful) {
       return $obj->body;
     }
-    return NULL; 
+    return NULL;
+  }
+
+  function backUrl() {
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.edit_detector');
+    if ($previousUrl) {
+      $response = new RedirectResponse($previousUrl);
+      $response->send();
+      return;
+    }
   }
 
 }

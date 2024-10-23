@@ -35,7 +35,7 @@ class SIRSearchForm extends FormBase {
   }
 
   public function setElementType($type) {
-    return $this->elementtype = $type; 
+    return $this->elementtype = $type;
   }
 
   public function getKeyword() {
@@ -43,7 +43,7 @@ class SIRSearchForm extends FormBase {
   }
 
   public function setKeyword($kw) {
-    return $this->keyword = $kw; 
+    return $this->keyword = $kw;
   }
 
   public function getLanguage() {
@@ -51,7 +51,7 @@ class SIRSearchForm extends FormBase {
   }
 
   public function setLanguage($lang) {
-    return $this->language = $lang; 
+    return $this->language = $lang;
   }
 
   public function getPage() {
@@ -59,7 +59,7 @@ class SIRSearchForm extends FormBase {
   }
 
   public function setPage($pg) {
-    return $this->page = $pg; 
+    return $this->page = $pg;
   }
 
   public function getPageSize() {
@@ -67,7 +67,7 @@ class SIRSearchForm extends FormBase {
   }
 
   public function setPageSize($pgsize) {
-    return $this->pagesize = $pgsize; 
+    return $this->pagesize = $pgsize;
   }
 
   /**
@@ -95,7 +95,15 @@ class SIRSearchForm extends FormBase {
     $this->setLanguage('');
     $this->setPage(1);
     $this->setPageSize(12);
-    if (sizeof($pathElements) >= 8) {
+
+    // IT IS A CLASS ELEMENT if size of path elements is equal 5
+    if (sizeof($pathElements) == 5) {
+
+      // ELEMENT TYPE
+      $this->setElementType($pathElements[4]);
+
+    // IT IS AN INSTANCE ELEMENT if size of path elements is equal 8
+    } else if (sizeof($pathElements) >= 8) {
 
       // ELEMENT TYPE
       $this->setElementType($pathElements[3]);
@@ -121,14 +129,17 @@ class SIRSearchForm extends FormBase {
       $this->setPageSize((int)$pathElements[7]);
     }
 
+    $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument');
+    $preferred_detector = \Drupal::config('rep.settings')->get('preferred_detector');
+
     $form['search_element_type'] = [
       '#type' => 'select',
       '#title' => $this->t('Element Type'),
       '#required' => TRUE,
       '#options' => [
-        'instrument' => $this->t('Questionnaires'),
-        'detectorstem' => $this->t('Item Stems'),
-        'detector' => $this->t('Items'),
+        'instrument' => $this->t($preferred_instrument . 's'),
+        'detectorstem' => $this->t($preferred_detector . ' Stems'),
+        'detector' => $this->t($preferred_detector . 's'),
         'codebook' => $this->t('Codebooks'),
         'responseoption' => $this->t('Response Options'),
         'annotationstem' => $this->t('Annotation Stems'),
@@ -137,6 +148,9 @@ class SIRSearchForm extends FormBase {
       '#default_value' => $this->getElementType(),
       '#ajax' => [
         'callback' => '::ajaxSubmitForm',
+      ],
+      '#attributes' => [
+        'class' => ['mt-1'],
       ],
     ];
     $form['search_language'] = [
@@ -147,15 +161,24 @@ class SIRSearchForm extends FormBase {
       '#ajax' => [
         'callback' => '::ajaxSubmitForm',
       ],
+      '#attributes' => [
+        'class' => ['mt-1'],
+      ],
     ];
     $form['search_keyword'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Keyword'),
       '#default_value' => $this->getKeyword(),
+      '#attributes' => [
+        'class' => ['mt-1'],
+      ],
     ];
     $form['search_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Search'),
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'search-button'],
+      ],
     ];
 
     return $form;
@@ -174,6 +197,7 @@ class SIRSearchForm extends FormBase {
    * {@inheritdoc}
    */
   private function redirectUrl(FormStateInterface $form_state) {
+
     $this->setKeyword($form_state->getValue('search_keyword'));
     if ($this->getKeyword() == NULL || $this->getKeyword() == '') {
       $this->setKeyword("_");
@@ -182,6 +206,18 @@ class SIRSearchForm extends FormBase {
     if ($this->getLanguage() == NULL || $this->getLanguage() == '' || $this->getLanguage() == 'ANY') {
       $this->setLanguage("_");
     }
+
+    // IF ELEMENT TYPE IS CLASS
+    if (($form_state->getValue('search_element_type') == 'instrument') ||
+        ($form_state->getValue('search_element_type') == 'detectorstem') ||
+        ($form_state->getValue('search_element_type') == 'detector')) {
+      $url = Url::fromRoute('rep.browse_tree');
+      $url->setRouteParameter('mode', 'browse');
+      $url->setRouteParameter('elementtype', $form_state->getValue('search_element_type'));
+      return $url;
+    }
+
+    // IF ELEMENT TYPE IS INSTANCE
     $url = Url::fromRoute('sir.list_element');
     $url->setRouteParameter('elementtype', $form_state->getValue('search_element_type'));
     $url->setRouteParameter('keyword', $this->getKeyword());

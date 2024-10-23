@@ -5,6 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\Constant;
 use Drupal\rep\Utils;
 use Drupal\rep\Entity\Tables;
@@ -34,7 +35,7 @@ class AddDetectorForm extends FormBase {
   }
 
   public function setSourceDetectorUri($uri) {
-    return $this->sourceDetectorUri = $uri; 
+    return $this->sourceDetectorUri = $uri;
   }
 
   public function getSourceDetector() {
@@ -42,7 +43,7 @@ class AddDetectorForm extends FormBase {
   }
 
   public function setSourceDetector($obj) {
-    return $this->sourceDetector = $obj; 
+    return $this->sourceDetector = $obj;
   }
 
   public function getDetectorStem() {
@@ -50,7 +51,7 @@ class AddDetectorForm extends FormBase {
   }
 
   public function setDetectorStem($stem) {
-    return $this->detectorStem = $stem; 
+    return $this->detectorStem = $stem;
   }
 
   public function getContainerSlotUri() {
@@ -58,7 +59,7 @@ class AddDetectorForm extends FormBase {
   }
 
   public function setContainerSlotUri($attachuri) {
-    return $this->containerslotUri = $attachuri; 
+    return $this->containerslotUri = $attachuri;
   }
 
   public function getContainerSlot() {
@@ -66,7 +67,7 @@ class AddDetectorForm extends FormBase {
   }
 
   public function setContainerSlot($attachobj) {
-    return $this->containerslot = $attachobj; 
+    return $this->containerslot = $attachobj;
   }
 
   /**
@@ -90,7 +91,7 @@ class AddDetectorForm extends FormBase {
       $obj = json_decode($rawresponse);
       if ($obj->isSuccessful) {
         $this->setSourceDetector($obj->body);
-        #dpm($this->getDetector());
+        //dpm($this->getDetector());
       } else {
         $this->setSourceDetector(NULL);
         $this->setSourceDetectorUri('');
@@ -138,11 +139,17 @@ class AddDetectorForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Save'),
       '#name' => 'save',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'save-button'],
+      ],
     ];
     $form['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -185,29 +192,29 @@ class AddDetectorForm extends FormBase {
     $api = \Drupal::service('rep.api_connector');
 
     if ($button_name === 'back') {
-      $form_state->setRedirectUrl(Utils::selectBackUrl('detector'));
+      self::backUrl();
       return;
-    } 
+    }
 
     try {
 
       $hasCodebook = '';
       if ($form_state->getValue('detector_codebook') != NULL && $form_state->getValue('detector_codebook') != '') {
         $hasCodebook = Utils::uriFromAutocomplete($form_state->getValue('detector_codebook'));
-      } 
+      }
 
       $useremail = \Drupal::currentUser()->getEmail();
 
       // CREATE A NEW DETECTOR
       $newDetectorUri = Utils::uriGen('detector');
       $detectorJson = '{"uri":"'.$newDetectorUri.'",'.
-        '"typeUri":"'.VSTOI::DETECTOR.'",'.
+        '"superUri":"'.VSTOI::DETECTOR.'",'.
         '"hascoTypeUri":"'.VSTOI::DETECTOR.'",'.
         '"hasDetectorStem":"'.$this->getDetectorStem()->uri.'",'.
         '"hasCodebook":"'.$hasCodebook.'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
       $api->detectorAdd($detectorJson);
-    
+
       // IF IN THE CONTEXT OF AN EXISTING CONTAINER_SLOT, ATTACH THE NEWLY CREATED DETECTOR TO THE CONTAINER_SLOT
       if ($this->getContainerSlot() != NULL) {
         $api->detectorAttach($newDetectorUri,$this->getContainerSlotUri());
@@ -216,21 +223,32 @@ class AddDetectorForm extends FormBase {
         $url->setRouteParameter('containersloturi', base64_encode($this->getContainerSlotUri()));
         $form_state->setRedirectUrl($url);
         return;
-      } else {        
+      } else {
         \Drupal::messenger()->addMessage(t("Detector has been added successfully."));
-        $form_state->setRedirectUrl(Utils::selectBackUrl('detector'));
+        self::backUrl();
         return;
       }
     } catch(\Exception $e) {
       if ($this->getContainerSlot() != NULL) {
-        \Drupal::messenger()->addMessage(t("An error occurred while adding the Detector: ".$e->getMessage()));
+        \Drupal::messenger()->addError(t("An error occurred while adding the Detector: ".$e->getMessage()));
         $url = Url::fromRoute('sir.edit_containerslot');
         $url->setRouteParameter('containersloturi', base64_encode($this->getContainerSlotUri()));
         $form_state->setRedirectUrl($url);
       } else {
-        \Drupal::messenger()->addMessage(t("An error occurred while adding the Detector: ".$e->getMessage()));
-        $form_state->setRedirectUrl(Utils::selectBackUrl('detector'));
-        }
+        \Drupal::messenger()->addError(t("An error occurred while adding the Detector: ".$e->getMessage()));
+        self::backUrl();
+        return;
+      }
+    }
+  }
+
+  function backUrl() {
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.add_detector');
+    if ($previousUrl) {
+      $response = new RedirectResponse($previousUrl);
+      $response->send();
+      return;
     }
   }
 

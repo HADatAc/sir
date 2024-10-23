@@ -5,6 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Constant;
@@ -24,7 +25,7 @@ class EditAnnotationStemForm extends FormBase {
   }
 
   public function setAnnotationStemUri($uri) {
-    return $this->annotationStemUri = $uri; 
+    return $this->annotationStemUri = $uri;
   }
 
   public function getAnnotationStem() {
@@ -32,7 +33,7 @@ class EditAnnotationStemForm extends FormBase {
   }
 
   public function setAnnotationStem($obj) {
-    return $this->annotationStem = $obj; 
+    return $this->annotationStem = $obj;
   }
 
   public function getSourceAnnotationStem() {
@@ -40,7 +41,7 @@ class EditAnnotationStemForm extends FormBase {
   }
 
   public function setSourceAnnotationStem($obj) {
-    return $this->sourceAnnotationStem = $obj; 
+    return $this->sourceAnnotationStem = $obj;
   }
 
   /**
@@ -73,7 +74,7 @@ class EditAnnotationStemForm extends FormBase {
       $wasGeneratedBy = $this->getAnnotationStem()->wasGeneratedBy;
       if ($this->getAnnotationStem()->wasDerivedFrom != NULL) {
         $this->setSourceAnnotationStem($this->retrieveAnnotationStem($this->getAnnotationStem()->wasDerivedFrom));
-        if ($this->getSourceAnnotationStem() != NULL && $this->getSourceAnnotationStem()->hasContent != NULL) { 
+        if ($this->getSourceAnnotationStem() != NULL && $this->getSourceAnnotationStem()->hasContent != NULL) {
           $sourceContent = $this->getSourceAnnotationStem()->hasContent;
         }
       }
@@ -118,11 +119,17 @@ class EditAnnotationStemForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Update'),
       '#name' => 'save',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'save-button'],
+      ],
     ];
     $form['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -160,12 +167,12 @@ class EditAnnotationStemForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $form_state->setRedirectUrl(Utils::selectBackUrl('annotationstem'));
+      self::backUrl();
       return;
-    } 
+    }
 
     try{
-  
+
       $uid = \Drupal::currentUser()->id();
       $useremail = \Drupal::currentUser()->getEmail();
 
@@ -174,7 +181,7 @@ class EditAnnotationStemForm extends FormBase {
         $wasDerivedFrom = 'null';
       } else {
         $wasDerivedFrom = $this->getSourceAnnotationStem()->uri;
-      } 
+      }
 
       $annotationStemJson = '{"uri":"'.$this->getAnnotationStem()->uri.'",'.
         '"typeUri":"'.VSTOI::ANNOTATION_STEM.'",'.
@@ -190,14 +197,15 @@ class EditAnnotationStemForm extends FormBase {
       // UPDATE BY DELETING AND CREATING
       $api = \Drupal::service('rep.api_connector');
       $api->annotationStemDel($this->getAnnotationStemUri());
-      $updatedAnnotationStem = $api->annotationStemAdd($annotationStemJson);    
+      $updatedAnnotationStem = $api->annotationStemAdd($annotationStemJson);
       \Drupal::messenger()->addMessage(t("Annotation Stem has been updated successfully."));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('annotationstem'));
+      self::backUrl();
+      return;
 
     }catch(\Exception $e){
       \Drupal::messenger()->addMessage(t("An error occurred while updating the Annotation Stem: ".$e->getMessage()));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('annotationstem'));
-    }
+      self::backUrl();
+      return;    }
   }
 
   public function retrieveAnnotationStem($annotationStemUri) {
@@ -207,7 +215,18 @@ class EditAnnotationStemForm extends FormBase {
     if ($obj->isSuccessful) {
       return $obj->body;
     }
-    return NULL; 
+    return NULL;
   }
+
+  function backUrl() {
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.edit_annotationstem');
+    if ($previousUrl) {
+      $response = new RedirectResponse($previousUrl);
+      $response->send();
+      return;
+    }
+  }
+
 
 }

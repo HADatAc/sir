@@ -5,6 +5,8 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Drupal\rep\Utils;
 
 class AddCodebookSlotsForm extends FormBase {
 
@@ -15,7 +17,7 @@ class AddCodebookSlotsForm extends FormBase {
   }
 
   public function setCodebookUri($uri) {
-    return $this->codebookUri = $uri; 
+    return $this->codebookUri = $uri;
   }
 
   /**
@@ -47,11 +49,17 @@ class AddCodebookSlotsForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Save'),
       '#name' => 'save',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'save-button'],
+      ],
     ];
     $form['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -80,27 +88,36 @@ class AddCodebookSlotsForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $url = Url::fromRoute('sir.manage_codebooks');
-      $form_state->setRedirectUrl($url);
+      self::backUrl();
       return;
-    } 
+    }
 
     try {
       $api = \Drupal::service('rep.api_connector');
       $api->codebookSlotAdd($this->getCodebookUri(),$form_state->getValue('slot_total_number'));
-    
+
       \Drupal::messenger()->addMessage(t("Codebook Slots has been added successfully."));
       $url = Url::fromRoute('sir.manage_codebook_slots');
       $url->setRouteParameter('codebookuri', base64_encode($this->getCodebookUri()));
       $form_state->setRedirectUrl($url);
 
     } catch(\Exception $e){
-      \Drupal::messenger()->addMessage(t("An error occurred while adding the Codebook slots: ".$e->getMessage()));
-      $url = Url::fromRoute('sir.manage_codebook_slots');
-      $url->setRouteParameter('codebookuri', base64_encode($this->getCodebookUri()));
-      $form_state->setRedirectUrl($url);
+      \Drupal::messenger()->addError(t("An error occurred while adding the Codebook slots: ".$e->getMessage()));
+      self::backUrl();
+      return;
     }
 
   }
+
+  function backUrl() {
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.manage_codebook_slots');
+    if ($previousUrl) {
+      $response = new RedirectResponse($previousUrl);
+      $response->send();
+      return;
+    }
+  }
+
 
 }

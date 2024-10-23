@@ -5,6 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class AddContainerSlotsForm extends FormBase {
 
@@ -17,7 +18,7 @@ class AddContainerSlotsForm extends FormBase {
   }
 
   public function setContainerUri($uri) {
-    return $this->containerUri = $uri; 
+    return $this->containerUri = $uri;
   }
 
   public function getBreadcrumbs() {
@@ -25,7 +26,7 @@ class AddContainerSlotsForm extends FormBase {
   }
 
   public function setBreadcrumbs(array $crumbs) {
-    return $this->crumbs = $crumbs; 
+    return $this->crumbs = $crumbs;
   }
 
   /**
@@ -79,11 +80,17 @@ class AddContainerSlotsForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Save'),
       '#name' => 'save',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'save-button'],
+      ],
     ];
     $form['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -114,7 +121,7 @@ class AddContainerSlotsForm extends FormBase {
     if ($button_name === 'back') {
       $this->backToSlotElement($form_state);
       return;
-    } 
+    }
 
     try{
       $api = \Drupal::service('rep.api_connector');
@@ -138,11 +145,11 @@ class AddContainerSlotsForm extends FormBase {
    */
   private function backToSlotElement(FormStateInterface $form_state) {
     $breadcrumbsArg = implode('|',$this->getBreadcrumbs());
-    $url = Url::fromRoute('sir.manage_slotelements'); 
+    $url = Url::fromRoute('sir.manage_slotelements');
     $url->setRouteParameter('containeruri', base64_encode($this->getContainerUri()));
     $url->setRouteParameter('breadcrumbs', $breadcrumbsArg);
     $form_state->setRedirectUrl($url);
     return;
-  } 
+  }
 
 }

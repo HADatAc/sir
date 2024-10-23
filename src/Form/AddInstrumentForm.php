@@ -4,6 +4,8 @@ namespace Drupal\sir\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\Constant;
 use Drupal\rep\Utils;
 use Drupal\rep\Entity\Tables;
@@ -59,17 +61,22 @@ class AddInstrumentForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Save'),
       '#name' => 'save',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'save-button'],
+      ],
     ];
     $form['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
       '#title' => t('<br><br>'),
     ];
-
 
     return $form;
   }
@@ -101,15 +108,15 @@ class AddInstrumentForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
+      self::backUrl();
       return;
-    } 
+  }
 
     try{
       $useremail = \Drupal::currentUser()->getEmail();
       $newInstrumentUri = Utils::uriGen('instrument');
       $instrumentJson = '{"uri":"'.$newInstrumentUri.'",'.
-        '"typeUri":"'.VSTOI::QUESTIONNAIRE.'",'.
+        '"superUri":"'.VSTOI::INSTRUMENT.'",'.
         '"hascoTypeUri":"'.VSTOI::INSTRUMENT.'",'.
         '"label":"'.$form_state->getValue('instrument_name').'",'.
         '"hasShortName":"'.$form_state->getValue('instrument_abbreviation').'",'.
@@ -120,15 +127,29 @@ class AddInstrumentForm extends FormBase {
         '"hasSIRManagerEmail":"'.$useremail.'"}';
 
       $api = \Drupal::service('rep.api_connector');
-      $api->instrumentAdd($instrumentJson);    
+      $api->instrumentAdd($instrumentJson);
       \Drupal::messenger()->addMessage(t("Instrument has been added successfully."));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
+      self::backUrl();
+      return;
 
     }catch(\Exception $e){
       \Drupal::messenger()->addMessage(t("An error occurred while adding instrument: ".$e->getMessage()));
-      $form_state->setRedirectUrl(Utils::selectBackUrl('instrument'));
-    }
+      self::backUrl();
+      return;
+ }
 
   }
+
+  function backUrl() {
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.add_instrument');
+    if ($previousUrl) {
+      $response = new RedirectResponse($previousUrl);
+      $response->send();
+      return;
+    }
+  }
+
+
 
 }
