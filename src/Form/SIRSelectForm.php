@@ -14,6 +14,7 @@ use Drupal\sir\Entity\Detector;
 use Drupal\sir\Entity\Codebook;
 use Drupal\sir\Entity\Instrument;
 use Drupal\sir\Entity\ResponseOption;
+use Symfony\Component\Validator\Constraints\Length;
 
 class SIRSelectForm extends FormBase {
 
@@ -93,11 +94,15 @@ class SIRSelectForm extends FormBase {
 
     $form['page_title'] = [
       '#type' => 'item',
-      '#markup' => '<h3>Manage ' . $this->plural_class_name . '</h3>',
+      '#markup' => '<h3 class="mt-5">Manage ' . $this->plural_class_name . '</h3>',
     ];
     $form['page_subtitle'] = [
       '#type' => 'item',
-      '#markup' => '<h4>' . $this->plural_class_name . ' maintained by <font color="DarkGreen">' . $this->manager_name . ' (' . $this->manager_email . ')</font></h4>',
+      '#markup' => $this->t('<h4>@plural_class_name maintained by <font color="DarkGreen">@manager_name (@manager_email)</font></h4>', [
+        '@plural_class_name' => $this->plural_class_name,
+        '@manager_name' => $this->manager_name,
+        '@manager_email' => $this->manager_email,
+      ]),
     ];
 
     // Add view toggle icons
@@ -355,7 +360,14 @@ class SIRSelectForm extends FormBase {
       ],
     ];
 
+    $cards_per_page = 9; // Number of cards to show per page
+    $cards_displayed = 0;
+
     foreach ($output as $key => $item) {
+      if ($cards_displayed >= $cards_per_page) {
+        break; // Stop showing cards if limit is reached
+      }
+
       // Use $key as the URI
       $uri = $key;
 
@@ -404,14 +416,16 @@ class SIRSelectForm extends FormBase {
       $content .= '</div>'; // Close row
 
       // Header
-      $form['element_cards'][$sanitized_key]['card']['header'] = [
-        '#type' => 'container',
-        '#attributes' => [
-          'style' => 'margin-bottom:0!important;',
-          'class' => ['card-header', 'mb-0'],
-        ],
-        '#markup' => '<h4>' . $header_text. '</h4>',
-      ];
+      if (strlen($header_text) > 0) {
+        $form['element_cards'][$sanitized_key]['card']['header'] = [
+          '#type' => 'container',
+          '#attributes' => [
+            'style' => 'margin-bottom:0!important;',
+            'class' => ['card-header', 'mb-0'],
+          ],
+          '#markup' => '<h4 class="mb-0">' . $header_text. '</h4>',
+        ];
+      }
 
       $form['element_cards'][$sanitized_key]['card']['content'] = [
         '#markup' => $content,
@@ -480,7 +494,7 @@ class SIRSelectForm extends FormBase {
           '#value' => $this->t('Manage Response Option Slots'),
           '#name' => 'manage_codebookslots_' . $sanitized_key,
           '#attributes' => [
-            'class' => ['btn', 'btn-secondary', 'btn-sm', 'manage-codebookslots-button'],
+            'class' => ['btn', 'btn-secondary', 'btn-sm', 'manage_codebookslots-button'],
           ],
           '#submit' => ['::manageCodebookSlotsSubmit'],
           '#limit_validation_errors' => [],
@@ -502,19 +516,38 @@ class SIRSelectForm extends FormBase {
           '#element_uri' => $uri,
         ];
       }
+
+      $cards_displayed++; // Count each card rendered
     }
 
-    // Add a "Load More" button for infinite scroll
-    $form['load_more'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Load More'),
-      '#attributes' => [
-        'data-drupal-selector' => 'edit-load-more',
-        'class' => ['btn', 'btn-primary', 'load-more-button'],
-        'data-page' => $page,
-        'data-elementtype' => $this->element_type,
-      ],
-    ];
+    // Show Load More button if there are more cards to load
+    if (count($output) > $cards_per_page) {
+      $form['load_more'] = [
+        '#type' => 'submit',
+        '#value' => $this->t('Load More'),
+        '#attributes' => [
+          'data-drupal-selector' => 'edit-load-more',
+          'class' => ['btn', 'btn-primary', 'load-more-button'],
+          'data-page' => $page,
+          'data-elementtype' => $this->element_type,
+        ],
+        '#prefix' => '<div class="d-flex justify-content-center">',
+        '#suffix' => '</div>',
+        '#ajax' => [
+          'callback' => '::loadMoreCallback',
+          'wrapper' => 'element-table',
+        ],
+      ];
+    }
+  }
+
+  /**
+   * Callback for Load More button.
+   */
+  public function loadMoreCallback(array &$form, FormStateInterface $form_state) {
+    $page = $form_state->getTriggeringElement()['#attributes']['data-page'];
+    $this->buildCardView($form, $form_state, $page + 1, 9); // Load next 9 cards
+    return $form['element_cards']; // Update the card section
   }
 
   /**
@@ -847,4 +880,3 @@ class SIRSelectForm extends FormBase {
   }
 
 }
-
