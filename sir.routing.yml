@@ -8,7 +8,7 @@ sir.search:
     elementtype: 'instrument'
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
@@ -20,7 +20,7 @@ sir.list_element:
     _form: '\Drupal\sir\Form\SIRListForm'
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
@@ -30,7 +30,7 @@ sir.select_element:
     _form: '\Drupal\sir\Form\SIRSelectForm'
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
@@ -40,11 +40,11 @@ sir.describe_element:
     _form: '\Drupal\sir\Form\DescribeForm'
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
-# Element URI 
+# Element URI
 
 sir.element_uri:
   path: 'sir/uriform'
@@ -52,7 +52,7 @@ sir.element_uri:
     _form: '\Drupal\sir\Form\UriForm'
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
@@ -65,7 +65,7 @@ sir.add_instrument:
     _form: '\Drupal\sir\Form\AddInstrumentForm'
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
@@ -85,9 +85,9 @@ sir.download_instrument:
     _controller: '\Drupal\rep\Controller\UtilsController::download'
   requirements:
     _permission: 'access content'
-    instrument: .+    
+    instrument: .+
   options:
-    no_cache: 'TRUE'    
+    no_cache: 'TRUE'
 
 # Slot Element CRUD options
 
@@ -95,10 +95,10 @@ sir.manage_slotelements:
   path: 'sir/manage/slotelements/{containeruri}/{breadcrumbs}'
   defaults:
     _form: '\Drupal\sir\Form\ManageSlotElementsForm'
-    _title: 'Manage Container Structure'    
+    _title: 'Manage Container Structure'
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
@@ -108,10 +108,10 @@ sir.add_subcontainer:
   path: 'sir/manage/addsubcontainer/{belongsto}/{breadcrumbs}'
   defaults:
     _form: '\Drupal\sir\Form\AddSubcontainerForm'
-    _title: 'Add Subcontainer'    
+    _title: 'Add Subcontainer'
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
@@ -119,7 +119,7 @@ sir.edit_subcontainer:
   path: 'sir/manage/editsubcontainer/{subcontaineruri}/{breadcrumbs}'
   defaults:
     _form: '\Drupal\sir\Form\EditSubcontainerForm'
-    _title: 'Edit Subcontainer'    
+    _title: 'Edit Subcontainer'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'
@@ -132,10 +132,10 @@ sir.add_containerslots:
   path: 'sir/manage/addcontainerslots/{containeruri}/{breadcrumbs}'
   defaults:
     _form: '\Drupal\sir\Form\AddContainerSlotsForm'
-    _title: "Create Container Slots"    
+    _title: "Create Container Slots"
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+    _custom_access_check: 'TRUE'
   options:
     _modal_form_layout: TRUE
     no_cache: 'TRUE'
@@ -144,10 +144,10 @@ sir.edit_containerslot:
   path: 'sir/manage/editcontainerslots/{containersloturi}/{breadcrumbs}'
   defaults:
     _form: '\Drupal\sir\Form\EditContainerSlotForm'
-    _title: 'Edit ContainerSlot'    
+    _title: 'Edit ContainerSlot'
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
@@ -165,10 +165,10 @@ sir.add_detectorstem:
   path: 'sir/manage/adddetectorstem/{sourcedetectorstemuri}'
   defaults:
     _form: '\Drupal\sir\Form\AddDetectorStemForm'
-    _title: 'Add Item Stem'    
+    _title: 'Add Item Stem'
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
@@ -176,10 +176,10 @@ sir.edit_detectorstem:
   path: 'sir/manage/editdetectorstem/{detectorstemuri}'
   defaults:
     _form: '\Drupal\sir\Form\EditDetectorStemForm'
-    _title: 'Edit Item Stem'    
+    _title: 'Edit Item Stem'
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
@@ -189,10 +189,10 @@ sir.add_detector:
   path: 'sir/manage/adddetector/{sourcedetectoruri}/{containersloturi}'
   defaults:
     _form: '\Drupal\sir\Form\AddDetectorForm'
-    _title: 'Add Item'    
+    _title: 'Add Item'
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
@@ -200,10 +200,10 @@ sir.add_containerslot_detector:
   path: 'sir/manage/addattachdetector/{containersloturi}'
   defaults:
     _form: '\Drupal\sir\Form\AddContainerSlotDetectorForm'
-    _title: 'Add Item'    
+    _title: 'Add Item'
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
@@ -211,10 +211,10 @@ sir.edit_detector:
   path: 'sir/manage/editdetector/{detectoruri}'
   defaults:
     _form: '\Drupal\sir\Form\EditDetectorForm'
-    _title: 'Edit Item'    
+    _title: 'Edit Item'
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
@@ -240,10 +240,10 @@ sir.add_codebook:
   path: 'sir/manage/addcodebook'
   defaults:
     _form: '\Drupal\sir\Form\AddCodebookForm'
-    _title: 'Add Codebook'    
+    _title: 'Add Codebook'
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
@@ -251,10 +251,10 @@ sir.edit_codebook:
   path: 'sir/manage/editcodebook/{codebookuri}'
   defaults:
     _form: '\Drupal\sir\Form\EditCodebookForm'
-    _title: 'Edit Codebook'    
+    _title: 'Edit Codebook'
   requirements:
-    _permission: 'access content'  
-    _custom_access_check: 'TRUE'      
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
@@ -264,10 +264,10 @@ sir.manage_codebook_slots:
   path: 'sir/manage/codebookslot/{codebookuri}'
   defaults:
     _form: '\Drupal\sir\Form\ManageCodebookSlotsForm'
-    _title: 'Manage Response Option Slots'    
+    _title: 'Manage Response Option Slots'
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
@@ -275,10 +275,10 @@ sir.add_codebookslots:
   path: 'sir/manage/addcodebookslots/{codebookuri}'
   defaults:
     _form: '\Drupal\sir\Form\AddCodebookSlotsForm'
-    _title: "Create Codebook's Response Option Slots"    
+    _title: "Create Codebook's Response Option Slots"
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
@@ -286,10 +286,10 @@ sir.edit_codebook_slot:
   path: 'sir/manage/editcodebookslot/{codebooksloturi}'
   defaults:
     _form: '\Drupal\sir\Form\EditCodebookSlotForm'
-    _title: "Edit Response Option Slot"    
+    _title: "Edit Response Option Slot"
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
@@ -307,10 +307,10 @@ sir.add_response_option:
   path: 'sir/manage/addresponseoption/{codebooksloturi}'
   defaults:
     _form: '\Drupal\sir\Form\AddResponseOptionForm'
-    _title: 'Add Response Option'    
+    _title: 'Add Response Option'
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
@@ -318,10 +318,10 @@ sir.edit_response_option:
   path: 'sir/manage/editresponseoption/{responseoptionuri}'
   defaults:
     _form: '\Drupal\sir\Form\EditResponseOptionForm'
-    _title: 'Edit Response Option'    
+    _title: 'Edit Response Option'
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
@@ -331,10 +331,10 @@ sir.add_annotationstem:
   path: 'sir/manage/addannotationstem/{sourceannotationstemuri}'
   defaults:
     _form: '\Drupal\sir\Form\AddAnnotationStemForm'
-    _title: 'Add Annotation Stem'    
+    _title: 'Add Annotation Stem'
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
@@ -342,10 +342,10 @@ sir.edit_annotationstem:
   path: 'sir/manage/editannotationstem/{annotationstemuri}'
   defaults:
     _form: '\Drupal\sir\Form\EditAnnotationStemForm'
-    _title: 'Edit Annotation Stem'    
+    _title: 'Edit Annotation Stem'
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
@@ -371,10 +371,10 @@ sir.add_annotation:
   path: 'sir/manage/addannotation/{containeruri}/{breadcrumbs}'
   defaults:
     _form: '\Drupal\sir\Form\AddAnnotationForm'
-    _title: 'Add Annotation'    
+    _title: 'Add Annotation'
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
@@ -382,10 +382,10 @@ sir.manage_container_annotations:
   path: 'sir/manage/containerannotations/{containeruri}/{breadcrumbs}'
   defaults:
     _form: '\Drupal\sir\Form\ManageContainerAnnotationsForm'
-    _title: 'Manage Container Annotations'    
+    _title: 'Manage Container Annotations'
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
@@ -393,10 +393,10 @@ sir.edit_annotation:
   path: 'sir/manage/editannotation/{annotationuri}/{containeruri}/{breadcrumbs}'
   defaults:
     _form: '\Drupal\sir\Form\EditAnnotationForm'
-    _title: 'Edit Annotation'    
+    _title: 'Edit Annotation'
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
@@ -406,8 +406,15 @@ sir.manage_annotations:
     _form: '\Drupal\sir\Form\ManageAnnotationsForm'
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
-
-
+ajax.sir.list.load_more:
+  path: '/ajax/sir/list/load_more'
+  defaults:
+    _controller: '\Drupal\sir\Controller\LoadMoreController::loadMoreCards'
+    _title: 'Load More Cards'
+  requirements:
+    _permission: 'access content'
+  options:
+    _no_cache: 'TRUE'
