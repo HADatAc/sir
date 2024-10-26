@@ -385,7 +385,7 @@ class SIRSelectForm extends FormBase {
       ];
 
       // Define the placeholder image URL
-      $placeholder_image = base_path() . \Drupal::service('extension.list.module')->getPath('sir') . '/images/hadatac_logo.jpg';
+      $placeholder_image = base_path() . \Drupal::service('extension.list.module')->getPath('rep') . '/images/ins_placeholder.png';
 
       // Header text and content
       $header_text = '';
