@@ -33,7 +33,7 @@ sir.manage_ins_files:
     elementtype: 'ins'
     mode: 'table'
     page: '1'
-    pagesize: '10'
+    pagesize: '9'
     studyuri: 'none'
   parent: sir.top_level
   menu_name: main
@@ -71,7 +71,7 @@ sir.manage_detectorstems :
   route_parameters:
     elementtype: 'detectorstem'
     page: '1'
-    pagesize: '10'
+    pagesize: '9'
   parent: sir.top_level
   menu_name: main
   weight: 21
@@ -86,7 +86,7 @@ sir.manage_detectors :
   route_parameters:
     elementtype: 'detector'
     page: '1'
-    pagesize: '10'
+    pagesize: '9'
   parent: sir.top_level
   menu_name: main
   weight: 22
@@ -101,7 +101,7 @@ sir.manage_codebooks :
   route_parameters:
     elementtype: 'codebook'
     page: '1'
-    pagesize: '10'
+    pagesize: '9'
   parent: sir.top_level
   menu_name: main
   weight: 23
@@ -116,7 +116,7 @@ sir.manage_responseoptions :
   route_parameters:
     elementtype: 'responseoption'
     page: '1'
-    pagesize: '10'
+    pagesize: '9'
   parent: sir.top_level
   menu_name: main
   weight: 24
@@ -131,7 +131,7 @@ sir.manage_annotationstems :
   route_parameters:
     elementtype: 'annotationstem'
     page: '1'
-    pagesize: '10'
+    pagesize: '9'
   parent: sir.top_level
   menu_name: main
   weight: 25

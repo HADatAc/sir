@@ -411,11 +411,11 @@ sir.manage_annotations:
     no_cache: 'TRUE'
 
 # LOAD MORE
-sir.load_more_data:
-  path: '/sir/select/{elementtype}/load-more-data'
-  defaults:
-    _controller: '\Drupal\sir\Form\SIRSelectForm::loadMoreCallback'
-  requirements:
-    _access: 'TRUE'
-  options:
-    _format: 'json'
+# sir.load_more_data:
+#   path: '/sir/select/{elementtype}/load-more-data'
+#   defaults:
+#     _controller: '\Drupal\sir\Form\SIRSelectForm::loadMoreSubmit'
+#   requirements:
+#     _access: 'TRUE'
+#   options:
+#     _format: 'json'

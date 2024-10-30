@@ -247,8 +247,10 @@ class ManageSlotElementsForm extends FormBase {
       '#value' => $this->t('Manage Structure of Selected'),
       '#name' => 'manage_subcontainer_structure',
       '#attributes' =>
-        ['class' =>
-          ['button', 'js-form-submit', 'form-submit', 'btn', 'btn-success', 'manage_slotelements-button'],
+        [
+          'class' =>
+            ['button', 'js-form-submit', 'form-submit', 'btn', 'btn-success', 'manage_slotelements-button'],
+          'style' => 'background-color: yellowgreen;'
         ],
 ];
     $form['slotelement_table'] = [
@@ -265,6 +267,7 @@ class ManageSlotElementsForm extends FormBase {
         '#attributes' =>
           ['class' =>
             ['button', 'js-form-submit', 'form-submit', 'btn', 'btn-success', 'back_parent-button'],
+            'style' => 'background-color: yellowgreen;'
           ],
       ];
     }
