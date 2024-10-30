@@ -8,13 +8,13 @@ use Drupal\Core\Url;
 use Drupal\rep\ListManagerEmailPage;
 use Drupal\rep\Utils;
 use Drupal\sir\Entity\AnnotationStem;
-use Drupal\sir\Entity\Annotation;
 use Drupal\sir\Entity\DetectorStem;
 use Drupal\sir\Entity\Detector;
 use Drupal\sir\Entity\Codebook;
 use Drupal\sir\Entity\Instrument;
 use Drupal\sir\Entity\ResponseOption;
-use Symfony\Component\Validator\Constraints\Length;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Drupal\Core\Render\Markup;
 
 class SIRSelectForm extends FormBase {
 
@@ -79,15 +79,30 @@ class SIRSelectForm extends FormBase {
 
     // Attach necessary libraries
     $form['#attached']['library'][] = 'core/drupal.bootstrap';
-    if ($view_type == 'card') {
-      // Attach Infinite Scroll library
-      $form['#attached']['library'][] = 'rep/infinite_scroll';
-      // Add drupalSettings for infinite scroll
-      $form['#attached']['drupalSettings']['rep'] = [
-        'pagesize' => $pagesize,
-        'list_size' => $this->list_size,
-      ];
+
+    $form['#attached']['library'][] = 'core/jquery';
+    $form['#attached']['library'][] = 'core/jquery.once';
+    $form['#attached']['library'][] = 'core/drupal';
+    $form['#attached']['library'][] = 'core/drupalSettings';
+    $form['#attached']['library'][] = 'sir/sir_js_css';
+
+
+    $form['#attached']['drupalSettings']['sir_select_form']['base_url'] = \Drupal::request()->getSchemeAndHttpHost() . base_path();
+    $form['#attached']['drupalSettings']['sir_select_form']['ajaxUrl'] = Url::fromRoute('sir.load_more_data', [
+      'elementtype' => $this->element_type,
+    ])->toString();
+    $form['#attached']['drupalSettings']['sir_select_form']['elementtype'] = $elementtype;
+
+    // Recupera ou define o valor de `pagesize` (padrão 9)
+    if ($form_state->get('page_size')) {
+      $pagesize = $form_state->get('page_size');
+    } else {
+      $pagesize = $session->get('sir_select_form_pagesize', 9);
+      $form_state->set('page_size', $pagesize);
     }
+
+    // Salva o valor atual do pagesize na sessão para manter o estado ao recarregar
+    #$session->set('sir_select_form_pagesize', $pagesize);
 
     // PUT FORM TOGETHER
     $this->prepareElementNames();
@@ -201,7 +216,7 @@ class SIRSelectForm extends FormBase {
         '#value' => $this->t('Add New ' . $this->single_class_name),
         '#name' => 'add_element',
         '#attributes' => [
-          'class' => ['btn', 'btn-primary', 'add-element-button'],
+          'class' => ['btn', 'btn-primary', 'add-element-button', 'mb-3'],
         ],
       ];
     }
@@ -344,210 +359,338 @@ class SIRSelectForm extends FormBase {
   /**
    * Build the card view.
    */
-  protected function buildCardView(array &$form, FormStateInterface $form_state, $page, $pagesize) {
-    // Remove pagination in card view
+  protected function buildCardView(array &$form, FormStateInterface $form_state, $page, $pagesize, $addMore = false) {
+    // Remove paginação na visualização de cartões
     $this->setList(ListManagerEmailPage::exec($this->element_type, $this->manager_email, $page, $pagesize));
 
     // Generate header and output
     $header = $this->generateHeader();
     $output = $this->generateOutput();
 
-    $form['element_cards'] = [
-      '#type' => 'container',
-      '#attributes' => [
-        'class' => ['row', 'infinite-scroll', 'mt-4'],
-        'id' => 'element-table',  // This ID is necessary for the infinite scroll JS to work.
-      ],
-    ];
+    // Definir imagem placeholder
+    $placeholder_image = base_path() . \Drupal::service('extension.list.module')->getPath('rep') . '/images/ins_placeholder.png';
 
-    $cards_per_page = 9; // Number of cards to show per page
-    $cards_displayed = 0;
+    // Se não estiver adicionando mais, crie o wrapper principal
+    if (!$addMore) {
 
-    foreach ($output as $key => $item) {
-      if ($cards_displayed >= $cards_per_page) {
-        break; // Stop showing cards if limit is reached
-      }
-
-      // Use $key as the URI
-      $uri = $key;
-
-      // Generate a sanitized key for element names
-      $sanitized_key = md5($uri);
-
-      $form['element_cards'][$sanitized_key] = [
+      $form['loading_overlay'] = [
         '#type' => 'container',
-        '#attributes' => ['class' => ['col-md-4']],
+        '#attributes' => [
+          'id' => 'loading-overlay',
+          'class' => ['loading-overlay'],
+          'style' => 'display: none;', // Inicialmente escondido
+        ],
+        '#markup' => '<div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div>',
       ];
 
-      $form['element_cards'][$sanitized_key]['card'] = [
-        '#type' => 'container',
-        '#attributes' => ['class' => ['card', 'mb-4']],
-      ];
-
-      // Define the placeholder image URL
-      $placeholder_image = base_path() . \Drupal::service('extension.list.module')->getPath('rep') . '/images/ins_placeholder.png';
-
-      // Header text and content
-      $header_text = '';
-      $content = '<div class="row">';
-      $content .= '<div class="col-md-8">';
-      $content .= '<div class="card-body">';
-
-      foreach ($header as $column_key => $column_label) {
-        $value = isset($item[$column_key]) ? $item[$column_key] : '';
-        if ($column_label == 'Downloads') {
-          $value = str_replace(['<br>', '<br/>', '<br />'], '', $value);
-        }
-        if ($column_label == 'Name') {
-          $header_text = preg_split('/<br\s*\/?>/i', $value)[0];
-        }
-        $content .= '<p class="mb-0 pb-0"><strong>' . $column_label . ':</strong> ' . $value . '</p>';
-      }
-      $content .= '</div>'; // Close card-body
-      $content .= '</div>'; // Close left column
-
-      // Right column with placeholder image
-      $content .= '<div class="col-md-4">';
-      $content .= '<div class="card-body text-center">';
-      $content .= '<img style="border:1px solid #d7d7d7; border-radius:15px;" src="' . $placeholder_image . '" alt="' . $this->element_type . ' Placeholder Image" class="img-fluid" />';
-      $content .= '</div>'; // Close card-body
-      $content .= '</div>'; // Close right column
-
-      $content .= '</div>'; // Close row
-
-      // Header
-      if (strlen($header_text) > 0) {
-        $form['element_cards'][$sanitized_key]['card']['header'] = [
+      $form['cards_wrapper'] = [
           '#type' => 'container',
           '#attributes' => [
-            'style' => 'margin-bottom:0!important;',
-            'class' => ['card-header', 'mb-0'],
+              'id' => 'cards-wrapper',
+              'class' => ['row'],
           ],
-          '#markup' => '<h4 class="mb-0">' . $header_text. '</h4>',
-        ];
-      }
-
-      $form['element_cards'][$sanitized_key]['card']['content'] = [
-        '#markup' => $content,
       ];
-
-      // Card Footer (Action buttons)
-      $form['element_cards'][$sanitized_key]['card']['footer'] = [
-        '#type' => 'container',
-        '#attributes' => [
-          'style' => 'margin-bottom:0!important;',
-          'class' => ['d-flex', 'card-footer', 'justify-content-end', 'mb-0'],
-        ],
-      ];
-
-      $form['element_cards'][$sanitized_key]['card']['footer']['actions'] = [
-        '#type' => 'actions',
-        '#attributes' => [
-          'style' => 'margin-bottom:0!important;',
-          'class' => ['mb-0'],
-        ],
-      ];
-
-      // Edit button
-      $form['element_cards'][$sanitized_key]['card']['footer']['actions']['edit'] = [
-        '#type' => 'submit',
-        '#value' => $this->t('Edit'),
-        '#name' => 'edit_element_' . $sanitized_key,
-        '#attributes' => [
-          'class' => ['btn', 'btn-primary', 'btn-sm', 'edit-element-button'],
-        ],
-        '#submit' => ['::editElementSubmit'],
-        '#limit_validation_errors' => [],
-        '#element_uri' => $uri,
-      ];
-
-      // Delete button
-      $form['element_cards'][$sanitized_key]['card']['footer']['actions']['delete'] = [
-        '#type' => 'submit',
-        '#value' => $this->t('Delete'),
-        '#name' => 'delete_element_' . $sanitized_key,
-        '#attributes' => [
-          'class' => ['btn', 'btn-danger', 'btn-sm', 'delete-element-button'],
-          'onclick' => 'if(!confirm("Really Delete?")){return false;}',
-        ],
-        '#submit' => ['::deleteElementSubmit'],
-        '#limit_validation_errors' => [],
-        '#element_uri' => $uri,
-      ];
-
-      // Manage button (if applicable)
-      if ($this->element_type == 'instrument') {
-        $form['element_cards'][$sanitized_key]['card']['footer']['actions']['manage'] = [
-          '#type' => 'submit',
-          '#value' => $this->t('Manage Structure'),
-          '#name' => 'manage_slotelements_' . $sanitized_key,
-          '#attributes' => [
-            'class' => ['btn', 'btn-secondary', 'btn-sm', 'manage_slotelements-button'],
-          ],
-          '#submit' => ['::manageSlotElementsSubmit'],
-          '#limit_validation_errors' => [],
-          '#element_uri' => $uri,
-        ];
-      } elseif ($this->element_type == 'codebook') {
-        $form['element_cards'][$sanitized_key]['card']['footer']['actions']['manage'] = [
-          '#type' => 'submit',
-          '#value' => $this->t('Manage Response Option Slots'),
-          '#name' => 'manage_codebookslots_' . $sanitized_key,
-          '#attributes' => [
-            'class' => ['btn', 'btn-secondary', 'btn-sm', 'manage_codebookslots-button'],
-          ],
-          '#submit' => ['::manageCodebookSlotsSubmit'],
-          '#limit_validation_errors' => [],
-          '#element_uri' => $uri,
-        ];
-      }
-
-      // Derive button (if applicable)
-      if ($this->element_type == 'detectorstem') {
-        $form['element_cards'][$sanitized_key]['card']['footer']['actions']['derive'] = [
-          '#type' => 'submit',
-          '#value' => $this->t('Derive'),
-          '#name' => 'derive_detectorstem_' . $sanitized_key,
-          '#attributes' => [
-            'class' => ['btn', 'btn-secondary', 'btn-sm', 'derive-button'],
-          ],
-          '#submit' => ['::deriveDetectorStemSubmit'],
-          '#limit_validation_errors' => [],
-          '#element_uri' => $uri,
-        ];
-      }
-
-      $cards_displayed++; // Count each card rendered
     }
 
-    // Show Load More button if there are more cards to load
-    if (count($output) > $cards_per_page) {
-      $form['load_more'] = [
-        '#type' => 'submit',
-        '#value' => $this->t('Load More'),
-        '#attributes' => [
-          'data-drupal-selector' => 'edit-load-more',
-          'class' => ['btn', 'btn-primary', 'load-more-button'],
-          'data-page' => $page,
-          'data-elementtype' => $this->element_type,
-        ],
-        '#prefix' => '<div class="d-flex justify-content-center">',
-        '#suffix' => '</div>',
-        '#ajax' => [
-          'callback' => '::loadMoreCallback',
-          'wrapper' => 'element-table',
-        ],
-      ];
+    // Processar cada item para construir os cartões
+    foreach ($output as $key => $item) {
+
+        // Obter variáveis do item
+        $item_vars = [];
+        if (is_object($item)) {
+            $item_vars = get_object_vars($item);
+        } elseif (is_array($item)) {
+            $item_vars = $item;
+        } else {
+            // Se não for objeto nem array, pular este item
+            continue;
+        }
+
+        $uri = $key;
+        $content = '';
+        $header_text = $item_vars['label'] ?? '';
+
+        foreach ($header as $column_key => $column_label) {
+            // Converter $column_label para string
+            $column_label_string = (string) $column_label;
+
+            // Obter o valor correspondente, ou definir como vazio se não existir
+            $value = $item_vars[$column_key] ?? '';
+
+            #dpm("Column Key: $column_key, Value: $value"); // Debug para verificar correspondência da coluna e valor
+
+            // Remover quebras de linha para o campo "Downloads"
+            if ($column_label_string == 'Downloads') {
+                $value = str_replace(['<br>', '<br/>', '<br />'], '', $value);
+            }
+
+            // Atualizar o texto do cabeçalho se for o campo "Name"
+            if ($column_label_string == 'Name') {
+                $header_text = preg_split('/<br\s*\/?>/i', $value)[0];
+            }
+
+            $content .= '<p class="mb-0 pb-0"><strong>' . $column_label_string . ':</strong> ' . $value . '</p>';
+        }
+
+        // Definir a URL da imagem, usar placeholder se não houver imagem no item
+        $image_uri = !empty($item_vars['image']) ? $item_vars['image'] : $placeholder_image;
+
+        // Construir a estrutura do cartão
+        $card = [
+          '#type' => 'container',
+          '#attributes' => [
+              'class' => ['col-md-4', 'js-form-wrapper', 'form-wrapper', 'mb-3'],
+              'id' => 'card-item-' . $uri,
+              'data-drupal-selector' => 'edit-card-' . str_replace([':', '/', '.'], '', $uri), // Removendo caracteres especiais para manter o padrão consistente
+          ],
+        ];
+
+        $card['card'] = [
+          '#type' => 'container',
+          '#attributes' => [
+              'class' => ['card', 'mb-3', 'js-form-wrapper', 'form-wrapper'],
+              'id' => 'card-item-' . $uri,
+              'data-drupal-selector' => 'edit-card-' . str_replace([':', '/', '.'], '', $uri),
+          ],
+        ];
+
+        // Cabeçalho do cartão
+        $card['card']['header'] = [
+          '#type' => 'container',
+          '#attributes' => [
+              'style' => 'margin-bottom:0!important;',
+              'class' => ['card-header', 'js-form-wrapper', 'form-wrapper', 'mb-3'],
+              'data-drupal-selector' => 'edit-header',
+              'id' => 'edit-header--' . md5($uri), // Usando md5 para garantir IDs únicos
+          ],
+          '#markup' => '<h5 class="mb-0">' . $header_text . '</h5>',
+        ];
+
+        // Corpo do cartão
+        $card['card']['body'] = [
+          '#type' => 'container',
+          '#attributes' => [
+              'style' => 'margin-bottom:0!important;',
+              'class' => ['card-body', 'mb-0', 'js-form-wrapper', 'form-wrapper', 'mb-3'],
+              'data-drupal-selector' => 'edit-body',
+              'id' => 'edit-body--' . md5($uri),
+          ],
+          'row' => [
+              '#type' => 'container',
+              '#attributes' => [
+                  'style' => 'margin-bottom:0!important;',
+                  'class' => ['row', 'js-form-wrapper', 'form-wrapper', 'mb-3'],
+                  'data-drupal-selector' => 'edit-row',
+                  'id' => 'edit-row--' . md5($uri),
+              ],
+              'image_column' => [
+                  '#type' => 'container',
+                  '#attributes' => [
+                      'style' => 'margin-bottom:0!important;',
+                      'class' => ['col-md-5', 'text-center', 'mb-0', 'align-middle', 'js-form-wrapper', 'form-wrapper', 'mb-3'],
+                      'data-drupal-selector' => 'edit-image-column',
+                      'id' => 'edit-image-column--' . md5($uri),
+                  ],
+                  'image' => [
+                      '#theme' => 'image',
+                      '#uri' => $image_uri,
+                      '#alt' => $this->t('Image for @name', ['@name' => $item_vars['label'] ?? '']),
+                      '#attributes' => [
+                          'style' => 'width: 70%',
+                          'class' => ['img-fluid', 'mb-0'],
+                          'data-drupal-selector' => 'edit-image',
+                      ],
+                  ],
+              ],
+              'text_column' => [
+                  '#type' => 'container',
+                  '#attributes' => [
+                      'style' => 'margin-bottom:0!important;',
+                      'class' => ['col-md-7', 'js-form-wrapper', 'form-wrapper', 'mb-3'],
+                      'data-drupal-selector' => 'edit-text-column',
+                      'id' => 'edit-text-column--' . md5($uri),
+                  ],
+                  'text' => [
+                      '#markup' => '<p class="card-text">' . $content . '</p>',
+                  ],
+              ],
+          ],
+        ];
+
+        // Rodapé do cartão (Ações)
+        $card['card']['footer'] = [
+          '#type' => 'container',
+          '#attributes' => [
+              'style' => 'margin-bottom:0!important;',
+              'class' => ['d-flex', 'card-footer', 'justify-content-end', 'mb-0', 'js-form-wrapper', 'form-wrapper', 'mb-3'],
+              'data-drupal-selector' => 'edit-footer',
+              'id' => 'edit-footer--' . md5($uri),
+          ],
+        ];
+
+        $card['card']['footer']['actions'] = [
+          '#type' => 'actions',
+          '#attributes' => [
+              'style' => 'margin-bottom:0!important;',
+              'class' => ['mb-0', 'js-form-wrapper', 'form-wrapper', 'mb-3'],
+              'data-drupal-selector' => 'edit-actions',
+              'id' => 'edit-actions--' . md5($uri),
+          ],
+        ];
+
+        // Botão Editar
+        $card['card']['footer']['actions']['edit'] = [
+          '#type' => 'submit',
+          '#value' => $this->t('Edit'),
+          '#name' => 'edit_element_' . md5($uri),
+          '#attributes' => [
+              'class' => ['btn', 'btn-primary', 'btn-sm', 'edit-element-button', 'button', 'js-form-submit', 'form-submit'],
+              'data-drupal-no-ajax' => 'true',
+              'formnovalidate' => 'formnovalidate',
+              'onclick' => 'this.form.submit();',
+              'data-drupal-selector' => 'edit-edit',
+              'id' => 'edit-edit--' . md5($uri),
+          ],
+          '#submit' => ['::editElementSubmit'],
+          '#limit_validation_errors' => [],
+          '#element_uri' => $uri,
+        ];
+
+        // Botão Deletar
+        $card['card']['footer']['actions']['delete'] = [
+          '#type' => 'submit',
+          '#value' => $this->t('Delete'),
+          '#name' => 'delete_element_' . md5($uri),
+          '#attributes' => [
+              'class' => ['btn', 'btn-danger', 'btn-sm', 'delete-element-button', 'button', 'js-form-submit', 'form-submit'],
+              'onclick' => 'if(!confirm("Really Delete?")){return false;}',
+              'data-drupal-selector' => 'edit-delete',
+              'id' => 'edit-delete--' . md5($uri),
+          ],
+          '#submit' => ['::deleteElementSubmit'],
+          '#limit_validation_errors' => [],
+          '#element_uri' => $uri,
+        ];
+
+        // Adicionar outros botões conforme necessário (Gerenciar, Derivar)
+        if ($this->element_type == 'instrument') {
+          $card['card']['footer']['actions']['manage'] = [
+              '#type' => 'submit',
+              '#value' => $this->t('Manage Structure'),
+              '#name' => 'manage_slotelements_' . md5($uri),
+              '#attributes' => [
+                  'class' => ['btn', 'btn-secondary', 'btn-sm', 'manage_slotelements-button', 'button', 'js-form-submit', 'form-submit'],
+                  'data-drupal-selector' => 'edit-manage',
+                  'id' => 'edit-manage--' . md5($uri),
+              ],
+              '#submit' => ['::manageSlotElementsSubmit'],
+              '#limit_validation_errors' => [],
+              '#element_uri' => $uri,
+          ];
+      }
+
+        // Adicionar o cartão ao container cards_wrapper
+        $form['cards_wrapper']['card_' . $uri] = $card;
+
+        //get total items
+        $total_items = $this->getListSize();
+
+        //Pagesize
+        $current_page_size = $form_state->get('page_size') ?? 9;
+
+        if ($total_items > $current_page_size) {
+          $form['load_more_button'] = [
+            '#type' => 'submit',
+            '#value' => $this->t('Load More'),
+            '#name' => 'load_more_button',
+            '#attributes' => [
+              'id' => 'load-more-button',
+              'class' => ['btn', 'btn-primary', 'load-more-button'],
+              'style' => 'display: none;', // Esconde o botão por padrão
+            ],
+            '#submit' => ['::loadMoreSubmit'],
+            '#limit_validation_errors' => [],
+          ];
+
+          $form['list_state'] = [
+            '#type' => 'hidden',
+            '#value' => ($total_items > $current_page_size ? 1:0),
+            "#name" => 'list_state',
+            '#attributes' => [
+              'id' => 'list_state',
+            ]
+          ];
+        }
     }
+
+    // Depuração final do formulário
+    #\Drupal::logger('sir_select_form')->debug('Estado final do formulário após buildCardView: @form', ['@form' => print_r($form, TRUE)]);
   }
+
+  /**
+   * Submit handler for the Load More button.
+   */
+  public function loadMoreSubmit(array &$form, FormStateInterface $form_state) {
+
+    //Pagesize
+    $current_page_size = $form_state->get('page_size') ?? 9;
+
+    $new_page_size = $current_page_size + 9;
+    $form_state->set('page_size', $new_page_size);
+
+    // Atualiza o valor de 'page_size' no estado do formulário e na sessão
+    $form_state->set('page_size', $new_page_size);
+
+    // Força a reconstrução do formulário para carregar mais elementos
+    $form_state->setRebuild();
+  }
+
+
 
   /**
    * Callback for Load More button.
    */
-  public function loadMoreCallback(array &$form, FormStateInterface $form_state) {
-    $page = $form_state->getTriggeringElement()['#attributes']['data-page'];
-    $this->buildCardView($form, $form_state, $page + 1, 9); // Load next 9 cards
-    return $form['element_cards']; // Update the card section
+  public function loadMoreCallback(array &$form = NULL, FormStateInterface $form_state = NULL) {
+    if ($form_state === NULL) {
+        $form_state = new \Drupal\Core\Form\FormState();
+    }
+
+    if ($form_state->get('loading')) {
+        return new JsonResponse(['cards' => []]);
+    }
+
+    $form_state->set('loading', true);
+
+    $page = \Drupal::request()->query->get('page') ?? 1;
+    $this->element_type = \Drupal::request()->query->get('elementtype');
+    $this->manager_email = \Drupal::currentUser()->getEmail();
+
+    $pagesize = $form_state->get('page_size') ?? 9;
+    $new_items = ListManagerEmailPage::exec($this->element_type, $this->manager_email, $page, $pagesize);
+
+    // Atualize o status dos itens já carregados
+    $items_loaded = $form_state->get('items_loaded') ?? 0;
+    $items_loaded += count($new_items);
+    $form_state->setValue('items_loaded', $items_loaded);
+
+    // Construir novos cartões
+    $new_cards = [];
+    $this->setList($new_items);
+    $this->buildCardView($new_cards, $form_state, $page, $pagesize, true); // Passar true para indicar que está adicionando
+
+    // Renderizar novos cartões
+    $renderer = \Drupal::service('renderer');
+    $rendered_cards = $renderer->renderRoot($new_cards['cards_wrapper']); // Renderize apenas o conteúdo dos cartões
+
+    $form_state->set('loading', false);
+
+    $form_state->setRebuild();
+
+    // \Drupal::logger('sir_select_form')->debug('Form state details: @form_state', [
+    //   '@form_state' => print_r($form_state->getValues(), TRUE),
+    // ]);
+
+    return new JsonResponse(['cards' => $rendered_cards, 'page' => $page]);
   }
 
   /**
@@ -620,11 +763,42 @@ class SIRSelectForm extends FormBase {
    * Submit handler for editing an element in card view.
    */
   public function editElementSubmit(array &$form, FormStateInterface $form_state) {
-    $triggering_element = $form_state->getTriggeringElement();
-    $uri = $triggering_element['#element_uri'];
 
-    $this->performEdit($uri, $form_state);
+    $triggering_element = $form_state->getTriggeringElement();
+
+    if (isset($triggering_element['#element_uri'])) {
+      $uri = $triggering_element['#element_uri'];
+
+      // Obter o tipo de elemento
+      $element_type = $this->element_type;
+
+      // Definir o mapeamento de tipos de elementos para suas respectivas rotas
+      $route_map = [
+        'instrument' => 'sir.edit_instrument',
+        'detectorstem' => 'sir.edit_detectorstem',
+        'detector' => 'sir.edit_detector',
+        'codebook' => 'sir.edit_codebook',
+        'responseoption' => 'sir.edit_response_option',
+        'annotationstem' => 'sir.edit_annotationstem',
+      ];
+
+      // Verificar se o tipo de elemento possui uma rota definida
+      if (isset($route_map[$element_type])) {
+        $route_name = $route_map[$element_type];
+
+        // Chamar a função para executar a edição
+        $this->performEdit($uri, $form_state);
+
+        // Redirecionar para a rota apropriada com o URI como parâmetro
+        $form_state->setRedirect($route_name, [$element_type . 'uri' => base64_encode($uri)]);
+      } else {
+        \Drupal::messenger()->addError($this->t('No edit route found for this element type.'));
+      }
+    } else {
+      \Drupal::messenger()->addError($this->t('Cannot edit: URI is missing.'));
+    }
   }
+
 
   /**
    * Submit handler for deleting an element in card view.
@@ -670,6 +844,9 @@ class SIRSelectForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    $triggering_element = $form_state->getTriggeringElement();
+    #\Drupal::logger('sir_select_form')->debug('Botão acionado: @button', ['@button' => $triggering_element['#name']]);
+
     // RETRIEVE TRIGGERING BUTTON
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
@@ -680,8 +857,13 @@ class SIRSelectForm extends FormBase {
 
     // Handle actions based on button name
     if (strpos($button_name, 'edit_element_') === 0) {
-      $uri = $triggering_element['#element_uri'];
-      $this->performEdit($uri, $form_state);
+      // Certifique-se de que o URI está realmente presente
+      if (isset($triggering_element['#element_uri'])) {
+        $uri = $triggering_element['#element_uri'];
+        $this->performEdit($uri, $form_state);
+      } else {
+        \Drupal::messenger()->addError($this->t('Cannot edit: URI is missing.'));
+      }
     } elseif (strpos($button_name, 'delete_element_') === 0) {
       $uri = $triggering_element['#element_uri'];
       $this->performDelete([$uri], $form_state);
@@ -784,35 +966,33 @@ class SIRSelectForm extends FormBase {
    * Perform the edit action.
    */
   protected function performEdit($uri, FormStateInterface $form_state) {
-    if (empty($uri)) {
-      \Drupal::messenger()->addError($this->t('Cannot edit: URI is empty.'));
-      return;
-    }
-
     $uid = \Drupal::currentUser()->id();
     $previousUrl = \Drupal::request()->getRequestUri();
 
     if ($this->element_type == 'instrument') {
-      Utils::trackingStoreUrls($uid, $previousUrl, 'sir.edit_instrument');
       $url = Url::fromRoute('sir.edit_instrument', ['instrumenturi' => base64_encode($uri)]);
     } elseif ($this->element_type == 'detectorstem') {
-      Utils::trackingStoreUrls($uid, $previousUrl, 'sir.edit_detectorstem');
       $url = Url::fromRoute('sir.edit_detectorstem', ['detectorstemuri' => base64_encode($uri)]);
     } elseif ($this->element_type == 'detector') {
-      Utils::trackingStoreUrls($uid, $previousUrl, 'sir.edit_detector');
       $url = Url::fromRoute('sir.edit_detector', ['detectoruri' => base64_encode($uri)]);
     } elseif ($this->element_type == 'codebook') {
-      Utils::trackingStoreUrls($uid, $previousUrl, 'sir.edit_codebook');
       $url = Url::fromRoute('sir.edit_codebook', ['codebookuri' => base64_encode($uri)]);
     } elseif ($this->element_type == 'responseoption') {
-      Utils::trackingStoreUrls($uid, $previousUrl, 'sir.edit_response_option');
       $url = Url::fromRoute('sir.edit_response_option', ['responseoptionuri' => base64_encode($uri)]);
     } elseif ($this->element_type == 'annotationstem') {
-      Utils::trackingStoreUrls($uid, $previousUrl, 'sir.edit_annotationstem');
       $url = Url::fromRoute('sir.edit_annotationstem', ['annotationstemuri' => base64_encode($uri)]);
+    } else {
+      \Drupal::messenger()->addError($this->t('No edit route found for this element type.'));
+      return;
     }
+
+    // Log para confirmar o redirecionamento
+    \Drupal::messenger()->addMessage('Redirecionando para ' . $url->toString());
+
+    // Definir redirecionamento explícito
     $form_state->setRedirectUrl($url);
   }
+
 
   /**
    * Perform the delete action.

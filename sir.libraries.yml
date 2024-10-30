@@ -7,7 +7,7 @@ sir_js_css:
     js/sir.js: {}
   dependencies:
     - core/jquery
-    - core/drupal
     - core/jquery.once
-    - rep/infinite_scroll  # Add this dependency
+    - core/drupal
+    - core/drupalSettings
     - rep/fontawesome
