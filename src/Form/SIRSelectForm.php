@@ -88,9 +88,9 @@ class SIRSelectForm extends FormBase {
 
 
     $form['#attached']['drupalSettings']['sir_select_form']['base_url'] = \Drupal::request()->getSchemeAndHttpHost() . base_path();
-    $form['#attached']['drupalSettings']['sir_select_form']['ajaxUrl'] = Url::fromRoute('sir.load_more_data', [
-      'elementtype' => $this->element_type,
-    ])->toString();
+    // $form['#attached']['drupalSettings']['sir_select_form']['ajaxUrl'] = Url::fromRoute('sir.load_more_data', [
+    //   'elementtype' => $this->element_type,
+    // ])->toString();
     $form['#attached']['drupalSettings']['sir_select_form']['elementtype'] = $elementtype;
 
     // Recupera ou define o valor de `pagesize` (padrão 9)
@@ -406,6 +406,8 @@ class SIRSelectForm extends FormBase {
             continue;
         }
 
+        //dpr($item_vars);
+
         $uri = $key;
         $content = '';
         $header_text = $item_vars['label'] ?? '';
@@ -455,16 +457,17 @@ class SIRSelectForm extends FormBase {
         ];
 
         // Cabeçalho do cartão
-        $card['card']['header'] = [
-          '#type' => 'container',
-          '#attributes' => [
-              'style' => 'margin-bottom:0!important;',
-              'class' => ['card-header', 'js-form-wrapper', 'form-wrapper', 'mb-3'],
-              'data-drupal-selector' => 'edit-header',
-              'id' => 'edit-header--' . md5($uri), // Usando md5 para garantir IDs únicos
-          ],
-          '#markup' => '<h5 class="mb-0">' . $header_text . '</h5>',
-        ];
+        if ($header_text != '')
+          $card['card']['header'] = [
+            '#type' => 'container',
+            '#attributes' => [
+                'style' => 'margin-bottom:0!important;',
+                'class' => ['card-header', 'js-form-wrapper', 'form-wrapper', 'mb-3'],
+                'data-drupal-selector' => 'edit-header',
+                'id' => 'edit-header--' . md5($uri), // Usando md5 para garantir IDs únicos
+            ],
+            '#markup' => '<h5 class="mb-0">' . $header_text . '</h5>',
+          ];
 
         // Corpo do cartão
         $card['card']['body'] = [
@@ -574,7 +577,7 @@ class SIRSelectForm extends FormBase {
 
         // Adicionar outros botões conforme necessário (Gerenciar, Derivar)
         if ($this->element_type == 'instrument') {
-          $card['card']['footer']['actions']['manage'] = [
+            $card['card']['footer']['actions']['manage'] = [
               '#type' => 'submit',
               '#value' => $this->t('Manage Structure'),
               '#name' => 'manage_slotelements_' . md5($uri),
@@ -587,9 +590,43 @@ class SIRSelectForm extends FormBase {
               '#limit_validation_errors' => [],
               '#element_uri' => $uri,
           ];
-      }
+        }
 
-        // Adicionar o cartão ao container cards_wrapper
+        if ($this->element_type == 'detectorstem') {
+          $card['card']['footer']['actions']['derive_detectorstem'] = [
+              '#type' => 'submit',
+              '#value' => $this->t('Derive New '),
+              '#name' => 'derive_detectorstemelements_' . md5($uri),
+              '#attributes' => [
+                  'class' => ['btn', 'btn-secondary', 'btn-sm', 'derive-button', 'button', 'js-form-submit', 'form-submit'],
+                  'data-drupal-selector' => 'edit-derive',
+                  'id' => 'edit-derive--' . md5($uri),
+              ],
+              '#submit' => ['::deriveDetectorStemSubmit'],
+              '#limit_validation_errors' => [],
+              '#element_uri' => $uri,
+          ];
+        }
+
+        if ($this->element_type == 'codebook') {
+          $card['card']['footer']['actions']['manage_codebook'] = [
+              '#type' => 'submit',
+              '#value' => $this->t('Manage Response Option Slots '),
+              '#name' => 'manage_codebookemelements_' . md5($uri),
+              '#attributes' => [
+                  'class' => ['btn', 'btn-secondary', 'btn-sm', 'manage_codebookslots-button', 'button', 'js-form-submit', 'form-submit'],
+                  'data-drupal-selector' => 'edit-codebook',
+                  'id' => 'edit-codebook--' . md5($uri),
+              ],
+              '#submit' => ['::manageCodebookSlotsSubmit'],
+              '#limit_validation_errors' => [],
+              '#element_uri' => $uri,
+          ];
+        }
+
+
+
+        // Add card to wrapper container
         $form['cards_wrapper']['card_' . $uri] = $card;
 
         //get total items
@@ -598,6 +635,7 @@ class SIRSelectForm extends FormBase {
         //Pagesize
         $current_page_size = $form_state->get('page_size') ?? 9;
 
+        //Prevent infinite scroll without new data
         if ($total_items > $current_page_size) {
           $form['load_more_button'] = [
             '#type' => 'submit',
@@ -606,7 +644,7 @@ class SIRSelectForm extends FormBase {
             '#attributes' => [
               'id' => 'load-more-button',
               'class' => ['btn', 'btn-primary', 'load-more-button'],
-              'style' => 'display: none;', // Esconde o botão por padrão
+              'style' => 'display: none;',
             ],
             '#submit' => ['::loadMoreSubmit'],
             '#limit_validation_errors' => [],
@@ -623,7 +661,7 @@ class SIRSelectForm extends FormBase {
         }
     }
 
-    // Depuração final do formulário
+    // Final Form Debbug
     #\Drupal::logger('sir_select_form')->debug('Estado final do formulário após buildCardView: @form', ['@form' => print_r($form, TRUE)]);
   }
 
@@ -643,54 +681,6 @@ class SIRSelectForm extends FormBase {
 
     // Força a reconstrução do formulário para carregar mais elementos
     $form_state->setRebuild();
-  }
-
-
-
-  /**
-   * Callback for Load More button.
-   */
-  public function loadMoreCallback(array &$form = NULL, FormStateInterface $form_state = NULL) {
-    if ($form_state === NULL) {
-        $form_state = new \Drupal\Core\Form\FormState();
-    }
-
-    if ($form_state->get('loading')) {
-        return new JsonResponse(['cards' => []]);
-    }
-
-    $form_state->set('loading', true);
-
-    $page = \Drupal::request()->query->get('page') ?? 1;
-    $this->element_type = \Drupal::request()->query->get('elementtype');
-    $this->manager_email = \Drupal::currentUser()->getEmail();
-
-    $pagesize = $form_state->get('page_size') ?? 9;
-    $new_items = ListManagerEmailPage::exec($this->element_type, $this->manager_email, $page, $pagesize);
-
-    // Atualize o status dos itens já carregados
-    $items_loaded = $form_state->get('items_loaded') ?? 0;
-    $items_loaded += count($new_items);
-    $form_state->setValue('items_loaded', $items_loaded);
-
-    // Construir novos cartões
-    $new_cards = [];
-    $this->setList($new_items);
-    $this->buildCardView($new_cards, $form_state, $page, $pagesize, true); // Passar true para indicar que está adicionando
-
-    // Renderizar novos cartões
-    $renderer = \Drupal::service('renderer');
-    $rendered_cards = $renderer->renderRoot($new_cards['cards_wrapper']); // Renderize apenas o conteúdo dos cartões
-
-    $form_state->set('loading', false);
-
-    $form_state->setRebuild();
-
-    // \Drupal::logger('sir_select_form')->debug('Form state details: @form_state', [
-    //   '@form_state' => print_r($form_state->getValues(), TRUE),
-    // ]);
-
-    return new JsonResponse(['cards' => $rendered_cards, 'page' => $page]);
   }
 
   /**
@@ -798,7 +788,6 @@ class SIRSelectForm extends FormBase {
       \Drupal::messenger()->addError($this->t('Cannot edit: URI is missing.'));
     }
   }
-
 
   /**
    * Submit handler for deleting an element in card view.
@@ -986,13 +975,10 @@ class SIRSelectForm extends FormBase {
       return;
     }
 
-    // Log para confirmar o redirecionamento
-    \Drupal::messenger()->addMessage('Redirecionando para ' . $url->toString());
-
     // Definir redirecionamento explícito
+    Utils::trackingStoreUrls($uid,$previousUrl,$url->toString());
     $form_state->setRedirectUrl($url);
   }
-
 
   /**
    * Perform the delete action.
