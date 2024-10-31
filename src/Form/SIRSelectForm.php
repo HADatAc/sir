@@ -88,21 +88,15 @@ class SIRSelectForm extends FormBase {
 
 
     $form['#attached']['drupalSettings']['sir_select_form']['base_url'] = \Drupal::request()->getSchemeAndHttpHost() . base_path();
-    // $form['#attached']['drupalSettings']['sir_select_form']['ajaxUrl'] = Url::fromRoute('sir.load_more_data', [
-    //   'elementtype' => $this->element_type,
-    // ])->toString();
     $form['#attached']['drupalSettings']['sir_select_form']['elementtype'] = $elementtype;
 
-    // Recupera ou define o valor de `pagesize` (padrão 9)
+    // Get value `pagesize` (default 9)
     if ($form_state->get('page_size')) {
       $pagesize = $form_state->get('page_size');
     } else {
       $pagesize = $session->get('sir_select_form_pagesize', 9);
       $form_state->set('page_size', $pagesize);
     }
-
-    // Salva o valor atual do pagesize na sessão para manter o estado ao recarregar
-    #$session->set('sir_select_form_pagesize', $pagesize);
 
     // PUT FORM TOGETHER
     $this->prepareElementNames();
@@ -674,7 +668,6 @@ class SIRSelectForm extends FormBase {
     $current_page_size = $form_state->get('page_size') ?? 9;
 
     $new_page_size = $current_page_size + 9;
-    $form_state->set('page_size', $new_page_size);
 
     // Atualiza o valor de 'page_size' no estado do formulário e na sessão
     $form_state->set('page_size', $new_page_size);

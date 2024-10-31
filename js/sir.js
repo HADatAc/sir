@@ -83,7 +83,7 @@
       }
 
       function onScroll() {
-        const scrollThreshold = 200;
+        const scrollThreshold = 20;
         var getLoadState= $("#list_state").val();
 
         //If all list items are loaded do not ask for more
