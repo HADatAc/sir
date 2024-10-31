@@ -98,9 +98,6 @@ class SIRSelectForm extends FormBase {
       $form_state->set('page_size', $pagesize);
     }
 
-    // Salva o valor atual do pagesize na sessão para manter o estado ao recarregar
-    #$session->set('sir_select_form_pagesize', $pagesize);
-
     // PUT FORM TOGETHER
     $this->prepareElementNames();
 
