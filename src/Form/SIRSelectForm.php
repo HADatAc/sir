@@ -671,10 +671,7 @@ class SIRSelectForm extends FormBase {
     $current_page_size = $form_state->get('page_size') ?? 9;
 
     $new_page_size = $current_page_size + 9;
-<<<<<<< HEAD
-=======
     $form_state->set('page_size', $new_page_size);
->>>>>>> f164ac440291f8806a7b6ee8f0b7cf0ff8bb7510
 
     // Atualiza o valor de 'page_size' no estado do formulário e na sessão
     $form_state->set('page_size', $new_page_size);
