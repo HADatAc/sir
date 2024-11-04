@@ -6,7 +6,7 @@ sir.top_level:
   weight: 70
   requirements:
     _permission: 'access content'
-    
+
 sir.search:
   title: Search Instrument Elements
   description: Search SIR Elements
@@ -33,7 +33,7 @@ sir.manage_ins_files:
     elementtype: 'ins'
     mode: 'table'
     page: '1'
-    pagesize: '10'
+    pagesize: '9'
     studyuri: 'none'
   parent: sir.top_level
   menu_name: main
@@ -48,7 +48,7 @@ sir.divider2:
   menu_name: main
   weight: 19
   route_name: '<none>'
-  
+
 sir.manage_instruments:
   title: Manage Instruments
   description: Manage Instruments
@@ -56,7 +56,7 @@ sir.manage_instruments:
   route_parameters:
     elementtype: 'instrument'
     page: '1'
-    pagesize: '10'
+    pagesize: '9'
   parent: sir.top_level
   menu_name: main
   weight: 20
@@ -65,13 +65,13 @@ sir.manage_instruments:
     _role: 'authenticated'
 
 sir.manage_detectorstems :
-  title: Manage Detector Stems 
+  title: Manage Detector Stems
   description: Manage Detector Stems
   route_name: sir.select_element
   route_parameters:
     elementtype: 'detectorstem'
     page: '1'
-    pagesize: '10'
+    pagesize: '9'
   parent: sir.top_level
   menu_name: main
   weight: 21
@@ -80,13 +80,13 @@ sir.manage_detectorstems :
     _role: 'authenticated'
 
 sir.manage_detectors :
-  title: Manage Detectors 
+  title: Manage Detectors
   description: Manage Detectors
   route_name: sir.select_element
   route_parameters:
     elementtype: 'detector'
     page: '1'
-    pagesize: '10'
+    pagesize: '9'
   parent: sir.top_level
   menu_name: main
   weight: 22
@@ -95,13 +95,13 @@ sir.manage_detectors :
     _role: 'authenticated'
 
 sir.manage_codebooks :
-  title: Manage Codebooks 
+  title: Manage Codebooks
   description: Manage codebooks and their corresponding Response Options
   route_name: sir.select_element
   route_parameters:
     elementtype: 'codebook'
     page: '1'
-    pagesize: '10'
+    pagesize: '9'
   parent: sir.top_level
   menu_name: main
   weight: 23
@@ -110,13 +110,13 @@ sir.manage_codebooks :
     _role: 'authenticated'
 
 sir.manage_responseoptions :
-  title: Manage Response Options 
+  title: Manage Response Options
   description: Manage Response Options
   route_name: sir.select_element
   route_parameters:
     elementtype: 'responseoption'
     page: '1'
-    pagesize: '10'
+    pagesize: '9'
   parent: sir.top_level
   menu_name: main
   weight: 24
@@ -125,13 +125,13 @@ sir.manage_responseoptions :
     _role: 'authenticated'
 
 sir.manage_annotationstems :
-  title: Manage Annotation Stems 
+  title: Manage Annotation Stems
   description: Manage Annotation Stems
   route_name: sir.select_element
   route_parameters:
     elementtype: 'annotationstem'
     page: '1'
-    pagesize: '10'
+    pagesize: '9'
   parent: sir.top_level
   menu_name: main
   weight: 25

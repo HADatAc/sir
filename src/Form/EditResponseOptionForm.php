@@ -167,7 +167,7 @@ class EditResponseOptionForm extends FormBase {
 
   function backUrl() {
     $uid = \Drupal::currentUser()->id();
-    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.edit_response_option');
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, \Drupal::request()->getRequestUri());
     if ($previousUrl) {
       $response = new RedirectResponse($previousUrl);
       $response->send();
