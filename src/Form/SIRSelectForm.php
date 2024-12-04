@@ -322,6 +322,8 @@ class SIRSelectForm extends FormBase {
     // RETRIEVE ELEMENTS FOR THE CURRENT PAGE
     $this->setList(ListManagerEmailPage::exec($this->element_type, $this->manager_email, $page, $pagesize));
 
+    //dpm($this->getList());
+
     // Generate header and output
     $header = $this->generateHeader();
     $output = $this->generateOutput();
@@ -413,7 +415,7 @@ class SIRSelectForm extends FormBase {
             // Obter o valor correspondente, ou definir como vazio se não existir
             $value = $item_vars[$column_key] ?? '';
 
-            #dpm("Column Key: $column_key, Value: $value"); // Debug para verificar correspondência da coluna e valor
+            //dpm("Column Key: $column_key, Value: $value"); // Debug para verificar correspondência da coluna e valor
 
             // Remover quebras de linha para o campo "Downloads"
             if ($column_label_string == 'Downloads') {
