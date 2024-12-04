@@ -130,6 +130,7 @@ class ManageAnnotationsForm extends FormBase {
 
     // RETRIEVE ELEMENTS
     $this->setList(ListManagerEmailPageByContainer::exec($this->getContainer()->uri,'annotation', $this->manager_email, $page, $pagesize));
+    //dpm($this->getList());
 
     $this->single_class_name = "";
     $this->plural_class_name = "";
