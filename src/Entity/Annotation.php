@@ -46,7 +46,8 @@ class Annotation {
           }
           if ($element->annotationStem != NULL) {
             if ($element->annotationStem->hasContent != NULL) {
-              $content = $element->annotationStem->hasContent;
+              //$content = $element->annotationStem->hasContent;
+              $content = substr($element->annotationStem->hasContent, 0, 125) . '   [Trunkated]';
             }
           }
         }
