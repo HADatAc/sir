@@ -6,6 +6,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Drupal\Component\Utility\Xss;
+use Drupal\rep\Utils;
 
 /**
  * Class JsonApiAnnotationStemController
@@ -33,18 +34,8 @@ class JsonApiAnnotationStemController extends ControllerBase{
     }
     //dpm($stems);
     foreach ($stems as $stem) {
-      $maxLength = 127;
-      $uriLength = strlen($stem->uri) + 4; // Inclui os colchetes e o espaço
-      $availableLength = $maxLength - $uriLength;
-
-      if (strlen($stem->hasContent) > $availableLength) {
-        $truncatedContent = substr($stem->hasContent, 0, $availableLength - 4) . ' ...'; // Trunca e adiciona "..."
-      } else {
-        $truncatedContent = $stem->hasContent;
-      }
-
       $results[] = [
-        'value' => $truncatedContent . ' [' . $stem->uri . ']',
+        'value' => Utils::trimAutoCompleteString($stem->hasContent,$stem->uri),
         'label' => $stem->hasContent,
       ];
     }
