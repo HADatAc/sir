@@ -5,7 +5,7 @@ core_version_requirement: ^9 || ^10
 type: module
 dependencies:
   - drupal:rep
-version: '0.7.0'
+version: '0.8'
 configure: rep.admin_settings
 libraries:
   - rep/rep_js_css

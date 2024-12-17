@@ -409,12 +409,13 @@ sir.manage_annotations:
     _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
-ajax.sir.list.load_more:
-  path: '/ajax/sir/list/load_more'
-  defaults:
-    _controller: '\Drupal\sir\Controller\LoadMoreController::loadMoreCards'
-    _title: 'Load More Cards'
-  requirements:
-    _permission: 'access content'
-  options:
-    _no_cache: 'TRUE'
+
+# LOAD MORE
+# sir.load_more_data:
+#   path: '/sir/select/{elementtype}/load-more-data'
+#   defaults:
+#     _controller: '\Drupal\sir\Form\SIRSelectForm::loadMoreSubmit'
+#   requirements:
+#     _access: 'TRUE'
+#   options:
+#     _format: 'json'

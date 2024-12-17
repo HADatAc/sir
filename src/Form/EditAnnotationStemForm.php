@@ -220,7 +220,7 @@ class EditAnnotationStemForm extends FormBase {
 
   function backUrl() {
     $uid = \Drupal::currentUser()->id();
-    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.edit_annotationstem');
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, \Drupal::request()->getRequestUri());
     if ($previousUrl) {
       $response = new RedirectResponse($previousUrl);
       $response->send();

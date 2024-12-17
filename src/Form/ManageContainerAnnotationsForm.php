@@ -294,9 +294,8 @@ class ManageContainerAnnotationsForm extends FormBase {
         $annotation->annotationStem->hasContent == "") {
       return "";
     }
-
-    $label = $annotation->annotationStem->hasContent . ' [' . $annotation->annotationStem->uri . ']';
-    return $label;
+    
+    return Utils::trimAutoCompleteString($annotation->annotationStem->hasContent,$annotation->annotationStem->uri);
   }
 
   public function containerslotAjaxCallback(array &$form, FormStateInterface $form_state) {

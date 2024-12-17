@@ -6,6 +6,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Drupal\Component\Utility\Xss;
+use Drupal\rep\Utils;
 
 /**
  * Class JsonApiAnnotationStemController
@@ -34,7 +35,7 @@ class JsonApiAnnotationStemController extends ControllerBase{
     //dpm($stems);
     foreach ($stems as $stem) {
       $results[] = [
-        'value' => $stem->hasContent . ' [' . $stem->uri . ']',
+        'value' => Utils::trimAutoCompleteString($stem->hasContent,$stem->uri),
         'label' => $stem->hasContent,
       ];
     }
