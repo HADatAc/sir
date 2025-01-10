@@ -83,9 +83,21 @@ class AddResponseOptionForm extends FormBase {
       '#options' => $languages,
       '#default_value' => 'en',
     ];
-    $form['responseoption_version'] = [
+    // $form['responseoption_version'] = [
+    //   '#type' => 'textfield',
+    //   '#title' => $this->t('Version'),
+    // ];
+    $form['responseoption_version_display'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
+      '#default_value' => '1',
+      '#attributes' => [
+        'disabled' => 'disabled',
+      ],
+    ];
+    $form['responseoption_version'] = [
+      '#type' => 'hidden',
+      '#value' => '1',
     ];
     $form['responseoption_description'] = [
       '#type' => 'textarea',
