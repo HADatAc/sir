@@ -418,7 +418,7 @@ sir.select_review_element:
   path: 'sir/review/{elementtype}/{page}/{pagesize}'
   defaults:
     _form: '\Drupal\sir\Form\Review\SIRReviewForm'
-  requirements:
+  # requirements:
     # _permission: 'access reviewer menu'
     # _custom_access_check: 'TRUE'
   options:
@@ -429,7 +429,7 @@ sir.review_response_option:
   defaults:
     _form: '\Drupal\sir\Form\Review\ReviewResponseOptionForm'
     _title: 'Review Response Option'
-  requirements:
+  # requirements:
     # _permission: 'access reviewer menu'
     # _custom_access_check: 'TRUE'
   options:
