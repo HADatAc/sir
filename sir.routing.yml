@@ -410,12 +410,27 @@ sir.manage_annotations:
   options:
     no_cache: 'TRUE'
 
-# LOAD MORE
-# sir.load_more_data:
-#   path: '/sir/select/{elementtype}/load-more-data'
-#   defaults:
-#     _controller: '\Drupal\sir\Form\SIRSelectForm::loadMoreSubmit'
-#   requirements:
-#     _access: 'TRUE'
-#   options:
-#     _format: 'json'
+# REVIEW ROUTES
+
+## Response Options
+
+sir.select_review_element:
+  path: 'sir/review/{elementtype}/{page}/{pagesize}'
+  defaults:
+    _form: '\Drupal\sir\Form\Review\SIRReviewForm'
+  requirements:
+    # _permission: 'access reviewer menu'
+    # _custom_access_check: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+sir.review_response_option:
+  path: 'sir/manage/reviewresponseoption/{responseoptionuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\Review\ReviewResponseOptionForm'
+    _title: 'Review Response Option'
+  requirements:
+    # _permission: 'access reviewer menu'
+    # _custom_access_check: 'TRUE'
+  options:
+    no_cache: 'TRUE'

@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\sir\Form;
+namespace Drupal\sir\Form\Review;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -10,7 +10,7 @@ use Drupal\rep\Utils;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Vocabulary\VSTOI;
 
-class EditResponseOptionForm extends FormBase {
+class ReviewResponseOptionForm extends FormBase {
 
   protected $responseOptionUri;
 
@@ -36,7 +36,7 @@ class EditResponseOptionForm extends FormBase {
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'edit_responseoption_form';
+    return 'review_responseoption_form';
   }
 
   /**
@@ -66,12 +66,18 @@ class EditResponseOptionForm extends FormBase {
       '#type' => 'textarea',
       '#title' => $this->t('Content'),
       '#default_value' => $this->getResponseOption()->hasContent,
+      '#attributes' => [
+        'disabled' => 'disabled',
+      ],
     ];
     $form['responseoption_language'] = [
       '#type' => 'select',
       '#title' => $this->t('Language'),
       '#options' => $languages,
       '#default_value' => $this->getResponseOption()->hasLanguage,
+      '#attributes' => [
+        'disabled' => 'disabled',
+      ],
     ];
     $form['responseoption_version'] = [
       '#type' => 'textfield',
@@ -85,19 +91,27 @@ class EditResponseOptionForm extends FormBase {
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
       '#default_value' => $this->getResponseOption()->comment,
-    ];
-    $form['update_submit'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Update'),
-      '#name' => 'save',
       '#attributes' => [
-        'class' => ['btn', 'btn-primary', 'save-button'],
+        'disabled' => 'disabled',
       ],
     ];
-    $form['cancel_submit'] = [
+    $form['responseoption_review_notes'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Review Notes'),
+      '#default_value' => $this->getResponseOption()->comment,
+    ];
+    $form['review_approve'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Cancel'),
-      '#name' => 'back',
+      '#value' => $this->t('Aprove'),
+      '#name' => 'approve',
+      '#attributes' => [
+        'class' => ['btn', 'btn-success', 'aprove-button'],
+      ],
+    ];
+    $form['review_reject'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Reject'),
+      '#name' => 'reject',
       '#attributes' => [
         'class' => ['btn', 'btn-primary', 'cancel-button'],
       ],

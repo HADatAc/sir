@@ -31,7 +31,7 @@ class SIRListForm extends FormBase {
   }
 
   public function setList($list) {
-    return $this->list = $list; 
+    return $this->list = $list;
   }
 
   public function getListSize() {
@@ -39,7 +39,7 @@ class SIRListForm extends FormBase {
   }
 
   public function setListSize($list_size) {
-    return $this->list_size = $list_size; 
+    return $this->list_size = $list_size;
   }
 
   /**
@@ -54,7 +54,7 @@ class SIRListForm extends FormBase {
     }
     if (gettype($this->list_size) == 'string') {
       $total_pages = "0";
-    } else { 
+    } else {
       if ($this->list_size % $pagesize == 0) {
         $total_pages = $this->list_size / $pagesize;
       } else {
@@ -89,49 +89,49 @@ class SIRListForm extends FormBase {
       case "instrument":
         $class_name = $preferred_instrument . "s";
         $header = Instrument::generateHeader();
-        $output = Instrument::generateOutput($this->getList());    
+        $output = Instrument::generateOutput($this->getList());
         break;
 
       // DETECTOR STEM
       case "detectorstem":
         $class_name = $preferred_detector . " Stems";
         $header = DetectorStem::generateHeader();
-        $output = DetectorStem::generateOutput($this->getList());    
+        $output = DetectorStem::generateOutput($this->getList());
         break;
 
       // DETECTOR
       case "detector":
         $class_name = $preferred_detector . "s";
         $header = Detector::generateHeader();
-        $output = Detector::generateOutput($this->getList());    
+        $output = Detector::generateOutput($this->getList());
         break;
 
       // CODEBOOK
       case "codebook":
         $class_name = "Codebooks";
         $header = Codebook::generateHeader();
-        $output = Codebook::generateOutput($this->getList());    
+        $output = Codebook::generateOutput($this->getList());
         break;
 
       // RESPONSE OPTION
       case "responseoption":
         $class_name = "Response Options";
         $header = ResponseOption::generateHeader();
-        $output = ResponseOption::generateOutput($this->getList());    
+        $output = ResponseOption::generateOutput($this->getList());
         break;
 
       // ANNOTATION STEM
       case "annotationstem":
         $class_name = "Annotaiton Stems";
         $header = AnnotationStem::generateHeader();
-        $output = AnnotationStem::generateOutput($this->getList());    
+        $output = AnnotationStem::generateOutput($this->getList());
         break;
 
       // ANNOTATION
       case "annotation":
         $class_name = "Annotations";
         $header = Annotation::generateHeader();
-        $output = Annotation::generateOutput($this->getList());    
+        $output = Annotation::generateOutput($this->getList());
         break;
 
       default:
@@ -159,13 +159,13 @@ class SIRListForm extends FormBase {
         'title' => ' ',
       ],
     ];
- 
+
     return $form;
   }
 
   /**
    * {@inheritdoc}
-   */   
+   */
   public function submitForm(array &$form, FormStateInterface $form_state) {
   }
 
