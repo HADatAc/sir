@@ -61,19 +61,19 @@ class SIRReviewForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $elementtype = NULL, $page = 1, $pagesize = 10) {
 
-    // IN CASE NOT CORRECT ROLE REDIRECT
-    $current_user = \Drupal::currentUser();
-    if (!$current_user->hasRole('reviewer')) {
-      \Drupal::messenger()->addError($this->t('You do not have permission to access this page.'));
+    // IN CASE NOT CORRECT ROLE REDIRECT disabled during develop
+    // $current_user = \Drupal::currentUser();
+    // if (!$current_user->hasRole('reviewer')) {
+    //   \Drupal::messenger()->addError($this->t('You do not have permission to access this page.'));
 
-      // Corrigindo a criação da URL.
-      $url = Url::fromRoute('rep.home')->toString();
+    //   // Corrigindo a criação da URL.
+    //   $url = Url::fromRoute('rep.home')->toString();
 
-      // Redirecionamento usando o URL gerado.
-      $response = new RedirectResponse($url);
-      $response->send();
-      exit;
-    }
+    //   // Redirecionamento usando o URL gerado.
+    //   $response = new RedirectResponse($url);
+    //   $response->send();
+    //   exit;
+    // }
 
     // GET manager EMAIL
     $this->manager_email = \Drupal::currentUser()->getEmail();
