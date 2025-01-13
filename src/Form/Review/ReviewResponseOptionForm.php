@@ -98,11 +98,11 @@ class ReviewResponseOptionForm extends FormBase {
     $form['responseoption_review_notes'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Review Notes'),
-      '#default_value' => $this->getResponseOption()->comment,
+      '#default_value' => $this->getResponseOption()->review_notes,
     ];
     $form['review_approve'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Aprove'),
+      '#value' => $this->t('Approve'),
       '#name' => 'approve',
       '#attributes' => [
         'class' => ['btn', 'btn-success', 'aprove-button'],
@@ -118,9 +118,20 @@ class ReviewResponseOptionForm extends FormBase {
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
+      '#title' => t('<br>'),
+    ];
+    $form['back'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Back'),
+      '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'back-button'],
+      ],
+    ];
+    $form['bottom_space'] = [
+      '#type' => 'item',
       '#title' => t('<br><br>'),
     ];
-
 
     return $form;
   }
@@ -155,27 +166,58 @@ class ReviewResponseOptionForm extends FormBase {
     try{
       $useremail = \Drupal::currentUser()->getEmail();
 
-      $responseOptionJSON = '{"uri":"'. $this->getResponseOption()->uri .'",'.
+      // APPROVE
+      if ($button_name === 'approve') {
+        $responseOptionJSON = '{"uri":"'. $this->getResponseOption()->uri .'",'.
+          '"typeUri":"'.VSTOI::RESPONSE_OPTION.'",'.
+          '"hascoTypeUri":"'.VSTOI::RESPONSE_OPTION.'",'.
+          '"hasContent":"'.$form_state->getValue('responseoption_content').'",'.
+          '"hasLanguage":"'.$form_state->getValue('responseoption_language').'",'.
+          '"hasStatus":"'."vstoi:Current".'",'.
+          '"comment":"'.$form_state->getValue('responseoption_description').'",'.
+          '"hasSIRManagerEmail":"'.$useremail.'"}';
+
+
+        // UPDATE BY DELETING AND CREATING
+        $api = \Drupal::service('rep.api_connector');
+        //dpm($this->getResponseOption()->uri);
+        $api->responseOptionDel($this->getResponseOption()->uri);
+        $api->responseOptionAdd($responseOptionJSON);
+
+        \Drupal::messenger()->addMessage(t("Response Option has been Approved."));
+        self::backUrl();
+        return;
+
+      } else {
+
+        // REJECT
+
+        $responseOptionJSON = '{"uri":"'. $this->getResponseOption()->uri .'",'.
         '"typeUri":"'.VSTOI::RESPONSE_OPTION.'",'.
         '"hascoTypeUri":"'.VSTOI::RESPONSE_OPTION.'",'.
         '"hasContent":"'.$form_state->getValue('responseoption_content').'",'.
         '"hasLanguage":"'.$form_state->getValue('responseoption_language').'",'.
-        '"hasVersion":"'.$form_state->getValue('responseoption_version').'",'.
+        '"hasStatus":"'."vstoi:Draft".'",'.
         '"comment":"'.$form_state->getValue('responseoption_description').'",'.
+        '"review_notes":"'.$form_state->getValue('responseoption_review_notes').'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
 
-      // UPDATE BY DELETING AND CREATING
-      $api = \Drupal::service('rep.api_connector');
-      //dpm($this->getResponseOption()->uri);
-      $api->responseOptionDel($this->getResponseOption()->uri);
-      $api->responseOptionAdd($responseOptionJSON);
+        // APPROVE
+        // UPDATE BY DELETING AND CREATING
+        $api = \Drupal::service('rep.api_connector');
+        //dpm($this->getResponseOption()->uri);
+        $api->responseOptionDel($this->getResponseOption()->uri);
+        $api->responseOptionAdd($responseOptionJSON);
 
-      \Drupal::messenger()->addMessage(t("Response Option has been updated successfully."));
-      self::backUrl();
-      return;
+        \Drupal::messenger()->addMessage(t("Response Option has been Rejected."));
+        self::backUrl();
+        return;
+
+      }
+
 
     }catch(\Exception $e){
-      \Drupal::messenger()->addMessage(t("An error occurred while updating the Response Option: ".$e->getMessage()));
+      \Drupal::messenger()->addMessage(t("An error occurred while approving/rejecting the Response Option: ".$e->getMessage()));
       self::backUrl();
       return;
     }
