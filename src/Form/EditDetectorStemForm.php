@@ -186,6 +186,7 @@ class EditDetectorStemForm extends FormBase {
       $detectorStemJson = '{"uri":"'.$this->getDetectorStem()->uri.'",'.
         '"typeUri":"'.VSTOI::DETECTOR_STEM.'",'.
         '"hascoTypeUri":"'.VSTOI::DETECTOR_STEM.'",'.
+        '"hasStatus":"'.$this->getDetectorStem()->hasStatus.'",'.
         '"hasContent":"'.$form_state->getValue('detectorstem_content').'",'.
         '"hasLanguage":"'.$form_state->getValue('detectorstem_language').'",'.
         '"hasVersion":"'.$form_state->getValue('detectorstem_version').'",'.

@@ -179,6 +179,7 @@ class AddDetectorStemForm extends FormBase {
       $detectorStemJson = '{"uri":"'.$newDetectorStemUri.'",'.
         '"superUri":"'.VSTOI::DETECTOR_STEM.'",'.
         '"hascoTypeUri":"'.VSTOI::DETECTOR_STEM.'",'.
+        '"hasStatus":"'.VSTOI::DRAFT.'",'.
         '"hasContent":"'.$form_state->getValue('detectorstem_content').'",'.
         '"hasLanguage":"'.$form_state->getValue('detectorstem_language').'",'.
         '"hasVersion":"'.$form_state->getValue('detectorstem_version').'",'.

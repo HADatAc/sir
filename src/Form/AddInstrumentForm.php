@@ -118,6 +118,7 @@ class AddInstrumentForm extends FormBase {
       $instrumentJson = '{"uri":"'.$newInstrumentUri.'",'.
         '"superUri":"'.VSTOI::INSTRUMENT.'",'.
         '"hascoTypeUri":"'.VSTOI::INSTRUMENT.'",'.
+        '"hasStatus":"'.VSTOI::DRAFT.'",'.
         '"label":"'.$form_state->getValue('instrument_name').'",'.
         '"hasShortName":"'.$form_state->getValue('instrument_abbreviation').'",'.
         '"hasInformant":"'.$form_state->getValue('instrument_informant').'",'.

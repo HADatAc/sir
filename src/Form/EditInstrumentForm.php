@@ -172,6 +172,7 @@ class EditInstrumentForm extends FormBase {
       $instrumentJson = '{"uri":"'.$this->getInstrumentUri().'",'.
         '"typeUri":"'.VSTOI::QUESTIONNAIRE.'",'.
         '"hascoTypeUri":"'.VSTOI::INSTRUMENT.'",'.
+        '"hasStatus":"'.$this->getInstrument()->hasStatus.'",'.
         '"label":"'.$form_state->getValue('instrument_name').'",'.
         '"hasShortName":"'.$form_state->getValue('instrument_abbreviation').'",'.
         '"hasInformant":"'.$form_state->getValue('instrument_informant').'",'.

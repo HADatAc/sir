@@ -186,6 +186,7 @@ class EditAnnotationStemForm extends FormBase {
       $annotationStemJson = '{"uri":"'.$this->getAnnotationStem()->uri.'",'.
         '"typeUri":"'.VSTOI::ANNOTATION_STEM.'",'.
         '"hascoTypeUri":"'.VSTOI::ANNOTATION_STEM.'",'.
+        '"hasStatus":"'.$this->getAnnotationStem()->hasStatus.'",'.
         '"hasContent":"'.$form_state->getValue('annotationstem_content').'",'.
         '"hasLanguage":"'.$form_state->getValue('annotationstem_language').'",'.
         '"hasVersion":"'.$form_state->getValue('annotationstem_version').'",'.
