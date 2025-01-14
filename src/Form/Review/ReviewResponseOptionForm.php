@@ -95,7 +95,7 @@ class ReviewResponseOptionForm extends FormBase {
         'disabled' => 'disabled',
       ],
     ];
-    $form['responseoption_review_notes'] = [
+    $form['responseoption_hasReviewnotes'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Review Notes'),
       '#default_value' => $this->getResponseOption()->review_notes,

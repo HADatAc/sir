@@ -22,3 +22,12 @@ th {
   height: 3rem;
 }
 
+.disabled-row {
+  background-color: #f5f5f5;
+  color: #999;
+  pointer-events: none;
+}
+
+.disabled-row td {
+  opacity: 0.7;
+}

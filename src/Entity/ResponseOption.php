@@ -30,6 +30,7 @@ class ResponseOption {
     $languages = $tables->getLanguages();
 
     $output = array();
+    $disabled_rows = [];
     foreach ($list as $element) {
       $uri = ' ';
       if ($element->uri != NULL) {
@@ -51,10 +52,17 @@ class ResponseOption {
         $version = $element->hasVersion;
       }
       $status = ' ';
+      $row_key = md5($element->uri);
       if ($element->hasStatus != NULL) {
-        $status = $element->hasStatus;
+        $status = parse_url($element->hasStatus, PHP_URL_FRAGMENT);
+
+        if (parse_url($element->hasStatus, PHP_URL_FRAGMENT) === 'Under Review') {
+          $status = "Under Review";
+          $disabled_rows[] = $row_key;
+        }
+
       }
-      $output[$element->uri] = [
+      $output[$row_key] = [
         'element_uri' => t('<a href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),
         'element_content' => $content,
         'element_language' => $lang,
@@ -63,8 +71,13 @@ class ResponseOption {
       ];
     }
 
-    //dpm($output);
-    return $output;
+    // Para garantir que disabled_rows seja um array associativo
+    $normalized_disabled_rows = array_fill_keys($disabled_rows, TRUE);
+
+    return [
+      'output'        => $output,
+      'disabled_rows' => $normalized_disabled_rows,
+    ];
 
   }
 
@@ -113,7 +126,10 @@ class ResponseOption {
       }
       $status = ' ';
       if ($element->hasStatus != NULL) {
-        $status = $element->hasStatus;
+        $status = parse_url($element->hasStatus, PHP_URL_FRAGMENT);
+
+        if (parse_url($element->hasStatus, PHP_URL_FRAGMENT) === 'UnderReview')
+          $status = "Under Review";
       }
       $owner = ' ';
       if ($element->hasOwner != NULL) {
