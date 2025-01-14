@@ -144,6 +144,7 @@ class EditCodebookForm extends FormBase {
       $codebookJson = '{"uri":"'. $this->getCodebook()->uri .'",'.
         '"typeUri":"'.VSTOI::CODEBOOK.'",'.
         '"hascoTypeUri":"'.VSTOI::CODEBOOK.'",'.
+        '"hasStatus":"'.$this->getCodebook()->hasStatus.'",'.
         '"label":"'.$form_state->getValue('codebook_name').'",'.
         '"hasLanguage":"'.$form_state->getValue('codebook_language').'",'.
         '"hasVersion":"'.$form_state->getValue('codebook_version').'",'.

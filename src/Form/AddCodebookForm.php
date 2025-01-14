@@ -101,6 +101,7 @@ class AddCodebookForm extends FormBase {
       $codebookJSON = '{"uri":"'.$newCodebookUri.'",' .
         '"typeUri":"'.VSTOI::CODEBOOK.'",'.
         '"hascoTypeUri":"'.VSTOI::CODEBOOK.'",'.
+        '"hasStatus":"'.VSTOI::DRAFT.'",'.
         '"label":"' . $form_state->getValue('codebook_name') . '",' .
         '"hasLanguage":"' . $form_state->getValue('codebook_language') . '",' .
         '"hasVersion":"' . $form_state->getValue('codebook_version') . '",' .

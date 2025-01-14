@@ -144,6 +144,7 @@ class EditResponseOptionForm extends FormBase {
       $responseOptionJSON = '{"uri":"'. $this->getResponseOption()->uri .'",'.
         '"typeUri":"'.VSTOI::RESPONSE_OPTION.'",'.
         '"hascoTypeUri":"'.VSTOI::RESPONSE_OPTION.'",'.
+        '"hasStatus":"'.$this->getResponseOption()->hasStatus.'",'.
         '"hasContent":"'.$form_state->getValue('responseoption_content').'",'.
         '"hasLanguage":"'.$form_state->getValue('responseoption_language').'",'.
         '"hasVersion":"'.$form_state->getValue('responseoption_version').'",'.
