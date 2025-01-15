@@ -75,6 +75,10 @@ class AddDetectorForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $sourcedetectoruri = NULL, $containersloturi = NULL) {
 
+    // MODAL
+    $form['#attached']['library'][] = 'rep/rep_modal';
+    $form['#attached']['library'][] = 'core/drupal.dialog';
+
     // ESTABLISH API SERVICE
     $api = \Drupal::service('rep.api_connector');
 
@@ -125,6 +129,34 @@ class AddDetectorForm extends FormBase {
       $sourceContent = $this->getSourceDetector()->hasContent;
     }
 
+    $form['detector_attributeOf'] = [
+      'top' => [
+        '#type' => 'markup',
+        '#markup' => '<div class="pt-3 col border border-white">',
+      ],
+      'main' => [
+        '#type' => 'textfield',
+        '#title' => $this->t('Attribute Of'),
+        '#name' => 'detector_attributeOf',
+        '#default_value' => '',
+        '#attributes' => [
+          'class' => ['open-tree-modal'],
+          'data-dialog-type' => 'modal',
+          'data-dialog-options' => json_encode(['width' => 800]),
+          'data-url' => Url::fromRoute('rep.tree_form', [
+            'mode' => 'modal',
+            'elementtype' => 'attribute',
+          ], ['query' => ['field_id' => 'detector_attributeOf']])->toString(),
+          'data-field-id' => 'detector_attributeOf',
+          'data-elementtype' => 'attribute',
+          'autocomplete' => 'off',
+        ],
+      ],
+      'bottom' => [
+        '#type' => 'markup',
+        '#markup' => '</div>',
+      ],
+    ];
     $form['detector_stem'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Detector Stem'),
@@ -210,6 +242,7 @@ class AddDetectorForm extends FormBase {
       $detectorJson = '{"uri":"'.$newDetectorUri.'",'.
         '"superUri":"'.VSTOI::DETECTOR.'",'.
         '"hascoTypeUri":"'.VSTOI::DETECTOR.'",'.
+        //'"hasAttributeOf":"'.$this->getDetectorStem()->hasAttributeOf.'",'.
         '"hasDetectorStem":"'.$this->getDetectorStem()->uri.'",'.
         '"hasCodebook":"'.$hasCodebook.'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';

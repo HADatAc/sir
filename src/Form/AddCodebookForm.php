@@ -23,8 +23,42 @@ class AddCodebookForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+
+    // MODAL
+    $form['#attached']['library'][] = 'rep/rep_modal';
+    $form['#attached']['library'][] = 'core/drupal.dialog';
+
     $tables = new Tables;
     $languages = $tables->getLanguages();
+
+    $form['codebook_type'] = [
+      'top' => [
+        '#type' => 'markup',
+        '#markup' => '<div class="pt-3 col border border-white">',
+      ],
+      'main' => [
+        '#type' => 'textfield',
+        '#title' => $this->t('Type'),
+        '#name' => 'codebook_type',
+        '#default_value' => '',
+        '#attributes' => [
+          'class' => ['open-tree-modal'],
+          'data-dialog-type' => 'modal',
+          'data-dialog-options' => json_encode(['width' => 800]),
+          'data-url' => Url::fromRoute('rep.tree_form', [
+            'mode' => 'modal',
+            'elementtype' => 'codebook',
+          ], ['query' => ['field_id' => 'codebook_type']])->toString(),
+          'data-field-id' => 'codebook_type',
+          'data-elementtype' => 'codebook',
+          'autocomplete' => 'off',
+        ],
+      ],
+      'bottom' => [
+        '#type' => 'markup',
+        '#markup' => '</div>',
+      ],
+    ];
     $form['codebook_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name'),
@@ -38,6 +72,12 @@ class AddCodebookForm extends FormBase {
     $form['codebook_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
+      '#default_value' => '1',
+      '#disabled' => TRUE,
+    ];
+    $form['codebook_version'] = [
+      '#type' => 'hidden',
+      '#value' => '1',
     ];
     $form['codebook_description'] = [
       '#type' => 'textarea',
@@ -102,6 +142,7 @@ class AddCodebookForm extends FormBase {
         '"typeUri":"'.VSTOI::CODEBOOK.'",'.
         '"hascoTypeUri":"'.VSTOI::CODEBOOK.'",'.
         '"hasStatus":"'.VSTOI::DRAFT.'",'.
+        //'"hasType":"'.$form_state->getValue('codebook_type').'",'.
         '"label":"' . $form_state->getValue('codebook_name') . '",' .
         '"hasLanguage":"' . $form_state->getValue('codebook_language') . '",' .
         '"hasVersion":"' . $form_state->getValue('codebook_version') . '",' .

@@ -78,6 +78,7 @@ class EditCodebookForm extends FormBase {
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
       '#default_value' => $this->getCodebook()->hasVersion,
+      '#disabled' => TRUE,
     ];
     $form['codebook_description'] = [
       '#type' => 'textarea',

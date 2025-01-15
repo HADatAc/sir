@@ -55,6 +55,11 @@ class EditDetectorStemForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $detectorstemuri = NULL) {
+
+    // MODAL
+    $form['#attached']['library'][] = 'rep/rep_modal';
+    $form['#attached']['library'][] = 'core/drupal.dialog';
+
     $uri=$detectorstemuri;
     $uri_decode=base64_decode($uri);
     $this->setDetectorStemUri($uri_decode);
@@ -81,6 +86,35 @@ class EditDetectorStemForm extends FormBase {
     }
 
     //dpm($this->getDetector());
+    $form['detectorstem_type'] = [
+      'top' => [
+        '#type' => 'markup',
+        '#markup' => '<div class="pt-3 col border border-white">',
+      ],
+      'main' => [
+        '#type' => 'textfield',
+        '#title' => $this->t('Type'),
+        '#name' => 'detectorstem_type',
+        '#default_value' => $this->getDetectorStem()->hasType ?? '',
+        '#disabled' => TRUE,
+        '#attributes' => [
+          'class' => ['open-tree-modal'],
+          'data-dialog-type' => 'modal',
+          'data-dialog-options' => json_encode(['width' => 800]),
+          'data-url' => Url::fromRoute('rep.tree_form', [
+            'mode' => 'modal',
+            'elementtype' => 'detectorstem',
+          ], ['query' => ['field_id' => 'detectorstem_type']])->toString(),
+          'data-field-id' => 'detectorstem_type',
+          'data-elementtype' => 'detectorstem',
+          'data-search-value' => $this->getDetectorStem()->hasType ?? '',
+        ],
+      ],
+      'bottom' => [
+        '#type' => 'markup',
+        '#markup' => '</div>',
+      ],
+    ];
 
     $form['detectorstem_content'] = [
       '#type' => 'textarea',
@@ -97,6 +131,7 @@ class EditDetectorStemForm extends FormBase {
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
       '#default_value' => $this->getDetectorStem()->hasVersion,
+      '#disabled' => TRUE,
     ];
     $form['detectorstem_description'] = [
       '#type' => 'textarea',
@@ -188,6 +223,7 @@ class EditDetectorStemForm extends FormBase {
         '"hascoTypeUri":"'.VSTOI::DETECTOR_STEM.'",'.
         '"hasStatus":"'.$this->getDetectorStem()->hasStatus.'",'.
         '"hasContent":"'.$form_state->getValue('detectorstem_content').'",'.
+        //'"hasType":"'.$form_state->getValue('detectorstem_type').'",'.
         '"hasLanguage":"'.$form_state->getValue('detectorstem_language').'",'.
         '"hasVersion":"'.$form_state->getValue('detectorstem_version').'",'.
         '"comment":"'.$form_state->getValue('detectorstem_description').'",'.

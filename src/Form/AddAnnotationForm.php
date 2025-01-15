@@ -57,6 +57,10 @@ class AddAnnotationForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $containeruri = NULL, $breadcrumbs = NULL) {
 
+    // MODAL
+    $form['#attached']['library'][] = 'rep/rep_modal';
+    $form['#attached']['library'][] = 'core/drupal.dialog';
+
     // SET CONTEXT
     $uri=base64_decode($containeruri);
     if ($breadcrumbs == "_") {
