@@ -95,8 +95,10 @@ class EditDetectorStemForm extends FormBase {
         '#type' => 'textfield',
         '#title' => $this->t('Type'),
         '#name' => 'detectorstem_type',
-        '#default_value' => $this->getDetectorStem()->hasType ?? '',
+        '#default_value' => $this->getDetectorStem()->superUri ? UTILS::namespaceUri($this->getDetectorStem()->superUri) : '',
         '#disabled' => TRUE,
+        '#id' => 'detectorstem_type',
+        '#parents' => ['detectorstem_type'],
         '#attributes' => [
           'class' => ['open-tree-modal'],
           'data-dialog-type' => 'modal',
@@ -107,7 +109,7 @@ class EditDetectorStemForm extends FormBase {
           ], ['query' => ['field_id' => 'detectorstem_type']])->toString(),
           'data-field-id' => 'detectorstem_type',
           'data-elementtype' => 'detectorstem',
-          'data-search-value' => $this->getDetectorStem()->hasType ?? '',
+          'data-search-value' => $this->getDetectorStem()->superUri ?? '',
         ],
       ],
       'bottom' => [
@@ -219,11 +221,10 @@ class EditDetectorStemForm extends FormBase {
       }
 
       $detectorStemJson = '{"uri":"'.$this->getDetectorStem()->uri.'",'.
-        '"typeUri":"'.VSTOI::DETECTOR_STEM.'",'.
+        '"superUri":"'.UTILS::plainUri($form_state->getValue('detectorstem_type')).'",'.
         '"hascoTypeUri":"'.VSTOI::DETECTOR_STEM.'",'.
         '"hasStatus":"'.$this->getDetectorStem()->hasStatus.'",'.
         '"hasContent":"'.$form_state->getValue('detectorstem_content').'",'.
-        //'"hasType":"'.$form_state->getValue('detectorstem_type').'",'.
         '"hasLanguage":"'.$form_state->getValue('detectorstem_language').'",'.
         '"hasVersion":"'.$form_state->getValue('detectorstem_version').'",'.
         '"comment":"'.$form_state->getValue('detectorstem_description').'",'.

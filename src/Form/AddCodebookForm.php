@@ -38,9 +38,11 @@ class AddCodebookForm extends FormBase {
       ],
       'main' => [
         '#type' => 'textfield',
-        '#title' => $this->t('Type'),
+        '#title' => $this->t('Parent Type'),
         '#name' => 'codebook_type',
         '#default_value' => '',
+        '#id' => 'codebook_type',
+        '#parents' => ['codebook_type'],
         '#attributes' => [
           'class' => ['open-tree-modal'],
           'data-dialog-type' => 'modal',
@@ -139,10 +141,9 @@ class AddCodebookForm extends FormBase {
       $uemail = \Drupal::currentUser()->getEmail();
       $newCodebookUri = Utils::uriGen('codebook');
       $codebookJSON = '{"uri":"'.$newCodebookUri.'",' .
-        '"typeUri":"'.VSTOI::CODEBOOK.'",'.
+        '"typeUri":"'.UTILS::plainUri($form_state->getValue('codebook_type')).'",'.
         '"hascoTypeUri":"'.VSTOI::CODEBOOK.'",'.
         '"hasStatus":"'.VSTOI::DRAFT.'",'.
-        //'"hasType":"'.$form_state->getValue('codebook_type').'",'.
         '"label":"' . $form_state->getValue('codebook_name') . '",' .
         '"hasLanguage":"' . $form_state->getValue('codebook_language') . '",' .
         '"hasVersion":"' . $form_state->getValue('codebook_version') . '",' .

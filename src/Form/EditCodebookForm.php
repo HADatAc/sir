@@ -63,6 +63,38 @@ class EditCodebookForm extends FormBase {
       return;
     }
 
+    $form['codebook_type'] = [
+      'top' => [
+        '#type' => 'markup',
+        '#markup' => '<div class="pt-3 col border border-white">',
+      ],
+      'main' => [
+        '#type' => 'textfield',
+        '#title' => $this->t('Parent Type'),
+        '#name' => 'codebook_type',
+        '#default_value' => $this->getCodebook()->typeUri ? UTILS::namespaceUri($this->getCodebook()->typeUri) : '',
+        '#id' => 'codebook_type',
+        '#parents' => ['codebook_type'],
+        '#disabled' => TRUE,
+        '#attributes' => [
+          'class' => ['open-tree-modal'],
+          'data-dialog-type' => 'modal',
+          'data-dialog-options' => json_encode(['width' => 800]),
+          'data-url' => Url::fromRoute('rep.tree_form', [
+            'mode' => 'modal',
+            'elementtype' => 'codebook',
+          ], ['query' => ['field_id' => 'codebook_type']])->toString(),
+          'data-field-id' => 'codebook_type',
+          'data-elementtype' => 'codebook',
+          'autocomplete' => 'off',
+          'data-search-value' => $this->getCodebook()->typeUri ?? '',
+        ],
+      ],
+      'bottom' => [
+        '#type' => 'markup',
+        '#markup' => '</div>',
+      ],
+    ];
     $form['codebook_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name'),
@@ -143,7 +175,7 @@ class EditCodebookForm extends FormBase {
       $useremail = \Drupal::currentUser()->getEmail();
 
       $codebookJson = '{"uri":"'. $this->getCodebook()->uri .'",'.
-        '"typeUri":"'.VSTOI::CODEBOOK.'",'.
+        '"typeUri":"'.UTILS::plainUri($this->getCodebook()->typeUri).'",'.
         '"hascoTypeUri":"'.VSTOI::CODEBOOK.'",'.
         '"hasStatus":"'.$this->getCodebook()->hasStatus.'",'.
         '"label":"'.$form_state->getValue('codebook_name').'",'.

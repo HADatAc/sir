@@ -88,7 +88,9 @@ class EditInstrumentForm extends FormBase {
         '#type' => 'textfield',
         '#title' => $this->t('Type'),
         '#name' => 'instrument_type',
-        '#default_value' => $this->getInstrument()->hasType ?? '',
+        '#default_value' => $this->getInstrument()->superUri ? UTILS::namespaceUri($this->getInstrument()->superUri): '',
+        '#id' => 'instrument_type',
+        '#parents' => ['instrument_type'],
         '#disabled' => TRUE,
         '#attributes' => [
           'class' => ['open-tree-modal'],
@@ -100,7 +102,7 @@ class EditInstrumentForm extends FormBase {
           ], ['query' => ['field_id' => 'instrument_type']])->toString(),
           'data-field-id' => 'instrument_type',
           'data-elementtype' => 'instrument',
-          'data-search-value' => $this->getInstrument()->hasType ?? '',
+          'data-search-value' => $this->getInstrument()->superUri ?? '',
         ],
       ],
       'bottom' => [
@@ -206,7 +208,7 @@ class EditInstrumentForm extends FormBase {
       $useremail = \Drupal::currentUser()->getEmail();
 
       $instrumentJson = '{"uri":"'.$this->getInstrumentUri().'",'.
-        '"typeUri":"'.VSTOI::QUESTIONNAIRE.'",'.
+        '"superUri":"'.UTILS::plainUri($form_state->getValue('instrument_type')).'",'.
         '"hascoTypeUri":"'.VSTOI::INSTRUMENT.'",'.
         //'"hasType":"'.$form_state->getValue('instrument_type').'",'.
         '"hasStatus":"'.$this->getInstrument()->hasStatus.'",'.

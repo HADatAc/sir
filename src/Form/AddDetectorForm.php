@@ -129,6 +129,18 @@ class AddDetectorForm extends FormBase {
       $sourceContent = $this->getSourceDetector()->hasContent;
     }
 
+    $form['detector_stem'] = [
+      '#type' => 'textfield',
+      '#title' => \Drupal::moduleHandler()->moduleExists('pmsr') ?
+        $this->t('Simulation Technique Stem') :
+        $this->t('Detector Stem'),
+      '#autocomplete_route_name' => 'sir.detector_stem_autocomplete',
+    ];
+    $form['detector_codebook'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Codebook'),
+      '#autocomplete_route_name' => 'sir.detector_codebook_autocomplete',
+    ];
     $form['detector_attributeOf'] = [
       'top' => [
         '#type' => 'markup',
@@ -136,9 +148,11 @@ class AddDetectorForm extends FormBase {
       ],
       'main' => [
         '#type' => 'textfield',
-        '#title' => $this->t('Attribute Of'),
+        '#title' => $this->t('Attribute Of <small><i>(optional)</i></small>'),
         '#name' => 'detector_attributeOf',
         '#default_value' => '',
+        '#id' => 'detector_attributeOf',
+        '#parents' => ['detector_attributeOf'],
         '#attributes' => [
           'class' => ['open-tree-modal'],
           'data-dialog-type' => 'modal',
@@ -156,18 +170,6 @@ class AddDetectorForm extends FormBase {
         '#type' => 'markup',
         '#markup' => '</div>',
       ],
-    ];
-    $form['detector_stem'] = [
-      '#type' => 'textfield',
-      '#title' => \Drupal::moduleHandler()->moduleExists('pmsr') ?
-        $this->t('Simulation Technique Stem') :
-        $this->t('Detector Stem'),
-      '#autocomplete_route_name' => 'sir.detector_stem_autocomplete',
-    ];
-    $form['detector_codebook'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Codebook'),
-      '#autocomplete_route_name' => 'sir.detector_codebook_autocomplete',
     ];
     $form['save_submit'] = [
       '#type' => 'submit',
@@ -242,9 +244,8 @@ class AddDetectorForm extends FormBase {
       // CREATE A NEW DETECTOR
       $newDetectorUri = Utils::uriGen('detector');
       $detectorJson = '{"uri":"'.$newDetectorUri.'",'.
-        '"superUri":"'.VSTOI::DETECTOR.'",'.
+        '"superUri":"'.UTILS::plainUri($this->getDetectorStem()->superUri).'",'.
         '"hascoTypeUri":"'.VSTOI::DETECTOR.'",'.
-        //'"hasAttributeOf":"'.$this->getDetectorStem()->hasAttributeOf.'",'.
         '"hasDetectorStem":"'.$this->getDetectorStem()->uri.'",'.
         '"hasCodebook":"'.$hasCodebook.'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';

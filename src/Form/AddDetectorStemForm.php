@@ -87,9 +87,11 @@ class AddDetectorStemForm extends FormBase {
       ],
       'main' => [
         '#type' => 'textfield',
-        '#title' => $this->t('Type'),
+        '#title' => $this->t('Parent Type'),
         '#name' => 'detectorstem_type',
         '#default_value' => '',
+        '#id' => 'detectorstem_type',
+        '#parents' => ['detectorstem_type'],
         '#attributes' => [
           'class' => ['open-tree-modal'],
           'data-dialog-type' => 'modal',
@@ -215,10 +217,9 @@ class AddDetectorStemForm extends FormBase {
       // CREATE A NEW DETECTOR
       $newDetectorStemUri = Utils::uriGen('detectorstem');
       $detectorStemJson = '{"uri":"'.$newDetectorStemUri.'",'.
-        '"superUri":"'.VSTOI::DETECTOR_STEM.'",'.
+        '"superUri":"'.UTILS::plainUri($form_state->getValue('detectorstem_type')).'",'.
         '"hascoTypeUri":"'.VSTOI::DETECTOR_STEM.'",'.
         '"hasStatus":"'.VSTOI::DRAFT.'",'.
-        //'"hasType":"'.$form_state->getValue('detectorstem_type').'",'.
         '"hasContent":"'.$form_state->getValue('detectorstem_content').'",'.
         '"hasLanguage":"'.$form_state->getValue('detectorstem_language').'",'.
         '"hasVersion":"'.$form_state->getValue('detectorstem_version').'",'.

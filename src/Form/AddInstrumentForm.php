@@ -2,6 +2,7 @@
 
 namespace Drupal\sir\Form;
 
+use Abraham\TwitterOAuth\Util;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
@@ -40,9 +41,11 @@ class AddInstrumentForm extends FormBase {
       ],
       'main' => [
         '#type' => 'textfield',
-        '#title' => $this->t('Type'),
+        '#title' => $this->t('Parent Type'),
         '#name' => 'instrument_type',
         '#default_value' => '',
+        '#id' => 'instrument_type',
+        '#parents' => ['instrument_type'],
         '#attributes' => [
           'class' => ['open-tree-modal'],
           'data-dialog-type' => 'modal',
@@ -130,6 +133,9 @@ class AddInstrumentForm extends FormBase {
       if(strlen($form_state->getValue('instrument_language')) < 1) {
         $form_state->setErrorByName('instrument_language', $this->t('Please enter a valid language'));
       }
+      if(empty($form_state->getValue('instrument_type'))) {
+        $form_state->setErrorByName('instrument_type', $this->t('Please select a valid instrument type'));
+      }
     }
   }
 
@@ -150,10 +156,9 @@ class AddInstrumentForm extends FormBase {
       $useremail = \Drupal::currentUser()->getEmail();
       $newInstrumentUri = Utils::uriGen('instrument');
       $instrumentJson = '{"uri":"'.$newInstrumentUri.'",'.
-        '"superUri":"'.VSTOI::INSTRUMENT.'",'.
+        '"superUri":"'.UTILS::plainUri($form_state->getValue('instrument_type')).'",'.
         '"hascoTypeUri":"'.VSTOI::INSTRUMENT.'",'.
         '"hasStatus":"'.VSTOI::DRAFT.'",'.
-        //'"hasType":"'.$form_state->getValue('instrument_type').'",'.
         '"label":"'.$form_state->getValue('instrument_name').'",'.
         '"hasShortName":"'.$form_state->getValue('instrument_abbreviation').'",'.
         '"hasInformant":"'.$form_state->getValue('instrument_informant').'",'.
