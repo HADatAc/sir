@@ -17,6 +17,7 @@ class Detector {
       'element_language' => t('Language'),
       'element_version' => t('Version'),
       'element_codebook' => t('Codebook'),
+      'element_type' => t('Attribute Of'),
     ];
 
   }
@@ -58,12 +59,17 @@ class Detector {
       if ($element->codebook != NULL && $element->codebook->label != '') {
         $codebookLabel = $element->codebook->label;
       }
+      $attributeOf = ' ';
+      if ($element->superUri != NULL) {
+        $attributeOf = Utils::namespaceUri($element->superUri);
+      }
       $output[$element->uri] = [
-        'element_uri' => t('<a href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),     
-        'element_content' => $content,     
+        'element_uri' => t('<a href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),
+        'element_content' => $content,
         'element_language' => $lang,
         'element_version' => $version,
         'element_codebook' => $codebookLabel,
+        'element_attribute_of' => $attributeOf,
       ];
     }
     return $output;

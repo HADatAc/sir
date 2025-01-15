@@ -13,6 +13,7 @@ class DetectorStem {
 
     return $header = [
       'element_uri' => t('URI'),
+      'element_type' => t('Parent Type'),
       'element_content' => t('Content'),
       'element_language' => t('Language'),
       'element_version' => t('Version'),
@@ -37,6 +38,10 @@ class DetectorStem {
       if ($element->uri != NULL) {
         $uri = $element->uri;
       }
+      $type = ' ';
+      if ($element->superUri != NULL) {
+        $type = Utils::namespaceUri($element->superUri);
+      }
       $uri = Utils::namespaceUri($uri);
       $content = ' ';
       if ($element->hasContent != NULL) {
@@ -59,8 +64,9 @@ class DetectorStem {
         }
       }
       $output[$element->uri] = [
-        'element_uri' => t('<a href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),     
-        'element_content' => $content,     
+        'element_uri' => t('<a href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),
+        'element_type' => $type,
+        'element_content' => $content,
         'element_language' => $lang,
         'element_version' => $version,
         'element_generated_by' => $derivationVal,

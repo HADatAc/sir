@@ -12,11 +12,12 @@ class Codebook {
 
     return $header = [
       'element_uri' => t('URI'),
+      'element_type' => t('Parent Type'),
       'element_name' => t('Name'),
       'element_language' => t('Language'),
       'element_version' => t('Version'),
     ];
-  
+
   }
 
   public static function generateOutput($list) {
@@ -27,12 +28,16 @@ class Codebook {
     // GET LANGUAGES
     $tables = new Tables;
     $languages = $tables->getLanguages();
- 
+
     $output = array();
     foreach ($list as $element) {
       $uri = ' ';
       if ($element->uri != NULL) {
         $uri = $element->uri;
+      }
+      $type = ' ';
+      if ($element->superUri != NULL) {
+        $type = Utils::namespaceUri($element->superUri);
       }
       $uri = Utils::namespaceUri($uri);
       $label = ' ';
@@ -50,11 +55,11 @@ class Codebook {
         $version = $element->hasVersion;
       }
       $output[$element->uri] = [
-        'element_uri' => t('<a href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),     
-        'element_name' => $label,     
+        'element_uri' => t('<a href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),
+        'element_name' => $label,
         'element_language' => $lang,
         'element_version' => $version,
-        //'element_uri' => $element->uri,
+        'element_type' => $type,
       ];
     }
     return $output;
