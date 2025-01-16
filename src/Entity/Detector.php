@@ -17,7 +17,7 @@ class Detector {
       'element_language' => t('Language'),
       'element_version' => t('Version'),
       'element_codebook' => t('Codebook'),
-      'element_type' => t('Attribute Of'),
+      'element_attribute_of' => t('Attribute Of'),
     ];
 
   }

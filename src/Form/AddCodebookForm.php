@@ -31,36 +31,36 @@ class AddCodebookForm extends FormBase {
     $tables = new Tables;
     $languages = $tables->getLanguages();
 
-    $form['codebook_type'] = [
-      'top' => [
-        '#type' => 'markup',
-        '#markup' => '<div class="pt-3 col border border-white">',
-      ],
-      'main' => [
-        '#type' => 'textfield',
-        '#title' => $this->t('Parent Type'),
-        '#name' => 'codebook_type',
-        '#default_value' => '',
-        '#id' => 'codebook_type',
-        '#parents' => ['codebook_type'],
-        '#attributes' => [
-          'class' => ['open-tree-modal'],
-          'data-dialog-type' => 'modal',
-          'data-dialog-options' => json_encode(['width' => 800]),
-          'data-url' => Url::fromRoute('rep.tree_form', [
-            'mode' => 'modal',
-            'elementtype' => 'codebook',
-          ], ['query' => ['field_id' => 'codebook_type']])->toString(),
-          'data-field-id' => 'codebook_type',
-          'data-elementtype' => 'codebook',
-          'autocomplete' => 'off',
-        ],
-      ],
-      'bottom' => [
-        '#type' => 'markup',
-        '#markup' => '</div>',
-      ],
-    ];
+    // $form['codebook_type'] = [
+    //   'top' => [
+    //     '#type' => 'markup',
+    //     '#markup' => '<div class="pt-3 col border border-white">',
+    //   ],
+    //   'main' => [
+    //     '#type' => 'textfield',
+    //     '#title' => $this->t('Parent Type'),
+    //     '#name' => 'codebook_type',
+    //     '#default_value' => '',
+    //     '#id' => 'codebook_type',
+    //     '#parents' => ['codebook_type'],
+    //     '#attributes' => [
+    //       'class' => ['open-tree-modal'],
+    //       'data-dialog-type' => 'modal',
+    //       'data-dialog-options' => json_encode(['width' => 800]),
+    //       'data-url' => Url::fromRoute('rep.tree_form', [
+    //         'mode' => 'modal',
+    //         'elementtype' => 'codebook',
+    //       ], ['query' => ['field_id' => 'codebook_type']])->toString(),
+    //       'data-field-id' => 'codebook_type',
+    //       'data-elementtype' => 'codebook',
+    //       'autocomplete' => 'off',
+    //     ],
+    //   ],
+    //   'bottom' => [
+    //     '#type' => 'markup',
+    //     '#markup' => '</div>',
+    //   ],
+    // ];
     $form['codebook_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name'),
@@ -141,7 +141,7 @@ class AddCodebookForm extends FormBase {
       $uemail = \Drupal::currentUser()->getEmail();
       $newCodebookUri = Utils::uriGen('codebook');
       $codebookJSON = '{"uri":"'.$newCodebookUri.'",' .
-        '"typeUri":"'.UTILS::plainUri($form_state->getValue('codebook_type')).'",'.
+        '"typeUri":"'.VSTOI::CODEBOOK.'",'.
         '"hascoTypeUri":"'.VSTOI::CODEBOOK.'",'.
         '"hasStatus":"'.VSTOI::DRAFT.'",'.
         '"label":"' . $form_state->getValue('codebook_name') . '",' .

@@ -218,6 +218,7 @@ class AddDetectorStemForm extends FormBase {
       $newDetectorStemUri = Utils::uriGen('detectorstem');
       $detectorStemJson = '{"uri":"'.$newDetectorStemUri.'",'.
         '"superUri":"'.UTILS::plainUri($form_state->getValue('detectorstem_type')).'",'.
+        //'"typeUri":"'.VSTOI::DETECTOR_STEM.'",'.
         '"hascoTypeUri":"'.VSTOI::DETECTOR_STEM.'",'.
         '"hasStatus":"'.VSTOI::DRAFT.'",'.
         '"hasContent":"'.$form_state->getValue('detectorstem_content').'",'.
