@@ -15,6 +15,7 @@ use Drupal\sir\Entity\Instrument;
 use Drupal\sir\Entity\ResponseOption;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Drupal\Core\Render\Markup;
+use Drupal\rep\Vocabulary\VSTOI;
 
 class SIRSelectForm extends FormBase {
 
@@ -185,16 +186,28 @@ class SIRSelectForm extends FormBase {
       ];
       $form['review_selected_element'] = [
         '#type' => 'submit',
-        '#value' => $this->t('Review Selected'),
+        '#value' => $this->t('Send to Reviewer'),
         '#name' => 'review_element',
         '#attributes' => [
           'onclick' => 'if(!confirm("Are you sure to submit for Review selected entry?")){return false;}',
-          'class' => ['btn', 'btn-success', 'review-element-button'],
-          'disabled' => 'disabled',
-          'id' => 'review-selected-button',
+          'class' => ['btn', 'btn-warning', 'review-element-button'],
+          //'disabled' => 'disabled',
+          //'id' => 'review-selected-button',
         ],
       ];
+
       if ($this->element_type == 'instrument') {
+        $form['review_selected_element'] = [
+          '#type' => 'submit',
+          '#value' => $this->t('Send Recursive to Reviewer'),
+          '#name' => 'review_element',
+          '#attributes' => [
+            'onclick' => 'if(!confirm("Are you sure to submit for Review selected entry?")){return false;}',
+            'class' => ['btn', 'btn-info', 'review-element-button'],
+            //'disabled' => 'disabled',
+            //'id' => 'review-selected-button',
+          ],
+        ];
         $form['manage_slotelements'] = [
           '#type' => 'submit',
           '#value' => $this->t('Manage Structure of Selected'),
@@ -340,54 +353,64 @@ class SIRSelectForm extends FormBase {
     //$output = $this->generateOutput();
 
     $results = $this->generateOutput();
+
     $output = $results['output'];
     $disabled_rows = $results['disabled_rows'];
 
     // Criar tabela personalizada
+    // $form['element_table'] = [
+    //   //'#type' => 'table',
+    //   '#type' => 'tableselect',
+    //   '#header' => array_merge(
+    //     ['select' => ''],
+    //     $header
+    //   ),
+    //   '#empty' => $this->t('No ' . $this->plural_class_name . ' found'),
+    //   '#attributes' => [
+    //     'class' => ['table', 'table-striped'],
+    //   ],
+    //   '#js_select' => FALSE,
+    // ];
     $form['element_table'] = [
-      '#type' => 'table',
-      '#header' => array_merge(
-        ['select' => $this->t('Select')],  // Adiciona coluna de seleção
-        $header
-      ),
+      '#type' => 'tableselect',
+      '#header' => $header,
+      '#options' => $output,
+      '#js_select' => FALSE,
       '#empty' => $this->t('No ' . $this->plural_class_name . ' found'),
-      '#attributes' => [
-        'class' => ['table', 'table-striped'],
-      ],
     ];
 
     // Adicionar linhas à tabela
-    foreach ($output as $key => $row) {
-        $is_disabled = isset($disabled_rows[$key]);
+    // foreach ($output as $key => $row) {
+    //     $is_disabled = isset($disabled_rows[$key]);
 
-        // Adicionar checkbox apenas se a linha não estiver desativada
-        $checkbox = [
-            '#type' => 'checkbox',
-            '#title' => $this->t('Select'),
-            '#title_display' => 'invisible',
-            '#return_value' => $key,
-            '#attributes' => [
-                'class' => ['element-select-checkbox'],
-            ],
-        ];
+    //     // Adicionar checkbox apenas se a linha não estiver desativada
+    //     $checkbox = [
+    //         '#type' => 'checkbox',
+    //         '#title' => $this->t('Select'),
+    //         '#title_display' => 'invisible',
+    //         '#return_value' => $key,
+    //         '#attributes' => [
+    //             'class' => ['element-select-checkbox'],
+    //         ],
+    //     ];
 
-        // Montar a linha
-        $form['element_table'][$key]['select'] = $is_disabled ? [
-            '#markup' => '',  // Célula vazia para linhas desativadas
-        ] : $checkbox;
+    //     // Montar a linha
+    //     $form['element_table'][$key]['select'] = $is_disabled ? [
+    //         '#markup' => '',  // Célula vazia para linhas desativadas
+    //     ] : $checkbox;
 
-        // Adicionar as outras colunas
-        foreach ($row as $field_key => $field_value) {
-            $form['element_table'][$key][$field_key] = [
-                '#markup' => $field_value,
-            ];
-        }
+    //     // Adicionar as outras colunas
+    //     foreach ($row as $field_key => $field_value) {
+    //         $form['element_table'][$key][$field_key] = [
+    //             '#markup' => $field_value,
+    //         ];
+    //     }
 
-        // Adicionar classes para linhas desativadas
-        if ($is_disabled) {
-            $form['element_table'][$key]['#attributes']['class'][] = 'disabled-row';
-        }
-    }
+    //     // Adicionar classes para linhas desativadas
+    //     if ($is_disabled) {
+    //         $form['element_table'][$key]['#attributes']['class'][] = 'disabled-row';
+    //     }
+    // }
 
     // Adicionar CSS personalizado
     $form['#attached']['library'][] = 'sir/sir_js_css';
@@ -908,9 +931,6 @@ class SIRSelectForm extends FormBase {
     } elseif (strpos($button_name, 'delete_element_') === 0) {
       $uri = $triggering_element['#element_uri'];
       $this->performDelete([$uri], $form_state);
-    } elseif (strpos($button_name, 'review_element_') === 0) {
-      $uri = $triggering_element['#element_uri'];
-      $this->performReview([$uri], $form_state);
     } elseif (strpos($button_name, 'manage_slotelements_') === 0) {
       $uri = $triggering_element['#element_uri'];
       $this->performManageSlotElements($uri, $form_state);
@@ -937,7 +957,15 @@ class SIRSelectForm extends FormBase {
         $selected_uris = array_keys($selected_rows);
         $this->performDelete($selected_uris, $form_state);
       } else {
-        \Drupal::messenger()->addWarning($this->t('Please select items to delete.'));
+        \Drupal::messenger()->addWarning($this->t('Please select item(s) to delete.'));
+      }
+    } elseif ($button_name === 'review_element') {
+      $selected_rows = array_filter($form_state->getValue('element_table'));
+      if (!empty($selected_rows)) {
+        $selected_uris = array_keys($selected_rows);
+        $this->performReview($selected_uris, $form_state);
+      } else {
+        \Drupal::messenger()->addWarning($this->t('Please select item(s) to submit for review.'));
       }
     } elseif ($button_name === 'manage_slotelements') {
       $selected_rows = array_filter($form_state->getValue('element_table'));
@@ -1065,23 +1093,48 @@ class SIRSelectForm extends FormBase {
    */
   protected function performReview(array $uris, FormStateInterface $form_state) {
     $api = \Drupal::service('rep.api_connector');
+    $useremail = \Drupal::currentUser()->getEmail();
+
+    // DETECT ELEMENT
     foreach ($uris as $shortUri) {
       $uri = Utils::plainUri($shortUri);
       if ($this->element_type == 'instrument') {
-        $api->instrumentReview($uri);
+
       } elseif ($this->element_type == 'detectorstem') {
-        $api->detectorStemReview($uri);
+
       } elseif ($this->element_type == 'detector') {
-        $api->detectorReview($uri);
+
       } elseif ($this->element_type == 'codebook') {
-        $api->codebookReview($uri);
+
       } elseif ($this->element_type == 'responseoption') {
-        $api->responseOptionReview($uri);
+
+        $rawresponse = $api->getUri($uri);
+        $obj = json_decode($rawresponse);
+
+        $responseOptionJSON = '{'.
+          '"uri":"'. $obj->uri .'",'.
+          '"typeUri":"'.$obj->typeUri.'",'.
+          '"hascoTypeUri":"'.$obj->hascoTypeUri.'",'.
+          '"hasStatus":"'.VSTOI::UNDER_REVIEW.'",'.
+          '"hasContent":"'.$obj->hasContent.'",'.
+          '"hasLanguage":"'.$obj->hasLanguage.'",'.
+          '"hasVersion":"'.$obj->hasVersion.'",'.
+          '"comment":"'.$obj->comment.'",'.
+          '"hasSIRManagerEmail":"'.$useremail.'"}';
+
+        // UPDATE BY DELETING AND CREATING
+        $api = \Drupal::service('rep.api_connector');
+        //dpm($this->getResponseOption()->uri);
+        $api->responseOptionDel($uri);
+        $api->responseOptionAdd($responseOptionJSON);
+
       } elseif ($this->element_type == 'annotationstem') {
-        $api->annotationStemReview($uri);
+
       }
     }
-    \Drupal::messenger()->addMessage($this->t('Selected @elements have submited for review successfully.', ['@elements' => $this->plural_class_name]));
+
+
+    \Drupal::messenger()->addMessage($this->t('Selected @elements have been submited for review successfully.', ['@elements' => $this->plural_class_name]));
     $form_state->setRebuild();
   }
 

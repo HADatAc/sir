@@ -16,6 +16,7 @@ class Codebook {
       'element_name' => t('Name'),
       'element_language' => t('Language'),
       'element_version' => t('Version'),
+      'element_status' => t('Status'),
     ];
 
   }
@@ -30,6 +31,7 @@ class Codebook {
     $languages = $tables->getLanguages();
 
     $output = array();
+    $disabled_rows = [];
     foreach ($list as $element) {
       $uri = ' ';
       if ($element->uri != NULL) {
@@ -54,15 +56,34 @@ class Codebook {
       if ($element->hasVersion != NULL) {
         $version = $element->hasVersion;
       }
-      $output[$element->uri] = [
+      $status = ' ';
+      $row_key = $element->uri;
+      if ($element->hasStatus != NULL) {
+        $status = parse_url($element->hasStatus, PHP_URL_FRAGMENT);
+
+        if (parse_url($element->hasStatus, PHP_URL_FRAGMENT) === 'Under Review') {
+          $status = "Under Review";
+          $disabled_rows[] = $row_key;
+        }
+
+      }
+      $output[$row_key] = [
         'element_uri' => t('<a href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),
         'element_name' => $label,
         'element_language' => $lang,
         'element_version' => $version,
         'element_type' => $type,
+        'element_status' => $status
       ];
     }
-    return $output;
+
+    // Para garantir que disabled_rows seja um array associativo
+    $normalized_disabled_rows = array_fill_keys($disabled_rows, TRUE);
+
+    return [
+      'output'        => $output,
+      'disabled_rows' => $normalized_disabled_rows,
+    ];
 
   }
 

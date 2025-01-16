@@ -52,7 +52,7 @@ class ResponseOption {
         $version = $element->hasVersion;
       }
       $status = ' ';
-      $row_key = md5($element->uri);
+      $row_key = $element->uri;
       if ($element->hasStatus != NULL) {
         $status = parse_url($element->hasStatus, PHP_URL_FRAGMENT);
 
