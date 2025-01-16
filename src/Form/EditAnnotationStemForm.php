@@ -97,6 +97,7 @@ class EditAnnotationStemForm extends FormBase {
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
       '#default_value' => $this->getAnnotationStem()->hasVersion,
+      '#disabled' => TRUE,
     ];
     $form['annotationstem_description'] = [
       '#type' => 'textarea',

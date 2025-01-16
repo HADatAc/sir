@@ -45,6 +45,10 @@ class AddDetectorStemForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $sourcedetectorstemuri = NULL) {
 
+    // MODAL
+    $form['#attached']['library'][] = 'rep/rep_modal';
+    $form['#attached']['library'][] = 'core/drupal.dialog';
+
     // ESTABLISH API SERVICE
     $api = \Drupal::service('rep.api_connector');
 
@@ -76,6 +80,36 @@ class AddDetectorStemForm extends FormBase {
       $sourceContent = $this->getSourceDetectorStem()->hasContent;
     }
 
+    $form['detectorstem_type'] = [
+      'top' => [
+        '#type' => 'markup',
+        '#markup' => '<div class="pt-3 col border border-white">',
+      ],
+      'main' => [
+        '#type' => 'textfield',
+        '#title' => $this->t('Parent Type'),
+        '#name' => 'detectorstem_type',
+        '#default_value' => '',
+        '#id' => 'detectorstem_type',
+        '#parents' => ['detectorstem_type'],
+        '#attributes' => [
+          'class' => ['open-tree-modal'],
+          'data-dialog-type' => 'modal',
+          'data-dialog-options' => json_encode(['width' => 800]),
+          'data-url' => Url::fromRoute('rep.tree_form', [
+            'mode' => 'modal',
+            'elementtype' => 'detectorstem',
+          ], ['query' => ['field_id' => 'detectorstem_type']])->toString(),
+          'data-field-id' => 'detectorstem_type',
+          'data-elementtype' => 'detectorstem',
+          'autocomplete' => 'off',
+        ],
+      ],
+      'bottom' => [
+        '#type' => 'markup',
+        '#markup' => '</div>',
+      ],
+    ];
     $form['detectorstem_content'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Content'),
@@ -89,6 +123,12 @@ class AddDetectorStemForm extends FormBase {
     $form['detectorstem_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
+      '#default_value' => '1',
+      '#disabled' => TRUE,
+    ];
+    $form['detectorstem_version'] = [
+      '#type' => 'hidden',
+      '#value' => '1',
     ];
     $form['detectorstem_description'] = [
       '#type' => 'textarea',
@@ -177,7 +217,8 @@ class AddDetectorStemForm extends FormBase {
       // CREATE A NEW DETECTOR
       $newDetectorStemUri = Utils::uriGen('detectorstem');
       $detectorStemJson = '{"uri":"'.$newDetectorStemUri.'",'.
-        '"superUri":"'.VSTOI::DETECTOR_STEM.'",'.
+        '"superUri":"'.UTILS::plainUri($form_state->getValue('detectorstem_type')).'",'.
+        //'"typeUri":"'.VSTOI::DETECTOR_STEM.'",'.
         '"hascoTypeUri":"'.VSTOI::DETECTOR_STEM.'",'.
         '"hasStatus":"'.VSTOI::DRAFT.'",'.
         '"hasContent":"'.$form_state->getValue('detectorstem_content').'",'.

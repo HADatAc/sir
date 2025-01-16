@@ -12,12 +12,13 @@ class Instrument {
 
     return $header = [
       'element_uri' => t('URI'),
+      'element_type' => t('Parent Type'),
       'element_abbreviation' => t('Abbreviation'),
       'element_name' => t('Name'),
       'element_language' => t('Language'),
       'element_downloads' => t('Downloads'),
     ];
-  
+
   }
 
   public static function generateOutput($list) {
@@ -28,12 +29,16 @@ class Instrument {
     // GET LANGUAGES
     $tables = new Tables;
     $languages = $tables->getLanguages();
- 
+
     $output = array();
     foreach ($list as $element) {
       $uri = ' ';
       if ($element->uri != NULL) {
         $uri = $element->uri;
+      }
+      $type = ' ';
+      if ($element->superUri != NULL) {
+        $type = Utils::namespaceUri($element->superUri);
       }
       $uri = Utils::namespaceUri($uri);
       $shortName = ' ';
@@ -63,9 +68,10 @@ class Instrument {
       $tordf = ' ';
       $tofhir = '<a href="'. $root_url . REPGUI::DOWNLOAD . 'fhir'. '/'. $encodedUri . '">FHIR</a>';
       $output[$element->uri] = [
-        'element_uri' => t('<a href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),     
-        'element_abbreviation' => $shortName,     
-        'element_name' => t($label . $version),     
+        'element_uri' => t('<a href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),
+        'element_type' => $type,
+        'element_abbreviation' => $shortName,
+        'element_name' => t($label . $version),
         'element_language' => $lang,
         'element_downloads' => t($totxt . ' ' . $tohtml . ' ' . $topdf . '<br>' . $tordf . ' ' . $tofhir),
       ];

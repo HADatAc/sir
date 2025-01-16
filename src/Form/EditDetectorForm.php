@@ -90,6 +90,37 @@ class EditDetectorForm extends FormBase {
       '#default_value' => $codebookLabel,
       '#autocomplete_route_name' => 'sir.detector_codebook_autocomplete',
     ];
+    $form['detector_attributeOf'] = [
+      'top' => [
+        '#type' => 'markup',
+        '#markup' => '<div class="pt-3 col border border-white">',
+      ],
+      'main' => [
+        '#type' => 'textfield',
+        '#title' => $this->t('Attribute Of <small><i>(optional)</i></small>'),
+        '#name' => 'detector_attributeOf',
+        '#default_value' => $this->getDetector()->superUri ? UTILS::namespaceUri($this->getDetector()->superUri) : '',
+        '#id' => 'detector_attributeOf',
+        '#parents' => ['detector_attributeOf'],
+        '#attributes' => [
+          'class' => ['open-tree-modal'],
+          'data-dialog-type' => 'modal',
+          'data-dialog-options' => json_encode(['width' => 800]),
+          'data-url' => Url::fromRoute('rep.tree_form', [
+            'mode' => 'modal',
+            'elementtype' => 'attribute',
+          ], ['query' => ['field_id' => 'detector_attributeOf']])->toString(),
+          'data-field-id' => 'detector_attributeOf',
+          'data-elementtype' => 'attribute',
+          'autocomplete' => 'off',
+          'data-search-value' => $this->getDetector()->superUri ?? '',
+        ],
+      ],
+      'bottom' => [
+        '#type' => 'markup',
+        '#markup' => '</div>',
+      ],
+    ];
     $form['update_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Update'),
@@ -156,7 +187,7 @@ class EditDetectorForm extends FormBase {
       }
 
       $detectorJson = '{"uri":"'.$this->getDetector()->uri.'",'.
-        '"typeUri":"'.VSTOI::DETECTOR.'",'.
+        '"superUri":"'.UTILS::plainUri($this->getDetector()->superUri).'",'.
         '"hascoTypeUri":"'.VSTOI::DETECTOR.'",'.
         '"hasDetectorStem":"'.$hasStem.'",'.
         '"hasCodebook":"'.$hasCodebook.'",'.
@@ -165,7 +196,7 @@ class EditDetectorForm extends FormBase {
       // UPDATE BY DELETING AND CREATING
       $api = \Drupal::service('rep.api_connector');
       $api->detectorDel($this->getDetectorUri());
-      $updatedDetector = $api->detectorAdd($detectorJson);
+      $api->detectorAdd($detectorJson);
       \Drupal::messenger()->addMessage(t("Detector has been updated successfully."));
       self::backUrl();
       return;

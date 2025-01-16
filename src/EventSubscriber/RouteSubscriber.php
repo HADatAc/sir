@@ -26,7 +26,7 @@ class RouteSubscriber extends RouteSubscriberBase {
   }
 
   protected function alterRoutes(RouteCollection $collection) {
-    
+
     $config = $this->configFactory->get('sir.settings');
     $sir_home = $config->get('sir_home');
     $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument');
@@ -45,10 +45,10 @@ class RouteSubscriber extends RouteSubscriberBase {
       $route->setDefault('_title', 'Edit ' . $preferred_instrument);
     }
     if ($route = $collection->get('sir.add_detectorstem')) {
-      $route->setDefault('_title', 'Add ' . $preferred_detector . 'Stem');
+      $route->setDefault('_title', 'Add ' . $preferred_detector . ' Stem');
     }
     if ($route = $collection->get('sir.edit_detectorstem')) {
-      $route->setDefault('_title', 'Edit ' . $preferred_detector . 'Stem');
+      $route->setDefault('_title', 'Edit ' . $preferred_detector . ' Stem');
     }
     if ($route = $collection->get('sir.add_detector')) {
       $route->setDefault('_title', 'Add ' . $preferred_detector);
@@ -60,5 +60,5 @@ class RouteSubscriber extends RouteSubscriberBase {
       $route->setDefault('_title', 'Edit ' . $preferred_detector);
     }
   }
-  
+
 }

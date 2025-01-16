@@ -75,6 +75,10 @@ class AddDetectorForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $sourcedetectoruri = NULL, $containersloturi = NULL) {
 
+    // MODAL
+    $form['#attached']['library'][] = 'rep/rep_modal';
+    $form['#attached']['library'][] = 'core/drupal.dialog';
+
     // ESTABLISH API SERVICE
     $api = \Drupal::service('rep.api_connector');
 
@@ -127,13 +131,45 @@ class AddDetectorForm extends FormBase {
 
     $form['detector_stem'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Detector Stem'),
+      '#title' => \Drupal::moduleHandler()->moduleExists('pmsr') ?
+        $this->t('Simulation Technique Stem') :
+        $this->t('Detector Stem'),
       '#autocomplete_route_name' => 'sir.detector_stem_autocomplete',
     ];
     $form['detector_codebook'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Codebook'),
       '#autocomplete_route_name' => 'sir.detector_codebook_autocomplete',
+    ];
+    $form['detector_attributeOf'] = [
+      'top' => [
+        '#type' => 'markup',
+        '#markup' => '<div class="pt-3 col border border-white">',
+      ],
+      'main' => [
+        '#type' => 'textfield',
+        '#title' => $this->t('Attribute Of <small><i>(optional)</i></small>'),
+        '#name' => 'detector_attributeOf',
+        '#default_value' => '',
+        '#id' => 'detector_attributeOf',
+        '#parents' => ['detector_attributeOf'],
+        '#attributes' => [
+          'class' => ['open-tree-modal'],
+          'data-dialog-type' => 'modal',
+          'data-dialog-options' => json_encode(['width' => 800]),
+          'data-url' => Url::fromRoute('rep.tree_form', [
+            'mode' => 'modal',
+            'elementtype' => 'attribute',
+          ], ['query' => ['field_id' => 'detector_attributeOf']])->toString(),
+          'data-field-id' => 'detector_attributeOf',
+          'data-elementtype' => 'attribute',
+          'autocomplete' => 'off',
+        ],
+      ],
+      'bottom' => [
+        '#type' => 'markup',
+        '#markup' => '</div>',
+      ],
     ];
     $form['save_submit'] = [
       '#type' => 'submit',
@@ -208,7 +244,7 @@ class AddDetectorForm extends FormBase {
       // CREATE A NEW DETECTOR
       $newDetectorUri = Utils::uriGen('detector');
       $detectorJson = '{"uri":"'.$newDetectorUri.'",'.
-        '"superUri":"'.VSTOI::DETECTOR.'",'.
+        '"superUri":"'.UTILS::plainUri($this->getDetectorStem()->superUri).'",'.
         '"hascoTypeUri":"'.VSTOI::DETECTOR.'",'.
         '"hasDetectorStem":"'.$this->getDetectorStem()->uri.'",'.
         '"hasCodebook":"'.$hasCodebook.'",'.
