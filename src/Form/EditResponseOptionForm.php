@@ -76,7 +76,9 @@ class EditResponseOptionForm extends FormBase {
     $form['responseoption_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
-      '#default_value' => $this->getResponseOption()->hasVersion,
+      '#default_value' =>
+        ($this->getResponseOption()->hasStatus === VSTOI::CURRENT || $this->getResponseOption()->hasStatus === VSTOI::DEPRECATED) ?
+        $this->getResponseOption()->hasVersion + 1 : $this->getResponseOption()->hasVersion,
       '#attributes' => [
         'disabled' => 'disabled',
       ],
@@ -86,6 +88,26 @@ class EditResponseOptionForm extends FormBase {
       '#title' => $this->t('Description'),
       '#default_value' => $this->getResponseOption()->comment,
     ];
+
+    if ($this->getResponseOption()->hasReviewNote !== NULL) {
+      $form['responseoption_hasreviewnote'] = [
+        '#type' => 'textarea',
+        '#title' => $this->t('Review Notes'),
+        '#default_value' => $this->getResponseOption()->hasReviewNote,
+        '#attributes' => [
+          'disabled' => 'disabled',
+        ]
+      ];
+      $form['responseoption_haseditoremail'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Reviewer Email'),
+        '#default_value' => $this->getResponseOption()->hasEditorEmail,
+        '#attributes' => [
+          'disabled' => 'disabled',
+        ],
+      ];
+    }
+
     $form['update_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Update'),
@@ -140,24 +162,48 @@ class EditResponseOptionForm extends FormBase {
 
     try{
       $useremail = \Drupal::currentUser()->getEmail();
-
-      $responseOptionJSON = '{"uri":"'. $this->getResponseOption()->uri .'",'.
-        '"typeUri":"'.VSTOI::RESPONSE_OPTION.'",'.
-        '"hascoTypeUri":"'.VSTOI::RESPONSE_OPTION.'",'.
-        '"hasStatus":"'.$this->getResponseOption()->hasStatus.'",'.
-        '"hasContent":"'.$form_state->getValue('responseoption_content').'",'.
-        '"hasLanguage":"'.$form_state->getValue('responseoption_language').'",'.
-        '"hasVersion":"'.$form_state->getValue('responseoption_version').'",'.
-        '"comment":"'.$form_state->getValue('responseoption_description').'",'.
-        '"hasSIRManagerEmail":"'.$useremail.'"}';
-
-      // UPDATE BY DELETING AND CREATING
       $api = \Drupal::service('rep.api_connector');
-      //dpm($this->getResponseOption()->uri);
-      $api->responseOptionDel($this->getResponseOption()->uri);
-      $api->responseOptionAdd($responseOptionJSON);
 
-      \Drupal::messenger()->addMessage(t("Response Option has been updated successfully."));
+      // UPDATE
+
+      // CHECK if Status is CURRENT OR DEPRECATED FOR NEW CREATION
+      if ($this->getResponseOption()->hasStatus === VSTOI::CURRENT || $this->getResponseOption()->hasStatus === VSTOI::DEPRECATED) {
+
+        // VERSION HAS CHANGED MUST CREATE NEW ONE
+        $newResponseOptionUri = Utils::uriGen('responseoption');
+        $responseOptionJSON_new = '{"uri":"'. $newResponseOptionUri .'",'.
+          '"typeUri":"'.VSTOI::RESPONSE_OPTION.'",'.
+          '"hascoTypeUri":"'.VSTOI::RESPONSE_OPTION.'",'.
+          '"hasStatus":"'.VSTOI::DRAFT.'",'.
+          '"hasContent":"'.$form_state->getValue('responseoption_content').'",'.
+          '"hasLanguage":"'.$form_state->getValue('responseoption_language').'",'.
+          '"hasVersion":"'.$form_state->getValue('responseoption_version').'",'.
+          '"comment":"'.$form_state->getValue('responseoption_description').'",'.
+          '"wasDerivedFrom":"'.$this->getResponseOption()->uri.'",'.
+          '"hasSIRManagerEmail":"'.$useremail.'"}';
+
+        $api->responseOptionAdd($responseOptionJSON_new);
+        \Drupal::messenger()->addMessage(t("New Version Response Option has been created successfully."));
+
+      } else {
+
+        // ITS DRAFT UPDATE CURRENT REGISTRY
+        $responseOptionJSON = '{"uri":"'. $this->getResponseOption()->uri .'",'.
+          '"typeUri":"'.$this->getResponseOption()->typeUri.'",'.
+          '"hascoTypeUri":"'.$this->getResponseOption()->hascoTypeUri.'",'.
+          '"hasStatus":"'.VSTOI::DRAFT.'",'.
+          '"hasContent":"'.$form_state->getValue('responseoption_content').'",'.
+          '"hasLanguage":"'.$form_state->getValue('responseoption_language').'",'.
+          '"hasVersion":"'.$form_state->getValue('responseoption_version').'",'.
+          '"comment":"'.$form_state->getValue('responseoption_description').'",'.
+          '"hasSIRManagerEmail":"'.$useremail.'"}';
+
+        // UPDATE BY DELETING AND CREATING
+        $api->responseOptionDel($this->getResponseOption()->uri);
+        $api->responseOptionAdd($responseOptionJSON);
+        \Drupal::messenger()->addMessage(t("Response Option has been updated successfully."));
+      }
+
       self::backUrl();
       return;
 

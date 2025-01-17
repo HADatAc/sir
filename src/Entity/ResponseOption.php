@@ -5,6 +5,7 @@ namespace Drupal\sir\Entity;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\REPGUI;
+use Drupal\rep\Vocabulary\VSTOI;
 
 class ResponseOption {
 
@@ -54,11 +55,23 @@ class ResponseOption {
       $status = ' ';
       $row_key = $element->uri;
       if ($element->hasStatus != NULL) {
-        $status = parse_url($element->hasStatus, PHP_URL_FRAGMENT);
 
-        if (parse_url($element->hasStatus, PHP_URL_FRAGMENT) === 'Under Review') {
-          $status = "Under Review";
+        // DISABLE SUBMIT FOR REVIEW BASED ON STATUS
+        if (
+          $element->hasStatus === VSTOI::UNDER_REVIEW ||
+          $element->hasStatus === VSTOI::CURRENT ||
+          $element->hasStatus === VSTOI::DEPRECATED
+        ) {
           $disabled_rows[] = $row_key;
+        }
+
+        // GET STATUS
+        if ($element->hasStatus === VSTOI::DRAFT && $element->hasReviewNote !== NULL) {
+          $status = "Draft (Already Reviewed)";
+        } else if($element->hasStatus === VSTOI::UNDER_REVIEW) {
+          $status = "Under Review";
+        } else {
+          $status = parse_url($element->hasStatus, PHP_URL_FRAGMENT);
         }
 
       }
@@ -127,13 +140,12 @@ class ResponseOption {
       $status = ' ';
       if ($element->hasStatus != NULL) {
         $status = parse_url($element->hasStatus, PHP_URL_FRAGMENT);
-
         if (parse_url($element->hasStatus, PHP_URL_FRAGMENT) === 'UnderReview')
           $status = "Under Review";
       }
       $owner = ' ';
-      if ($element->hasOwner != NULL) {
-        $status = $element->hasOwner;
+      if ($element->hasSIRManagerEmail != NULL) {
+        $owner = $element->hasSIRManagerEmail;
       }
       $output[$element->uri] = [
         'element_uri' => t('<a href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),

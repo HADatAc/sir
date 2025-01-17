@@ -43,6 +43,7 @@ class ReviewResponseOptionForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $responseoptionuri = NULL) {
+
     $uri=$responseoptionuri ?? 'default';
     $uri_decode=base64_decode($uri);
     $this->setResponseOptionUri($uri_decode);
@@ -95,15 +96,23 @@ class ReviewResponseOptionForm extends FormBase {
         'disabled' => 'disabled',
       ],
     ];
-    $form['responseoption_hasReviewnotes'] = [
+    $form['responseoption_hasreviewnote'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Review Notes'),
-      '#default_value' => $this->getResponseOption()->review_notes,
+      '#default_value' => $this->getResponseOption()->hasReviewNote,
+    ];
+    $form['responseoption_haseditoremail'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Reviewer Email'),
+      '#default_value' => \Drupal::currentUser()->getEmail(),
+      '#attributes' => [
+        'disabled' => 'disabled',
+      ],
     ];
     $form['review_approve'] = [
       '#type' => 'submit',
       '#value' => $this->t('Approve'),
-      '#name' => 'approve',
+      '#name' => 'review_approve',
       '#attributes' => [
         'class' => ['btn', 'btn-success', 'aprove-button'],
       ],
@@ -111,7 +120,7 @@ class ReviewResponseOptionForm extends FormBase {
     $form['review_reject'] = [
       '#type' => 'submit',
       '#value' => $this->t('Reject'),
-      '#name' => 'reject',
+      '#name' => 'review_reject',
       '#attributes' => [
         'class' => ['btn', 'btn-primary', 'cancel-button'],
       ],
@@ -163,26 +172,77 @@ class ReviewResponseOptionForm extends FormBase {
       return;
     }
 
+    if ($button_name === 'review_reject' && strlen($form_state->getValue('responseoption_hasreviewnote')) === 0) {
+      \Drupal::messenger()->addWarning(t("To reject you must type a Review Note!"));
+      return false;
+    }
+
     try{
-      $useremail = \Drupal::currentUser()->getEmail();
-
+      $api = \Drupal::service('rep.api_connector');
       // APPROVE
-      if ($button_name === 'approve') {
-        $responseOptionJSON = '{"uri":"'. $this->getResponseOption()->uri .'",'.
-          '"typeUri":"'.VSTOI::RESPONSE_OPTION.'",'.
-          '"hascoTypeUri":"'.VSTOI::RESPONSE_OPTION.'",'.
-          '"hasContent":"'.$form_state->getValue('responseoption_content').'",'.
-          '"hasLanguage":"'.$form_state->getValue('responseoption_language').'",'.
-          '"hasStatus":"'."vstoi:Current".'",'.
-          '"comment":"'.$form_state->getValue('responseoption_description').'",'.
-          '"hasSIRManagerEmail":"'.$useremail.'"}';
+      if ($button_name === 'review_approve') {
 
+        // IF wasDerivedFrom NULL
+        if ($this->getResponseOption()->wasDerivedFrom === NULL) {
+          $responseOptionJSON = '{"uri":"'. $this->getResponseOption()->uri .'",'.
+            '"typeUri":"'.$this->getResponseOption()->typeUri.'",'.
+            '"hascoTypeUri":"'.$this->getResponseOption()->hascoTypeUri.'",'.
+            '"hasContent":"'.$this->getResponseOption()->hasContent.'",'.
+            '"hasLanguage":"'.$this->getResponseOption()->hasLanguage.'",'.
+            '"hasVersion":"'.$this->getResponseOption()->hasVersion.'",'.
+            '"hasStatus":"'.VSTOI::CURRENT.'",'.
+            '"comment":"'.$this->getResponseOption()->comment.'",'.
+            '"hasSIRManagerEmail":"' . $this->getResponseOption()->hasSIRManagerEmail . '",'.
+            '"hasReviewNote":"' . $form_state->getValue('responseoption_hasreviewnote') . '",'.
+            '"hasEditorEmail":"'.\Drupal::currentUser()->getEmail().
+            '"wasDerivedFrom":"'.$this->getResponseOption()->wasDerivedFrom.
+            '"}';
 
-        // UPDATE BY DELETING AND CREATING
-        $api = \Drupal::service('rep.api_connector');
-        //dpm($this->getResponseOption()->uri);
-        $api->responseOptionDel($this->getResponseOption()->uri);
-        $api->responseOptionAdd($responseOptionJSON);
+          //GET PARENT VALUES
+          $rawresponse = $api->getUri($this->getResponseOption()->wasDerivedFrom);
+          $obj = json_decode($rawresponse);
+          $result = $obj->body;
+          $responseOptionParentJSON = '{"uri":"'. $result->wasDerivedFrom .'",'.
+            '"typeUri":"'.$result->typeUri.'",'.
+            '"hascoTypeUri":"'.$result->hascoTypeUri.'",'.
+            '"hasContent":"'.$result->hasContent.'",'.
+            '"hasLanguage":"'.$result->hasLanguage.'",'.
+            '"hasVersion":"'.$result->hasVersion.'",'.
+            '"hasStatus":"'.VSTOI::CURRENT.'",'.
+            '"comment":"'.$result->comment.'",'.
+            '"hasSIRManagerEmail":"' . $result->hasSIRManagerEmail . '",'.
+            '"hasReviewNote":"' . $result->hasReviewNote . '",'.
+            '"hasEditorEmail":"'.$result->hasEditorEmail.
+            '"}';
+
+          // UPDATE BY DELETING AND CREATING
+          $api->responseOptionDel($this->getResponseOption()->uri);
+          $api->responseOptionAdd($responseOptionJSON);
+
+          // UPDATE DERIVED FROM RECORD
+          $api->responseOptionDel($result->wasDerivedFrom);
+          $api->responseOptionAdd($responseOptionParentJSON);
+
+        } else {
+
+          // MUST UPDATE STATUS FROM PREVIOUS PARENT
+          $responseOptionJSON = '{"uri":"'. $this->getResponseOption()->uri .'",'.
+            '"typeUri":"'.$this->getResponseOption()->typeUri.'",'.
+            '"hascoTypeUri":"'.$this->getResponseOption()->hascoTypeUri.'",'.
+            '"hasContent":"'.$this->getResponseOption()->hasContent.'",'.
+            '"hasLanguage":"'.$this->getResponseOption()->hasLanguage.'",'.
+            '"hasVersion":"'.$this->getResponseOption()->hasVersion.'",'.
+            '"hasStatus":"'.VSTOI::CURRENT.'",'.
+            '"comment":"'.$this->getResponseOption()->comment.'",'.
+            '"hasSIRManagerEmail":"' . $this->getResponseOption()->hasSIRManagerEmail . '",'.
+            '"hasReviewNote":"' . $form_state->getValue('responseoption_hasreviewnote') . '",'.
+            '"hasEditorEmail":"'.\Drupal::currentUser()->getEmail().
+            '"}';
+
+          // UPDATE BY DELETING AND CREATING
+          $api->responseOptionDel($this->getResponseOption()->uri);
+          $api->responseOptionAdd($responseOptionJSON);
+        }
 
         \Drupal::messenger()->addMessage(t("Response Option has been Approved."));
         self::backUrl();
@@ -191,21 +251,20 @@ class ReviewResponseOptionForm extends FormBase {
       } else {
 
         // REJECT
-
         $responseOptionJSON = '{"uri":"'. $this->getResponseOption()->uri .'",'.
-        '"typeUri":"'.VSTOI::RESPONSE_OPTION.'",'.
-        '"hascoTypeUri":"'.VSTOI::RESPONSE_OPTION.'",'.
-        '"hasContent":"'.$form_state->getValue('responseoption_content').'",'.
-        '"hasLanguage":"'.$form_state->getValue('responseoption_language').'",'.
-        '"hasStatus":"'."vstoi:Draft".'",'.
-        '"comment":"'.$form_state->getValue('responseoption_description').'",'.
-        '"review_notes":"'.$form_state->getValue('responseoption_review_notes').'",'.
-        '"hasSIRManagerEmail":"'.$useremail.'"}';
+        '"typeUri":"'.$this->getResponseOption()->typeUri.'",'.
+        '"hascoTypeUri":"'.$this->getResponseOption()->hascoTypeUri.'",'.
+        '"hasContent":"'.$this->getResponseOption()->hasContent.'",'.
+        '"hasLanguage":"'.$this->getResponseOption()->hasLanguage.'",'.
+        '"hasStatus":"'.VSTOI::DRAFT.'",'.
+        '"hasVersion":"'.$this->getResponseOption()->hasVersion.'",'.
+        '"comment":"'.$this->getResponseOption()->comment.'",'.
+        '"hasSIRManagerEmail":"' . $this->getResponseOption()->hasSIRManagerEmail . '",'.
+        '"hasReviewNote":"' . $form_state->getValue('responseoption_hasreviewnote') . '",'.
+        '"hasEditorEmail":"'.\Drupal::currentUser()->getEmail().
+        '"}';
 
-        // APPROVE
         // UPDATE BY DELETING AND CREATING
-        $api = \Drupal::service('rep.api_connector');
-        //dpm($this->getResponseOption()->uri);
         $api->responseOptionDel($this->getResponseOption()->uri);
         $api->responseOptionAdd($responseOptionJSON);
 

@@ -16,6 +16,7 @@ use Drupal\sir\Entity\ResponseOption;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Drupal\Core\Render\Markup;
+use Drupal\rep\Vocabulary\VSTOI;
 
 class SIRReviewForm extends FormBase {
 
@@ -247,9 +248,7 @@ class SIRReviewForm extends FormBase {
 
     // RETRIEVE ELEMENTS FOR THE CURRENT PAGE
     //$this->setList(ListManagerEmailPage::exec($this->element_type, $this->manager_email, $page, $pagesize));
-    $this->setList(ListManagerEmailPage::execReview($this->element_type, $this->manager_email, "draft",0, $page, $pagesize));
-
-    //dpm($this->getList());
+    $this->setList(ListManagerEmailPage::execReview($this->element_type, VSTOI::UNDER_REVIEW, $page, $pagesize));
 
     // Generate header and output
     $header = $this->generateHeader();
@@ -434,9 +433,9 @@ class SIRReviewForm extends FormBase {
       // Certifique-se de que o URI está realmente presente
       if (isset($triggering_element['#element_uri'])) {
         $uri = $triggering_element['#element_uri'];
-        $this->performEdit($uri, $form_state);
+        $this->performReview($uri, $form_state);
       } else {
-        \Drupal::messenger()->addError($this->t('Cannot edit: URI is missing.'));
+        \Drupal::messenger()->addError($this->t('Cannot review: URI is missing.'));
       }
     } elseif (strpos($button_name, 'delete_element_') === 0) {
       $uri = $triggering_element['#element_uri'];
@@ -457,9 +456,9 @@ class SIRReviewForm extends FormBase {
       if (count($selected_rows) == 1) {
         $selected_uris = array_keys($selected_rows);
         $uri = $selected_uris[0];
-        $this->performEdit($uri, $form_state);
+        $this->performReview($uri, $form_state);
       } else {
-        \Drupal::messenger()->addWarning($this->t('Please select exactly one item to edit.'));
+        \Drupal::messenger()->addWarning($this->t('Please select exactly ONE item to review.'));
       }
     } elseif ($button_name === 'delete_element') {
       $selected_rows = array_filter($form_state->getValue('element_table'));
@@ -537,26 +536,26 @@ class SIRReviewForm extends FormBase {
   }
 
   /**
-   * Perform the edit action.
+   * Perform the review action.
    */
-  protected function performEdit($uri, FormStateInterface $form_state) {
+  protected function performReview($uri, FormStateInterface $form_state) {
     $uid = \Drupal::currentUser()->id();
     $previousUrl = \Drupal::request()->getRequestUri();
 
     if ($this->element_type == 'instrument') {
-      $url = Url::fromRoute('sir.edit_instrument', ['instrumenturi' => base64_encode($uri)]);
+      $url = Url::fromRoute('sir.review_instrument', ['instrumenturi' => base64_encode($uri)]);
     } elseif ($this->element_type == 'detectorstem') {
-      $url = Url::fromRoute('sir.edit_detectorstem', ['detectorstemuri' => base64_encode($uri)]);
+      $url = Url::fromRoute('sir.review_detectorstem', ['detectorstemuri' => base64_encode($uri)]);
     } elseif ($this->element_type == 'detector') {
-      $url = Url::fromRoute('sir.edit_detector', ['detectoruri' => base64_encode($uri)]);
+      $url = Url::fromRoute('sir.review_detector', ['detectoruri' => base64_encode($uri)]);
     } elseif ($this->element_type == 'codebook') {
-      $url = Url::fromRoute('sir.edit_codebook', ['codebookuri' => base64_encode($uri)]);
+      $url = Url::fromRoute('sir.review_codebook', ['codebookuri' => base64_encode($uri)]);
     } elseif ($this->element_type == 'responseoption') {
-      $url = Url::fromRoute('sir.edit_response_option', ['responseoptionuri' => base64_encode($uri)]);
+      $url = Url::fromRoute('sir.review_response_option', ['responseoptionuri' => base64_encode($uri)]);
     } elseif ($this->element_type == 'annotationstem') {
-      $url = Url::fromRoute('sir.edit_annotationstem', ['annotationstemuri' => base64_encode($uri)]);
+      $url = Url::fromRoute('sir.review_annotationstem', ['annotationstemuri' => base64_encode($uri)]);
     } else {
-      \Drupal::messenger()->addError($this->t('No edit route found for this element type.'));
+      \Drupal::messenger()->addError($this->t('No review route found for this element type.'));
       return;
     }
 

@@ -148,35 +148,35 @@
   };
 })(jQuery, Drupal);
 
-// (function ($, Drupal) {
-//   'use strict';
+(function ($, Drupal) {
+  'use strict';
 
-//   Drupal.behaviors.sirSelectForm = {
-//     attach: function (context, settings) {
-//       // Função para atualizar o estado do botão
-//       function updateReviewButton() {
-//         const checkedBoxes = document.querySelectorAll('.element-select-checkbox:checked').length;
-//         const reviewButton = document.getElementById('review-selected-button');
+  Drupal.behaviors.sirSelectForm = {
+    attach: function (context, settings) {
+      // Função para atualizar o estado do botão
+      function updateReviewButton() {
+        const checkedBoxes = document.querySelectorAll('.element-select-checkbox:checked').length;
+        const reviewButton = document.getElementById('review-selected-button');
 
-//         if (reviewButton) {
-//           if (checkedBoxes > 0) {
-//             reviewButton.removeAttribute('disabled');
-//           } else {
-//             reviewButton.setAttribute('disabled', 'disabled');
-//           }
-//         }
-//       }
+        if (reviewButton) {
+          if (checkedBoxes > 0) {
+            reviewButton.removeAttribute('disabled');
+          } else {
+            reviewButton.setAttribute('disabled', 'disabled');
+          }
+        }
+      }
 
-//       // Atualiza quando a página carrega
-//       updateReviewButton();
+      // Atualiza quando a página carrega
+      updateReviewButton();
 
-//       // Atualiza quando um checkbox é alterado
-//       once('sirSelectForm', '.element-select-checkbox', context).forEach(function (element) {
-//         element.addEventListener('change', function() {
-//           updateReviewButton();
-//         });
-//       });
-//     }
-//   };
-// })(jQuery, Drupal);
+      // Atualiza quando um checkbox é alterado
+      once('sirSelectForm', '.element-select-checkbox', context).forEach(function (element) {
+        element.addEventListener('change', function() {
+          updateReviewButton();
+        });
+      });
+    }
+  };
+})(jQuery, Drupal);
 

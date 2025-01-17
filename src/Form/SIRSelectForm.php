@@ -190,22 +190,29 @@ class SIRSelectForm extends FormBase {
         '#name' => 'review_element',
         '#attributes' => [
           'onclick' => 'if(!confirm("Are you sure to submit for Review selected entry?")){return false;}',
-          'class' => ['btn', 'btn-warning', 'review-element-button'],
-          //'disabled' => 'disabled',
-          //'id' => 'review-selected-button',
+          'class' => ['btn', 'btn-primary', 'review-element-button'],
+          // 'disabled' => 'disabled',
+          // 'id' => 'review-selected-button',
         ],
       ];
 
       if ($this->element_type == 'instrument') {
-        $form['review_selected_element'] = [
+        $form['review_recursive_selected_element'] = [
           '#type' => 'submit',
           '#value' => $this->t('Send Recursive to Reviewer'),
-          '#name' => 'review_element',
+          '#name' => 'review_recursive_element',
           '#attributes' => [
-            'onclick' => 'if(!confirm("Are you sure to submit for Review selected entry?")){return false;}',
-            'class' => ['btn', 'btn-info', 'review-element-button'],
-            //'disabled' => 'disabled',
-            //'id' => 'review-selected-button',
+            'onclick' => 'if(!confirm("Are you sure you want to submit for Review selected entry?")){return false;}',
+            'class' => ['btn', 'btn-primary', 'review-element-button'],
+          ],
+        ];
+        $form['generate_ins_select_element'] = [
+          '#type' => 'submit',
+          '#value' => $this->t('Generate INS'),
+          '#name' => 'generate_ins_element',
+          '#attributes' => [
+            'onclick' => 'if(!confirm("Are you sure you want to generate an INS file?")){return false;}',
+            'class' => ['btn', 'btn-primary', 'generate-ins-element-button'],
           ],
         ];
         $form['manage_slotelements'] = [
@@ -359,8 +366,8 @@ class SIRSelectForm extends FormBase {
 
     // Criar tabela personalizada
     // $form['element_table'] = [
-    //   //'#type' => 'table',
-    //   '#type' => 'tableselect',
+    //   '#type' => 'table',
+    //   //'#type' => 'tableselect',
     //   '#header' => array_merge(
     //     ['select' => ''],
     //     $header
@@ -960,13 +967,26 @@ class SIRSelectForm extends FormBase {
         \Drupal::messenger()->addWarning($this->t('Please select item(s) to delete.'));
       }
     } elseif ($button_name === 'review_element') {
-      $selected_rows = array_filter($form_state->getValue('element_table'));
-      if (!empty($selected_rows)) {
-        $selected_uris = array_keys($selected_rows);
-        $this->performReview($selected_uris, $form_state);
+      // HAS ELEMENTS
+      if ($form_state->getValue('element_table') !== "") {
+        $selected_rows = array_filter($form_state->getValue('element_table'));
+        if (!empty($selected_rows)) {
+          $selected_uris = array_keys($selected_rows);
+          $this->performReview($selected_uris, $form_state);
+        } else {
+          \Drupal::messenger()->addWarning($this->t('Please select item(s) to submit for review.'));
+        }
       } else {
         \Drupal::messenger()->addWarning($this->t('Please select item(s) to submit for review.'));
       }
+    } elseif ($button_name === 'review_recursive_element') {
+
+      \Drupal::messenger()->addWarning($this->t('Under Development'));
+
+    } elseif ($button_name === 'generate_ins_element') {
+
+      \Drupal::messenger()->addWarning($this->t('Under Development'));
+
     } elseif ($button_name === 'manage_slotelements') {
       $selected_rows = array_filter($form_state->getValue('element_table'));
       if (count($selected_rows) == 1) {
@@ -1092,50 +1112,61 @@ class SIRSelectForm extends FormBase {
    * Perform the review action.
    */
   protected function performReview(array $uris, FormStateInterface $form_state) {
+
     $api = \Drupal::service('rep.api_connector');
     $useremail = \Drupal::currentUser()->getEmail();
 
     // DETECT ELEMENT
     foreach ($uris as $shortUri) {
       $uri = Utils::plainUri($shortUri);
-      if ($this->element_type == 'instrument') {
 
-      } elseif ($this->element_type == 'detectorstem') {
+      // GET OBJECT
+      $rawresponse = $api->getUri($uri);
+      $obj = json_decode($rawresponse);
+      $result = $obj->body;
 
-      } elseif ($this->element_type == 'detector') {
+      if ($this->element_type == 'responseoption') {
 
-      } elseif ($this->element_type == 'codebook') {
+      // } elseif ($this->element_type == 'detectorstem') {
 
-      } elseif ($this->element_type == 'responseoption') {
+      // } elseif ($this->element_type == 'detector') {
 
-        $rawresponse = $api->getUri($uri);
-        $obj = json_decode($rawresponse);
+      // } elseif ($this->element_type == 'codebook') {
+
+      // } elseif ($this->element_type == 'responseoption') {
+
+
+        //dpr($result);
 
         $responseOptionJSON = '{'.
-          '"uri":"'. $obj->uri .'",'.
-          '"typeUri":"'.$obj->typeUri.'",'.
-          '"hascoTypeUri":"'.$obj->hascoTypeUri.'",'.
+          '"uri":"'. $result->uri .'",'.
+          '"typeUri":"'.$result->typeUri.'",'.
+          '"hascoTypeUri":"'.$result->hascoTypeUri.'",'.
           '"hasStatus":"'.VSTOI::UNDER_REVIEW.'",'.
-          '"hasContent":"'.$obj->hasContent.'",'.
-          '"hasLanguage":"'.$obj->hasLanguage.'",'.
-          '"hasVersion":"'.$obj->hasVersion.'",'.
-          '"comment":"'.$obj->comment.'",'.
-          '"hasSIRManagerEmail":"'.$useremail.'"}';
+          '"hasContent":"'.$result->hasContent.'",'.
+          '"hasLanguage":"'.$result->hasLanguage.'",'.
+          '"hasVersion":"'.$result->hasVersion.'",'.
+          '"comment":"'.$result->comment.'",'.
+          '"hasSIRManagerEmail":"'.$useremail;
+
+
+        $responseOptionJSON .= '"}';
 
         // UPDATE BY DELETING AND CREATING
         $api = \Drupal::service('rep.api_connector');
-        //dpm($this->getResponseOption()->uri);
+        //dpr($responseOptionJSON);
         $api->responseOptionDel($uri);
         $api->responseOptionAdd($responseOptionJSON);
 
-      } elseif ($this->element_type == 'annotationstem') {
+      // } elseif ($this->element_type == 'annotationstem') {
 
       }
     }
 
 
     \Drupal::messenger()->addMessage($this->t('Selected @elements have been submited for review successfully.', ['@elements' => $this->plural_class_name]));
-    $form_state->setRebuild();
+    //$form_state->setRebuild();
+    $form_state->setRedirect('<current>');
   }
 
   /**
