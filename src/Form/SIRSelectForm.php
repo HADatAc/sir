@@ -1146,6 +1146,7 @@ class SIRSelectForm extends FormBase {
           '"hasContent":"'.$result->hasContent.'",'.
           '"hasLanguage":"'.$result->hasLanguage.'",'.
           '"hasVersion":"'.$result->hasVersion.'",'.
+          '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.
           '"comment":"'.$result->comment.'",'.
           '"hasSIRManagerEmail":"'.$useremail;
 

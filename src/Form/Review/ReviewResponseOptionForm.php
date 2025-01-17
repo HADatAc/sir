@@ -96,6 +96,14 @@ class ReviewResponseOptionForm extends FormBase {
         'disabled' => 'disabled',
       ],
     ];
+    $form['responseoption_wasderivedfrom'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Derived From'),
+      '#default_value' => $this->getResponseOption()->wasDerivedFrom,
+      '#attributes' => [
+        'disabled' => 'disabled',
+      ],
+    ];
     $form['responseoption_hasreviewnote'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Review Notes'),
@@ -182,8 +190,8 @@ class ReviewResponseOptionForm extends FormBase {
       // APPROVE
       if ($button_name === 'review_approve') {
 
-        // IF wasDerivedFrom NULL
-        if ($this->getResponseOption()->wasDerivedFrom === NULL) {
+        // IF wasDerivedFrom not NULL
+        if ($this->getResponseOption()->wasDerivedFrom !== NULL) {
           $responseOptionJSON = '{"uri":"'. $this->getResponseOption()->uri .'",'.
             '"typeUri":"'.$this->getResponseOption()->typeUri.'",'.
             '"hascoTypeUri":"'.$this->getResponseOption()->hascoTypeUri.'",'.
@@ -194,30 +202,35 @@ class ReviewResponseOptionForm extends FormBase {
             '"comment":"'.$this->getResponseOption()->comment.'",'.
             '"hasSIRManagerEmail":"' . $this->getResponseOption()->hasSIRManagerEmail . '",'.
             '"hasReviewNote":"' . $form_state->getValue('responseoption_hasreviewnote') . '",'.
-            '"hasEditorEmail":"'.\Drupal::currentUser()->getEmail().
-            '"wasDerivedFrom":"'.$this->getResponseOption()->wasDerivedFrom.
+            '"hasEditorEmail":"' . \Drupal::currentUser()->getEmail() . '",'.
+            '"wasDerivedFrom":"' . $this->getResponseOption()->wasDerivedFrom .
             '"}';
+
+          dpm($responseOptionJSON);
+
+          // UPDATE BY DELETING AND CREATING
+          $api->responseOptionDel($this->getResponseOption()->uri);
+          $api->responseOptionAdd($responseOptionJSON);
 
           //GET PARENT VALUES
           $rawresponse = $api->getUri($this->getResponseOption()->wasDerivedFrom);
           $obj = json_decode($rawresponse);
           $result = $obj->body;
-          $responseOptionParentJSON = '{"uri":"'. $result->wasDerivedFrom .'",'.
+          $responseOptionParentJSON = '{"uri":"'. $this->getResponseOption()->wasDerivedFrom .'",'.
             '"typeUri":"'.$result->typeUri.'",'.
             '"hascoTypeUri":"'.$result->hascoTypeUri.'",'.
             '"hasContent":"'.$result->hasContent.'",'.
             '"hasLanguage":"'.$result->hasLanguage.'",'.
             '"hasVersion":"'.$result->hasVersion.'",'.
-            '"hasStatus":"'.VSTOI::CURRENT.'",'.
+            '"hasStatus":"'.VSTOI::DEPRECATED.'",'.
             '"comment":"'.$result->comment.'",'.
             '"hasSIRManagerEmail":"' . $result->hasSIRManagerEmail . '",'.
             '"hasReviewNote":"' . $result->hasReviewNote . '",'.
-            '"hasEditorEmail":"'.$result->hasEditorEmail.
+            '"hasEditorEmail":"'.$result->hasEditorEmail . '",'.
+            '"wasDerivedFrom":"'.$result->wasDerivedFrom .
             '"}';
 
-          // UPDATE BY DELETING AND CREATING
-          $api->responseOptionDel($this->getResponseOption()->uri);
-          $api->responseOptionAdd($responseOptionJSON);
+          dpm($responseOptionParentJSON);
 
           // UPDATE DERIVED FROM RECORD
           $api->responseOptionDel($result->wasDerivedFrom);
@@ -234,9 +247,10 @@ class ReviewResponseOptionForm extends FormBase {
             '"hasVersion":"'.$this->getResponseOption()->hasVersion.'",'.
             '"hasStatus":"'.VSTOI::CURRENT.'",'.
             '"comment":"'.$this->getResponseOption()->comment.'",'.
-            '"hasSIRManagerEmail":"' . $this->getResponseOption()->hasSIRManagerEmail . '",'.
-            '"hasReviewNote":"' . $form_state->getValue('responseoption_hasreviewnote') . '",'.
-            '"hasEditorEmail":"'.\Drupal::currentUser()->getEmail().
+            '"hasSIRManagerEmail":"' . $this->getResponseOption()->hasSIRManagerEmail.'",'.
+            '"hasReviewNote":"' . $form_state->getValue('responseoption_hasreviewnote').'",'.
+            '"hasEditorEmail":"'.\Drupal::currentUser()->getEmail().'",'.
+            '"wasDerivedFrom":"'.$this->getResponseOption()->wasDerivedFrom.
             '"}';
 
           // UPDATE BY DELETING AND CREATING
