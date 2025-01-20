@@ -189,6 +189,7 @@ class ReviewResponseOptionForm extends FormBase {
       $api = \Drupal::service('rep.api_connector');
       // APPROVE
       if ($button_name === 'review_approve') {
+        dpm('approve');
 
         // IF wasDerivedFrom not NULL
         if ($this->getResponseOption()->wasDerivedFrom !== NULL) {
@@ -230,7 +231,7 @@ class ReviewResponseOptionForm extends FormBase {
             '"wasDerivedFrom":"'.$result->wasDerivedFrom .
             '"}';
 
-          //dpm($responseOptionParentJSON);
+          dpm($responseOptionParentJSON);
 
           // UPDATE DERIVED FROM RECORD
           $api->responseOptionDel($result->wasDerivedFrom);

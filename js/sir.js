@@ -153,27 +153,81 @@
 
   Drupal.behaviors.sirSelectForm = {
     attach: function (context, settings) {
-      // Função para atualizar o estado do botão
+      // Update the review button state
       function updateReviewButton() {
         const checkedBoxes = document.querySelectorAll('.checkbox-status-draft:checked').length;
         const reviewButton = document.getElementById('review-selected-button');
 
+        const currentChecked = document.querySelectorAll('.checkbox-status-current:checked').length;
+        const deprecatedChecked = document.querySelectorAll('.checkbox-status-deprecated:checked').length;
+
         if (reviewButton) {
-          if (checkedBoxes > 0) {
+          if (checkedBoxes > 0 && (currentChecked == 0 && deprecatedChecked == 0)) {
             reviewButton.removeAttribute('disabled');
           } else {
             reviewButton.setAttribute('disabled', 'disabled');
           }
         }
+
       }
 
-      // Atualiza quando a página carrega
-      updateReviewButton();
+      function updateDeleteButton() {
+        const checkedBoxes = document.querySelectorAll('.checkbox-status-deprecated:checked').length;
+        const deleteButton = document.getElementById('edit-delete-selected-element');
 
-      // Atualiza quando um checkbox é alterado
+        if (deleteButton) {
+          if (checkedBoxes > 0 ) {
+            deleteButton.setAttribute('disabled', 'disabled');
+          } else {
+            deleteButton.removeAttribute('disabled');
+          }
+        }
+
+      }
+
+      function updateEditButton() {
+        const checkedBoxes = document.querySelectorAll('.checkbox-status-deprecated:checked').length;
+        const editButton = document.getElementById('edit-edit-selected-element');
+
+        if (editButton) {
+          if (checkedBoxes > 0 ) {
+            editButton.setAttribute('disabled', 'disabled');
+          } else {
+            editButton.removeAttribute('disabled');
+          }
+        }
+
+      }
+
+      // Update the review button state when the page loads
+      updateReviewButton();
+      updateEditButton();
+      updateDeleteButton();
+
+      // Update the review button state when a checkbox is changed
       once('sirSelectForm', '.checkbox-status-draft', context).forEach(function (element) {
         element.addEventListener('change', function() {
           updateReviewButton();
+          updateDeleteButton();
+          updateEditButton();
+        });
+      });
+
+      // Update the review button state when a checkbox is changed
+      once('sirSelectForm', '.checkbox-status-current', context).forEach(function (element) {
+        element.addEventListener('change', function() {
+          updateReviewButton();
+          updateDeleteButton();
+          updateEditButton();
+        });
+      });
+
+      // Update the review button state when a checkbox is changed
+      once('sirSelectForm', '.checkbox-status-deprecated', context).forEach(function (element) {
+        element.addEventListener('change', function() {
+          updateReviewButton();
+          updateDeleteButton();
+          updateEditButton();
         });
       });
     }

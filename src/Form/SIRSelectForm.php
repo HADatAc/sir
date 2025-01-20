@@ -253,6 +253,20 @@ class SIRSelectForm extends FormBase {
       $this->buildCardView($form, $form_state, $page, $pagesize);
     }
 
+    $form['notes'] = [
+      '#type' => 'markup',
+      '#markup' => '<div class="info-label">Informative Notes:</div>
+      <ul>
+        <li>You cannot Delete nor Edit if the status is "Deprecated".</li>
+        <li>You cannot submit for Review if the status is different from "Draft".</li>
+      </ul>',
+      '#allowed_tags' => ['div', 'ul', 'li'],
+    ];
+
+    $form['space_1'] = [
+      '#type' => 'item',
+      '#markup' => '<br><br>',
+    ];
     // Back button
     $form['submit'] = [
       '#type' => 'submit',
@@ -417,9 +431,9 @@ class SIRSelectForm extends FormBase {
         }
 
         // Add classes to disabled rows
-        if ($is_disabled) {
-            $form['element_table'][$key]['#attributes']['class'][] = 'disabled-row';
-        }
+        // if ($is_disabled) {
+        //     $form['element_table'][$key]['#attributes']['class'][] = 'disabled-row';
+        // }
     }
 
     // Add custom CSS
@@ -1127,6 +1141,12 @@ class SIRSelectForm extends FormBase {
       $rawresponse = $api->getUri($uri);
       $obj = json_decode($rawresponse);
       $result = $obj->body;
+
+      //GLOBAL CHECKBOX STATUS
+      if ($result->hasStatus !== VSTOI::DRAFT) {
+        \Drupal::messenger()->addWarning($this->t('ATTENTION: Only draft elements can be submitted for review. Check the status of the elements and submit again. '));
+        return;
+      }
 
       if ($this->element_type == 'responseoption') {
 
