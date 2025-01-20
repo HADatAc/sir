@@ -155,7 +155,7 @@
     attach: function (context, settings) {
       // Função para atualizar o estado do botão
       function updateReviewButton() {
-        const checkedBoxes = document.querySelectorAll('.element-select-checkbox:checked').length;
+        const checkedBoxes = document.querySelectorAll('.checkbox-status-draft:checked').length;
         const reviewButton = document.getElementById('review-selected-button');
 
         if (reviewButton) {
@@ -171,7 +171,7 @@
       updateReviewButton();
 
       // Atualiza quando um checkbox é alterado
-      once('sirSelectForm', '.element-select-checkbox', context).forEach(function (element) {
+      once('sirSelectForm', '.checkbox-status-draft', context).forEach(function (element) {
         element.addEventListener('change', function() {
           updateReviewButton();
         });
