@@ -81,6 +81,7 @@ class ResponseOption {
         'element_language' => $lang,
         'element_version' => $version,
         'element_status' => $status,
+        'element_hasStatus' => $element->hasStatus,
       ];
     }
 

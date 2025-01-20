@@ -404,7 +404,7 @@ class SIRSelectForm extends FormBase {
 
     // ADD lines to table
     foreach ($output as $key => $row) {
-        $is_disabled = isset($disabled_rows[$key]);
+        //$is_disabled = isset($disabled_rows[$key]);
 
         // ADD checkbox's to row
         $checkbox = [
@@ -425,9 +425,11 @@ class SIRSelectForm extends FormBase {
 
         // Next Columns
         foreach ($row as $field_key => $field_value) {
-            $form['element_table'][$key][$field_key] = [
-                '#markup' => $field_value,
-            ];
+            if ($field_key !== 'element_hasStatus') {
+                $form['element_table'][$key][$field_key] = [
+                    '#markup' => $field_value,
+                ];
+            }
         }
 
         // Add classes to disabled rows
@@ -464,7 +466,10 @@ class SIRSelectForm extends FormBase {
 
     // Generate header and output
     $header = $this->generateHeader();
-    $output = $this->generateOutput();
+    //$output = $this->generateOutput();
+    $results = $this->generateOutput();
+    $output = $results['output'];
+    $disabled_rows = $results['disabled_rows'];
 
     // Definir imagem placeholder
     $placeholder_image = base_path() . \Drupal::service('extension.list.module')->getPath('rep') . '/images/ins_placeholder.png';
@@ -504,8 +509,6 @@ class SIRSelectForm extends FormBase {
             // Se não for objeto nem array, pular este item
             continue;
         }
-
-        //dpr($item_vars);
 
         $uri = $key;
         $content = '';
@@ -641,38 +644,60 @@ class SIRSelectForm extends FormBase {
         ];
 
         // Botão Editar
-        $card['card']['footer']['actions']['edit'] = [
-          '#type' => 'submit',
-          '#value' => $this->t('Edit'),
-          '#name' => 'edit_element_' . md5($uri),
-          '#attributes' => [
-              'class' => ['btn', 'btn-primary', 'btn-sm', 'edit-element-button', 'button', 'js-form-submit', 'form-submit'],
-              'data-drupal-no-ajax' => 'true',
-              'formnovalidate' => 'formnovalidate',
-              'onclick' => 'this.form.submit();',
-              'data-drupal-selector' => 'edit-edit',
-              'id' => 'edit-edit--' . md5($uri),
-          ],
-          '#submit' => ['::editElementSubmit'],
-          '#limit_validation_errors' => [],
-          '#element_uri' => $uri,
-        ];
+        if ($item_vars['element_hasStatus'] !== VSTOI::UNDER_REVIEW && $item_vars['element_hasStatus'] !== VSTOI::DEPRECATED) {
+          $card['card']['footer']['actions']['edit'] = [
+            '#type' => 'submit',
+            '#value' => $this->t('Edit'),
+              '#name' => 'edit_element_' . md5($uri),
+              '#attributes' => [
+                  'class' => ['btn', 'btn-primary', 'btn-sm', 'edit-element-button', 'button', 'js-form-submit', 'form-submit'],
+                  'data-drupal-no-ajax' => 'true',
+                  'formnovalidate' => 'formnovalidate',
+                  'onclick' => 'this.form.submit();',
+                  'data-drupal-selector' => 'edit-edit',
+                  'id' => 'edit-edit--' . md5($uri),
+              ],
+              '#submit' => ['::editElementSubmit'],
+              '#limit_validation_errors' => [],
+              '#element_uri' => $uri,
+            ];
+        }
 
         // Botão Deletar
-        $card['card']['footer']['actions']['delete'] = [
-          '#type' => 'submit',
-          '#value' => $this->t('Delete'),
-          '#name' => 'delete_element_' . md5($uri),
-          '#attributes' => [
-              'class' => ['btn', 'btn-danger', 'btn-sm', 'delete-element-button', 'button', 'js-form-submit', 'form-submit'],
-              'onclick' => 'if(!confirm("Really Delete?")){return false;}',
-              'data-drupal-selector' => 'edit-delete',
-              'id' => 'edit-delete--' . md5($uri),
-          ],
-          '#submit' => ['::deleteElementSubmit'],
-          '#limit_validation_errors' => [],
-          '#element_uri' => $uri,
-        ];
+        if ($item_vars['element_hasStatus'] !== VSTOI::DEPRECATED && $item_vars['element_hasStatus'] !== VSTOI::UNDER_REVIEW) {
+          $card['card']['footer']['actions']['delete'] = [
+            '#type' => 'submit',
+            '#value' => $this->t('Delete'),
+            '#name' => 'delete_element_' . md5($uri),
+            '#attributes' => [
+                'class' => ['btn', 'btn-danger', 'btn-sm', 'delete-element-button', 'button', 'js-form-submit', 'form-submit'],
+                'onclick' => 'if(!confirm("Really Delete?")){return false;}',
+                'data-drupal-selector' => 'edit-delete',
+                'id' => 'edit-delete--' . md5($uri),
+            ],
+            '#submit' => ['::deleteElementSubmit'],
+            '#limit_validation_errors' => [],
+            '#element_uri' => $uri,
+          ];
+        }
+
+        // Botão Review
+        if ($item_vars['element_hasStatus'] === VSTOI::DRAFT) {
+          $card['card']['footer']['actions']['review'] = [
+            '#type' => 'submit',
+            '#value' => $this->t('Send to Review'),
+            '#name' => 'review_element_' . md5($uri),
+            '#attributes' => [
+                'class' => ['btn', 'btn-primary', 'btn-sm', 'review-element-button', 'button', 'js-form-submit', 'form-submit'],
+                'onclick' => 'if(!confirm("Really submit to review?")){return false;}',
+                'data-drupal-selector' => 'edit-review',
+                'id' => 'edit-review--' . md5($uri),
+            ],
+            '#submit' => ['::reviewElementSubmit'],
+            '#limit_validation_errors' => [],
+            '#element_uri' => $uri,
+          ];
+        }
 
         // Adicionar outros botões conforme necessário (Gerenciar, Derivar)
         if ($this->element_type == 'instrument') {
@@ -899,6 +924,16 @@ class SIRSelectForm extends FormBase {
   }
 
   /**
+   * Submit handler for deleting an element in card view.
+   */
+  public function reviewElementSubmit(array &$form, FormStateInterface $form_state) {
+    $triggering_element = $form_state->getTriggeringElement();
+    $uri = $triggering_element['#element_uri'];
+
+    $this->performReview([$uri], $form_state);
+  }
+
+  /**
    * Submit handler for managing slot elements in card view.
    */
   public function manageSlotElementsSubmit(array &$form, FormStateInterface $form_state) {
@@ -944,7 +979,7 @@ class SIRSelectForm extends FormBase {
     // $selected_rows = array_filter($form_state->getValue('element_table'));
     $element_table = $form_state->getValue('element_table');
     // Filtra as linhas onde o valor de 'select' não é igual a zero
-    if ($element_table !== "") {
+    if ($element_table !== "" && $element_table !== NULL) {
       $selected_rows = array_filter($element_table, function($item) {
           return isset($item['select']) && $item['select'] !== 0; // Verifica se 'select' existe e não é igual a zero
       });
@@ -1176,33 +1211,48 @@ class SIRSelectForm extends FormBase {
 
       // } elseif ($this->element_type == 'responseoption') {
 
-        // CHECK IF SOMETING NEW just in case status is different from draft
-        if ($result->hasStatus === VSTOI::DRAFT
-            && $result->wasDerivedFrom !== NULL
-            && $this->checkDerivedElements($uri) !== false) {
-          $responseOptionJSON = '{'.
-            '"uri":"'. $result->uri .'",'.
-            '"typeUri":"'.$result->typeUri.'",'.
-            '"hascoTypeUri":"'.$result->hascoTypeUri.'",'.
-            '"hasStatus":"'.VSTOI::UNDER_REVIEW.'",'.
-            '"hasContent":"'.$result->hasContent.'",'.
-            '"hasLanguage":"'.$result->hasLanguage.'",'.
-            '"hasVersion":"'.$result->hasVersion.'",'.
-            '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.
-            '"comment":"'.$result->comment.'",'.
-            '"hasSIRManagerEmail":"'.$useremail;
-
-          $responseOptionJSON .= '"}';
-
-          // UPDATE BY DELETING AND CREATING
-          $api = \Drupal::service('rep.api_connector');
-          //dpr($responseOptionJSON);
-          $api->responseOptionDel($uri);
-          $api->responseOptionAdd($responseOptionJSON);
-        } else {
+        // CHECK IF IT IS A DRAFT
+        if ($result->hasStatus !== VSTOI::DRAFT) {
           \Drupal::messenger()->addError($this->t('There is a previous version that has the same content.'), ['@elements' => $this->plural_class_name]);
           return false;
+
+        // CENARIO #1: CHECK IF IT HAS wasDerivedFrom property, means it is a derived element
+        } elseif ($result->wasDerivedFrom !== NULL
+            && $this->checkDerivedElements($uri) === false) {
+            \Drupal::messenger()->addError($this->t('There is a previous version that has the same content.'), ['@elements' => $this->plural_class_name]);
+            return false;
+
+        // CENARIO #2: CHECK IF IT THERE ARE ANY ONER R.O. WITH SAME CONTENT ALREADY IN REP
+        } elseif ($result->wasDerivedFrom === NULL) {
+
+          //$response = $api->listSizeByKeywordAndLanguage($this->element_type, $result->hasContent, $result->hasLanguage);
+          $response = $api->listByKeywordAndLanguage($this->element_type, $result->hasContent, $result->hasLanguage, 99999, 0);
+          if ($response > 1) {
+            \Drupal::messenger()->addError($this->t('There is already a '.$this->single_class_name.' with the same content on the Repository.'), ['@elements' => $this->plural_class_name]);
+            return false;
+          }
         }
+
+        // NO RESTRITIONS? SEND TO REVIEW
+        $responseOptionJSON = '{'.
+          '"uri":"'. $result->uri .'",'.
+          '"typeUri":"'.$result->typeUri.'",'.
+          '"hascoTypeUri":"'.$result->hascoTypeUri.'",'.
+          '"hasStatus":"'.VSTOI::UNDER_REVIEW.'",'.
+          '"hasContent":"'.$result->hasContent.'",'.
+          '"hasLanguage":"'.$result->hasLanguage.'",'.
+          '"hasVersion":"'.$result->hasVersion.'",'.
+          '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.
+          '"comment":"'.$result->comment.'",'.
+          '"hasSIRManagerEmail":"'.$useremail;
+
+        $responseOptionJSON .= '"}';
+
+        // UPDATE BY DELETING AND CREATING
+        $api = \Drupal::service('rep.api_connector');
+        //dpr($responseOptionJSON);
+        $api->responseOptionDel($uri);
+        $api->responseOptionAdd($responseOptionJSON);
 
       // } elseif ($this->element_type == 'annotationstem') {
 
@@ -1322,18 +1372,24 @@ class SIRSelectForm extends FormBase {
             $oldResult->hasLanguage === $result->hasLanguage &&
             $oldResult->comment === $result->comment)
         ) {
-          $tmpStatus = false;
+          $tmpStatus = FALSE;
         }
         break;
     }
 
-    dpm("Result: " . $result->uri . "<br>Old Result:" . $oldResult->uri);
+    // $currentTime = microtime(true); // Obtém o tempo atual em segundos com microsegundos
+    // $milliseconds = round($currentTime * 1000); // Converte para milissegundos
+    // dpm("Result: " . $result->uri . "<br>Old Result:" . $oldResult->uri . "<br>Hora: " . $milliseconds);
 
     // OUTPUT
-    if ($tmpStatus === false) {
+    if ($tmpStatus === FALSE) {
         return false;
     } else {
-      return $this->checkDerivedElements($oldResult->wasDerivedFrom);
+      if ($result->wasDerivedFrom !== NULL) {
+        return $this->checkDerivedElements($result->wasDerivedFrom);
+      } else {
+        return true;
+      }
     }
 
   }
