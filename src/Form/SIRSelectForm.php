@@ -941,16 +941,17 @@ class SIRSelectForm extends FormBase {
     $uid = \Drupal::currentUser()->id();
     $previousUrl = \Drupal::request()->getRequestUri();
 
-    // Handle actions based on button name
-    if (strpos($button_name, 'edit_element_') === 0) {
-
-      // $selected_rows = array_filter($form_state->getValue('element_table'));
-      $element_table = $form_state->getValue('element_table');
-      // Filtra as linhas onde o valor de 'select' não é igual a zero
+    // $selected_rows = array_filter($form_state->getValue('element_table'));
+    $element_table = $form_state->getValue('element_table');
+    // Filtra as linhas onde o valor de 'select' não é igual a zero
+    if ($element_table !== "") {
       $selected_rows = array_filter($element_table, function($item) {
           return isset($item['select']) && $item['select'] !== 0; // Verifica se 'select' existe e não é igual a zero
       });
+    }
 
+    // Handle actions based on button name
+    if (strpos($button_name, 'edit_element_') === 0) {
       // Certifique-se de que o URI está realmente presente
       if (isset($triggering_element['#element_uri'])) {
         // $uri = $triggering_element['#element_uri'];
