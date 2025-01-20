@@ -388,12 +388,11 @@ class SIRSelectForm extends FormBase {
     //   '#empty' => $this->t('No ' . $this->plural_class_name . ' found'),
     // ];
 
-    // Adicionar linhas à tabela
+    // ADD lines to table
     foreach ($output as $key => $row) {
         $is_disabled = isset($disabled_rows[$key]);
 
-        dpr($row);;
-        // Adicionar checkbox apenas se a linha não estiver desativada
+        // ADD checkbox's to row
         $checkbox = [
             '#type' => 'checkbox',
             '#title' => $this->t('Select'),
@@ -404,26 +403,26 @@ class SIRSelectForm extends FormBase {
             ],
         ];
 
-        // Montar a linha
+        // Assemble row
         // $form['element_table'][$key]['select'] = $is_disabled ? [
         //     '#markup' => '',  // Célula vazia para linhas desativadas
         // ] : $checkbox;
         $form['element_table'][$key]['select'] = $checkbox;
 
-        // Adicionar as outras colunas
+        // Next Columns
         foreach ($row as $field_key => $field_value) {
             $form['element_table'][$key][$field_key] = [
                 '#markup' => $field_value,
             ];
         }
 
-        // Adicionar classes para linhas desativadas
+        // Add classes to disabled rows
         if ($is_disabled) {
             $form['element_table'][$key]['#attributes']['class'][] = 'disabled-row';
         }
     }
 
-    // Adicionar CSS personalizado
+    // Add custom CSS
     $form['#attached']['library'][] = 'sir/sir_js_css';
 
     // Pager
