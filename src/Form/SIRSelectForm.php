@@ -191,8 +191,8 @@ class SIRSelectForm extends FormBase {
         '#attributes' => [
           'onclick' => 'if(!confirm("Are you sure to submit for Review selected entry?")){return false;}',
           'class' => ['btn', 'btn-primary', 'review-element-button'],
-          // 'disabled' => 'disabled',
-          // 'id' => 'review-selected-button',
+          'disabled' => 'disabled',
+          'id' => 'review-selected-button',
         ],
       ];
 
@@ -365,61 +365,64 @@ class SIRSelectForm extends FormBase {
     $disabled_rows = $results['disabled_rows'];
 
     // Criar tabela personalizada
-    // $form['element_table'] = [
-    //   '#type' => 'table',
-    //   //'#type' => 'tableselect',
-    //   '#header' => array_merge(
-    //     ['select' => ''],
-    //     $header
-    //   ),
-    //   '#empty' => $this->t('No ' . $this->plural_class_name . ' found'),
-    //   '#attributes' => [
-    //     'class' => ['table', 'table-striped'],
-    //   ],
-    //   '#js_select' => FALSE,
-    // ];
     $form['element_table'] = [
-      '#type' => 'tableselect',
-      '#header' => $header,
-      '#options' => $output,
-      '#js_select' => FALSE,
+      '#type' => 'table',
+      //'#type' => 'tableselect',
+      '#header' => array_merge(
+        ['select' => ''],
+        $header
+      ),
       '#empty' => $this->t('No ' . $this->plural_class_name . ' found'),
+      '#attributes' => [
+        'class' => ['table', 'table-striped'],
+      ],
+      '#js_select' => FALSE,
     ];
 
-    // Adicionar linhas à tabela
-    // foreach ($output as $key => $row) {
-    //     $is_disabled = isset($disabled_rows[$key]);
+    // OLD METHOS TO CREATE TABLES
+    // $form['element_table'] = [
+    //   '#type' => 'tableselect',
+    //   '#header' => $header,
+    //   '#options' => $output,
+    //   '#js_select' => FALSE,
+    //   '#empty' => $this->t('No ' . $this->plural_class_name . ' found'),
+    // ];
 
-    //     // Adicionar checkbox apenas se a linha não estiver desativada
-    //     $checkbox = [
-    //         '#type' => 'checkbox',
-    //         '#title' => $this->t('Select'),
-    //         '#title_display' => 'invisible',
-    //         '#return_value' => $key,
-    //         '#attributes' => [
-    //             'class' => ['element-select-checkbox'],
-    //         ],
-    //     ];
+    // ADD lines to table
+    foreach ($output as $key => $row) {
+        $is_disabled = isset($disabled_rows[$key]);
 
-    //     // Montar a linha
-    //     $form['element_table'][$key]['select'] = $is_disabled ? [
-    //         '#markup' => '',  // Célula vazia para linhas desativadas
-    //     ] : $checkbox;
+        // ADD checkbox's to row
+        $checkbox = [
+            '#type' => 'checkbox',
+            '#title' => $this->t('Select'),
+            '#title_display' => 'invisible',
+            '#return_value' => $key,
+            '#attributes' => [
+                'class' => ['element-select-checkbox checkbox-status-'. strtolower($row['element_status'])],
+            ],
+        ];
 
-    //     // Adicionar as outras colunas
-    //     foreach ($row as $field_key => $field_value) {
-    //         $form['element_table'][$key][$field_key] = [
-    //             '#markup' => $field_value,
-    //         ];
-    //     }
+        // Assemble row
+        // $form['element_table'][$key]['select'] = $is_disabled ? [
+        //     '#markup' => '',  // Célula vazia para linhas desativadas
+        // ] : $checkbox;
+        $form['element_table'][$key]['select'] = $checkbox;
 
-    //     // Adicionar classes para linhas desativadas
-    //     if ($is_disabled) {
-    //         $form['element_table'][$key]['#attributes']['class'][] = 'disabled-row';
-    //     }
-    // }
+        // Next Columns
+        foreach ($row as $field_key => $field_value) {
+            $form['element_table'][$key][$field_key] = [
+                '#markup' => $field_value,
+            ];
+        }
 
-    // Adicionar CSS personalizado
+        // Add classes to disabled rows
+        if ($is_disabled) {
+            $form['element_table'][$key]['#attributes']['class'][] = 'disabled-row';
+        }
+    }
+
+    // Add custom CSS
     $form['#attached']['library'][] = 'sir/sir_js_css';
 
     // Pager

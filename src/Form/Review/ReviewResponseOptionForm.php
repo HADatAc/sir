@@ -206,7 +206,7 @@ class ReviewResponseOptionForm extends FormBase {
             '"wasDerivedFrom":"' . $this->getResponseOption()->wasDerivedFrom .
             '"}';
 
-          dpm($responseOptionJSON);
+          //dpm($responseOptionJSON);
 
           // UPDATE BY DELETING AND CREATING
           $api->responseOptionDel($this->getResponseOption()->uri);
@@ -230,7 +230,7 @@ class ReviewResponseOptionForm extends FormBase {
             '"wasDerivedFrom":"'.$result->wasDerivedFrom .
             '"}';
 
-          dpm($responseOptionParentJSON);
+          //dpm($responseOptionParentJSON);
 
           // UPDATE DERIVED FROM RECORD
           $api->responseOptionDel($result->wasDerivedFrom);
