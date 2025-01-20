@@ -12,7 +12,6 @@ class Codebook {
 
     return $header = [
       'element_uri' => t('URI'),
-      'element_type' => t('Parent Type'),
       'element_name' => t('Name'),
       'element_language' => t('Language'),
       'element_version' => t('Version'),
@@ -72,7 +71,6 @@ class Codebook {
         'element_name' => $label,
         'element_language' => $lang,
         'element_version' => $version,
-        'element_type' => $type,
         'element_status' => $status
       ];
     }
