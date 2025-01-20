@@ -997,9 +997,18 @@ class SIRSelectForm extends FormBase {
         \Drupal::messenger()->addWarning($this->t('Please select item(s) to submit for review.'));
       }
     } elseif ($button_name === 'review_recursive_element') {
-
-      \Drupal::messenger()->addWarning($this->t('Under Development'));
-
+      // HAS ELEMENTS
+      if ($form_state->getValue('element_table') !== "") {
+        $selected_rows = array_filter($form_state->getValue('element_table'));
+        if (!empty($selected_rows)) {
+          $selected_uris = array_keys($selected_rows);
+          $this->performReviewRecursive($selected_uris, $form_state);
+        } else {
+          \Drupal::messenger()->addWarning($this->t('Please select item(s) to submit for recursive review.'));
+        }
+      } else {
+        \Drupal::messenger()->addWarning($this->t('Please select item(s) to submit for recursive review.'));
+      }
     } elseif ($button_name === 'generate_ins_element') {
 
       \Drupal::messenger()->addWarning($this->t('Under Development'));
@@ -1181,6 +1190,52 @@ class SIRSelectForm extends FormBase {
         //dpr($responseOptionJSON);
         $api->responseOptionDel($uri);
         $api->responseOptionAdd($responseOptionJSON);
+
+      // } elseif ($this->element_type == 'annotationstem') {
+
+      }
+    }
+
+
+    \Drupal::messenger()->addMessage($this->t('Selected @elements have been submited for review successfully.', ['@elements' => $this->plural_class_name]));
+    //$form_state->setRebuild();
+    $form_state->setRedirect('<current>');
+  }
+
+  /**
+   * Perform the review recursive action.
+   */
+  protected function performReviewRecursive(array $uris, FormStateInterface $form_state) {
+
+    $api = \Drupal::service('rep.api_connector');
+    $useremail = \Drupal::currentUser()->getEmail();
+
+    // DETECT ELEMENT
+    foreach ($uris as $shortUri) {
+      $uri = Utils::plainUri($shortUri);
+
+      // GET OBJECT
+      $rawresponse = $api->getUri($uri);
+      $obj = json_decode($rawresponse);
+      $result = $obj->body;
+
+      if ($this->element_type == 'instrument') {
+
+        // UPDATE BY DELETING AND CREATING
+        $api = \Drupal::service('rep.api_connector');
+        dpm($uri);
+        //dpr($responseOptionJSON);
+        $resp = $api->reviewRecursive($uri);
+        $total = -1;
+        if ($resp != null) {
+          $obj = json_decode($resp);
+          if ($obj->isSuccessful) {
+            $totalStr = $obj->body;
+            $obj2 = json_decode($totalStr);
+            $total = $obj2->total;
+          }
+        }       
+        dpm($total);
 
       // } elseif ($this->element_type == 'annotationstem') {
 
