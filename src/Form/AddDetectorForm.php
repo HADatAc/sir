@@ -129,12 +129,44 @@ class AddDetectorForm extends FormBase {
       $sourceContent = $this->getSourceDetector()->hasContent;
     }
 
+    // $form['detector_stem'] = [
+    //   '#type' => 'textfield',
+    //   '#title' => \Drupal::moduleHandler()->moduleExists('pmsr') ?
+    //     $this->t('Simulation Technique Stem') :
+    //     $this->t('Detector Stem'),
+    //   '#autocomplete_route_name' => 'sir.detector_stem_autocomplete',
+    // ];
     $form['detector_stem'] = [
-      '#type' => 'textfield',
-      '#title' => \Drupal::moduleHandler()->moduleExists('pmsr') ?
-        $this->t('Simulation Technique Stem') :
-        $this->t('Detector Stem'),
-      '#autocomplete_route_name' => 'sir.detector_stem_autocomplete',
+      'top' => [
+        '#type' => 'markup',
+        '#markup' => '<div class="pt-3 col border border-white">',
+      ],
+      'main' => [
+        '#type' => 'textfield',
+        '#title' => \Drupal::moduleHandler()->moduleExists('pmsr') ?
+          $this->t('Simulation Technique Stem') :
+          $this->t('Detector Stem'),
+        '#name' => 'detector_stem',
+        '#default_value' => '',
+        '#id' => 'detector_stem',
+        '#parents' => ['detector_stem'],
+        '#attributes' => [
+          'class' => ['open-tree-modal'],
+          'data-dialog-type' => 'modal',
+          'data-dialog-options' => json_encode(['width' => 800]),
+          'data-url' => Url::fromRoute('rep.tree_form', [
+            'mode' => 'modal',
+            'elementtype' => 'detectorstem',
+          ], ['query' => ['field_id' => 'detector_stem']])->toString(),
+          'data-field-id' => 'detector_stem',
+          'data-elementtype' => 'detectorstem',
+          'autocomplete' => 'off',
+        ],
+      ],
+      'bottom' => [
+        '#type' => 'markup',
+        '#markup' => '</div>',
+      ],
     ];
     $form['detector_codebook'] = [
       '#type' => 'textfield',

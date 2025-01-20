@@ -932,8 +932,6 @@ class SIRSelectForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $triggering_element = $form_state->getTriggeringElement();
-    #\Drupal::logger('sir_select_form')->debug('Botão acionado: @button', ['@button' => $triggering_element['#name']]);
 
     // RETRIEVE TRIGGERING BUTTON
     $triggering_element = $form_state->getTriggeringElement();
@@ -945,39 +943,50 @@ class SIRSelectForm extends FormBase {
 
     // Handle actions based on button name
     if (strpos($button_name, 'edit_element_') === 0) {
+
+      // $selected_rows = array_filter($form_state->getValue('element_table'));
+      $element_table = $form_state->getValue('element_table');
+      // Filtra as linhas onde o valor de 'select' não é igual a zero
+      $selected_rows = array_filter($element_table, function($item) {
+          return isset($item['select']) && $item['select'] !== 0; // Verifica se 'select' existe e não é igual a zero
+      });
+
       // Certifique-se de que o URI está realmente presente
       if (isset($triggering_element['#element_uri'])) {
-        $uri = $triggering_element['#element_uri'];
+        // $uri = $triggering_element['#element_uri'];
+        $uri = array_keys($selected_rows)[0];
         $this->performEdit($uri, $form_state);
       } else {
         \Drupal::messenger()->addError($this->t('Cannot edit: URI is missing.'));
       }
     } elseif (strpos($button_name, 'delete_element_') === 0) {
-      $uri = $triggering_element['#element_uri'];
+      // $uri = $triggering_element['#element_uri'];
+      $uri = array_keys($selected_rows)[0];
       $this->performDelete([$uri], $form_state);
     } elseif (strpos($button_name, 'manage_slotelements_') === 0) {
-      $uri = $triggering_element['#element_uri'];
+      // $uri = $triggering_element['#element_uri'];
+      $uri = array_keys($selected_rows)[0];
       $this->performManageSlotElements($uri, $form_state);
     } elseif (strpos($button_name, 'manage_codebookslots_') === 0) {
-      $uri = $triggering_element['#element_uri'];
+      // $uri = $triggering_element['#element_uri'];
+      $uri = array_keys($selected_rows)[0];
       $this->performManageCodebookSlots($uri, $form_state);
     } elseif (strpos($button_name, 'derive_detectorstem_') === 0) {
-      $uri = $triggering_element['#element_uri'];
+      // $uri = $triggering_element['#element_uri'];
+      $uri = array_keys($selected_rows)[0];
       $this->performDeriveDetectorStem($uri, $form_state);
     } elseif ($button_name === 'add_element') {
       $this->performAdd($form_state);
     } elseif ($button_name === 'edit_element') {
-      $selected_rows = array_filter($form_state->getValue('element_table'));
       if (count($selected_rows) == 1) {
-        $selected_uris = array_keys($selected_rows);
-        $uri = $selected_uris[0];
+        $uri = array_keys($selected_rows)[0];
+        //dpm($uri);
         $this->performEdit($uri, $form_state);
       } else {
         \Drupal::messenger()->addWarning($this->t('Please select exactly one item to edit.'));
       }
     } elseif ($button_name === 'delete_element') {
-      $selected_rows = array_filter($form_state->getValue('element_table'));
-      if (!empty($selected_rows)) {
+      if (count($selected_rows) > 0) {
         $selected_uris = array_keys($selected_rows);
         $this->performDelete($selected_uris, $form_state);
       } else {
@@ -986,8 +995,7 @@ class SIRSelectForm extends FormBase {
     } elseif ($button_name === 'review_element') {
       // HAS ELEMENTS
       if ($form_state->getValue('element_table') !== "") {
-        $selected_rows = array_filter($form_state->getValue('element_table'));
-        if (!empty($selected_rows)) {
+        if (count($selected_rows) > 0) {
           $selected_uris = array_keys($selected_rows);
           $this->performReview($selected_uris, $form_state);
         } else {
@@ -1153,8 +1161,8 @@ class SIRSelectForm extends FormBase {
 
       //GLOBAL CHECKBOX STATUS
       if ($result->hasStatus !== VSTOI::DRAFT) {
-        \Drupal::messenger()->addWarning($this->t('ATTENTION: Only draft elements can be submitted for review. Check the status of the elements and submit again. '));
-        return;
+        \Drupal::messenger()->addWarning($this->t('ATTENTION: Only draft elements can be submitted for review. Check the status of the elements and submit again. '),['@elements' => $this->plural_class_name]);
+        return false;
       }
 
       if ($this->element_type == 'responseoption') {
@@ -1167,29 +1175,33 @@ class SIRSelectForm extends FormBase {
 
       // } elseif ($this->element_type == 'responseoption') {
 
+        // CHECK IF SOMETING NEW just in case status is different from draft
+        if ($result->hasStatus === VSTOI::DRAFT
+            && $result->wasDerivedFrom !== NULL
+            && $this->checkDerivedElements($uri) !== false) {
+          $responseOptionJSON = '{'.
+            '"uri":"'. $result->uri .'",'.
+            '"typeUri":"'.$result->typeUri.'",'.
+            '"hascoTypeUri":"'.$result->hascoTypeUri.'",'.
+            '"hasStatus":"'.VSTOI::UNDER_REVIEW.'",'.
+            '"hasContent":"'.$result->hasContent.'",'.
+            '"hasLanguage":"'.$result->hasLanguage.'",'.
+            '"hasVersion":"'.$result->hasVersion.'",'.
+            '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.
+            '"comment":"'.$result->comment.'",'.
+            '"hasSIRManagerEmail":"'.$useremail;
 
-        //dpr($result);
+          $responseOptionJSON .= '"}';
 
-        $responseOptionJSON = '{'.
-          '"uri":"'. $result->uri .'",'.
-          '"typeUri":"'.$result->typeUri.'",'.
-          '"hascoTypeUri":"'.$result->hascoTypeUri.'",'.
-          '"hasStatus":"'.VSTOI::UNDER_REVIEW.'",'.
-          '"hasContent":"'.$result->hasContent.'",'.
-          '"hasLanguage":"'.$result->hasLanguage.'",'.
-          '"hasVersion":"'.$result->hasVersion.'",'.
-          '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.
-          '"comment":"'.$result->comment.'",'.
-          '"hasSIRManagerEmail":"'.$useremail;
-
-
-        $responseOptionJSON .= '"}';
-
-        // UPDATE BY DELETING AND CREATING
-        $api = \Drupal::service('rep.api_connector');
-        //dpr($responseOptionJSON);
-        $api->responseOptionDel($uri);
-        $api->responseOptionAdd($responseOptionJSON);
+          // UPDATE BY DELETING AND CREATING
+          $api = \Drupal::service('rep.api_connector');
+          //dpr($responseOptionJSON);
+          $api->responseOptionDel($uri);
+          $api->responseOptionAdd($responseOptionJSON);
+        } else {
+          \Drupal::messenger()->addError($this->t('There is a previous version that has the same content.'), ['@elements' => $this->plural_class_name]);
+          return false;
+        }
 
       // } elseif ($this->element_type == 'annotationstem') {
 
@@ -1234,7 +1246,7 @@ class SIRSelectForm extends FormBase {
             $obj2 = json_decode($totalStr);
             $total = $obj2->total;
           }
-        }       
+        }
         dpm($total);
 
       // } elseif ($this->element_type == 'annotationstem') {
@@ -1286,6 +1298,43 @@ class SIRSelectForm extends FormBase {
     $url->setRouteParameter('sourcedetectorstemuri', base64_encode($uri));
     $url->setRouteParameter('containersloturi', 'EMPTY');
     $form_state->setRedirectUrl($url);
+  }
+
+  protected function checkDerivedElements($uri) {
+    $api = \Drupal::service('rep.api_connector');
+    $rawresponse = $api->getUri($uri);
+    $obj = json_decode($rawresponse);
+    $result = $obj->body;
+
+    $tmpStatus = true;
+
+    // Verifica se o elemento atual está em estado de rascunho e se foi derivado de outro
+    $oldElement = $api->getUri($result->wasDerivedFrom);
+    $oldObj = json_decode($oldElement);
+    $oldResult = $oldObj->body;
+
+    // Verifica se o conteúdo, idioma ou comentário são iguais
+    switch ($this->element_type) {
+      default:
+      case 'responseoption':
+        if (($oldResult->hasContent === $result->hasContent &&
+            $oldResult->hasLanguage === $result->hasLanguage &&
+            $oldResult->comment === $result->comment)
+        ) {
+          $tmpStatus = false;
+        }
+        break;
+    }
+
+    dpm("Result: " . $result->uri . "<br>Old Result:" . $oldResult->uri);
+
+    // OUTPUT
+    if ($tmpStatus === false) {
+        return false;
+    } else {
+      return $this->checkDerivedElements($oldResult->wasDerivedFrom);
+    }
+
   }
 
 }

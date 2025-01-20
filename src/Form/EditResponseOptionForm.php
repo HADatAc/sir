@@ -161,32 +161,6 @@ class EditResponseOptionForm extends FormBase {
       return;
     }
 
-    // CHECK IF SOMETING NEW just in case status is different from draft
-    if ($this->getResponseOption()->hasStatus !== VSTOI::DRAFT) {
-
-      if (
-        ($this->getResponseOption()->hasContent === $form_state->getValue('responseoption_content') &&
-        $this->getResponseOption()->hasLanguage === $form_state->getValue('responseoption_language') &&
-        $this->getResponseOption()->comment === $form_state->getValue('responseoption_description'))
-      ){
-        \Drupal::messenger()->addWarning($this->t('New Version must have different content, language or description.'));
-        return;
-      }
-    } else {
-      // WE MUST CHECK IF OLDER VERSION IS EQUAL TO CURRENT VERSION
-      $oldElement = $api->getUri($this->getResponseOption()->wasDerivedFrom);
-      $oldObj = json_decode($oldElement);
-      $oldResult = $oldObj->body;
-      if (
-        $oldResult->hasContent === $form_state->getValue('responseoption_content') &&
-        $oldResult->hasLanguage === $form_state->getValue('responseoption_language') &&
-        $oldResult->comment === $form_state->getValue('responseoption_description')
-      ) {
-        \Drupal::messenger()->addWarning($this->t('New Version must have different content, language or description from previous one.'));
-        return;
-      }
-    }
-
     try{
       $useremail = \Drupal::currentUser()->getEmail();
 
@@ -222,6 +196,7 @@ class EditResponseOptionForm extends FormBase {
           '"hasLanguage":"'.$form_state->getValue('responseoption_language').'",'.
           '"hasVersion":"'.$form_state->getValue('responseoption_version').'",'.
           '"comment":"'.$form_state->getValue('responseoption_description').'",'.
+          '"wasDerivedFrom":"'.$this->getResponseOption()->wasDerivedFrom.'",'.
           '"hasSIRManagerEmail":"'.$useremail.'"}';
 
         // UPDATE BY DELETING AND CREATING
