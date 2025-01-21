@@ -413,7 +413,7 @@ class SIRSelectForm extends FormBase {
             '#title_display' => 'invisible',
             '#return_value' => $key,
             '#attributes' => [
-                'class' => ['element-select-checkbox checkbox-status-'. strtolower($row['element_status'])],
+                'class' => ['element-select-checkbox checkbox-status-'. strtolower($row['element_hasStatus'])],
             ],
         ];
 
@@ -1203,26 +1203,13 @@ class SIRSelectForm extends FormBase {
 
       if ($this->element_type == 'responseoption') {
 
-      // } elseif ($this->element_type == 'detectorstem') {
-
-      // } elseif ($this->element_type == 'detector') {
-
-      // } elseif ($this->element_type == 'codebook') {
-
-      // } elseif ($this->element_type == 'responseoption') {
-
-        // CHECK IF IT IS A DRAFT
-        if ($result->hasStatus !== VSTOI::DRAFT) {
-          \Drupal::messenger()->addError($this->t('There is a previous version that has the same content.'), ['@elements' => $this->plural_class_name]);
-          return false;
-
         // CENARIO #1: CHECK IF IT HAS wasDerivedFrom property, means it is a derived element
-        } elseif ($result->wasDerivedFrom !== NULL
+        if ($result->wasDerivedFrom !== NULL
             && $this->checkDerivedElements($uri) === false) {
             \Drupal::messenger()->addError($this->t('There is a previous version that has the same content.'), ['@elements' => $this->plural_class_name]);
             return false;
 
-        // CENARIO #2: CHECK IF IT THERE ARE ANY ONER R.O. WITH SAME CONTENT ALREADY IN REP
+        // CENARIO #2: CHECK IF THERE ARE ANY ONER R.O. WITH SAME CONTENT ALREADY IN REP
         } elseif ($result->wasDerivedFrom === NULL) {
 
           //$response = $api->listSizeByKeywordAndLanguage($this->element_type, $result->hasContent, $result->hasLanguage);
@@ -1254,9 +1241,58 @@ class SIRSelectForm extends FormBase {
         $api->responseOptionDel($uri);
         $api->responseOptionAdd($responseOptionJSON);
 
-      // } elseif ($this->element_type == 'annotationstem') {
+      } elseif ($this->element_type == 'codebook') {
+
+        // CENARIO #1: CHECK IF IT HAS wasDerivedFrom property, means it is a derived element
+        if ($result->wasDerivedFrom !== NULL
+            && $this->checkDerivedElements($uri) === false) {
+            \Drupal::messenger()->addError($this->t('There is a previous version that has the same content.'), ['@elements' => $this->plural_class_name]);
+            return false;
+
+        // CENARIO #2: CHECK IF THERE ARE ANY ONER Codebook WITH SAME CONTENT ALREADY IN REP
+        } elseif ($result->wasDerivedFrom === NULL) {
+
+          //$response = $api->listSizeByKeywordAndLanguage($this->element_type, $result->hasContent, $result->hasLanguage);
+          $response = $api->listByKeywordAndLanguage($this->element_type, $result->hasContent, $result->hasLanguage, 99999, 0);
+          if ($response > 1) {
+            \Drupal::messenger()->addError($this->t('There is already a '.$this->single_class_name.' with the same content on the Repository.'), ['@elements' => $this->plural_class_name]);
+            return false;
+          }
+        }
+
+        // NO RESTRITIONS? SEND TO REVIEW
+        $codebookJSON = '{'.
+          '"uri":"'.$result->uri.'",'.
+          '"typeUri":"'.VSTOI::CODEBOOK.'",'.
+          '"hascoTypeUri":"'.VSTOI::CODEBOOK.'",'.
+          '"hasStatus":"'.VSTOI::UNDER_REVIEW.'",'.
+          '"label":"' . $result->label . '",' .
+          '"hasLanguage":"'.$result->hasLanguage.'",' .
+          '"hasVersion":"'.$result->hasVersion.'",' .
+          '"comment":"'.$result->comment.'",' .
+          '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.
+          '"hasSIRManagerEmail":"'.$useremail;
+
+          $codebookJSON .= '"}';
+
+          // UPDATE BY DELETING AND CREATING
+          $api = \Drupal::service('rep.api_connector');
+          //dpr($responseOptionJSON);
+          $api->codebookDel($uri);
+          $api->codebookAdd($codebookJSON);
 
       }
+
+
+      // } elseif ($this->element_type == 'detectorstem') {
+
+      // } elseif ($this->element_type == 'detector') {
+
+      // } elseif ($this->element_type == 'codebook') {
+
+      // } elseif ($this->element_type == 'instrument') {
+
+      // } elseif ($this->element_type == 'annotationstem') {
     }
 
 

@@ -290,7 +290,7 @@ class SIRReviewForm extends FormBase {
       case "detector":
         return Detector::generateHeader();
       case "codebook":
-        return Codebook::generateHeader();
+        return Codebook::generateReviewHeader();
       case "responseoption":
         return ResponseOption::generateReviewHeader();
       case "annotationstem":
@@ -312,7 +312,7 @@ class SIRReviewForm extends FormBase {
       case "detector":
         return Detector::generateOutput($this->getList());
       case "codebook":
-        return Codebook::generateOutput($this->getList());
+        return Codebook::generateReviewOutput($this->getList());
       case "responseoption":
         return ResponseOption::generateReviewOutput($this->getList());
       case "annotationstem":

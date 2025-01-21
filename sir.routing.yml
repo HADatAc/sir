@@ -412,8 +412,6 @@ sir.manage_annotations:
 
 # REVIEW ROUTES
 
-## Response Options
-
 sir.select_review_element:
   path: 'sir/review/{elementtype}/{page}/{pagesize}'
   defaults:
@@ -424,11 +422,26 @@ sir.select_review_element:
   options:
     no_cache: 'TRUE'
 
+## Response Options
+
 sir.review_response_option:
   path: 'sir/manage/reviewresponseoption/{responseoptionuri}'
   defaults:
     _form: '\Drupal\sir\Form\Review\ReviewResponseOptionForm'
     _title: 'Review Response Option'
+  requirements:
+    # _permission: 'access reviewer menu'
+    _review_access: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+## Codebook
+
+sir.review_codebook:
+  path: 'sir/manage/reviewcodebook/{codebookuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\Review\ReviewCodebookForm'
+    _title: 'Review Codebook'
   requirements:
     # _permission: 'access reviewer menu'
     _review_access: 'TRUE'

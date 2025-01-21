@@ -186,14 +186,15 @@
       }
 
       function updateEditButton() {
-        const checkedBoxes = document.querySelectorAll('.checkbox-status-deprecated:checked').length;
+        const deprecatedChecked = document.querySelectorAll('.checkbox-status-deprecated:checked').length;
+        const underreviewChecked = document.querySelectorAll('.checkbox-status-underreview:checked').length;
         const editButton = document.getElementById('edit-edit-selected-element');
 
         if (editButton) {
-          if (checkedBoxes > 0 ) {
-            editButton.setAttribute('disabled', 'disabled');
-          } else {
+          if (deprecatedChecked === 0 && underreviewChecked === 0) {
             editButton.removeAttribute('disabled');
+          } else {
+            editButton.setAttribute('disabled', 'disabled');
           }
         }
 
@@ -224,6 +225,15 @@
 
       // Update the review button state when a checkbox is changed
       once('sirSelectForm', '.checkbox-status-deprecated', context).forEach(function (element) {
+        element.addEventListener('change', function() {
+          updateReviewButton();
+          updateDeleteButton();
+          updateEditButton();
+        });
+      });
+
+      // Update the review button state when a checkbox is changed
+      once('sirSelectForm', '.checkbox-status-underreview', context).forEach(function (element) {
         element.addEventListener('change', function() {
           updateReviewButton();
           updateDeleteButton();
