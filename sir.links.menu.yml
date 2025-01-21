@@ -64,6 +64,21 @@ sir.manage_instruments:
     _permission: 'access content'
     _role: 'authenticated'
 
+sir.manage_processes :
+  title: Manage Processes
+  description: Manage Processes
+  route_name: sir.select_element
+  route_parameters:
+    elementtype: 'process'
+    page: '1'
+    pagesize: '9'
+  parent: sir.top_level
+  menu_name: main
+  weight: 21
+  requirements:
+    _permission: 'access content'
+    _role: 'authenticated'
+
 sir.manage_detectorstems :
   title: Manage Detector Stems
   description: Manage Detector Stems
@@ -74,7 +89,7 @@ sir.manage_detectorstems :
     pagesize: '9'
   parent: sir.top_level
   menu_name: main
-  weight: 21
+  weight: 22
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -89,7 +104,7 @@ sir.manage_detectors :
     pagesize: '9'
   parent: sir.top_level
   menu_name: main
-  weight: 22
+  weight: 23
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -104,7 +119,7 @@ sir.manage_codebooks :
     pagesize: '9'
   parent: sir.top_level
   menu_name: main
-  weight: 23
+  weight: 24
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -119,7 +134,7 @@ sir.manage_responseoptions :
     pagesize: '9'
   parent: sir.top_level
   menu_name: main
-  weight: 24
+  weight: 25
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -134,7 +149,7 @@ sir.manage_annotationstems :
     pagesize: '9'
   parent: sir.top_level
   menu_name: main
-  weight: 25
+  weight: 26
   requirements:
     _permission: 'access content'
     _role: 'authenticated'

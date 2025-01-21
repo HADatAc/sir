@@ -9,6 +9,7 @@ use Drupal\rep\ListManagerEmailPage;
 use Drupal\rep\Utils;
 use Drupal\sir\Entity\AnnotationStem;
 use Drupal\sir\Entity\DetectorStem;
+use Drupal\sir\Entity\Process;
 use Drupal\sir\Entity\Detector;
 use Drupal\sir\Entity\Codebook;
 use Drupal\sir\Entity\Instrument;
@@ -327,6 +328,12 @@ class SIRSelectForm extends FormBase {
       case "annotationstem":
         $this->single_class_name = "Annotation Stem";
         $this->plural_class_name = "Annotation Stems";
+        break;
+
+      // PROCESS
+      case "process":
+        $this->single_class_name = "Process";
+        $this->plural_class_name = "Processes";
         break;
 
       default:
@@ -824,6 +831,8 @@ class SIRSelectForm extends FormBase {
         return ResponseOption::generateHeader();
       case "annotationstem":
         return AnnotationStem::generateHeader();
+      case "process":
+        return Process::generateHeader();
       default:
         return [];
     }
@@ -846,6 +855,8 @@ class SIRSelectForm extends FormBase {
         return ResponseOption::generateOutput($this->getList());
       case "annotationstem":
         return AnnotationStem::generateOutput($this->getList());
+      case "process":
+        return Process::generateOutput($this->getList());
       default:
         return [];
     }
@@ -894,6 +905,7 @@ class SIRSelectForm extends FormBase {
         'codebook' => 'sir.edit_codebook',
         'responseoption' => 'sir.edit_response_option',
         'annotationstem' => 'sir.edit_annotationstem',
+        'process' => 'sir.edit_process',
       ];
 
       // Verificar se o tipo de elemento possui uma rota definida
@@ -1120,6 +1132,10 @@ class SIRSelectForm extends FormBase {
       Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_annotationstem');
       $url = Url::fromRoute('sir.add_annotationstem');
       $url->setRouteParameter('sourceannotationstemuri', 'EMPTY');
+    } elseif ($this->element_type == 'process') {
+      Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_process');
+      $url = Url::fromRoute('sir.add_process');
+      $url->setRouteParameter('sourceprocessuri', 'EMPTY');
     }
     $form_state->setRedirectUrl($url);
   }
@@ -1127,7 +1143,7 @@ class SIRSelectForm extends FormBase {
   /**
    * Perform the edit action.
    */
-  protected function performEdit($uri, FormStateInterface $form_state) {
+    protected function performEdit($uri, FormStateInterface $form_state) {
     $uid = \Drupal::currentUser()->id();
     $previousUrl = \Drupal::request()->getRequestUri();
 
@@ -1143,6 +1159,8 @@ class SIRSelectForm extends FormBase {
       $url = Url::fromRoute('sir.edit_response_option', ['responseoptionuri' => base64_encode($uri)]);
     } elseif ($this->element_type == 'annotationstem') {
       $url = Url::fromRoute('sir.edit_annotationstem', ['annotationstemuri' => base64_encode($uri)]);
+    } elseif ($this->element_type == 'process') {
+      $url = Url::fromRoute('sir.edit_process', ['processuri' => base64_encode($uri)]);
     } else {
       \Drupal::messenger()->addError($this->t('No edit route found for this element type.'));
       return;

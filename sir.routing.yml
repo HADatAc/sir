@@ -410,6 +410,31 @@ sir.manage_annotations:
   options:
     no_cache: 'TRUE'
 
+# Process CRUD options
+
+sir.add_process:
+  path: 'sir/manage/addprocess/{sourceprocessuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\AddProcessForm'
+    _title: 'Add Process'
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+sir.edit_process:
+  path: 'sir/manage/editprocess/{processuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\EditProcessForm'
+    _title: 'Edit Process'
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+
 # REVIEW ROUTES
 
 sir.select_review_element:
