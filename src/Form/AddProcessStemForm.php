@@ -11,39 +11,39 @@ use Drupal\rep\Utils;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Vocabulary\VSTOI;
 
-class AddProcessForm extends FormBase {
+class AddProcessStemForm extends FormBase {
 
   /**
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'add_process_form';
+    return 'add_process_stem_form';
   }
 
-  protected $sourceProcessUri;
+  protected $sourceProcessStemUri;
 
-  protected $sourceProcess;
+  protected $sourceProcessStem;
 
-  public function getSourceProcessUri() {
-    return $this->sourceProcessUri;
+  public function getSourceProcessStemUri() {
+    return $this->sourceProcessStemUri;
   }
 
-  public function setSourceProcessUri($uri) {
-    return $this->sourceProcessUri = $uri;
+  public function setSourceProcessStemUri($uri) {
+    return $this->sourceProcessStemUri = $uri;
   }
 
-  public function getSourceProcess() {
-    return $this->sourceProcess;
+  public function getSourceProcessStem() {
+    return $this->sourceProcessStem;
   }
 
-  public function setSourceProcess($obj) {
-    return $this->sourceProcess = $obj;
+  public function setSourceProcessStem($obj) {
+    return $this->sourceProcessStem = $obj;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $sourceprocessuri = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, $sourceprocessstemuri = NULL) {
 
     // MODAL
     $form['#attached']['library'][] = 'rep/rep_modal';
@@ -53,34 +53,34 @@ class AddProcessForm extends FormBase {
     $api = \Drupal::service('rep.api_connector');
 
     // HANDLE SOURCE PROCESS,  IF ANY
-    $sourceuri=$sourceprocessuri;
+    $sourceuri=$sourceprocessstemuri;
     if ($sourceuri === NULL || $sourceuri === 'EMPTY') {
-      $this->setSourceProcess(NULL);
-      $this->setSourceProcessUri('');
+      $this->setSourceProcessStem(NULL);
+      $this->setSourceProcessStemUri('');
     } else {
       $sourceuri_decode=base64_decode($sourceuri);
-      $this->setSourceProcessUri($sourceuri_decode);
-      $rawresponse = $api->getUri($this->getSourceProcessUri());
+      $this->setSourceProcessStemUri($sourceuri_decode);
+      $rawresponse = $api->getUri($this->getSourceProcessStemUri());
       $obj = json_decode($rawresponse);
       if ($obj->isSuccessful) {
-        $this->setSourceProcess($obj->body);
+        $this->setSourceProcessStem($obj->body);
       } else {
-        $this->setSourceProcess(NULL);
-        $this->setSourceProcessUri('');
+        $this->setSourceProcessStem(NULL);
+        $this->setSourceProcessStemUri('');
       }
     }
-    $disabledDerivationOption = ($this->getSourceProcess() === NULL);
+    $disabledDerivationOption = ($this->getSourceProcessStem() === NULL);
 
     $tables = new Tables;
     $languages = $tables->getLanguages();
     $derivations = $tables->getGenerationActivities();
 
     $sourceContent = '';
-    if ($this->getSourceProcess() != NULL) {
-      $sourceContent = $this->getSourceProcess()->hasContent;
+    if ($this->getSourceProcessStem() != NULL) {
+      $sourceContent = $this->getSourceProcessStem()->hasContent;
     }
 
-    $form['process_type'] = [
+    $form['process_stem_type'] = [
       'top' => [
         '#type' => 'markup',
         '#markup' => '<div class="pt-3 col border border-white">',
@@ -88,10 +88,10 @@ class AddProcessForm extends FormBase {
       'main' => [
         '#type' => 'textfield',
         '#title' => $this->t('Parent Type'),
-        '#name' => 'process_type',
+        '#name' => 'process_stem_type',
         '#default_value' => '',
-        '#id' => 'process_type',
-        '#parents' => ['process_type'],
+        '#id' => 'process_stem_type',
+        '#parents' => ['process_stem_type'],
         '#attributes' => [
           'class' => ['open-tree-modal'],
           'data-dialog-type' => 'modal',
@@ -99,8 +99,8 @@ class AddProcessForm extends FormBase {
           'data-url' => Url::fromRoute('rep.tree_form', [
             'mode' => 'modal',
             'elementtype' => 'process',
-          ], ['query' => ['field_id' => 'process_type']])->toString(),
-          'data-field-id' => 'process_type',
+          ], ['query' => ['field_id' => 'process_stem_type']])->toString(),
+          'data-field-id' => 'process_stem_type',
           'data-elementtype' => 'process',
           'autocomplete' => 'off',
         ],
@@ -110,44 +110,44 @@ class AddProcessForm extends FormBase {
         '#markup' => '</div>',
       ],
     ];
-    $form['process_content'] = [
+    $form['process_stem_content'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Content'),
     ];
-    $form['process_language'] = [
+    $form['process_stem_language'] = [
       '#type' => 'select',
       '#title' => $this->t('Language'),
       '#options' => $languages,
       '#default_value' => 'en',
     ];
-    $form['process_version'] = [
+    $form['process_stem_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
       '#default_value' => '1',
       '#disabled' => TRUE,
     ];
-    $form['process_version'] = [
+    $form['process_stem_version'] = [
       '#type' => 'hidden',
       '#value' => '1',
     ];
-    $form['process_description'] = [
+    $form['process_stem_description'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
     ];
-    $form['process_was_derived_from'] = [
+    $form['process_stem_was_derived_from'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Was Derived From'),
       '#default_value' => $sourceContent,
       '#disabled' => TRUE,
     ];
-    $form['process_was_generated_by'] = [
+    $form['process_stem_was_generated_by'] = [
       '#type' => 'select',
       '#title' => $this->t('Was Generated By'),
       '#options' => $derivations,
       '#default_value' => Constant::DEFAULT_WAS_GENERATED_BY,
       '#disabled' => $disabledDerivationOption,
     ];
-    $form['save_submit'] = [
+    $form['process_stem_save_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Save'),
       '#name' => 'save',
@@ -155,7 +155,7 @@ class AddProcessForm extends FormBase {
         'class' => ['btn', 'btn-primary', 'save-button'],
       ],
     ];
-    $form['cancel_submit'] = [
+    $form['process_stem_cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
@@ -163,7 +163,7 @@ class AddProcessForm extends FormBase {
         'class' => ['btn', 'btn-primary', 'cancel-button'],
       ],
     ];
-    $form['bottom_space'] = [
+    $form['process_stem_bottom_space'] = [
       '#type' => 'item',
       '#title' => t('<br><br>'),
     ];
@@ -177,14 +177,14 @@ class AddProcessForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name != 'back') {
-      if(strlen($form_state->getValue('process_content')) < 1) {
-        $form_state->setErrorByName('process_content', $this->t('Please enter a valid content'));
+      if(strlen($form_state->getValue('process_stem_content')) < 1) {
+        $form_state->setErrorByName('process_stem_content', $this->t('Please enter a valid content'));
       }
-      if(strlen($form_state->getValue('process_language')) < 1) {
-        $form_state->setErrorByName('process_language', $this->t('Please enter a valid language'));
+      if(strlen($form_state->getValue('process_stem_language')) < 1) {
+        $form_state->setErrorByName('process_stem_language', $this->t('Please enter a valid language'));
       }
-      if(strlen($form_state->getValue('process_version')) < 1) {
-        $form_state->setErrorByName('process_version', $this->t('Please enter a valid version'));
+      if(strlen($form_state->getValue('process_stem_version')) < 1) {
+        $form_state->setErrorByName('process_stem_version', $this->t('Please enter a valid version'));
       }
     }
   }
@@ -205,10 +205,10 @@ class AddProcessForm extends FormBase {
     try {
 
       $wasDerivedFrom = '';
-      if ($this->getSourceProcessUri() === NULL) {
+      if ($this->getSourceProcessStemUri() === NULL) {
         $wasDerivedFrom = 'null';
       } else {
-        $wasDerivedFrom = $this->getSourceProcessUri();
+        $wasDerivedFrom = $this->getSourceProcessStemUri();
       }
       $wasGeneratedBy = $form_state->getValue('process_was_generated_by');
 
@@ -217,25 +217,25 @@ class AddProcessForm extends FormBase {
       // CREATE A NEW DETECTOR
       $newProcessUri = Utils::uriGen('process');
       $processJson = '{"uri":"'.$newProcessUri.'",'.
-        '"superUri":"'.UTILS::plainUri($form_state->getValue('process_type')).'",'.
+        '"superUri":"'.UTILS::plainUri($form_state->getValue('process_stem_type')).'",'.
         //'"typeUri":"'.VSTOI::DETECTOR_STEM.'",'.
         '"hascoTypeUri":"'.VSTOI::PROCESS.'",'.
         '"hasStatus":"'.VSTOI::DRAFT.'",'.
-        '"hasContent":"'.$form_state->getValue('process_content').'",'.
-        '"hasLanguage":"'.$form_state->getValue('process_language').'",'.
-        '"hasVersion":"'.$form_state->getValue('process_version').'",'.
-        '"comment":"'.$form_state->getValue('process_description').'",'.
+        '"hasContent":"'.$form_state->getValue('process_stem_content').'",'.
+        '"hasLanguage":"'.$form_state->getValue('process_stem_language').'",'.
+        '"hasVersion":"'.$form_state->getValue('process_stem_version').'",'.
+        '"comment":"'.$form_state->getValue('process_stem_description').'",'.
         '"wasDerivedFrom":"'.$wasDerivedFrom.'",'.
         '"wasGeneratedBy":"'.$wasGeneratedBy.'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
       $api = \Drupal::service('rep.api_connector');
       $message = $api->processAdd($processJson);
-      \Drupal::messenger()->addMessage(t("Added a new Process with URI: ".$newProcessUri));
+      \Drupal::messenger()->addMessage(t("Added a new Process Stem with URI: ".$newProcessUri));
       self::backUrl();
       return;
 
     } catch(\Exception $e) {
-        \Drupal::messenger()->addError(t("An error occurred while adding the Process: ".$e->getMessage()));
+        \Drupal::messenger()->addError(t("An error occurred while adding the Process Stem: ".$e->getMessage()));
         self::backUrl();
         return;
       }
@@ -243,7 +243,7 @@ class AddProcessForm extends FormBase {
 
   function backUrl() {
     $uid = \Drupal::currentUser()->id();
-    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.add_process');
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.add_process_stem  ');
     if ($previousUrl) {
       $response = new RedirectResponse($previousUrl);
       $response->send();

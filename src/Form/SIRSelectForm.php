@@ -1289,15 +1289,60 @@ class SIRSelectForm extends FormBase {
           '"hasVersion":"'.$result->hasVersion.'",' .
           '"comment":"'.$result->comment.'",' .
           '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.
-          '"hasSIRManagerEmail":"'.$useremail;
+          '"hasSIRManagerEmail":"'.$useremail.'",';
 
-          $codebookJSON .= '"}';
+          // ADD SLOTS
+          $codebookJSON .= '"codebookSlots":[';
+          $slot_list = $api->codebookSlotList($uri);
+          $obj = json_decode($slot_list);
+          $slots = [];
+          if ($obj->isSuccessful) {
+            $slots = $obj->body;
+          }
+          foreach ($slots as $slot) {
+            $codebookJSON .= '{'.
+              '"uri": "'.$slot->uri.'",'.
+              '"typeUri": "'.$slot->typeUri.'",'.
+              '"hascoTypeUri": "'.$slot->hascoTypeUri.'",'.
+              '"label": "'.$slot->label.'",'.
+              '"comment": "'.$slot->comment.'",'.
+              '"hasResponseOption": "'.$slot->hasResponseOption.'",'.
+              '"hasPriority": "'.$slot->hasPriority.'",'.
+              '"responseOption": {'.
+                '"uri": "'.$slot->responseOption->uri.'",'.
+                '"typeUri": "'.$slot->responseOption->typeUri.'",'.
+                '"hascoTypeUri": "'.$slot->responseOption->hascoTypeUri.'",'.
+                '"label": "'.$slot->responseOption->label.'",'.
+                '"comment": "'.$slot->responseOption->comment.'",'.
+                '"hasStatus": "'.($slot->responseOption->hasStatus === VSTOI::DRAFT ? VSTOI::UNDER_REVIEW : $slot->responseOption->hasStatus).'",'.
+                '"hasContent": "'.$slot->responseOption->hasContent.'",'.
+                '"hasLanguage": "'.$slot->responseOption->hasLanguage.'",'.
+                '"hasVersion": "'.$slot->responseOption->hasVersion.'",'.
+                '"wasDerivedFrom": "'.$slot->responseOption->wasDerivedFrom.'",'.
+                '"hasSIRManagerEmail": "'.$slot->responseOption->hasSIRManagerEmail.'",'.
+                '"hasEditorEmail": "'.$slot->responseOption->hasEditorEmail.'",'.
+                '"typeLabel": "'.$slot->responseOption->typeLabel.'",'.
+                '"hascoTypeLabel": "'.$slot->responseOption->hascoTypeLabel.'"'.
+              '},'.
+              '"typeLabel": "'.$slot->typeLabel.'",'.
+              '"hascoTypeLabel": "'.$slot->hascoTypeLabel.'"'.
+              '}';
+            $codebookJSON .= $slot->hasPriority < sizeof($slots) ? ',' : '';
+          }
+          $codebookJSON .= '],';
+
+          // CLOSE JSON CODEBOOK
+          $codebookJSON .= '"uriNamespace": "'.$result->uriNamespace.'",'.
+          '"typeLabel": "'.$result->typeLabel.'",'.
+          '"hascoTypeLabel": "'.$result->hascoTypeLabel.'",'.
+          '"typeNamespace": "'.$result->typeNamespace.'"'.
+          '}';
 
           // UPDATE BY DELETING AND CREATING
           $api = \Drupal::service('rep.api_connector');
-          //dpr($responseOptionJSON);
-          $api->codebookDel($uri);
-          $api->codebookAdd($codebookJSON);
+          dpm($codebookJSON);
+          // $api->codebookDel($uri);
+          // $api->codebookAdd($codebookJSON);
 
       }
 

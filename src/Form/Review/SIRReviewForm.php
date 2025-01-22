@@ -554,6 +554,8 @@ class SIRReviewForm extends FormBase {
       $url = Url::fromRoute('sir.review_response_option', ['responseoptionuri' => base64_encode($uri)]);
     } elseif ($this->element_type == 'annotationstem') {
       $url = Url::fromRoute('sir.review_annotationstem', ['annotationstemuri' => base64_encode($uri)]);
+    } elseif ($this->element_type == 'process') {
+      $url = Url::fromRoute('sir.review_process', ['processuri' => base64_encode($uri)]);
     } else {
       \Drupal::messenger()->addError($this->t('No review route found for this element type.'));
       return;
