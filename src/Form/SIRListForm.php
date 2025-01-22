@@ -13,7 +13,7 @@ use Drupal\sir\Entity\Codebook;
 use Drupal\sir\Entity\Instrument;
 use Drupal\sir\Entity\ResponseOption;
 use Drupal\sir\Entity\ProcessStem;
-
+use Drupal\sir\Entity\Process;
 class SIRListForm extends FormBase {
 
   /**
@@ -140,6 +140,13 @@ class SIRListForm extends FormBase {
         $class_name = "Process Stems";
         $header = ProcessStem::generateHeader();
         $output = ProcessStem::generateOutput($this->getList());
+        break;
+
+      // PROCESS
+      case "process":
+        $class_name = "Processes";
+        $header = Process::generateHeader();
+        $output = Process::generateOutput($this->getList());
         break;
 
       default:

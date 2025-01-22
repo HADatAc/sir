@@ -435,6 +435,73 @@ sir.edit_processstem:
     no_cache: 'TRUE'
 
 
+# Process CRUD options
+
+sir.add_process:
+  path: 'sir/manage/addprocess'
+  defaults:
+    _form: '\Drupal\sir\Form\AddProcessForm'
+    _title: 'Add Process'
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+sir.edit_process:
+  path: 'sir/manage/editprocess/{processuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\EditProcessForm'
+    _title: 'Edit Process'
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+# Process Slot CRUD options
+
+# sir.manage_process_slots:
+#   path: 'sir/manage/processslot/{processuri}'
+#   defaults:
+#     _form: '\Drupal\sir\Form\ManageProcessSlotsForm'
+#     _title: 'Manage Process Slots'
+#   requirements:
+#     _permission: 'access content'
+#     _custom_access_check: 'TRUE'
+#   options:
+#     no_cache: 'TRUE'
+
+# sir.add_processslots:
+#   path: 'sir/manage/addprocessslots/{processuri}'
+#   defaults:
+#     _form: '\Drupal\sir\Form\AddProcessSlotsForm'
+#     _title: "Create Process's Slots"
+#   requirements:
+#     _permission: 'access content'
+#     _custom_access_check: 'TRUE'
+#   options:
+#     no_cache: 'TRUE'
+
+# sir.edit_process_slot:
+#   path: 'sir/manage/editprocessslot/{processsloturi}'
+#   defaults:
+#     _form: '\Drupal\sir\Form\EditProcessSlotForm'
+#     _title: "Edit Process Slot"
+#   requirements:
+#     _permission: 'access content'
+#     _custom_access_check: 'TRUE'
+#   options:
+#     no_cache: 'TRUE'
+
+# sir.processslot_process_autocomplete:
+#   path: '/sir/manage/process/autocomplete'
+#   defaults:
+#     _controller: '\Drupal\sir\Controller\JsonApiProcessController::handleAutocomplete'
+#     _format: json
+#   requirements:
+#     _permission: 'access content'
+
 # REVIEW ROUTES
 
 sir.select_review_element:
@@ -467,6 +534,19 @@ sir.review_codebook:
   defaults:
     _form: '\Drupal\sir\Form\Review\ReviewCodebookForm'
     _title: 'Review Codebook'
+  requirements:
+    # _permission: 'access reviewer menu'
+    _review_access: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+## Process
+
+sir.review_process:
+  path: 'sir/manage/reviewprocess/{processuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\Review\ReviewProcessForm'
+    _title: 'Review Process'
   requirements:
     # _permission: 'access reviewer menu'
     _review_access: 'TRUE'

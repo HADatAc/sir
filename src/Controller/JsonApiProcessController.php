@@ -8,10 +8,10 @@ use Symfony\Component\HttpFoundation\Request;
 use Drupal\Component\Utility\Xss;
 
 /**
- * Class JsonApiStemController
+ * Class JsonApiProcessController
  * @package Drupal\sir\Controller
  */
-class JsonApiStemController extends ControllerBase{
+class JsonApiProcessController extends ControllerBase{
 
   /**
    * @return JsonResponse
@@ -23,19 +23,17 @@ class JsonApiStemController extends ControllerBase{
       return new JsonResponse($results);
     }
     $keyword = Xss::filter($input);
-    //dpm($keyword);
     $api = \Drupal::service('rep.api_connector');
-    $stem_list = $api->listByKeyword('detectorstem','_',10,0);
-    $obj = json_decode($stem_list);
-    $stems = [];
+    $process_list = $api->listByKeyword('process',$keyword,10,0);
+    $obj = json_decode($process_list);
+    $processes = [];
     if ($obj->isSuccessful) {
-      $stems = $obj->body;
+      $processes = $obj->body;
     }
-    //dpm($stems);
-    foreach ($stems as $stem) {
+    foreach ($processes as $process) {
       $results[] = [
-        'value' => $stem->hasContent . ' [' . $stem->uri . ']',
-        'label' => $stem->hasContent,
+        'value' => $process->label . ' [' . $process->uri . ']',
+        'label' => $process->label,
       ];
     }
     return new JsonResponse($results);

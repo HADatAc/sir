@@ -9,7 +9,7 @@ use Drupal\Component\Utility\Xss;
 //use Drupal\Core\Entity\Element\EntityAutocomplete;
 
 /**
- * Class JsonApiCodebookController
+ * Class JsonApiDetectorController
  * @package Drupal\sir\Controller
  */
 class JsonApiDetectorController extends ControllerBase{

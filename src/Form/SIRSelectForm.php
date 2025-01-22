@@ -12,6 +12,7 @@ use Drupal\sir\Entity\DetectorStem;
 use Drupal\sir\Entity\ProcessStem;
 use Drupal\sir\Entity\Detector;
 use Drupal\sir\Entity\Codebook;
+use Drupal\sir\Entity\Process;
 use Drupal\sir\Entity\Instrument;
 use Drupal\sir\Entity\ResponseOption;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -344,6 +345,12 @@ class SIRSelectForm extends FormBase {
       case "processstem":
         $this->single_class_name = "Process Stem";
         $this->plural_class_name = "Process Stems";
+        break;
+
+      // PROCESS
+      case "process":
+        $this->single_class_name = "Process";
+        $this->plural_class_name = "Processes";
         break;
 
       default:
@@ -781,8 +788,6 @@ class SIRSelectForm extends FormBase {
           ];
         }
 
-
-
         // Add card to wrapper container
         $form['cards_wrapper']['card_' . $uri] = $card;
 
@@ -859,6 +864,8 @@ class SIRSelectForm extends FormBase {
         return AnnotationStem::generateHeader();
       case "processstem":
         return ProcessStem::generateHeader();
+      case "process":
+        return Process::generateHeader();
       default:
         return [];
     }
@@ -883,6 +890,8 @@ class SIRSelectForm extends FormBase {
         return AnnotationStem::generateOutput($this->getList());
       case "processstem":
         return ProcessStem::generateOutput($this->getList());
+      case "process":
+        return Process::generateOutput($this->getList());
       default:
         return [];
     }
@@ -932,6 +941,7 @@ class SIRSelectForm extends FormBase {
         'responseoption' => 'sir.edit_response_option',
         'annotationstem' => 'sir.edit_annotationstem',
         'processstem' => 'sir.edit_processstem',
+        'process' => 'sir.edit_process',
       ];
 
       // Verificar se o tipo de elemento possui uma rota definida
@@ -989,6 +999,15 @@ class SIRSelectForm extends FormBase {
     $uri = $triggering_element['#element_uri'];
 
     $this->performManageCodebookSlots($uri, $form_state);
+  }
+
+  /**
+   * Submit handler for managing process slots in card view.
+   */
+  public function manageProcessSlotsSubmit(array &$form, FormStateInterface $form_state) {
+    $triggering_element = $form_state->getTriggeringElement();
+    $uri = $triggering_element['#element_uri'];
+    $this->performManageProcessSlots($uri, $form_state);
   }
 
   /**
@@ -1054,6 +1073,10 @@ class SIRSelectForm extends FormBase {
       // $uri = $triggering_element['#element_uri'];
       $uri = array_keys($selected_rows)[0];
       $this->performManageCodebookSlots($uri, $form_state);
+    } elseif (strpos($button_name, 'manage_processslots_') === 0) {
+      // $uri = $triggering_element['#element_uri'];
+      $uri = array_keys($selected_rows)[0];
+      $this->performManageProcessSlots($uri, $form_state);
     } elseif (strpos($button_name, 'derive_detectorstem_') === 0) {
       // $uri = $triggering_element['#element_uri'];
       $uri = array_keys($selected_rows)[0];
@@ -1126,6 +1149,15 @@ class SIRSelectForm extends FormBase {
       } else {
         \Drupal::messenger()->addWarning($this->t('Please select exactly one codebook to manage.'));
       }
+    } elseif ($button_name === 'manage_processslots') {
+      $selected_rows = array_filter($form_state->getValue('element_table'));
+      if (count($selected_rows) == 1) {
+        $selected_uris = array_keys($selected_rows);
+        $uri = $selected_uris[0];
+        $this->performManageProcessSlots($uri, $form_state);
+      } else {
+        \Drupal::messenger()->addWarning($this->t('Please select exactly one process to manage.'));
+      }
     } elseif ($button_name === 'derive_detectorstem') {
       $selected_rows = array_filter($form_state->getValue('element_table'));
       if (count($selected_rows) == 1) {
@@ -1184,6 +1216,10 @@ class SIRSelectForm extends FormBase {
       Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_processstem');
       $url = Url::fromRoute('sir.add_processstem');
       $url->setRouteParameter('sourceprocessstemuri', 'EMPTY');
+    } elseif ($this->element_type == 'process') {
+      Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_process');
+      $url = Url::fromRoute('sir.add_process');
+      $url->setRouteParameter('sourceprocessuri', 'EMPTY');
     }
     $form_state->setRedirectUrl($url);
   }
@@ -1209,6 +1245,8 @@ class SIRSelectForm extends FormBase {
       $url = Url::fromRoute('sir.edit_annotationstem', ['annotationstemuri' => base64_encode($uri)]);
     } elseif ($this->element_type == 'processstem') {
       $url = Url::fromRoute('sir.edit_processstem', ['processstemuri' => base64_encode($uri)]);
+    } elseif ($this->element_type == 'process') {
+      $url = Url::fromRoute('sir.edit_process', ['processuri' => base64_encode($uri)]);
     } else {
       \Drupal::messenger()->addError($this->t('No edit route found for this element type.'));
       return;
@@ -1240,6 +1278,8 @@ class SIRSelectForm extends FormBase {
         $api->annotationStemDel($uri);
       } elseif ($this->element_type == 'processstem') {
         $api->processStemDel($uri);
+      } elseif ($this->element_type == 'process') {
+        $api->processDel($uri);
       }
     }
     \Drupal::messenger()->addMessage($this->t('Selected @elements have been deleted successfully.', ['@elements' => $this->plural_class_name]));

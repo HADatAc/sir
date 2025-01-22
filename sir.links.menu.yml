@@ -79,6 +79,21 @@ sir.manage_processstems :
     _permission: 'access content'
     _role: 'authenticated'
 
+sir.manage_processes :
+  title: Manage Processes
+  description: Manage Processes
+  route_name: sir.select_element
+  route_parameters:
+    elementtype: 'process'
+    page: '1'
+    pagesize: '9'
+  parent: sir.top_level
+  menu_name: main
+  weight: 22
+  requirements:
+    _permission: 'access content'
+    _role: 'authenticated'
+
 sir.manage_detectorstems :
   title: Manage Detector Stems
   description: Manage Detector Stems

@@ -13,6 +13,7 @@ use Drupal\sir\Entity\Detector;
 use Drupal\sir\Entity\ProcessStem;
 use Drupal\sir\Entity\Codebook;
 use Drupal\sir\Entity\Instrument;
+use Drupal\sir\Entity\Process;
 use Drupal\sir\Entity\ResponseOption;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -218,6 +219,12 @@ class SIRReviewForm extends FormBase {
         $this->plural_class_name = "Process Stems";
         break;
 
+      // PROCESS
+      case "process":
+        $this->single_class_name = "Process";
+        $this->plural_class_name = "Processes";
+        break;
+
       default:
         $this->single_class_name = "Object of Unknown Type";
         $this->plural_class_name = "Objects of Unknown Types";
@@ -304,6 +311,8 @@ class SIRReviewForm extends FormBase {
         return AnnotationStem::generateHeader();
       case "processstem":
         return ProcessStem::generateHeader();
+      case "process":
+        return Process::generateHeader();
       default:
         return [];
     }
@@ -328,6 +337,8 @@ class SIRReviewForm extends FormBase {
         return AnnotationStem::generateOutput($this->getList());
       case "processstem":
         return ProcessStem::generateOutput($this->getList());
+      case "process":
+        return Process::generateOutput($this->getList());
       default:
         return [];
     }
@@ -568,6 +579,9 @@ class SIRReviewForm extends FormBase {
       Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_processstem');
       $url = Url::fromRoute('sir.add_processstem');
       $url->setRouteParameter('sourceprocessstemuri', 'EMPTY');
+    } elseif ($this->element_type == 'process') {
+      Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_process');
+      $url = Url::fromRoute('sir.add_process');
     }
     $form_state->setRedirectUrl($url);
   }
@@ -593,6 +607,8 @@ class SIRReviewForm extends FormBase {
       $url = Url::fromRoute('sir.review_annotationstem', ['annotationstemuri' => base64_encode($uri)]);
     } elseif ($this->element_type == 'processstem') {
       $url = Url::fromRoute('sir.review_processstem', ['processstemuri' => base64_encode($uri)]);
+    } elseif ($this->element_type == 'process') {
+      $url = Url::fromRoute('sir.review_process', ['processuri' => base64_encode($uri)]);
     } else {
       \Drupal::messenger()->addError($this->t('No review route found for this element type.'));
       return;
@@ -624,6 +640,8 @@ class SIRReviewForm extends FormBase {
         $api->annotationStemDel($uri);
       } elseif ($this->element_type == 'processstem') {
         $api->processStemDel($uri);
+      } elseif ($this->element_type == 'process') {
+        $api->processDel($uri);
       }
     }
     \Drupal::messenger()->addMessage($this->t('Selected @elements have been deleted successfully.', ['@elements' => $this->plural_class_name]));
