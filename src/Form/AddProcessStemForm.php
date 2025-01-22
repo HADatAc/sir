@@ -215,11 +215,11 @@ class AddProcessStemForm extends FormBase {
       $useremail = \Drupal::currentUser()->getEmail();
 
       // CREATE A NEW DETECTOR
-      $newProcessUri = Utils::uriGen('process');
-      $processJson = '{"uri":"'.$newProcessUri.'",'.
+      $newProcessStemUri = Utils::uriGen('processstem');
+      $processStemJson = '{"uri":"'.$newProcessStemUri.'",'.
         '"superUri":"'.UTILS::plainUri($form_state->getValue('process_stem_type')).'",'.
         //'"typeUri":"'.VSTOI::DETECTOR_STEM.'",'.
-        '"hascoTypeUri":"'.VSTOI::PROCESS.'",'.
+        '"hascoTypeUri":"'.VSTOI::PROCESS_STEM.'",'.
         '"hasStatus":"'.VSTOI::DRAFT.'",'.
         '"hasContent":"'.$form_state->getValue('process_stem_content').'",'.
         '"hasLanguage":"'.$form_state->getValue('process_stem_language').'",'.
@@ -229,8 +229,8 @@ class AddProcessStemForm extends FormBase {
         '"wasGeneratedBy":"'.$wasGeneratedBy.'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
       $api = \Drupal::service('rep.api_connector');
-      $message = $api->processAdd($processJson);
-      \Drupal::messenger()->addMessage(t("Added a new Process Stem with URI: ".$newProcessUri));
+      $message = $api->processStemAdd($processStemJson);
+      \Drupal::messenger()->addMessage(t("Added a new Process Stem with URI: ".$newProcessStemUri));
       self::backUrl();
       return;
 
@@ -243,7 +243,7 @@ class AddProcessStemForm extends FormBase {
 
   function backUrl() {
     $uid = \Drupal::currentUser()->id();
-    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.add_process_stem  ');
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.add_processstem');
     if ($previousUrl) {
       $response = new RedirectResponse($previousUrl);
       $response->send();

@@ -302,7 +302,7 @@ class SIRSelectForm extends FormBase {
   protected function prepareElementNames() {
     $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument');
     $preferred_detector = \Drupal::config('rep.settings')->get('preferred_detector');
-
+    $preferred_process = \Drupal::config('rep.settings')->get('preferred_process');
     switch ($this->element_type) {
 
       // INSTRUMENT
@@ -343,14 +343,14 @@ class SIRSelectForm extends FormBase {
 
       // PROCESS STEM
       case "processstem":
-        $this->single_class_name = "Process Stem";
-        $this->plural_class_name = "Process Stems";
+        $this->single_class_name = $preferred_process . " Stem";
+        $this->plural_class_name = $preferred_process . " Stems";
         break;
 
       // PROCESS
       case "process":
-        $this->single_class_name = "Process";
-        $this->plural_class_name = "Processes";
+        $this->single_class_name = $preferred_process;
+        $this->plural_class_name =  $preferred_process . "s";
         break;
 
       default:
@@ -520,17 +520,17 @@ class SIRSelectForm extends FormBase {
       ];
     }
 
-    // Processar cada item para construir os cartões
+    // Process each item to build the cards
     foreach ($output as $key => $item) {
 
-        // Obter variáveis do item
+        // Get item variables
         $item_vars = [];
         if (is_object($item)) {
             $item_vars = get_object_vars($item);
         } elseif (is_array($item)) {
             $item_vars = $item;
         } else {
-            // Se não for objeto nem array, pular este item
+            // If not object or array, skip this item
             continue;
         }
 
@@ -539,20 +539,20 @@ class SIRSelectForm extends FormBase {
         $header_text = $item_vars['label'] ?? '';
 
         foreach ($header as $column_key => $column_label) {
-            // Converter $column_label para string
+            // Convert $column_label to string
             $column_label_string = (string) $column_label;
 
-            // Obter o valor correspondente, ou definir como vazio se não existir
+            // Get the corresponding value, or set to empty if it doesn't exist
             $value = $item_vars[$column_key] ?? '';
 
             //dpm("Column Key: $column_key, Value: $value"); // Debug para verificar correspondência da coluna e valor
 
-            // Remover quebras de linha para o campo "Downloads"
+            // Remove line breaks for the "Downloads" field
             if ($column_label_string == 'Downloads') {
                 $value = str_replace(['<br>', '<br/>', '<br />'], '', $value);
             }
 
-            // Atualizar o texto do cabeçalho se for o campo "Name"
+            // Update header text if it's the "Name" field
             if ($column_label_string == 'Name') {
                 $header_text = preg_split('/<br\s*\/?>/i', $value)[0];
             }
@@ -560,16 +560,16 @@ class SIRSelectForm extends FormBase {
             $content .= '<p class="mb-0 pb-0"><strong>' . $column_label_string . ':</strong> ' . $value . '</p>';
         }
 
-        // Definir a URL da imagem, usar placeholder se não houver imagem no item
+        // Set image URL, use placeholder if no image in item
         $image_uri = !empty($item_vars['image']) ? $item_vars['image'] : $placeholder_image;
 
-        // Construir a estrutura do cartão
+        // Build card structure
         $card = [
           '#type' => 'container',
           '#attributes' => [
               'class' => ['col-md-4', 'js-form-wrapper', 'form-wrapper', 'mb-3'],
               'id' => 'card-item-' . $uri,
-              'data-drupal-selector' => 'edit-card-' . str_replace([':', '/', '.'], '', $uri), // Removendo caracteres especiais para manter o padrão consistente
+              'data-drupal-selector' => 'edit-card-' . str_replace([':', '/', '.'], '', $uri), // Removing special characters to keep the pattern consistent
           ],
         ];
 
@@ -582,7 +582,7 @@ class SIRSelectForm extends FormBase {
           ],
         ];
 
-        // Cabeçalho do cartão
+        // Card header
         if ($header_text != '')
           $card['card']['header'] = [
             '#type' => 'container',
@@ -590,12 +590,12 @@ class SIRSelectForm extends FormBase {
                 'style' => 'margin-bottom:0!important;',
                 'class' => ['card-header', 'js-form-wrapper', 'form-wrapper', 'mb-3'],
                 'data-drupal-selector' => 'edit-header',
-                'id' => 'edit-header--' . md5($uri), // Usando md5 para garantir IDs únicos
+                'id' => 'edit-header--' . md5($uri), // Using md5 to ensure unique IDs
             ],
             '#markup' => '<h5 class="mb-0">' . $header_text . '</h5>',
           ];
 
-        // Corpo do cartão
+        // Card body
         $card['card']['body'] = [
           '#type' => 'container',
           '#attributes' => [
@@ -646,7 +646,7 @@ class SIRSelectForm extends FormBase {
           ],
         ];
 
-        // Rodapé do cartão (Ações)
+        // Card footer (Actions)
         $card['card']['footer'] = [
           '#type' => 'container',
           '#attributes' => [
@@ -667,7 +667,7 @@ class SIRSelectForm extends FormBase {
           ],
         ];
 
-        // Botão Editar
+        // Edit button
         if ($item_vars['element_hasStatus'] !== VSTOI::UNDER_REVIEW && $item_vars['element_hasStatus'] !== VSTOI::DEPRECATED) {
           $card['card']['footer']['actions']['edit'] = [
             '#type' => 'submit',
@@ -687,7 +687,7 @@ class SIRSelectForm extends FormBase {
             ];
         }
 
-        // Botão Deletar
+        // Delete button
         if ($item_vars['element_hasStatus'] !== VSTOI::DEPRECATED && $item_vars['element_hasStatus'] !== VSTOI::UNDER_REVIEW) {
           $card['card']['footer']['actions']['delete'] = [
             '#type' => 'submit',
@@ -705,7 +705,7 @@ class SIRSelectForm extends FormBase {
           ];
         }
 
-        // Botão Review
+        // Review button
         if ($item_vars['element_hasStatus'] === VSTOI::DRAFT) {
           $card['card']['footer']['actions']['review'] = [
             '#type' => 'submit',
@@ -723,7 +723,7 @@ class SIRSelectForm extends FormBase {
           ];
         }
 
-        // Adicionar outros botões conforme necessário (Gerenciar, Derivar)
+        // Add other buttons as needed (Manage, Derive)
         if ($this->element_type == 'instrument') {
             $card['card']['footer']['actions']['manage'] = [
               '#type' => 'submit',
@@ -944,14 +944,14 @@ class SIRSelectForm extends FormBase {
         'process' => 'sir.edit_process',
       ];
 
-      // Verificar se o tipo de elemento possui uma rota definida
+      // Check if the element type has a defined route
       if (isset($route_map[$element_type])) {
         $route_name = $route_map[$element_type];
 
-        // Chamar a função para executar a edição
+        // Call the function to perform the edit
         $this->performEdit($uri, $form_state);
 
-        // Redirecionar para a rota apropriada com o URI como parâmetro
+        // Redirect to the appropriate route with the URI as a parameter
         $form_state->setRedirect($route_name, [$element_type . 'uri' => base64_encode($uri)]);
       } else {
         \Drupal::messenger()->addError($this->t('No edit route found for this element type.'));
@@ -1073,10 +1073,6 @@ class SIRSelectForm extends FormBase {
       // $uri = $triggering_element['#element_uri'];
       $uri = array_keys($selected_rows)[0];
       $this->performManageCodebookSlots($uri, $form_state);
-    } elseif (strpos($button_name, 'manage_processslots_') === 0) {
-      // $uri = $triggering_element['#element_uri'];
-      $uri = array_keys($selected_rows)[0];
-      $this->performManageProcessSlots($uri, $form_state);
     } elseif (strpos($button_name, 'derive_detectorstem_') === 0) {
       // $uri = $triggering_element['#element_uri'];
       $uri = array_keys($selected_rows)[0];
@@ -1149,15 +1145,6 @@ class SIRSelectForm extends FormBase {
       } else {
         \Drupal::messenger()->addWarning($this->t('Please select exactly one codebook to manage.'));
       }
-    } elseif ($button_name === 'manage_processslots') {
-      $selected_rows = array_filter($form_state->getValue('element_table'));
-      if (count($selected_rows) == 1) {
-        $selected_uris = array_keys($selected_rows);
-        $uri = $selected_uris[0];
-        $this->performManageProcessSlots($uri, $form_state);
-      } else {
-        \Drupal::messenger()->addWarning($this->t('Please select exactly one process to manage.'));
-      }
     } elseif ($button_name === 'derive_detectorstem') {
       $selected_rows = array_filter($form_state->getValue('element_table'));
       if (count($selected_rows) == 1) {
@@ -1227,7 +1214,7 @@ class SIRSelectForm extends FormBase {
   /**
    * Perform the edit action.
    */
-    protected function performEdit($uri, FormStateInterface $form_state) {
+  protected function performEdit($uri, FormStateInterface $form_state) {
     $uid = \Drupal::currentUser()->id();
     $previousUrl = \Drupal::request()->getRequestUri();
 
@@ -1329,25 +1316,29 @@ class SIRSelectForm extends FormBase {
         }
 
         // NO RESTRITIONS? SEND TO REVIEW
-        $responseOptionJSON = '{'.
-          '"uri":"'. $result->uri .'",'.
-          '"typeUri":"'.$result->typeUri.'",'.
-          '"hascoTypeUri":"'.$result->hascoTypeUri.'",'.
-          '"hasStatus":"'.VSTOI::UNDER_REVIEW.'",'.
-          '"hasContent":"'.$result->hasContent.'",'.
-          '"hasLanguage":"'.$result->hasLanguage.'",'.
-          '"hasVersion":"'.$result->hasVersion.'",'.
-          '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.
-          '"comment":"'.$result->comment.'",'.
-          '"hasSIRManagerEmail":"'.$useremail;
+        $clonedObject = $result;
+        $clonedObject->hasStatus = VSTOI::UNDER_REVIEW;
 
-        $responseOptionJSON .= '"}';
+        unset($clonedObject->deletable);
+        unset($clonedObject->count);
+        unset($clonedObject->uriNamespace);
+        unset($clonedObject->typeNamespace);
+        unset($clonedObject->label);
+        unset($clonedObject->nodeId);
+        unset($clonedObject->field);
+        unset($clonedObject->query);
+        unset($clonedObject->namedGraph);
+        unset($clonedObject->serialNumber);
+        unset($clonedObject->image);
+        unset($clonedObject->typeLabel);
+        unset($clonedObject->hascoTypeLabel);
+
+        $finalObject = json_encode($clonedObject, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         // UPDATE BY DELETING AND CREATING
         $api = \Drupal::service('rep.api_connector');
-        //dpr($responseOptionJSON);
         $api->responseOptionDel($uri);
-        $api->responseOptionAdd($responseOptionJSON);
+        $api->responseOptionAdd($finalObject);
 
       } elseif ($this->element_type == 'codebook') {
 
@@ -1552,52 +1543,6 @@ class SIRSelectForm extends FormBase {
     $url = Url::fromRoute('sir.add_processstem');
     $url->setRouteParameter('sourceprocessstemuri', base64_encode($uri));
     $form_state->setRedirectUrl($url);
-  }
-
-  /**
-   * Check if an element is derived from another element.
-   */
-  protected function checkDerivedElements($uri) {
-    $api = \Drupal::service('rep.api_connector');
-    $rawresponse = $api->getUri($uri);
-    $obj = json_decode($rawresponse);
-    $result = $obj->body;
-
-    $tmpStatus = true;
-
-    // Verifica se o elemento atual está em estado de rascunho e se foi derivado de outro
-    $oldElement = $api->getUri($result->wasDerivedFrom);
-    $oldObj = json_decode($oldElement);
-    $oldResult = $oldObj->body;
-
-    // Verifica se o conteúdo, idioma ou comentário são iguais
-    switch ($this->element_type) {
-      default:
-      case 'responseoption':
-        if (($oldResult->hasContent === $result->hasContent &&
-            $oldResult->hasLanguage === $result->hasLanguage &&
-            $oldResult->comment === $result->comment)
-        ) {
-          $tmpStatus = FALSE;
-        }
-        break;
-    }
-
-    // $currentTime = microtime(true); // Obtém o tempo atual em segundos com microsegundos
-    // $milliseconds = round($currentTime * 1000); // Converte para milissegundos
-    // dpm("Result: " . $result->uri . "<br>Old Result:" . $oldResult->uri . "<br>Hora: " . $milliseconds);
-
-    // OUTPUT
-    if ($tmpStatus === FALSE) {
-        return false;
-    } else {
-      if ($result->wasDerivedFrom !== NULL) {
-        return $this->checkDerivedElements($result->wasDerivedFrom);
-      } else {
-        return true;
-      }
-    }
-
   }
 
 }

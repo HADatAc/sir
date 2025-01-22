@@ -25,6 +25,7 @@ class ProcessStem {
 
   public static function generateOutput($list) {
 
+    dpm($list);
     // ROOT URL
     $root_url = \Drupal::request()->getBaseUrl();
 
@@ -68,11 +69,23 @@ class ProcessStem {
       $status = ' ';
       $row_key = $element->uri;
       if ($element->hasStatus != NULL) {
-        $status = parse_url($element->hasStatus, PHP_URL_FRAGMENT);
 
-        if (parse_url($element->hasStatus, PHP_URL_FRAGMENT) === 'Under Review') {
-          $status = "Under Review";
+        // DISABLE SUBMIT FOR REVIEW BASED ON STATUS
+        if (
+          $element->hasStatus === VSTOI::UNDER_REVIEW ||
+          $element->hasStatus === VSTOI::CURRENT ||
+          $element->hasStatus === VSTOI::DEPRECATED
+        ) {
           $disabled_rows[] = $row_key;
+        }
+
+        // GET STATUS
+        if ($element->hasStatus === VSTOI::DRAFT && $element->hasReviewNote !== NULL) {
+          $status = "Draft (Already Reviewed)";
+        } else if($element->hasStatus === VSTOI::UNDER_REVIEW) {
+          $status = "Under Review";
+        } else {
+          $status = parse_url($element->hasStatus, PHP_URL_FRAGMENT);
         }
 
       }
@@ -83,7 +96,8 @@ class ProcessStem {
         'element_language' => $lang,
         'element_version' => $version,
         'element_generated_by' => $derivationVal,
-        'element_status' => $status
+        'element_status' => $status,
+        'element_hasStatus' => parse_url($element->hasStatus, PHP_URL_FRAGMENT),
       ];
     }
 
