@@ -9,7 +9,7 @@ use Drupal\rep\ListManagerEmailPage;
 use Drupal\rep\Utils;
 use Drupal\sir\Entity\AnnotationStem;
 use Drupal\sir\Entity\DetectorStem;
-use Drupal\sir\Entity\Process;
+use Drupal\sir\Entity\ProcessStem;
 use Drupal\sir\Entity\Detector;
 use Drupal\sir\Entity\Codebook;
 use Drupal\sir\Entity\Instrument;
@@ -163,6 +163,16 @@ class SIRSelectForm extends FormBase {
           '#type' => 'submit',
           '#value' => $this->t('Derive New ' . $this->single_class_name . ' from Selected'),
           '#name' => 'derive_detectorstem',
+          '#attributes' => [
+            'class' => ['btn', 'btn-primary', 'derive-button'],
+          ],
+        ];
+      }
+      if ($this->element_type == 'processstem') {
+        $form['derive_processstem'] = [
+          '#type' => 'submit',
+          '#value' => $this->t('Derive New ' . $this->single_class_name . ' from Selected'),
+          '#name' => 'derive_processstem',
           '#attributes' => [
             'class' => ['btn', 'btn-primary', 'derive-button'],
           ],
@@ -330,10 +340,10 @@ class SIRSelectForm extends FormBase {
         $this->plural_class_name = "Annotation Stems";
         break;
 
-      // PROCESS
-      case "process":
-        $this->single_class_name = "Process";
-        $this->plural_class_name = "Processes";
+      // PROCESS STEM
+      case "processstem":
+        $this->single_class_name = "Process Stem";
+        $this->plural_class_name = "Process Stems";
         break;
 
       default:
@@ -739,6 +749,22 @@ class SIRSelectForm extends FormBase {
           ];
         }
 
+        if ($this->element_type == 'processstem') {
+          $card['card']['footer']['actions']['derive_processstem'] = [
+            '#type' => 'submit',
+            '#value' => $this->t('Derive New '),
+            '#name' => 'derive_processstemelements_' . md5($uri),
+            '#attributes' => [
+                'class' => ['btn', 'btn-secondary', 'btn-sm', 'derive-button', 'button', 'js-form-submit', 'form-submit'],
+                'data-drupal-selector' => 'edit-derive',
+                'id' => 'edit-derive--' . md5($uri),
+            ],
+            '#submit' => ['::deriveProcessStemSubmit'],
+            '#limit_validation_errors' => [],
+            '#element_uri' => $uri,
+          ];
+        }
+
         if ($this->element_type == 'codebook') {
           $card['card']['footer']['actions']['manage_codebook'] = [
               '#type' => 'submit',
@@ -831,8 +857,8 @@ class SIRSelectForm extends FormBase {
         return ResponseOption::generateHeader();
       case "annotationstem":
         return AnnotationStem::generateHeader();
-      case "process":
-        return Process::generateHeader();
+      case "processstem":
+        return ProcessStem::generateHeader();
       default:
         return [];
     }
@@ -855,8 +881,8 @@ class SIRSelectForm extends FormBase {
         return ResponseOption::generateOutput($this->getList());
       case "annotationstem":
         return AnnotationStem::generateOutput($this->getList());
-      case "process":
-        return Process::generateOutput($this->getList());
+      case "processstem":
+        return ProcessStem::generateOutput($this->getList());
       default:
         return [];
     }
@@ -905,7 +931,7 @@ class SIRSelectForm extends FormBase {
         'codebook' => 'sir.edit_codebook',
         'responseoption' => 'sir.edit_response_option',
         'annotationstem' => 'sir.edit_annotationstem',
-        'process' => 'sir.edit_process',
+        'processstem' => 'sir.edit_processstem',
       ];
 
       // Verificar se o tipo de elemento possui uma rota definida
@@ -976,6 +1002,15 @@ class SIRSelectForm extends FormBase {
   }
 
   /**
+   * Submit handler for deriving a process stem in card view.
+   */
+  public function deriveProcessStemSubmit(array &$form, FormStateInterface $form_state) {
+    $triggering_element = $form_state->getTriggeringElement();
+    $uri = $triggering_element['#element_uri'];
+    $this->performDeriveProcessStem($uri, $form_state);
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
@@ -1023,6 +1058,10 @@ class SIRSelectForm extends FormBase {
       // $uri = $triggering_element['#element_uri'];
       $uri = array_keys($selected_rows)[0];
       $this->performDeriveDetectorStem($uri, $form_state);
+    } elseif (strpos($button_name, 'derive_processstem_') === 0) {
+      // $uri = $triggering_element['#element_uri'];
+      $uri = array_keys($selected_rows)[0];
+      $this->performDeriveProcessStem($uri, $form_state);
     } elseif ($button_name === 'add_element') {
       $this->performAdd($form_state);
     } elseif ($button_name === 'edit_element') {
@@ -1096,6 +1135,15 @@ class SIRSelectForm extends FormBase {
       } else {
         \Drupal::messenger()->addWarning($this->t('Please select exactly one item stem to derive.'));
       }
+    } elseif ($button_name === 'derive_processstem') {
+      $selected_rows = array_filter($form_state->getValue('element_table'));
+      if (count($selected_rows) == 1) {
+        $selected_uris = array_keys($selected_rows);
+        $uri = $selected_uris[0];
+        $this->performDeriveProcessStem($uri, $form_state);
+      } else {
+        \Drupal::messenger()->addWarning($this->t('Please select exactly one item stem to derive.'));
+      }
     } elseif ($button_name === 'back') {
       $url = Url::fromRoute('sir.search');
       $form_state->setRedirectUrl($url);
@@ -1132,10 +1180,10 @@ class SIRSelectForm extends FormBase {
       Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_annotationstem');
       $url = Url::fromRoute('sir.add_annotationstem');
       $url->setRouteParameter('sourceannotationstemuri', 'EMPTY');
-    } elseif ($this->element_type == 'process') {
-      Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_process');
-      $url = Url::fromRoute('sir.add_process');
-      $url->setRouteParameter('sourceprocessuri', 'EMPTY');
+    } elseif ($this->element_type == 'processstem') {
+      Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_processstem');
+      $url = Url::fromRoute('sir.add_processstem');
+      $url->setRouteParameter('sourceprocessstemuri', 'EMPTY');
     }
     $form_state->setRedirectUrl($url);
   }
@@ -1159,8 +1207,8 @@ class SIRSelectForm extends FormBase {
       $url = Url::fromRoute('sir.edit_response_option', ['responseoptionuri' => base64_encode($uri)]);
     } elseif ($this->element_type == 'annotationstem') {
       $url = Url::fromRoute('sir.edit_annotationstem', ['annotationstemuri' => base64_encode($uri)]);
-    } elseif ($this->element_type == 'process') {
-      $url = Url::fromRoute('sir.edit_process', ['processuri' => base64_encode($uri)]);
+    } elseif ($this->element_type == 'processstem') {
+      $url = Url::fromRoute('sir.edit_processstem', ['processstemuri' => base64_encode($uri)]);
     } else {
       \Drupal::messenger()->addError($this->t('No edit route found for this element type.'));
       return;
@@ -1190,6 +1238,8 @@ class SIRSelectForm extends FormBase {
         $api->responseOptionDel($uri);
       } elseif ($this->element_type == 'annotationstem') {
         $api->annotationStemDel($uri);
+      } elseif ($this->element_type == 'processstem') {
+        $api->processStemDel($uri);
       }
     }
     \Drupal::messenger()->addMessage($this->t('Selected @elements have been deleted successfully.', ['@elements' => $this->plural_class_name]));
@@ -1283,11 +1333,11 @@ class SIRSelectForm extends FormBase {
           '"uri":"'.$result->uri.'",'.
           '"typeUri":"'.VSTOI::CODEBOOK.'",'.
           '"hascoTypeUri":"'.VSTOI::CODEBOOK.'",'.
-          '"hasStatus":"'.VSTOI::UNDER_REVIEW.'",'.
           '"label":"' . $result->label . '",' .
+          '"comment":"'.$result->comment.'",' .
+          '"hasStatus":"'.VSTOI::UNDER_REVIEW.'",'.
           '"hasLanguage":"'.$result->hasLanguage.'",' .
           '"hasVersion":"'.$result->hasVersion.'",' .
-          '"comment":"'.$result->comment.'",' .
           '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.
           '"hasSIRManagerEmail":"'.$useremail.'",';
 
@@ -1318,9 +1368,9 @@ class SIRSelectForm extends FormBase {
                 '"hasContent": "'.$slot->responseOption->hasContent.'",'.
                 '"hasLanguage": "'.$slot->responseOption->hasLanguage.'",'.
                 '"hasVersion": "'.$slot->responseOption->hasVersion.'",'.
-                '"wasDerivedFrom": "'.$slot->responseOption->wasDerivedFrom.'",'.
+                '"wasDerivedFrom": "'.($slot->responseOption->wasDerivedFrom ?? NULL).'",'.
                 '"hasSIRManagerEmail": "'.$slot->responseOption->hasSIRManagerEmail.'",'.
-                '"hasEditorEmail": "'.$slot->responseOption->hasEditorEmail.'",'.
+                '"hasEditorEmail": "'.($slot->responseOption->hasEditorEmail ?? NULL).'",'.
                 '"typeLabel": "'.$slot->responseOption->typeLabel.'",'.
                 '"hascoTypeLabel": "'.$slot->responseOption->hascoTypeLabel.'"'.
               '},'.
@@ -1340,7 +1390,7 @@ class SIRSelectForm extends FormBase {
 
           // UPDATE BY DELETING AND CREATING
           $api = \Drupal::service('rep.api_connector');
-          dpm($codebookJSON);
+          // dpm($codebookJSON);
           // $api->codebookDel($uri);
           // $api->codebookAdd($codebookJSON);
 
@@ -1356,6 +1406,8 @@ class SIRSelectForm extends FormBase {
       // } elseif ($this->element_type == 'instrument') {
 
       // } elseif ($this->element_type == 'annotationstem') {
+
+      // } elseif ($this->element_type == 'processstem') {
     }
 
 
@@ -1450,6 +1502,21 @@ class SIRSelectForm extends FormBase {
     $form_state->setRedirectUrl($url);
   }
 
+  /**
+   * Perform derive process stem action.
+   */
+  protected function performDeriveProcessStem($uri, FormStateInterface $form_state) {
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = \Drupal::request()->getRequestUri();
+    Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_processstem');
+    $url = Url::fromRoute('sir.add_processstem');
+    $url->setRouteParameter('sourceprocessstemuri', base64_encode($uri));
+    $form_state->setRedirectUrl($url);
+  }
+
+  /**
+   * Check if an element is derived from another element.
+   */
   protected function checkDerivedElements($uri) {
     $api = \Drupal::service('rep.api_connector');
     $rawresponse = $api->getUri($uri);

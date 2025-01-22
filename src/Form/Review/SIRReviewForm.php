@@ -10,6 +10,7 @@ use Drupal\rep\Utils;
 use Drupal\sir\Entity\AnnotationStem;
 use Drupal\sir\Entity\DetectorStem;
 use Drupal\sir\Entity\Detector;
+use Drupal\sir\Entity\ProcessStem;
 use Drupal\sir\Entity\Codebook;
 use Drupal\sir\Entity\Instrument;
 use Drupal\sir\Entity\ResponseOption;
@@ -211,6 +212,12 @@ class SIRReviewForm extends FormBase {
         $this->plural_class_name = "Annotation Stems";
         break;
 
+      // PROCESS STEM
+      case "processstem":
+        $this->single_class_name = "Process Stem";
+        $this->plural_class_name = "Process Stems";
+        break;
+
       default:
         $this->single_class_name = "Object of Unknown Type";
         $this->plural_class_name = "Objects of Unknown Types";
@@ -295,6 +302,8 @@ class SIRReviewForm extends FormBase {
         return ResponseOption::generateReviewHeader();
       case "annotationstem":
         return AnnotationStem::generateHeader();
+      case "processstem":
+        return ProcessStem::generateHeader();
       default:
         return [];
     }
@@ -317,6 +326,8 @@ class SIRReviewForm extends FormBase {
         return ResponseOption::generateReviewOutput($this->getList());
       case "annotationstem":
         return AnnotationStem::generateOutput($this->getList());
+      case "processstem":
+        return ProcessStem::generateOutput($this->getList());
       default:
         return [];
     }
@@ -354,6 +365,7 @@ class SIRReviewForm extends FormBase {
         'codebook' => 'sir.edit_codebook',
         'responseoption' => 'sir.edit_response_option',
         'annotationstem' => 'sir.edit_annotationstem',
+        'processstem' => 'sir.edit_processstem',
       ];
 
       // Verificar se o tipo de elemento possui uma rota definida
@@ -414,6 +426,15 @@ class SIRReviewForm extends FormBase {
   }
 
   /**
+   * Submit handler for deriving a process stem in card view.
+   */
+  public function deriveProcessStemSubmit(array &$form, FormStateInterface $form_state) {
+    $triggering_element = $form_state->getTriggeringElement();
+    $uri = $triggering_element['#element_uri'];
+    $this->performDeriveProcessStem($uri, $form_state);
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
@@ -449,6 +470,9 @@ class SIRReviewForm extends FormBase {
     } elseif (strpos($button_name, 'derive_detectorstem_') === 0) {
       $uri = $triggering_element['#element_uri'];
       $this->performDeriveDetectorStem($uri, $form_state);
+    } elseif (strpos($button_name, 'derive_processstem_') === 0) {
+      $uri = $triggering_element['#element_uri'];
+      $this->performDeriveProcessStem($uri, $form_state);
     } elseif ($button_name === 'add_element') {
       $this->performAdd($form_state);
     } elseif ($button_name === 'edit_element') {
@@ -495,6 +519,15 @@ class SIRReviewForm extends FormBase {
       } else {
         \Drupal::messenger()->addWarning($this->t('Please select exactly one item stem to derive.'));
       }
+    } elseif ($button_name === 'derive_processstem') {
+      $selected_rows = array_filter($form_state->getValue('element_table'));
+      if (count($selected_rows) == 1) {
+        $selected_uris = array_keys($selected_rows);
+        $uri = $selected_uris[0];
+        $this->performDeriveProcessStem($uri, $form_state);
+      } else {
+        \Drupal::messenger()->addWarning($this->t('Please select exactly one item stem to derive.'));
+      }
     } elseif ($button_name === 'back') {
       $url = Url::fromRoute('sir.search');
       $form_state->setRedirectUrl($url);
@@ -531,6 +564,10 @@ class SIRReviewForm extends FormBase {
       Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_annotationstem');
       $url = Url::fromRoute('sir.add_annotationstem');
       $url->setRouteParameter('sourceannotationstemuri', 'EMPTY');
+    } elseif ($this->element_type == 'processstem') {
+      Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_processstem');
+      $url = Url::fromRoute('sir.add_processstem');
+      $url->setRouteParameter('sourceprocessstemuri', 'EMPTY');
     }
     $form_state->setRedirectUrl($url);
   }
@@ -554,8 +591,8 @@ class SIRReviewForm extends FormBase {
       $url = Url::fromRoute('sir.review_response_option', ['responseoptionuri' => base64_encode($uri)]);
     } elseif ($this->element_type == 'annotationstem') {
       $url = Url::fromRoute('sir.review_annotationstem', ['annotationstemuri' => base64_encode($uri)]);
-    } elseif ($this->element_type == 'process') {
-      $url = Url::fromRoute('sir.review_process', ['processuri' => base64_encode($uri)]);
+    } elseif ($this->element_type == 'processstem') {
+      $url = Url::fromRoute('sir.review_processstem', ['processstemuri' => base64_encode($uri)]);
     } else {
       \Drupal::messenger()->addError($this->t('No review route found for this element type.'));
       return;
@@ -585,6 +622,8 @@ class SIRReviewForm extends FormBase {
         $api->responseOptionDel($uri);
       } elseif ($this->element_type == 'annotationstem') {
         $api->annotationStemDel($uri);
+      } elseif ($this->element_type == 'processstem') {
+        $api->processStemDel($uri);
       }
     }
     \Drupal::messenger()->addMessage($this->t('Selected @elements have been deleted successfully.', ['@elements' => $this->plural_class_name]));
@@ -628,6 +667,18 @@ class SIRReviewForm extends FormBase {
     $url = Url::fromRoute('sir.add_detectorstem');
     $url->setRouteParameter('sourcedetectorstemuri', base64_encode($uri));
     $url->setRouteParameter('containersloturi', 'EMPTY');
+    $form_state->setRedirectUrl($url);
+  }
+
+  /**
+   * Perform derive process stem action.
+   */
+  protected function performDeriveProcessStem($uri, FormStateInterface $form_state) {
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = \Drupal::request()->getRequestUri();
+    Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_processstem');
+    $url = Url::fromRoute('sir.add_processstem');
+    $url->setRouteParameter('sourceprocessstemuri', base64_encode($uri));
     $form_state->setRedirectUrl($url);
   }
 

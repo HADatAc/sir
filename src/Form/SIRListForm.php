@@ -12,6 +12,7 @@ use Drupal\sir\Entity\Detector;
 use Drupal\sir\Entity\Codebook;
 use Drupal\sir\Entity\Instrument;
 use Drupal\sir\Entity\ResponseOption;
+use Drupal\sir\Entity\ProcessStem;
 
 class SIRListForm extends FormBase {
 
@@ -132,6 +133,13 @@ class SIRListForm extends FormBase {
         $class_name = "Annotations";
         $header = Annotation::generateHeader();
         $output = Annotation::generateOutput($this->getList());
+        break;
+
+      // PROCESS STEM
+      case "processstem":
+        $class_name = "Process Stems";
+        $header = ProcessStem::generateHeader();
+        $output = ProcessStem::generateOutput($this->getList());
         break;
 
       default:

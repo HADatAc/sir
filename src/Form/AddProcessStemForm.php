@@ -98,10 +98,10 @@ class AddProcessStemForm extends FormBase {
           'data-dialog-options' => json_encode(['width' => 800]),
           'data-url' => Url::fromRoute('rep.tree_form', [
             'mode' => 'modal',
-            'elementtype' => 'process',
+            'elementtype' => 'processstem',
           ], ['query' => ['field_id' => 'process_stem_type']])->toString(),
           'data-field-id' => 'process_stem_type',
-          'data-elementtype' => 'process',
+          'data-elementtype' => 'processstem',
           'autocomplete' => 'off',
         ],
       ],

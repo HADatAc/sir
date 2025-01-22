@@ -105,10 +105,10 @@ class EditProcessStemForm extends FormBase {
           'data-dialog-options' => json_encode(['width' => 800]),
           'data-url' => Url::fromRoute('rep.tree_form', [
             'mode' => 'modal',
-            'elementtype' => 'process_stem',
+            'elementtype' => 'processstem',
           ], ['query' => ['field_id' => 'process_stem_type']])->toString(),
           'data-field-id' => 'process_stem_type',
-          'data-elementtype' => 'process_stem',
+          'data-elementtype' => 'processstem',
           'data-search-value' => $this->getProcessStem()->superUri ?? '',
         ],
       ],

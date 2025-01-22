@@ -64,12 +64,12 @@ sir.manage_instruments:
     _permission: 'access content'
     _role: 'authenticated'
 
-sir.manage_processes :
-  title: Manage Processes
-  description: Manage Processes
+sir.manage_processstems :
+  title: Manage Process Stems
+  description: Manage Process Stems
   route_name: sir.select_element
   route_parameters:
-    elementtype: 'process'
+    elementtype: 'processstem'
     page: '1'
     pagesize: '9'
   parent: sir.top_level
