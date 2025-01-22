@@ -49,7 +49,7 @@ function sir_menu_links_discovered_alter(&$links) {
 
     $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument');
     $preferred_detector = \Drupal::config('rep.settings')->get('preferred_detector');
-    $preferred_processstem = \Drupal::config('rep.settings')->get('preferred_process');
+    $preferred_process = \Drupal::config('rep.settings')->get('preferred_process');
 
     if (isset($links['sir.top_level'])) {
       $links['sir.top_level']['title'] = $preferred_instrument . ' Elements';
@@ -66,10 +66,14 @@ function sir_menu_links_discovered_alter(&$links) {
     if (isset($links['sir.manage_detectors'])) {
         $links['sir.manage_detectors']['title'] = 'Manage ' . $preferred_detector . 's';
     }
-    // if (isset($links['sir.manage_processstems'])) {
-    //   $links['sir.manage_processstems']['title'] = 'Manage ' . $preferred_processstem . ' Stems';
-    // }
-
+    if (isset($links['sir.manage_process'])) {
+      $links['sir.manage_process']['title'] = 'Manage ' . $preferred_process;
+      $links['sir.manage_process']['weight'] = 22;
+    }
+    if (isset($links['sir.manage_processstems'])) {
+      $links['sir.manage_processstems']['title'] = 'Manage ' . $preferred_process . ' Stems';
+      $links['sir.manage_processstems']['weight'] = 23;
+    }
 }
 
 /**
