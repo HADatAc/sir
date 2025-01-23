@@ -277,6 +277,7 @@ class AddDetectorForm extends FormBase {
       $newDetectorUri = Utils::uriGen('detector');
       $detectorJson = '{"uri":"'.$newDetectorUri.'",'.
         '"superUri":"'.UTILS::plainUri($this->getDetectorStem()->superUri).'",'.
+        // '"superUri":"'.($this->getDetectorStem()->superUri).'",'.
         '"hascoTypeUri":"'.VSTOI::DETECTOR.'",'.
         '"hasDetectorStem":"'.$this->getDetectorStem()->uri.'",'.
         '"hasCodebook":"'.$hasCodebook.'",'.

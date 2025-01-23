@@ -25,7 +25,7 @@ class ProcessStem {
 
   public static function generateOutput($list) {
 
-    dpm($list);
+    //dpm($list);
     // ROOT URL
     $root_url = \Drupal::request()->getBaseUrl();
 

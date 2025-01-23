@@ -31,3 +31,7 @@ th {
 .disabled-row td {
   opacity: 0.7;
 }
+
+div.vertical-tabs__panes {
+  border-left: 1px solid #ccc !important;
+}
