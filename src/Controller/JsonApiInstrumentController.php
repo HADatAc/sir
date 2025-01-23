@@ -25,7 +25,7 @@ class JsonApiInstrumentController extends ControllerBase{
     $keyword = Xss::filter($input);
     //dpm($keyword);
     $api = \Drupal::service('rep.api_connector');
-    $instrument_list = $api->listByKeyword('instrument','_',10,0);
+    $instrument_list = $api->listByKeyword('instrument','_',100000,0);
     $obj = json_decode($instrument_list);
     $instruments = [];
     if ($obj->isSuccessful) {

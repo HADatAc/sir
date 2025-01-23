@@ -30,6 +30,11 @@ class AddProcessForm extends FormBase {
    * Builds the main form and handles dynamic addition of instruments.
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+
+    // Disable caching on this form.
+    $form_state->setCached(FALSE);
+
+
     // In buildForm(), before getting $instrument_count:
     if (!$form_state->has('instrument_count')) {
       // If the key does not exist, initialize it at 0.
@@ -122,22 +127,31 @@ class AddProcessForm extends FormBase {
     // Loop to create text fields (1 for each instrument)
     $instrument_count = $form_state->get('instrument_count');
     for ($i = 0; $i < $instrument_count; $i++) {
-      $form['process_instruments']['wrapper']["instrument_$i"]['instrument_stem_label'] = [
+      $form['process_instruments']['wrapper']["instrument_$i"]['instrument_label_'.$i] = [
         '#type' => 'markup',
-        '#markup' => '<strong>' . $this->t('Instrument @num', ['@num' => $i + 1]) . '</strong>',
+        '#markup' => '<strong class="mb-2">' . $this->t('Instrument @num', ['@num' => $i + 1]) . '</strong>',
         '#attributes' => [
           'class' => ['form-control', 'mb-2'],
           'style' => 'font-weight: bold; padding: 5px;',
+          'id' => 'instrument_label_'.$i,
         ],
       ];
-      $form['process_instruments']['wrapper']["instrument_$i"]['instrument_stem'] = [
-          '#type' => 'textfield',
-          '#title' => '',
-          '#default_value' => $form_state->getValue("instrument_$i") ?? '',
-          '#autocomplete_route_name' => 'sir.process_instrument_autocomplete',
-        ];
+      $form['process_instruments']['wrapper']["instrument_$i"]['instrument_selected_'.$i] = [
+        '#type' => 'textfield',
+        '#title' => '',
+        '#size' => 15,
+        '#default_value' => $form_state->getValue("instrument_$i") ?? '',
+        '#autocomplete_route_name' => 'sir.process_instrument_autocomplete',
+        '#attributes' => [
+          'class' => ['form-control', 'mt-2'],
+          'id' => 'instrument_selected_'.$i,
+        ],
+      ];
 
-
+      $form['process_instruments']['wrapper']["instrument_$i"]['instrument_detector_wrapper_'.$i] = [
+        '#type' => 'container',
+        '#attributes' => ['id' => 'instrument_detector_wrapper_'.$i],
+      ];
     }
 
     // Save and Cancel buttons
@@ -272,5 +286,13 @@ class AddProcessForm extends FormBase {
   }
 
 
+  /**
+   * AJAX callback that increments the instrument count and rebuilds the form.
+   */
+  public function loadDetectors(array &$form, $instrumentId, $detectorWrapperId, FormStateInterface $form_state) {
+    dpm($form);
+    // Return exactly the same array that contains the wrapper.
+    return $form['process_instruments']['wrapper'][$instrumentId][$detectorWrapperId];
+  }
 
 }

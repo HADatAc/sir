@@ -391,7 +391,7 @@ class SIRSelectForm extends FormBase {
     // RETRIEVE ELEMENTS FOR THE CURRENT PAGE
     $this->setList(ListManagerEmailPage::exec($this->element_type, $this->manager_email, $page, $pagesize));
 
-    //dpm($this->getList());
+    dpm($this->getList());
 
     // Generate header and output
     $header = $this->generateHeader();
