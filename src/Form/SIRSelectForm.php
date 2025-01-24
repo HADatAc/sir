@@ -391,7 +391,7 @@ class SIRSelectForm extends FormBase {
     // RETRIEVE ELEMENTS FOR THE CURRENT PAGE
     $this->setList(ListManagerEmailPage::exec($this->element_type, $this->manager_email, $page, $pagesize));
 
-    dpm($this->getList());
+    // dpm($this->getList());
 
     // Generate header and output
     $header = $this->generateHeader();
@@ -1468,7 +1468,7 @@ class SIRSelectForm extends FormBase {
 
         // UPDATE BY DELETING AND CREATING
         $api = \Drupal::service('rep.api_connector');
-        dpm($uri);
+        // dpm($uri);
         //dpr($responseOptionJSON);
         $resp = $api->reviewRecursive($uri);
         $total = -1;
@@ -1480,7 +1480,7 @@ class SIRSelectForm extends FormBase {
             $total = $obj2->total;
           }
         }
-        dpm($total);
+        // dpm($total);
 
       // } elseif ($this->element_type == 'annotationstem') {
 
