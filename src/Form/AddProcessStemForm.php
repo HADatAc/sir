@@ -120,7 +120,7 @@ class AddProcessStemForm extends FormBase {
       '#options' => $languages,
       '#default_value' => 'en',
     ];
-    $form['process_stem_version'] = [
+    $form['process_stem_version_hidden'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
       '#default_value' => '1',

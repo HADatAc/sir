@@ -95,7 +95,7 @@ class EditProcessStemForm extends FormBase {
         '#type' => 'textfield',
         '#title' => $this->t('Type'),
         '#name' => 'process_stem_type',
-          '#default_value' => $this->getProcessStem()->superUri ? UTILS::namespaceUri($this->getProcessStem()->superUri) : '',
+          '#default_value' => $this->getProcessStem()->superUri ?? '',
         '#disabled' => TRUE,
         '#id' => 'process_stem_type',
         '#parents' => ['process_stem_type'],
@@ -129,11 +129,15 @@ class EditProcessStemForm extends FormBase {
       '#options' => $languages,
       '#default_value' => $this->getProcessStem()->hasLanguage,
     ];
-    $form['process_stem_version'] = [
+    $form['process_stem_version_hidden'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
-      '#default_value' => $this->getProcessStem()->hasVersion,
-      '#disabled' => TRUE,
+      '#default_value' =>
+        ($this->getProcessStem()->hasStatus === VSTOI::CURRENT || $this->getProcessStem()->hasStatus === VSTOI::DEPRECATED) ?
+        $this->getProcessStem()->hasVersion + 1 : $this->getProcessStem()->hasVersion,
+      '#attributes' => [
+        'disabled' => 'disabled',
+      ],
     ];
     $form['process_stem_description'] = [
       '#type' => 'textarea',

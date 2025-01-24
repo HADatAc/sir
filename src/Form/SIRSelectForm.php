@@ -213,7 +213,7 @@ class SIRSelectForm extends FormBase {
       if ($this->element_type == 'instrument' || $this->element_type == 'codebook') {
         $form['review_recursive_selected_element'] = [
           '#type' => 'submit',
-          '#value' => $this->t('Send Recursive to Reviewer'),
+          '#value' => $this->t('Send Reviewer'),
           '#name' => 'review_recursive_element',
           '#attributes' => [
             'onclick' => 'if(!confirm("Are you sure you want to submit for Review selected entry?")){return false;}',
@@ -1117,7 +1117,8 @@ class SIRSelectForm extends FormBase {
       }
     } elseif ($button_name === 'review_recursive_element') {
       // HAS ELEMENTS
-      if ($form_state->getValue('element_table') !== "") {
+      if (count($selected_rows) == 1) {
+        $uri = array_keys($selected_rows)[0];
         $selected_rows = array_filter($form_state->getValue('element_table'));
         if (!empty($selected_rows)) {
           $selected_uris = array_keys($selected_rows);
@@ -1133,37 +1134,29 @@ class SIRSelectForm extends FormBase {
       \Drupal::messenger()->addWarning($this->t('Under Development'));
 
     } elseif ($button_name === 'manage_slotelements') {
-      $selected_rows = array_filter($form_state->getValue('element_table'));
       if (count($selected_rows) == 1) {
-        $selected_uris = array_keys($selected_rows);
-        $uri = $selected_uris[0];
+        $uri = array_keys($selected_rows)[0];
         $this->performManageSlotElements($uri, $form_state);
       } else {
         \Drupal::messenger()->addWarning($this->t('Please select exactly one item to manage.'));
       }
     } elseif ($button_name === 'manage_codebookslots') {
-      $selected_rows = array_filter($form_state->getValue('element_table'));
       if (count($selected_rows) == 1) {
-        $selected_uris = array_keys($selected_rows);
-        $uri = $selected_uris[0];
+        $uri = array_keys($selected_rows)[0];
         $this->performManageCodebookSlots($uri, $form_state);
       } else {
         \Drupal::messenger()->addWarning($this->t('Please select exactly one codebook to manage.'));
       }
     } elseif ($button_name === 'derive_detectorstem') {
-      $selected_rows = array_filter($form_state->getValue('element_table'));
       if (count($selected_rows) == 1) {
-        $selected_uris = array_keys($selected_rows);
-        $uri = $selected_uris[0];
+        $uri = array_keys($selected_rows)[0];
         $this->performDeriveDetectorStem($uri, $form_state);
       } else {
         \Drupal::messenger()->addWarning($this->t('Please select exactly one item stem to derive.'));
       }
     } elseif ($button_name === 'derive_processstem') {
-      $selected_rows = array_filter($form_state->getValue('element_table'));
       if (count($selected_rows) == 1) {
-        $selected_uris = array_keys($selected_rows);
-        $uri = $selected_uris[0];
+        $uri = array_keys($selected_rows)[0];
         $this->performDeriveProcessStem($uri, $form_state);
       } else {
         \Drupal::messenger()->addWarning($this->t('Please select exactly one item stem to derive.'));
@@ -1254,6 +1247,7 @@ class SIRSelectForm extends FormBase {
    */
   protected function performDelete(array $uris, FormStateInterface $form_state) {
     $api = \Drupal::service('rep.api_connector');
+
     foreach ($uris as $shortUri) {
       $uri = Utils::plainUri($shortUri);
       if ($this->element_type == 'instrument') {
