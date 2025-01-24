@@ -1,55 +1,78 @@
-// (function ($, Drupal) {
-//   'use strict';
-
+// (function($, Drupal) {
 //   Drupal.behaviors.addProcessForm = {
 //     attach: function (context, settings) {
-//       // Seleciona todos os elementos que tenham ID iniciando com instrument_selected_,
-//       // mas apenas dentro do contexto atual (ou seja, onde foi recém-inserido).
-//       // E evita duplicar eventos nos mesmos elementos
-//       once('addProcessForm', '[id^="instrument_selected_"]', context).forEach((element) => {
-//         //alert('AddProcessForm Behavior rodou!');
+//       // Seletor: todos os campos com .form-autocomplete, no contexto do Drupal.
+//       $('input.form-autocomplete', context)
+//         // 1) remove handlers anteriores para evitar duplicar
+//         .off('autocompleteselect.addProcessForm')
 
-//         // Adiciona o listener de foco
-//         element.addEventListener('focus', function() {
-//           const detectorWrapperId = this.id.replace('instrument_selected_', 'instrument_detector_wrapper_');
+//         // 2) registra o evento jQuery UI "autocompleteselect"
+//         .on('autocompleteselect.addProcessForm', function(event, ui) {
+//           // "ui.item" contém { label, value } ou algo similar
+//           const valor = ui.item.value;
+//           console.log('Valor selecionado no jQuery UI Autocomplete:', valor);
 
-//           // Chama sua função
-//           Drupal.behaviors.addProcessForm.loadDetectors(element, detectorWrapperId, 'formState');
+//           // Se quiser um alert:
+//           const URI = /\[(.*?)\]/;
+//           const resultado = valor.match(URI);
+//           // alert('Você escolheu a opção: ' + resultado[1]);
+
+//           // Se quiser pegar o ID do campo dinamicamente
+//           console.log('Campo ID:', this.id);
+//           console.log('Valor:', resultado[1]);
 //         });
-//       });
-//     },
-
-//     loadDetectors: function(instrument, detectorWrapperId, formState) {
-//       console.log('Instrument ID:', instrument.id);
-//       console.log('Detector Wrapper ID:', detectorWrapperId);
-//       console.log('Form State:', formState);
-//       console.log('Element Value:', instrument.value);
 //     }
 //   };
-
 // })(jQuery, Drupal);
 
 (function($, Drupal) {
   Drupal.behaviors.addProcessForm = {
     attach: function (context, settings) {
-      // Seletor: todos os campos com .form-autocomplete, no contexto do Drupal.
-      $('input.form-autocomplete', context)
-        // 1) remove handlers anteriores para evitar duplicar
-        .off('autocompleteselect.addProcessForm')
 
-        // 2) registra o evento jQuery UI "autocompleteselect"
+      var rootUrl = settings.sir_select_form.base_url;
+
+      $('input.form-autocomplete', context)
+        .off('autocompleteselect.addProcessForm')
         .on('autocompleteselect.addProcessForm', function(event, ui) {
-          // "ui.item" contém { label, value } ou algo similar
           const valor = ui.item.value;
           console.log('Valor selecionado no jQuery UI Autocomplete:', valor);
 
-          // Se quiser um alert:
-          alert('Você escolheu a opção: ' + valor);
+          // Extraia a URI dentro de [ ... ] usando regex
+          const match = valor.match(/\[(.*?)\]/);
+          const instrumentUri = match ? match[1] : null;
 
-          // Se quiser pegar o ID do campo dinamicamente
-          console.log('Campo ID:', this.id);
+          // Pega o ID do campo. Ex: "instrument_selected_0"
+          const campoId = this.id;
+
+          // Envia requisição AJAX para a rota custom
+          $.ajax({
+            url: rootUrl + '/sir/load-detectors', // mesma rota que definimos
+            type: 'GET', // ou 'POST'
+            data: {
+              instrument_id: instrumentUri
+            },
+            success: function(response) {
+              // Aqui você recebe o JSON que retornou do Controller
+              if (response.status === 'success') {
+                console.log('Detectors:', response.detectors);
+                // Exemplo de atualizar algo no DOM
+                const index = campoId.replace('instrument_selected_', '');
+                const wrapperId = 'instrument_detector_wrapper_' + index;
+
+                let html = '<ul>';
+                for (const [label, value] of Object.entries(response.detectors)) {
+                  html += `<li>${label} (${value})</li>`;
+                }
+                html += '</ul>';
+
+                $('#' + wrapperId).html(html);
+              }
+            },
+            error: function(xhr, status, error) {
+              console.error('Erro na requisição AJAX:', error);
+            }
+          });
         });
     }
   };
 })(jQuery, Drupal);
-

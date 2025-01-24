@@ -160,7 +160,6 @@ class AddDetectorForm extends FormBase {
           ], ['query' => ['field_id' => 'detector_stem']])->toString(),
           'data-field-id' => 'detector_stem',
           'data-elementtype' => 'detectorstem',
-          'data-element-uri' => 1,
           'autocomplete' => 'off',
         ],
       ],

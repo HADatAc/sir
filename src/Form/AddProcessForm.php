@@ -34,6 +34,8 @@ class AddProcessForm extends FormBase {
     // Disable caching on this form.
     $form_state->setCached(FALSE);
 
+    $form['#attached']['drupalSettings']['sir_process_form']['base_url'] = \Drupal::request()->getSchemeAndHttpHost() . base_path();
+
 
     // In buildForm(), before getting $instrument_count:
     if (!$form_state->has('instrument_count')) {
@@ -292,7 +294,7 @@ class AddProcessForm extends FormBase {
    * AJAX callback that increments the instrument count and rebuilds the form.
    */
   public function loadDetectors(array &$form, $instrumentId, $detectorWrapperId, FormStateInterface $form_state) {
-    dpm($form);
+    dpm($instrumentId);
     // Return exactly the same array that contains the wrapper.
     return $form['process_instruments']['wrapper'][$instrumentId][$detectorWrapperId];
   }

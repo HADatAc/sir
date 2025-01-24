@@ -20,6 +20,8 @@ class JsonApiDetectorController extends ControllerBase{
   public function handleAutocomplete(Request $request) {
     $results = [];
     $input = $request->query->get('q');
+
+
     if (!$input) {
       return new JsonResponse($results);
     }
@@ -27,6 +29,7 @@ class JsonApiDetectorController extends ControllerBase{
     $api = \Drupal::service('rep.api_connector');
     $detector_list = $api->listByKeyword('detector',$input,10,0);
     $obj = json_decode($detector_list);
+    dpm($obj);
     $detectors = [];
     if ($obj->isSuccessful) {
       $detectors = $obj->body;

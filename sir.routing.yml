@@ -517,3 +517,12 @@ sir.process_instrument_autocomplete:
     _format: json
   requirements:
     _permission: 'access content'
+
+sir.load_detectors:
+  path: '/sir/load-detectors'
+  defaults:
+    _controller: '\Drupal\sir\Controller\JsonApiProcessController::loadDetectors'
+    _title: 'Load Detectors'
+  requirements:
+    _permission: 'access content'
+  methods: [GET, POST]
