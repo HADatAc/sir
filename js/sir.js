@@ -244,29 +244,3 @@
   };
 })(jQuery, Drupal);
 
-(function ($, Drupal) {
-  'use strict';
-
-  Drupal.behaviors.addProcessForm = {
-    attach: function (context, settings) {
-      // Adicionando evento de foco ao campo de autocomplete
-      $('[id^=instrument_selected_]', context).once('autocompleteChange').on('focus', function() {
-        const instrumentId = $(this).val(); // Obtém o valor atual do campo
-        const detectorWrapperId = $(this).attr('id').replace('instrument_selected_', 'instrument_detector_wrapper_');
-
-        // Chama a função loadDetectors com os parâmetros necessários
-        Drupal.behaviors.addProcessForm.loadDetectors(instrumentId, detectorWrapperId, 'formState');
-      });
-
-      // ... código existente ...
-    },
-
-    loadDetectors: function(instrumentId, detectorWrapperId, formState) {
-      console.log('Instrument ID:', instrumentId); // Para depuração
-      console.log('Detector Wrapper ID:', detectorWrapperId); // Para depuração
-      console.log('Form State:', formState); // Para depuração
-      // Aqui você pode adicionar a lógica que deseja executar
-    }
-  };
-})(jQuery, Drupal);
-

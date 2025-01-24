@@ -240,11 +240,11 @@ class AddDetectorForm extends FormBase {
       if ($form_state->getValue('detector_stem') == NULL || $form_state->getValue('detector_stem') == '') {
         $form_state->setErrorByName('detector_stem', $this->t('Detector stem value is empty. Please enter a valid stem.'));
       }
-      $stemUri = Utils::uriFromAutocomplete($form_state->getValue('detector_stem'));
-      $this->setDetectorStem($api->parseObjectResponse($api->getUri($stemUri),'getUri'));
-      if($this->getDetectorStem() == NULL) {
-        $form_state->setErrorByName('detector_stem', $this->t('Value for Detector Stem is not valid. Please enter a valid stem.'));
-      }
+      // $stemUri = Utils::uriFromAutocomplete($form_state->getValue('detector_stem'));
+      // $this->setDetectorStem($api->parseObjectResponse($api->getUri($stemUri),'getUri'));
+      // if($this->getDetectorStem() == NULL) {
+      //   $form_state->setErrorByName('detector_stem', $this->t('Value for Detector Stem is not valid. Please enter a valid stem.'));
+      // }
     }
   }
 
@@ -276,10 +276,9 @@ class AddDetectorForm extends FormBase {
       // CREATE A NEW DETECTOR
       $newDetectorUri = Utils::uriGen('detector');
       $detectorJson = '{"uri":"'.$newDetectorUri.'",'.
-        '"superUri":"'.UTILS::plainUri($this->getDetectorStem()->superUri).'",'.
-        // '"superUri":"'.($this->getDetectorStem()->superUri).'",'.
+        '"superUri":"'.UTILS::plainUri($form_state->getValue('detector_stem')).'",'.
         '"hascoTypeUri":"'.VSTOI::DETECTOR.'",'.
-        '"hasDetectorStem":"'.$this->getDetectorStem()->uri.'",'.
+        '"hasDetectorStem":"'.$form_state->getValue('detector_stem').'",'.
         '"hasCodebook":"'.$hasCodebook.'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
       $api->detectorAdd($detectorJson);

@@ -43,9 +43,11 @@ class AddProcessForm extends FormBase {
     $instrument_count = $form_state->get('instrument_count');
 
     // Libraries
-    $form['#attached']['library'][] = 'rep/rep_modal';
-    $form['#attached']['library'][] = 'core/drupal.dialog';
-    $form['#attached']['library'][] = 'core/drupal.ajax';
+    // $form['#attached']['library'][] = 'rep/rep_modal';
+    // $form['#attached']['library'][] = 'core/drupal.dialog';
+    // $form['#attached']['library'][] = 'core/drupal.ajax';
+    $form['#attached']['library'][] = 'sir/sir_process';
+
 
     $tables = new Tables;
     $languages = $tables->getLanguages();

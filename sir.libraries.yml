@@ -6,3 +6,11 @@ sir_js_css:
     - core/jquery
     - core/drupal
     - core/jquery.once
+
+sir_process:
+  version: 1.x
+  js:
+    js/sir_process.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
