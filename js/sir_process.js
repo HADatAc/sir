@@ -32,28 +32,24 @@
 (function($, Drupal) {
   Drupal.behaviors.addProcessForm = {
     attach: function (context, settings) {
-      // Seleciona todos os campos que tenham a classe 'form-autocomplete' no contexto atual
+      // Seletor: todos os campos com .form-autocomplete, no contexto do Drupal.
       $('input.form-autocomplete', context)
-        // Remover quaisquer event handlers anteriores no namespace .myAutocomplete
-        .off('autocompleteSelect.addProcessForm')
+        // 1) remove handlers anteriores para evitar duplicar
+        .off('autocompleteselect.addProcessForm')
 
-        // Registra novamente o evento autocompleteSelect no namespace .myAutocomplete
-        .on('autocompleteSelect.addProcessForm', function (event, selectedItem) {
-          // 'this' é o próprio <input> onde o usuário está digitando
-          // 'selectedItem' é o <li> do autocomplete que foi clicado / selecionado
+        // 2) registra o evento jQuery UI "autocompleteselect"
+        .on('autocompleteselect.addProcessForm', function(event, ui) {
+          // "ui.item" contém { label, value } ou algo similar
+          const valor = ui.item.value;
+          console.log('Valor selecionado no jQuery UI Autocomplete:', valor);
 
-          const valorSelecionado = $(this).val();
-          console.log('Campo ID:', this.id, ' – Valor selecionado:', valorSelecionado);
+          // Se quiser um alert:
+          alert('Você escolheu a opção: ' + valor);
 
-          // Se quiser ver o texto exato que está no <li> da lista de sugestões:
-          console.log('Texto do <li> selecionado:', $(selectedItem).text());
-
-          // Ação que você quer disparar:
-          alert('Você escolheu a opção do autocomplete: ' + valorSelecionado);
-
-          // Chama sua função
-          Drupal.behaviors.addProcessForm.loadDetectors(this, detectorWrapperId, 'formState');
+          // Se quiser pegar o ID do campo dinamicamente
+          console.log('Campo ID:', this.id);
         });
     }
   };
 })(jQuery, Drupal);
+

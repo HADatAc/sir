@@ -41,27 +41,31 @@ class Detector {
         $uri = $element->uri;
       }
       $uri = Utils::namespaceUri($uri);
-      $content = ' ';
+      $content = $element->label;
       $lang = ' ';
       $version = ' ';
-      if ($element->detectorStem != NULL) {
-        if ($element->detectorStem->hasContent != NULL) {
-          $content = $element->detectorStem->hasContent;
-        }
-        if ($element->detectorStem->hasLanguage != NULL) {
-          if ($languages != NULL) {
-            $lang = $languages[$element->detectorStem->hasLanguage];
-          }
-        }
-        if ($element->detectorStem->hasVersion != NULL) {
-          $version = $element->detectorStem->hasVersion;
-        }
+      if ($element->version != NULL) {
+        $version = $element->version;
+      }else{
+        $version = '1';
       }
-      $codebookLabel = ' ';
+      // if ($element->detectorStem != NULL) {
+      //   if ($element->detectorStem->hasContent != NULL) {
+      //     $content = $element->detectorStem->hasContent;
+      //   }
+      //   if ($element->detectorStem->hasLanguage != NULL) {
+      //     if ($languages != NULL) {
+      //       $lang = $languages[$element->detectorStem->hasLanguage];
+      //     }
+      //   }
+      //   if ($element->detectorStem->hasVersion != NULL) {
+      //     $version = $element->detectorStem->hasVersion;
+      //   }
+      $codebookLabel = 'None Provided';
       if ($element->codebook != NULL && $element->codebook->label != '') {
         $codebookLabel = $element->codebook->label;
       }
-      $attributeOf = ' ';
+      $attributeOf = 'None Provided';
       if ($element->superUri != NULL) {
         $attributeOf = Utils::namespaceUri($element->superUri);
       }
