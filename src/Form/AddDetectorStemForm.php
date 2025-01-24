@@ -120,7 +120,7 @@ class AddDetectorStemForm extends FormBase {
       '#options' => $languages,
       '#default_value' => 'en',
     ];
-    $form['detectorstem_version'] = [
+    $form['detectorstem_version_hidden'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
       '#default_value' => '1',

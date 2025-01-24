@@ -136,8 +136,12 @@ class EditInstrumentForm extends FormBase {
     $form['instrument_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
-      '#default_value' => $this->getInstrument()->hasVersion,
-      '#disabled' => TRUE,
+      '#default_value' =>
+        ($this->getInstrument()->hasStatus === VSTOI::CURRENT || $this->getInstrument()->hasStatus === VSTOI::DEPRECATED) ?
+        $this->getInstrument()->hasVersion + 1 : $this->getInstrument()->hasVersion,
+      '#attributes' => [
+        'disabled' => 'disabled',
+      ],
     ];
     $form['instrument_description'] = [
       '#type' => 'textarea',

@@ -77,10 +77,6 @@ class AddCodebookForm extends FormBase {
       '#default_value' => '1',
       '#disabled' => TRUE,
     ];
-    $form['codebook_version'] = [
-      '#type' => 'hidden',
-      '#value' => '1',
-    ];
     $form['codebook_description'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Description'),

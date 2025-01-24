@@ -95,7 +95,7 @@ class EditDetectorStemForm extends FormBase {
         '#type' => 'textfield',
         '#title' => $this->t('Type'),
         '#name' => 'detectorstem_type',
-        '#default_value' => $this->getDetectorStem()->superUri ? UTILS::namespaceUri($this->getDetectorStem()->superUri) : '',
+        '#default_value' => $this->getDetectorStem()->superUri ?? '',
         '#disabled' => TRUE,
         '#id' => 'detectorstem_type',
         '#parents' => ['detectorstem_type'],
@@ -132,8 +132,12 @@ class EditDetectorStemForm extends FormBase {
     $form['detectorstem_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
-      '#default_value' => $this->getDetectorStem()->hasVersion,
-      '#disabled' => TRUE,
+      '#default_value' =>
+        ($this->getDetectorStem()->hasStatus === VSTOI::CURRENT || $this->getDetectorStem()->hasStatus === VSTOI::DEPRECATED) ?
+        $this->getDetectorStem()->hasVersion + 1 : $this->getDetectorStem()->hasVersion,
+      '#attributes' => [
+        'disabled' => 'disabled',
+      ],
     ];
     $form['detectorstem_description'] = [
       '#type' => 'textarea',

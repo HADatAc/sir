@@ -29,7 +29,7 @@
   Drupal.behaviors.addProcessForm = {
     attach: function (context, settings) {
 
-      var rootUrl = settings.sir_select_form.base_url;
+      var rootUrl = settings.sir_process_form.base_url;
 
       $('input.form-autocomplete', context)
         .off('autocompleteselect.addProcessForm')
@@ -61,7 +61,7 @@
 
                 let html = '<ul>';
                 for (const [label, value] of Object.entries(response.detectors)) {
-                  html += `<li>${label} (${value})</li>`;
+                  html += `<li><input type="checkbox" name="detector_${index}" value="${value}">${label}</li>`;
                 }
                 html += '</ul>';
 

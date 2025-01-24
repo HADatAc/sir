@@ -173,6 +173,16 @@ class AddDetectorForm extends FormBase {
       '#title' => $this->t('Codebook'),
       '#autocomplete_route_name' => 'sir.detector_codebook_autocomplete',
     ];
+    $form['detector_version_hidden'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Version'),
+      '#default_value' => '1',
+      '#disabled' => TRUE,
+    ];
+    $form['detector_version'] = [
+      '#type' => 'hidden',
+      '#value' => '1',
+    ];
     $form['detector_isAttributeOf'] = [
       'top' => [
         '#type' => 'markup',
@@ -304,6 +314,7 @@ class AddDetectorForm extends FormBase {
         '"hascoTypeUri":"'.VSTOI::DETECTOR.'",'.
         '"hasDetectorStem":"'.$form_state->getValue('detector_stem').'",'.
         '"hasCodebook":"'.$hasCodebook.'",'.
+        '"hasContent":"'.$label.'",'.
         '"hasSIRManagerEmail":"'.$useremail.'",'.
         '"label":"'.$label.'",'.
         '"hasVersion":"1",'.

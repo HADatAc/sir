@@ -196,19 +196,21 @@ class SIRSelectForm extends FormBase {
           'class' => ['btn', 'btn-primary', 'delete-element-button'],
         ],
       ];
-      $form['review_selected_element'] = [
-        '#type' => 'submit',
-        '#value' => $this->t('Send to Reviewer'),
-        '#name' => 'review_element',
-        '#attributes' => [
-          'onclick' => 'if(!confirm("Are you sure to submit for Review selected entry?")){return false;}',
-          'class' => ['btn', 'btn-primary', 'review-element-button'],
-          'disabled' => 'disabled',
-          'id' => 'review-selected-button',
-        ],
-      ];
+      if ($this->element_type !== 'instrument' && $this->element_type !== 'codebook') {
+        $form['review_selected_element'] = [
+          '#type' => 'submit',
+          '#value' => $this->t('Send to Reviewer'),
+          '#name' => 'review_element',
+          '#attributes' => [
+            'onclick' => 'if(!confirm("Are you sure to submit for Review selected entry?")){return false;}',
+            'class' => ['btn', 'btn-primary', 'review-element-button'],
+            'disabled' => 'disabled',
+            'id' => 'review-selected-button',
+          ],
+        ];
+      }
 
-      if ($this->element_type == 'instrument') {
+      if ($this->element_type == 'instrument' || $this->element_type == 'codebook') {
         $form['review_recursive_selected_element'] = [
           '#type' => 'submit',
           '#value' => $this->t('Send Recursive to Reviewer'),
@@ -218,6 +220,9 @@ class SIRSelectForm extends FormBase {
             'class' => ['btn', 'btn-primary', 'review-element-button'],
           ],
         ];
+      }
+
+      if ($this->element_type === 'instrument') {
         $form['generate_ins_select_element'] = [
           '#type' => 'submit',
           '#value' => $this->t('Generate INS'),

@@ -29,7 +29,6 @@ class JsonApiDetectorController extends ControllerBase{
     $api = \Drupal::service('rep.api_connector');
     $detector_list = $api->listByKeyword('detector',$input,10,0);
     $obj = json_decode($detector_list);
-    dpm($obj);
     $detectors = [];
     if ($obj->isSuccessful) {
       $detectors = $obj->body;
@@ -43,10 +42,14 @@ class JsonApiDetectorController extends ControllerBase{
       //  'value' => EntityAutocomplete::getEntityLabels([$detector]),
       //  'label' => implode(' ', $label),
       //];
+      // $results[] = [
+      //   'value' => $detector->detectorStem->hasContent . '  -- CB: '  . $detector->codebook->label . ' [' . $detector->uri . ']',
+      //   'label' => $detector->detectorStem->hasContent . '  -- CB: '  . $detector->codebook->label,
+      // ];
       $results[] = [
-        'value' => $detector->detectorStem->hasContent . '  -- CB: '  . $detector->codebook->label . ' [' . $detector->uri . ']',
-        'label' => $detector->detectorStem->hasContent . '  -- CB: '  . $detector->codebook->label,
-      ];
+          'value' => $detector->label . ' [' . $detector->uri . ']',
+          'label' => $detector->label,
+        ];
     }
 
     return new JsonResponse($results);

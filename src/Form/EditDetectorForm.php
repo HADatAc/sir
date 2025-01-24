@@ -90,6 +90,16 @@ class EditDetectorForm extends FormBase {
       '#default_value' => $codebookLabel,
       '#autocomplete_route_name' => 'sir.detector_codebook_autocomplete',
     ];
+    $form['codebook_version'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Version'),
+      '#default_value' =>
+        ($this->getDetector()->hasStatus === VSTOI::CURRENT || $this->getDetector()->hasStatus === VSTOI::DEPRECATED) ?
+        $this->getDetector()->hasVersion + 1 : $this->getDetector()->hasVersion,
+      '#attributes' => [
+        'disabled' => 'disabled',
+      ],
+    ];
     $form['detector_attributeOf'] = [
       'top' => [
         '#type' => 'markup',
