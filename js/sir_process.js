@@ -31,6 +31,8 @@
 
       var rootUrl = settings.sir_process_form.base_url;
 
+
+
       $('input.form-autocomplete', context)
         .off('autocompleteselect.addProcessForm')
         .on('autocompleteselect.addProcessForm', function(event, ui) {
@@ -49,7 +51,7 @@
             url: rootUrl + '/sir/load-detectors', // mesma rota que definimos
             type: 'GET', // ou 'POST'
             data: {
-              instrument_id: instrumentUri
+              instrument_id: encodeURIComponent(instrumentUri)
             },
             success: function(response) {
               // Aqui você recebe o JSON que retornou do Controller

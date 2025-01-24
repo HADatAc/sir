@@ -71,6 +71,7 @@ class ManageCodebookSlotsForm extends FormBase {
       'slot_priority' => t('Priority'),
       'slot_content' => t("Response Option's Content"),
       'slot_response_option' => t("Response Option's URI"),
+      'slot_response_status' => t("Status"),
     ];
 
     # POPULATE DATA
@@ -96,6 +97,7 @@ class ManageCodebookSlotsForm extends FormBase {
         'slot_priority' => $slot->hasPriority,
         'slot_content' => $content,
         'slot_response_option' => $responseOptionUriStr,
+        'slot_response_status' => Utils::plainStatus($responseoption->hasStatus),
       ];
     }
 
