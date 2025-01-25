@@ -155,6 +155,7 @@ class AddProcessForm extends FormBase {
       $form['process_instruments']['wrapper']["instrument_$i"]['instrument_detector_wrapper_'.$i] = [
         '#type' => 'container',
         '#attributes' => ['id' => 'instrument_detector_wrapper_'.$i],
+        '#markup' => $form_state->get("instrument_detector_wrapper_$i") ?? '',
       ];
     }
 
@@ -287,16 +288,6 @@ class AddProcessForm extends FormBase {
   public function addInstrumentCallback(array &$form, FormStateInterface $form_state) {
     // Return exactly the same array that contains the wrapper.
     return $form['process_instruments']['wrapper'];
-  }
-
-
-  /**
-   * AJAX callback that increments the instrument count and rebuilds the form.
-   */
-  public function loadDetectors(array &$form, $instrumentId, $detectorWrapperId, FormStateInterface $form_state) {
-    //dpm($instrumentId);
-    // Return exactly the same array that contains the wrapper.
-    return $form['process_instruments']['wrapper'][$instrumentId][$detectorWrapperId];
   }
 
 }
