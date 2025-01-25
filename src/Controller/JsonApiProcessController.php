@@ -6,7 +6,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Drupal\Component\Utility\Xss;
-
+use Drupal\rep\Utils;
 /**
  * Class JsonApiProcessController
  * @package Drupal\sir\Controller
@@ -41,24 +41,24 @@ class JsonApiProcessController extends ControllerBase{
 
   public function loadDetectors(Request $request) {
     $api = \Drupal::service('rep.api_connector');
-    $detectors = $api->detectorListFromInstrument($request->query->get('instrument_id'));
-    $obj = json_decode($detectors);
+    $response = $api->detectorListFromInstrument($request->query->get('instrument_id'));
+
+    // Decode Main JSON
+    $data = json_decode($response, true);
+    // Decode Body JSON
+    $urls = json_decode($data['body'], true);
+
     $detectors = [];
-    if ($obj->isSuccessful) {
-      $detectors = $obj->body;
-    }
-    dpm($detectors);
-    $detectors = [];
-    if ($obj->isSuccessful) {
-      $detectors = $obj->body;
-    }
-    foreach ($detectors as $detector) {
+    foreach ($urls as $url) {
+      $detectorData = $api->getUri($url);
+      $obj = json_decode($detectorData);
       $detectors[] = [
-        'name' => $detector->label,
-        'value' => $detector->uri,
+        'name' => isset($obj->body->label) ? $obj->body->label : '',
+        'uri' => isset($obj->body->uri) ? $obj->body->uri : '',
+        'status' => isset($obj->body->hasStatus) ? Utils::plainStatus($obj->body->hasStatus) : '',
+        'hasStatus' => isset($obj->body->hasStatus) ? $obj->body->hasStatus : null,
       ];
     }
-
     return new JsonResponse($detectors);
   }
 

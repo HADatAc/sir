@@ -111,8 +111,8 @@ class AddDetectorStemForm extends FormBase {
       ],
     ];
     $form['detectorstem_content'] = [
-      '#type' => 'textarea',
-      '#title' => $this->t('Content'),
+      '#type' => 'textfield',
+      '#title' => $this->t('Name'),
     ];
     $form['detectorstem_language'] = [
       '#type' => 'select',

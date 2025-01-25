@@ -111,8 +111,8 @@ class AddProcessStemForm extends FormBase {
       ],
     ];
     $form['process_stem_content'] = [
-      '#type' => 'textarea',
-      '#title' => $this->t('Content'),
+      '#type' => 'textfield',
+      '#title' => $this->t('Name'),
     ];
     $form['process_stem_language'] = [
       '#type' => 'select',

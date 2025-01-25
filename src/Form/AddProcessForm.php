@@ -294,7 +294,7 @@ class AddProcessForm extends FormBase {
    * AJAX callback that increments the instrument count and rebuilds the form.
    */
   public function loadDetectors(array &$form, $instrumentId, $detectorWrapperId, FormStateInterface $form_state) {
-    dpm($instrumentId);
+    //dpm($instrumentId);
     // Return exactly the same array that contains the wrapper.
     return $form['process_instruments']['wrapper'][$instrumentId][$detectorWrapperId];
   }

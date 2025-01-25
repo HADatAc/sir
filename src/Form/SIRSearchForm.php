@@ -145,6 +145,7 @@ class SIRSearchForm extends FormBase {
         'annotationstem' => $this->t('Annotation Stems'),
         'annotation' => $this->t('Annotations'),
         'processstem' => $this->t('Process Stems'),
+        'process' => $this->t('Processes'),
       ],
       '#default_value' => $this->getElementType(),
       '#ajax' => [
