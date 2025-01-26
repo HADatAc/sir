@@ -35,9 +35,10 @@ class AddProcessForm extends FormBase {
     // Disable caching on this form.
     //$form_state->setCached(FALSE);
 
-    $form['#attached']['drupalSettings']['sir_process_form']['base_url'] = \Drupal::request()->getSchemeAndHttpHost() . base_path();
+    // FOR Javascript file
+    //$form['#attached']['drupalSettings']['sir_process_form']['base_url'] = \Drupal::request()->getSchemeAndHttpHost() . base_path();
 
-    // Inicializa o contador de instrumentos no estado do formulário.
+    // Start counter
     if (!$form_state->has('instrument_count')) {
       $form_state->set('instrument_count', 0);
     }
@@ -119,7 +120,7 @@ class AddProcessForm extends FormBase {
     // Loop to create fields for each instrument
     for ($i = 0; $i < $instrument_count; $i++) {
 
-      // Recupera os detectores armazenados no Form State
+      // Get Detectors from state
       $detectors = $this->getDetectors($form_state->getValue("instrument_selected_$i")) ?? [];
 
       $form['process_instruments']['wrapper']['instrument_information_'.$i] = [
@@ -159,9 +160,9 @@ class AddProcessForm extends FormBase {
       ];
 
 
-      // Botão para carregar detectores
+      // Load detectors button
       $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['insURI']['load_detectors_'.$i] = [
-        '#type' => 'button', // Alterado de 'submit' para 'button'
+        '#type' => 'button',
         '#value' => $this->t('Load Detectors'),
         '#name' => 'load_detectors_'.$i,
         '#ajax' => [
@@ -189,7 +190,7 @@ class AddProcessForm extends FormBase {
         ];
       } else {
 
-        $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i]['detectors_table'] = [
+        $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i]['detectors_table_'.$i] = [
           '#type' => 'table',
           '#header' => [
             '#',
@@ -200,26 +201,26 @@ class AddProcessForm extends FormBase {
           '#attributes' => ['class' => ['detectors-table']],
         ];
 
-        // Adiciona as linhas da tabela.
+        // Add line to table
         foreach ($detectors as $index => $item) {
-          $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i]['detectors_table'][$index]['checkbox'] = [
+          $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i]['detectors_table_'.$i][$index]['checkbox'] = [
             '#type' => 'checkbox',
             '#attributes' => [
               'value' => $item['uri'],
               'disabled' => $item['status'] !== 'Draft',
             ],
           ];
-          $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i]['detectors_table'][$index]['label'] = [
+          $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i]['detectors_table_'.$i][$index]['label'] = [
             '#plain_text' => $item['name'] ?: $this->t('Unknown'),
           ];
-          $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i]['detectors_table'][$index]['status'] = [
+          $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i]['detectors_table_'.$i][$index]['status'] = [
             '#plain_text' => $item['status'] ?: $this->t('Unknown'),
           ];
         }
       }
     }
 
-    // TAB 2: Instruments
+    // TAB 3: Mapping
     $form['process_mapper'] = [
       '#type' => 'details',
       '#title' => $this->t('Mapper'),
@@ -307,6 +308,7 @@ class AddProcessForm extends FormBase {
     elseif ($button_name === 'save') {
       // Otherwise, it's a Save action
       try {
+        $api = \Drupal::service('rep.api_connector');
         $uemail = \Drupal::currentUser()->getEmail();
 
         // Prepare data to be sent to the external service
@@ -321,16 +323,43 @@ class AddProcessForm extends FormBase {
           . '"comment":"' . $form_state->getValue('process_description') . '",'
           . '"hasSIRManagerEmail":"' . $uemail . '"}';
 
-        // Chamada para o serviço externo
-        $api = \Drupal::service('rep.api_connector');
+        // Save Process on API
         $api->processAdd($processJSON);
 
+        // HARDCODED FOR DEBUG
+        //$api->processInstrumentAdd('https://cienciapt.org/PC1737858644787541','https://cienciapt.org/INS1737852506198591');
+
+        // Loop to add Instruments
+        $instrument_count = $form_state->get('instrument_count');
+        for ($i = 0; $i < $instrument_count; $i++) {
+          $instrument = $api->processInstrumentAdd($newProcessUri,$form_state->getValue('instrument_selected_'.$i));
+          \Drupal::messenger()->addWarning($this->t("Instrument: "), $instrument);
+
+          // Loop to Add Detectors
+          $detectors = $form_state->getValue('detectors_table_'.$i);
+
+          // Filter elements where value is not 0
+          $filtered = array_filter($detectors, function ($item) {
+            return !empty($item['checkbox']) && $item['checkbox'] !== 0;
+          });
+
+          foreach ($filtered as $key => $value) {
+            if (isset($value['checkbox'])) {
+              $detector = $api->processDetectorAdd($newProcessUri,$value['checkbox']);
+
+              \Drupal::messenger()->addWarning($this->t("Detector: "), $detector);
+            }
+          }
+        }
+
+        //Return to Select List
         \Drupal::messenger()->addMessage($this->t("Process has been added successfully."));
         self::backUrl();
         return;
+        //return false; //DEBUG
 
       } catch (\Exception $e) {
-        \Drupal::messenger()->addMessage($this->t("An error occurred while adding a process: " . $e->getMessage()));
+        \Drupal::messenger()->addError($this->t("An error occurred while adding a process: " . $e->getMessage()));
         self::backUrl();
         return;
       }
@@ -361,7 +390,7 @@ class AddProcessForm extends FormBase {
   }
 
   /**
-   * AJAX callback que incrementa o contador de instrumentos e reconstrói o formulário.
+   * AJAX callback
    */
   public function addInstrumentCallback(array &$form, FormStateInterface $form_state) {
     // If it's not possible to determine the index, return the complete wrapper
@@ -382,21 +411,20 @@ class AddProcessForm extends FormBase {
 
   public function getDetectors($instrument_uri) {
 
-    // Chamada para o serviço externo para obter os detectores.
+    // Call to get Detectors
     $api = \Drupal::service('rep.api_connector');
     $response = $api->detectorListFromInstrument($instrument_uri);
 
-    // Decodificar a resposta JSON.
+    // Decode JSON reply
     $data = json_decode($response, true);
     if (!$data || !isset($data['body'])) {
-      // Em caso de resposta inválida, limpar o wrapper.
       return [];
     }
 
-    // Decodificar o corpo da resposta.
+    // Decode Body
     $urls = json_decode($data['body'], true);
 
-    // Processar os detectores.
+    // Process detectors
     $detectors = [];
     foreach ($urls as $url) {
       $detectorData = $api->getUri($url);
