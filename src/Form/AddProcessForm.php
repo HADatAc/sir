@@ -352,22 +352,25 @@ class AddProcessForm extends FormBase {
         for ($i = 0; $i < $instrument_count; $i++) {
           // Check if there is no "Add instrument Empty"
           if ($form_state->getValue('instrument_selected_'.$i) !== '') {
-            $instrument = $api->processInstrumentAdd($newProcessUri,$form_state->getValue('instrument_selected_'.$i));
-            \Drupal::messenger()->addWarning($this->t("Instrument: "), $instrument);
+            $uriInstrument = Utils::uriFromAutocomplete($form_state->getValue('instrument_selected_'.$i));
+            $api->processInstrumentAdd($newProcessUri,$uriInstrument);
+            \Drupal::messenger()->addWarning($this->t("Instrument: "), $uriInstrument);
 
             // Loop to Add Detectors
             $detectors = $form_state->getValue('detectors_table_'.$i);
 
             // Filter elements where value is not 0
-            $filtered = array_filter($detectors, function ($item) {
-              return !empty($item['checkbox']) && $item['checkbox'] !== 0;
-            });
+            if ($detectors != NULL) {
+              $filtered = array_filter($detectors, function ($item) {
+                return !empty($item['checkbox']) && $item['checkbox'] !== 0;
+              });
 
-            foreach ($filtered as $key => $value) {
-              if (isset($value['checkbox'])) {
-                $detector = $api->processDetectorAdd($newProcessUri,$value['checkbox']);
+              foreach ($filtered as $key => $value) {
+                if (isset($value['checkbox'])) {
+                  $detector = $api->processDetectorAdd($newProcessUri,$value['checkbox']);
 
-                \Drupal::messenger()->addWarning($this->t("Detector: "), $detector);
+                  \Drupal::messenger()->addWarning($this->t("Detector: "), $detector);
+                }
               }
             }
           }

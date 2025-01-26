@@ -16,6 +16,8 @@ class Process {
       'element_name' => t('Name'),
       'element_language' => t('Language'),
       'element_version' => t('Version'),
+      'element_tot_instruments' => t('# Instruments'),
+      'element_tot_detectors' => t('# Detectors'),
       'element_status' => t('Status'),
     ];
 
@@ -58,7 +60,6 @@ class Process {
       }
       $status = ' ';
       if ($element->hasStatus != NULL) {
-
         // GET STATUS
         if ($element->hasStatus === VSTOI::DRAFT && $element->hasReviewNote !== NULL) {
           $status = "Draft (Already Reviewed)";
@@ -67,13 +68,16 @@ class Process {
         } else {
           $status = parse_url($element->hasStatus, PHP_URL_FRAGMENT);
         }
-
       }
+      $totInst = count($element->instruments);
+      $totDet = count($element->detectors);
       $output[$element->uri] = [
         'element_uri' => t('<a href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),
         'element_name' => $label,
         'element_language' => $lang,
         'element_version' => $version,
+        'element_tot_instruments' => $totInst,
+        'element_tot_detectors' => $totDet,
         'element_status' => $status,
         'element_hasStatus' => parse_url($element->hasStatus, PHP_URL_FRAGMENT),
       ];

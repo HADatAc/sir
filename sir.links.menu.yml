@@ -49,21 +49,6 @@ sir.divider2:
   weight: 19
   route_name: '<none>'
 
-sir.manage_instruments:
-  title: Manage Instruments
-  description: Manage Instruments
-  route_name: sir.select_element
-  route_parameters:
-    elementtype: 'instrument'
-    page: '1'
-    pagesize: '9'
-  parent: sir.top_level
-  menu_name: main
-  weight: 20
-  requirements:
-    _permission: 'access content'
-    _role: 'authenticated'
-
 sir.manage_processstems :
   title: Manage Process Stems
   description: Manage Process Stems
@@ -74,7 +59,7 @@ sir.manage_processstems :
     pagesize: '9'
   parent: sir.top_level
   menu_name: main
-  weight: 21
+  weight: 20
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -89,7 +74,22 @@ sir.manage_process :
     pagesize: '9'
   parent: sir.top_level
   menu_name: main
-  weight: 22
+  weight: 30
+  requirements:
+    _permission: 'access content'
+    _role: 'authenticated'
+
+sir.manage_instruments:
+  title: Manage Instruments
+  description: Manage Instruments
+  route_name: sir.select_element
+  route_parameters:
+    elementtype: 'instrument'
+    page: '1'
+    pagesize: '9'
+  parent: sir.top_level
+  menu_name: main
+  weight: 40
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -104,7 +104,7 @@ sir.manage_detectorstems :
     pagesize: '9'
   parent: sir.top_level
   menu_name: main
-  weight: 23
+  weight: 50
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -119,7 +119,7 @@ sir.manage_detectors :
     pagesize: '9'
   parent: sir.top_level
   menu_name: main
-  weight: 24
+  weight: 60
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -134,7 +134,7 @@ sir.manage_codebooks :
     pagesize: '9'
   parent: sir.top_level
   menu_name: main
-  weight: 25
+  weight: 70
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -149,7 +149,7 @@ sir.manage_responseoptions :
     pagesize: '9'
   parent: sir.top_level
   menu_name: main
-  weight: 26
+  weight: 80
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -164,7 +164,7 @@ sir.manage_annotationstems :
     pagesize: '9'
   parent: sir.top_level
   menu_name: main
-  weight: 27
+  weight: 100
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
