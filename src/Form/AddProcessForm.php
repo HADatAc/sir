@@ -117,11 +117,20 @@ class AddProcessForm extends FormBase {
       '#default_tab' => 0,
     ];
 
+    $detectors = [];
     // Loop to create fields for each instrument
     for ($i = 0; $i < $instrument_count; $i++) {
 
-      // Get Detectors from state
-      $detectors = $this->getDetectors($form_state->getValue("instrument_selected_$i")) ?? [];
+      $instrument = '';
+      // Get Detectors from Instrument
+      if ($form_state->getValue('instrument_selected_'.$i) !== '')
+        if (preg_match('/\[(https?:\/\/|)([^\]]+)\]/', $form_state->getValue('instrument_selected_'.$i) , $matches)) {
+          $instrument = $matches[1].$matches[2];
+      }
+
+      //dpm($i."=".$instrument."-".$form_state->getValue('instrument_selected_'.$i));
+
+      $detectors = $this->getDetectors( $instrument);
 
       $form['process_instruments']['wrapper']['instrument_information_'.$i] = [
         '#type' => 'details',
@@ -129,6 +138,7 @@ class AddProcessForm extends FormBase {
         '#open' => ($i < $instrument_count-1) ? FALSE:TRUE,
         '#attributes' => [
           'class' => ['accordion-tabs-wrapper'],
+          'id' => 'instrument_information_'.$i,
         ],
         '#group' => 'instruments'
       ];
@@ -136,9 +146,11 @@ class AddProcessForm extends FormBase {
       $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i] = [
         '#type' => 'fieldset',
         '#title' => $this->t(''),
+        '#name' => 'fieldset_'.$i,
         // '#description' => count($detectors) > 0 ? $this->t('Select the ones you want to include'):'',
         '#attributes' => [
           'class' => ['fieldset-class'],
+          'id' => 'fieldset_'.$i
         ],
       ];
 
@@ -150,10 +162,10 @@ class AddProcessForm extends FormBase {
         '#type' => 'textfield',
         '#title' => '',
         '#size' => 15,
-        '#default_value' => $form_state->getValue("instrument_selected_$i") ?? '',
+        '#default_value' => $form_state->getValue('instrument_selected_'.$i),
         '#autocomplete_route_name' => 'sir.process_instrument_autocomplete',
         '#attributes' => [
-          'class' => ['form-control', 'mt-2', 'w-50', 'me-3'],
+          'class' => ['form-control', 'mt-2', 'w-75', 'me-3'],
           'id' => 'instrument_selected_'.$i,
           'style' => 'float:left;'
         ]
@@ -162,7 +174,7 @@ class AddProcessForm extends FormBase {
 
       // Load detectors button
       $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['insURI']['load_detectors_'.$i] = [
-        '#type' => 'button',
+        '#type' => 'submit',
         '#value' => $this->t('Load Detectors'),
         '#name' => 'load_detectors_'.$i,
         '#ajax' => [
@@ -179,7 +191,7 @@ class AddProcessForm extends FormBase {
 
       $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['insURI']['remove_instrument_'.$i] = [
         '#type' => 'submit',
-        '#value' => $this->t('Remove Instrument'),
+        '#value' => $this->t('Delete'),
         '#name' => 'remove_instrument_'.$i,
         '#ajax' => [
           'callback' => '::removeInstrumentCallback',
@@ -189,7 +201,7 @@ class AddProcessForm extends FormBase {
           'effect' => 'fade',
         ],
         '#attributes' => [
-          'class' => ['btn', 'btn-danger', 'load-detectors-button', 'mt-2', 'w-17'],
+          'class' => ['btn', 'btn-danger', 'load-detectors-button', 'mt-2', 'w-10'],
         ],
       ];
 
@@ -374,10 +386,43 @@ class AddProcessForm extends FormBase {
       }
     }
     elseif ($button_name === 'add_instrument') {
-      $count = $form_state->get('instrument_count') ?? 0;
-      $form_state->set('instrument_count', $count + 1);
+
+      // PREVENT NULL INSTRUMENTS
+      if ($form_state->getValue('instrument_selected_'.($form_state->get('instrument_count')-1)) !== '') {
+        $count = $form_state->get('instrument_count') ?? 0;
+        $form_state->set('instrument_count', $count + 1);
+      }
+
       $form_state->setRebuild(TRUE);
-      return;
+      //return false;
+
+    } elseif (preg_match('/load_detectors_(\d+)/', $button_name, $matches)) {
+      $i = $matches[1];
+      //dpm("Instrument: ".$i);
+
+        if (preg_match('/\[(https?:\/\/|)([^\]]+)\]/', $form_state->getValue('instrument_selected_'.$i), $matches)) {
+          $instrument = $matches[1].$matches[2];
+          // dpm("Instrument: ".$instrument);
+          //$form_state->setValue('detectors_selected_'.$i, $this->getDetectors($instrument));
+          $form_state->setValue('instrument_information_'.$i, $this->t('<b>Instrument ['.$form_state->getValue("instrument_selected_$i").']</b>'));
+        }
+
+      $form_state->setRebuild(TRUE);
+      return $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i];
+
+    } elseif (preg_match('/remove_instrument_(\d+)/', $button_name, $matches)) {
+      $index_to_remove = $matches[1]; // Get the index from the match.
+
+      // Remove the instrument with the extracted index.
+      $instrument_count = $form_state->get('instrument_count');
+      for ($i = $index_to_remove; $i < $instrument_count - 1; $i++) {
+        $form_state->setValue("instrument_selected_$i", $form_state->getValue("instrument_selected_" . ($i + 1)));
+      }
+      // Remove the last instrument (now a duplicate due to shifting).
+      $form_state->unsetValue("instrument_selected_" . $index_to_remove);
+      $form_state->set('instrument_count', $instrument_count > 0 ? $instrument_count - 1 : 0);
+      $form_state->setRebuild(TRUE);
+      return $form['process_instruments']['wrapper'];
     }
   }
 
@@ -405,9 +450,14 @@ class AddProcessForm extends FormBase {
 
   public function loadDetectorsCallback(array &$form, FormStateInterface $form_state) {
     $trigger = $form_state->getTriggeringElement();
+
     if (preg_match('/load_detectors_(\d+)/', $trigger['#name'], $matches)) {
       $i = $matches[1];
-      $form_state->set('detectors_selected_'.$i, $this->getDetectors($form_state->get('instrument_selected_'.$i)));
+      if (preg_match('/\[(https?:\/\/|)([^\]]+)\]/', $form_state->getValue('instrument_selected_'.$i), $matches)) {
+        $instrument = $matches[1].$matches[2];
+        $form_state->set('detectors_selected_'.$i, $this->getDetectors($instrument));
+      }
+
       $form_state->setRebuild(TRUE);
       return $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i];
     }
@@ -450,21 +500,20 @@ class AddProcessForm extends FormBase {
    * AJAX callback to remove an instrument.
    */
   public function removeInstrumentCallback(array &$form, FormStateInterface $form_state) {
-    // Get the triggering element.
-    $trigger = $form_state->getTriggeringElement();
+    // // Get the triggering element.
+    // $trigger = $form_state->getTriggeringElement();
 
-    // Extract the instrument index from the triggering element's name.
-    if (preg_match('/remove_instrument_(\d+)/', $trigger['#name'], $matches)) {
-      $index_to_remove = $matches[1]; // Get the index from the match.
+    // // Extract the instrument index from the triggering element's name.
+    // if (preg_match('/remove_instrument_(\d+)/', $trigger['#name'], $matches)) {
+    //   $index_to_remove = $matches[1]; // Get the index from the match.
 
-      // Remove the instrument with the extracted index.
-      $instrument_count = $form_state->get('instrument_count');
-      for ($i = $index_to_remove; $i < $instrument_count - 1; $i++) {
-        $form_state->setValue("instrument_selected_$i", $form_state->getValue("instrument_selected_" . ($i + 1)));
-      }
-      $form_state->set('instrument_count', $instrument_count - 1);
-      $form_state->setRebuild(TRUE);
-    }
+    //   // Remove the instrument with the extracted index.
+    //   $instrument_count = $form_state->get('instrument_count');
+    //   for ($i = $index_to_remove; $i < $instrument_count - 1; $i++) {
+    //     $form_state->set("instrument_selected_$i", $form_state->get("instrument_selected_" . ($i + 1)));
+    //   }
+    //   $form_state->setRebuild(TRUE);
+    // }
     // Return the updated wrapper.
     return $form['process_instruments']['wrapper'];
 
