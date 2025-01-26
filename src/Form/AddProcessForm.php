@@ -177,6 +177,22 @@ class AddProcessForm extends FormBase {
         ],
       ];
 
+      $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['insURI']['remove_instrument_'.$i] = [
+        '#type' => 'submit',
+        '#value' => $this->t('Remove Instrument'),
+        '#name' => 'remove_instrument_'.$i,
+        '#ajax' => [
+          'callback' => '::removeInstrumentCallback',
+          'wrapper' => 'wrapper',
+          'event' => 'click',
+          'method' => 'replaceWith',
+          'effect' => 'fade',
+        ],
+        '#attributes' => [
+          'class' => ['btn', 'btn-danger', 'load-detectors-button', 'mt-2', 'w-17'],
+        ],
+      ];
+
       $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i] = [
         '#type' => 'container',
         '#attributes' => [
@@ -374,10 +390,6 @@ class AddProcessForm extends FormBase {
       $form_state->setRebuild(TRUE);
       return;
     }
-    elseif ($button_name === 'load_detectors_0') {
-      $form_state->setRebuild(TRUE);
-      return;
-    }
   }
 
   /**
@@ -394,13 +406,12 @@ class AddProcessForm extends FormBase {
   }
 
   /**
-   * AJAX callback
+   * AJAX addInstrument callback
    */
   public function addInstrumentCallback(array &$form, FormStateInterface $form_state) {
     // If it's not possible to determine the index, return the complete wrapper
     return $form['process_instruments']['wrapper'];
   }
-
 
 
   public function loadDetectorsCallback(array &$form, FormStateInterface $form_state) {
@@ -413,6 +424,9 @@ class AddProcessForm extends FormBase {
     }
   }
 
+  /**
+   * get Detectors From Instrument
+   */
   public function getDetectors($instrument_uri) {
 
     // Call to get Detectors
@@ -441,6 +455,30 @@ class AddProcessForm extends FormBase {
       ];
     }
     return $detectors;
+  }
+
+  /**
+   * AJAX callback to remove an instrument.
+   */
+  public function removeInstrumentCallback(array &$form, FormStateInterface $form_state) {
+    // Get the triggering element.
+    $trigger = $form_state->getTriggeringElement();
+
+    // Extract the instrument index from the triggering element's name.
+    if (preg_match('/remove_instrument_(\d+)/', $trigger['#name'], $matches)) {
+      $index_to_remove = $matches[1]; // Get the index from the match.
+
+      // Remove the instrument with the extracted index.
+      $instrument_count = $form_state->get('instrument_count');
+      for ($i = $index_to_remove; $i < $instrument_count - 1; $i++) {
+        $form_state->setValue("instrument_selected_$i", $form_state->getValue("instrument_selected_" . ($i + 1)));
+      }
+      $form_state->set('instrument_count', $instrument_count - 1);
+      $form_state->setRebuild(TRUE);
+    }
+    // Return the updated wrapper.
+    return $form['process_instruments']['wrapper'];
+
   }
 
 }
