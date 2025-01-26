@@ -243,19 +243,8 @@ class AddProcessForm extends FormBase {
       '#group' => 'information',
     ];
 
-    $form['process_mapper']['add_instrument'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Add Instrument'),
-      '#name' => 'add_instrument',
-      '#ajax' => [
-        'callback' => '::addInstrumentCallback',
-        'wrapper' => 'wrapper',
-        'method' => 'replaceWith',
-        'effect' => 'fade',
-      ],
-      '#attributes' => [
-        'class' => ['btn', 'btn-primary', 'add-instrument-button', 'mb-3', 'mt-2'],
-      ],
+    $form['process_mapper']['message'] = [
+      '#markup' => '<p style="font-weight:bold;" class="mt-3"><b>Under Development...</b></p>',
     ];
 
     // Botões de salvar e cancelar
