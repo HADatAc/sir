@@ -327,27 +327,31 @@ class AddProcessForm extends FormBase {
         $api->processAdd($processJSON);
 
         // HARDCODED FOR DEBUG
+        // In my Scenario https://cienciapt.org/PC1737858644787541 = "Xuxu com camarao" AND https://cienciapt.org/INS1737852506198591 = "Nuno Instrument"
         //$api->processInstrumentAdd('https://cienciapt.org/PC1737858644787541','https://cienciapt.org/INS1737852506198591');
 
         // Loop to add Instruments
         $instrument_count = $form_state->get('instrument_count');
         for ($i = 0; $i < $instrument_count; $i++) {
-          $instrument = $api->processInstrumentAdd($newProcessUri,$form_state->getValue('instrument_selected_'.$i));
-          \Drupal::messenger()->addWarning($this->t("Instrument: "), $instrument);
+          // Check if there is no "Add instrument Empty"
+          if ($form_state->getValue('instrument_selected_'.$i) !== '')
+            $instrument = $api->processInstrumentAdd($newProcessUri,$form_state->getValue('instrument_selected_'.$i));
+            \Drupal::messenger()->addWarning($this->t("Instrument: "), $instrument);
 
-          // Loop to Add Detectors
-          $detectors = $form_state->getValue('detectors_table_'.$i);
+            // Loop to Add Detectors
+            $detectors = $form_state->getValue('detectors_table_'.$i);
 
-          // Filter elements where value is not 0
-          $filtered = array_filter($detectors, function ($item) {
-            return !empty($item['checkbox']) && $item['checkbox'] !== 0;
-          });
+            // Filter elements where value is not 0
+            $filtered = array_filter($detectors, function ($item) {
+              return !empty($item['checkbox']) && $item['checkbox'] !== 0;
+            });
 
-          foreach ($filtered as $key => $value) {
-            if (isset($value['checkbox'])) {
-              $detector = $api->processDetectorAdd($newProcessUri,$value['checkbox']);
+            foreach ($filtered as $key => $value) {
+              if (isset($value['checkbox'])) {
+                $detector = $api->processDetectorAdd($newProcessUri,$value['checkbox']);
 
-              \Drupal::messenger()->addWarning($this->t("Detector: "), $detector);
+                \Drupal::messenger()->addWarning($this->t("Detector: "), $detector);
+              }
             }
           }
         }
