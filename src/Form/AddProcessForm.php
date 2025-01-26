@@ -334,7 +334,7 @@ class AddProcessForm extends FormBase {
         $instrument_count = $form_state->get('instrument_count');
         for ($i = 0; $i < $instrument_count; $i++) {
           // Check if there is no "Add instrument Empty"
-          if ($form_state->getValue('instrument_selected_'.$i) !== '')
+          if ($form_state->getValue('instrument_selected_'.$i) !== '') {
             $instrument = $api->processInstrumentAdd($newProcessUri,$form_state->getValue('instrument_selected_'.$i));
             \Drupal::messenger()->addWarning($this->t("Instrument: "), $instrument);
 
