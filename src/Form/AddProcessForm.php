@@ -31,25 +31,21 @@ class AddProcessForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
 
+    //dpm($form_state->getValues());
     // Disable caching on this form.
-    $form_state->setCached(FALSE);
+    //$form_state->setCached(FALSE);
 
     $form['#attached']['drupalSettings']['sir_process_form']['base_url'] = \Drupal::request()->getSchemeAndHttpHost() . base_path();
 
-
-    // In buildForm(), before getting $instrument_count:
+    // Inicializa o contador de instrumentos no estado do formulário.
     if (!$form_state->has('instrument_count')) {
-      // If the key does not exist, initialize it at 0.
       $form_state->set('instrument_count', 0);
     }
     $instrument_count = $form_state->get('instrument_count');
 
     // Libraries
-    // $form['#attached']['library'][] = 'rep/rep_modal';
-    // $form['#attached']['library'][] = 'core/drupal.dialog';
-    // $form['#attached']['library'][] = 'core/drupal.ajax';
-    $form['#attached']['library'][] = 'sir/sir_process';
-
+    //$form['#attached']['library'][] = 'sir/sir_process';
+    $form['#attached']['library'][] = 'core/drupal.accordion';
 
     $tables = new Tables;
     $languages = $tables->getLanguages();
@@ -100,66 +96,113 @@ class AddProcessForm extends FormBase {
       '#name' => 'add_instrument',
       '#ajax' => [
         'callback' => '::addInstrumentCallback',
-        // Matches the ID you forced above.
         'wrapper' => 'wrapper',
         'method' => 'replaceWith',
+        'effect' => 'fade',
       ],
       '#attributes' => [
         'class' => ['btn', 'btn-primary', 'add-instrument-button', 'mb-3', 'mt-2'],
       ],
     ];
 
-
-
-    // Vertical tabs
-    $form['process_instruments']['instruments'] = [
-      '#type' => 'vertical_tabs',
-      '#default_tab' => 'instrument_0',
-    ];
-
-    $form['process_instruments']['instruments'] = [
-      '#type' => 'details',
-      '#title' => $this->t('Instruments'),
-      '#group' => 'instruments',
-    ];
-
+    // Wrapper for instruments
     $form['process_instruments']['wrapper'] = [
       '#type' => 'container',
       '#attributes' => ['id' => 'wrapper'],
     ];
 
-    // Loop to create text fields (1 for each instrument)
-    $instrument_count = $form_state->get('instrument_count');
+    $form['process_instruments']['wrapper']['instrument_tabs'] = [
+      '#type' => 'vertical_tabs',
+      '#default_tab' => 0,
+    ];
+
+    // Loop to create fields for each instrument
     for ($i = 0; $i < $instrument_count; $i++) {
-      $form['process_instruments']['wrapper']["instrument_$i"]['instrument_label_'.$i] = [
-        '#type' => 'markup',
-        '#markup' => '<strong class="mb-2">' . $this->t('Instrument @num', ['@num' => $i + 1]) . '</strong>',
+
+      $form['process_instruments']['wrapper']['instrument_information_'.$i] = [
+        '#type' => 'details',
+        '#title' => $this->t('<b>Instrument ['.$form_state->getValue("instrument_selected_$i").']</b>'),
+        '#open' => ($i < $instrument_count-1) ? FALSE:TRUE,
         '#attributes' => [
-          'class' => ['form-control', 'mb-2'],
-          'style' => 'font-weight: bold; padding: 5px;',
-          'id' => 'instrument_label_'.$i,
+          'class' => ['accordion-tabs-wrapper'],
         ],
       ];
-      $form['process_instruments']['wrapper']["instrument_$i"]['instrument_selected_'.$i] = [
+
+      $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['instrument_selected_'.$i] = [
         '#type' => 'textfield',
         '#title' => '',
         '#size' => 15,
-        '#default_value' => $form_state->getValue("instrument_$i") ?? '',
+        '#default_value' => $form_state->getValue("instrument_selected_$i") ?? '',
         '#autocomplete_route_name' => 'sir.process_instrument_autocomplete',
         '#attributes' => [
-          'class' => ['form-control', 'mt-2'],
+          'class' => ['form-control', 'mt-2', 'w-50'],
           'id' => 'instrument_selected_'.$i,
+        ]
+      ];
+
+      // Recupera os detectores armazenados no Form State
+      $detectors = $this->getDetectors($form_state->getValue("instrument_selected_$i")) ?? [];
+
+      // Botão para carregar detectores
+      $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['load_detectors_'.$i] = [
+        '#type' => 'button', // Alterado de 'submit' para 'button'
+        '#value' => $this->t('Load Detectors'),
+        '#name' => 'load_detectors_'.$i,
+        '#ajax' => [
+          'callback' => '::loadDetectorsCallback',
+          'wrapper' => 'instrument_detector_wrapper_'.$i,
+          'event' => 'click',
+          'method' => 'replaceWith',
+          'effect' => 'fade',
+        ],
+        '#attributes' => [
+          'class' => ['btn', 'btn-secondary', 'load-detectors-button', 'mt-2', 'w-25'],
         ],
       ];
 
-      $form['process_instruments']['wrapper']["instrument_$i"]['instrument_detector_wrapper_'.$i] = [
+      $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['instrument_detector_wrapper_'.$i] = [
         '#type' => 'container',
-        '#attributes' => ['id' => 'instrument_detector_wrapper_'.$i],
-        '#markup' => $form_state->get("instrument_detector_wrapper_$i") ?? '',
+        '#attributes' => [
+          'id' => 'instrument_detector_wrapper_'.$i
+        ]
       ];
+
+      if (empty($detectors)) {
+        $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['instrument_detector_wrapper_'.$i]['message'] = [
+          '#markup' => '<p style="font-weight:bold;" class="mt-3"><b>That Instrument has no detectors available.</b></p>',
+        ];
+      } else {
+        $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['instrument_detector_wrapper_'.$i]['detectors_table'] = [
+          '#type' => 'table',
+          '#header' => [
+            '#',
+            $this->t('Detector Label'),
+            $this->t('Detector Status'),
+          ],
+          '#rows' => [],
+          '#attributes' => ['class' => ['detectors-table']],
+        ];
+
+        // Adiciona as linhas da tabela.
+        foreach ($detectors as $index => $item) {
+          $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['instrument_detector_wrapper_'.$i]['detectors_table'][$index]['checkbox'] = [
+            '#type' => 'checkbox',
+            '#attributes' => [
+              'value' => $item['uri'],
+              'disabled' => $item['status'] !== 'Draft',
+            ],
+          ];
+          $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['instrument_detector_wrapper_'.$i]['detectors_table'][$index]['label'] = [
+            '#plain_text' => $item['name'] ?: $this->t('Unknown'),
+          ];
+          $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['instrument_detector_wrapper_'.$i]['detectors_table'][$index]['status'] = [
+            '#plain_text' => $item['status'] ?: $this->t('Unknown'),
+          ];
+        }
+      }
     }
 
-    // Save and Cancel buttons
+    // Botões de salvar e cancelar
     $form['save_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Save'),
@@ -177,15 +220,14 @@ class AddProcessForm extends FormBase {
       ],
     ];
 
-    // Some extra space
+    // Espaço extra
     $form['bottom_space'] = [
       '#type' => 'item',
-      '#title' => t('<br><br>'),
+      '#markup' => '<br><br>',
     ];
 
     return $form;
   }
-
 
   /**
    * {@inheritdoc}
@@ -240,15 +282,7 @@ class AddProcessForm extends FormBase {
           . '"comment":"' . $form_state->getValue('process_description') . '",'
           . '"hasSIRManagerEmail":"' . $uemail . '"}';
 
-        // Example: here you could also retrieve the instrument names from $form_state
-        // if needed to send them to the API. Example:
-        // $instrument_count = $form_state->get('instrument_count');
-        // for ($i = 0; $i < $instrument_count; $i++) {
-        //   $instrument_name = $form_state->getValue('instrument_name_' . $i);
-        //   // Do something with $instrument_name
-        // }
-
-        // Call to external service
+        // Chamada para o serviço externo
         $api = \Drupal::service('rep.api_connector');
         $api->processAdd($processJSON);
 
@@ -261,9 +295,14 @@ class AddProcessForm extends FormBase {
         self::backUrl();
         return;
       }
-    } elseif ($button_name === 'add_instrument') {
+    }
+    elseif ($button_name === 'add_instrument') {
       $count = $form_state->get('instrument_count') ?? 0;
       $form_state->set('instrument_count', $count + 1);
+      $form_state->setRebuild(TRUE);
+      return;
+    }
+    elseif ($button_name === 'load_detectors_0') {
       $form_state->setRebuild(TRUE);
       return;
     }
@@ -283,11 +322,54 @@ class AddProcessForm extends FormBase {
   }
 
   /**
-   * AJAX callback that increments the instrument count and rebuilds the form.
+   * AJAX callback que incrementa o contador de instrumentos e reconstrói o formulário.
    */
   public function addInstrumentCallback(array &$form, FormStateInterface $form_state) {
-    // Return exactly the same array that contains the wrapper.
+    // If it's not possible to determine the index, return the complete wrapper
     return $form['process_instruments']['wrapper'];
+  }
+
+
+
+  public function loadDetectorsCallback(array &$form, FormStateInterface $form_state) {
+    $trigger = $form_state->getTriggeringElement();
+    if (preg_match('/load_detectors_(\d+)/', $trigger['#name'], $matches)) {
+      $i = $matches[1];
+      $form_state->set('detectors_selected_'.$i, $this->getDetectors($form_state->get('instrument_selected_'.$i)));
+      $form_state->setRebuild(TRUE);
+      return $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['instrument_detector_wrapper_'.$i];
+    }
+  }
+
+  public function getDetectors($instrument_uri) {
+
+    // Chamada para o serviço externo para obter os detectores.
+    $api = \Drupal::service('rep.api_connector');
+    $response = $api->detectorListFromInstrument($instrument_uri);
+
+    // Decodificar a resposta JSON.
+    $data = json_decode($response, true);
+    if (!$data || !isset($data['body'])) {
+      // Em caso de resposta inválida, limpar o wrapper.
+      return [];
+    }
+
+    // Decodificar o corpo da resposta.
+    $urls = json_decode($data['body'], true);
+
+    // Processar os detectores.
+    $detectors = [];
+    foreach ($urls as $url) {
+      $detectorData = $api->getUri($url);
+      $obj = json_decode($detectorData);
+      $detectors[] = [
+        'name' => isset($obj->body->label) ? $obj->body->label : '',
+        'uri' => isset($obj->body->uri) ? $obj->body->uri : '',
+        'status' => isset($obj->body->hasStatus) ? Utils::plainStatus($obj->body->hasStatus) : '',
+        'hasStatus' => isset($obj->body->hasStatus) ? $obj->body->hasStatus : null,
+      ];
+    }
+    return $detectors;
   }
 
 }

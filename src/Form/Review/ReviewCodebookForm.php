@@ -72,7 +72,7 @@ class ReviewCodebookForm extends FormBase {
       '#type' => 'details',
       '#title' => $this->t('Codebook Form'),
       '#group' => 'information',
-  ];
+    ];
 
     $form['codebook_information']['codebook_name'] = [
       '#type' => 'textfield',

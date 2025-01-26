@@ -34,7 +34,7 @@ class JsonApiInstrumentController extends ControllerBase{
     //dpm($instruments);
     foreach ($instruments as $instrument) {
       $results[] = [
-        'value' => $instrument->label . ' [' . $instrument->uri . ']',
+        'value' => $instrument->uri,
         'label' => $instrument->label  . ' [' . $instrument->uri . ']',
       ];
     }
