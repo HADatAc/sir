@@ -119,6 +119,9 @@ class AddProcessForm extends FormBase {
     // Loop to create fields for each instrument
     for ($i = 0; $i < $instrument_count; $i++) {
 
+      // Recupera os detectores armazenados no Form State
+      $detectors = $this->getDetectors($form_state->getValue("instrument_selected_$i")) ?? [];
+
       $form['process_instruments']['wrapper']['instrument_information_'.$i] = [
         '#type' => 'details',
         '#title' => $this->t('<b>Instrument ['.$form_state->getValue("instrument_selected_$i").']</b>'),
@@ -126,25 +129,38 @@ class AddProcessForm extends FormBase {
         '#attributes' => [
           'class' => ['accordion-tabs-wrapper'],
         ],
+        '#group' => 'instruments'
       ];
 
-      $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['instrument_selected_'.$i] = [
+      $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i] = [
+        '#type' => 'fieldset',
+        '#title' => $this->t(''),
+        // '#description' => count($detectors) > 0 ? $this->t('Select the ones you want to include'):'',
+        '#attributes' => [
+          'class' => ['fieldset-class'],
+        ],
+      ];
+
+      $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['insURI'] = [
+        '#type' => 'container'
+      ];
+
+      $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['insURI']['instrument_selected_'.$i] = [
         '#type' => 'textfield',
         '#title' => '',
         '#size' => 15,
         '#default_value' => $form_state->getValue("instrument_selected_$i") ?? '',
         '#autocomplete_route_name' => 'sir.process_instrument_autocomplete',
         '#attributes' => [
-          'class' => ['form-control', 'mt-2', 'w-50'],
+          'class' => ['form-control', 'mt-2', 'w-50', 'me-3'],
           'id' => 'instrument_selected_'.$i,
+          'style' => 'float:left;'
         ]
       ];
 
-      // Recupera os detectores armazenados no Form State
-      $detectors = $this->getDetectors($form_state->getValue("instrument_selected_$i")) ?? [];
 
       // Botão para carregar detectores
-      $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['load_detectors_'.$i] = [
+      $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['insURI']['load_detectors_'.$i] = [
         '#type' => 'button', // Alterado de 'submit' para 'button'
         '#value' => $this->t('Load Detectors'),
         '#name' => 'load_detectors_'.$i,
@@ -156,11 +172,11 @@ class AddProcessForm extends FormBase {
           'effect' => 'fade',
         ],
         '#attributes' => [
-          'class' => ['btn', 'btn-secondary', 'load-detectors-button', 'mt-2', 'w-25'],
+          'class' => ['btn', 'btn-secondary', 'load-detectors-button', 'mt-2', 'w-13'],
         ],
       ];
 
-      $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['instrument_detector_wrapper_'.$i] = [
+      $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i] = [
         '#type' => 'container',
         '#attributes' => [
           'id' => 'instrument_detector_wrapper_'.$i
@@ -168,11 +184,12 @@ class AddProcessForm extends FormBase {
       ];
 
       if (empty($detectors)) {
-        $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['instrument_detector_wrapper_'.$i]['message'] = [
+        $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i]['message'] = [
           '#markup' => '<p style="font-weight:bold;" class="mt-3"><b>That Instrument has no detectors available.</b></p>',
         ];
       } else {
-        $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['instrument_detector_wrapper_'.$i]['detectors_table'] = [
+
+        $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i]['detectors_table'] = [
           '#type' => 'table',
           '#header' => [
             '#',
@@ -185,22 +202,44 @@ class AddProcessForm extends FormBase {
 
         // Adiciona as linhas da tabela.
         foreach ($detectors as $index => $item) {
-          $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['instrument_detector_wrapper_'.$i]['detectors_table'][$index]['checkbox'] = [
+          $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i]['detectors_table'][$index]['checkbox'] = [
             '#type' => 'checkbox',
             '#attributes' => [
               'value' => $item['uri'],
               'disabled' => $item['status'] !== 'Draft',
             ],
           ];
-          $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['instrument_detector_wrapper_'.$i]['detectors_table'][$index]['label'] = [
+          $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i]['detectors_table'][$index]['label'] = [
             '#plain_text' => $item['name'] ?: $this->t('Unknown'),
           ];
-          $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['instrument_detector_wrapper_'.$i]['detectors_table'][$index]['status'] = [
+          $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i]['detectors_table'][$index]['status'] = [
             '#plain_text' => $item['status'] ?: $this->t('Unknown'),
           ];
         }
       }
     }
+
+    // TAB 2: Instruments
+    $form['process_mapper'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Mapper'),
+      '#group' => 'information',
+    ];
+
+    $form['process_mapper']['add_instrument'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Add Instrument'),
+      '#name' => 'add_instrument',
+      '#ajax' => [
+        'callback' => '::addInstrumentCallback',
+        'wrapper' => 'wrapper',
+        'method' => 'replaceWith',
+        'effect' => 'fade',
+      ],
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'add-instrument-button', 'mb-3', 'mt-2'],
+      ],
+    ];
 
     // Botões de salvar e cancelar
     $form['save_submit'] = [
@@ -337,7 +376,7 @@ class AddProcessForm extends FormBase {
       $i = $matches[1];
       $form_state->set('detectors_selected_'.$i, $this->getDetectors($form_state->get('instrument_selected_'.$i)));
       $form_state->setRebuild(TRUE);
-      return $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['instrument_detector_wrapper_'.$i];
+      return $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i];
     }
   }
 
