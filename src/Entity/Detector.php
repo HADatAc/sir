@@ -66,17 +66,30 @@ class Detector {
         $codebookLabel = $element->codebook->label;
       }
       $attributeOf = 'None Provided';
-      if ($element->superUri != NULL) {
-        $attributeOf = Utils::namespaceUri($element->superUri);
+      if ($element->isAttributeOf != NULL) {
+        $attributeOf = $element->isAttributeOf;
+        //$attributeOf = Utils::namespaceUri($element->isAttributeOf);
       }
       $status = ' ';
       $row_key = $element->uri;
       if ($element->hasStatus != NULL) {
-        $status = parse_url($element->hasStatus, PHP_URL_FRAGMENT);
 
-        if (parse_url($element->hasStatus, PHP_URL_FRAGMENT) === 'Under Review') {
-          $status = "Under Review";
+        // DISABLE SUBMIT FOR REVIEW BASED ON STATUS
+        if (
+          $element->hasStatus === VSTOI::UNDER_REVIEW ||
+          $element->hasStatus === VSTOI::CURRENT ||
+          $element->hasStatus === VSTOI::DEPRECATED
+        ) {
           $disabled_rows[] = $row_key;
+        }
+
+        // GET STATUS
+        if ($element->hasStatus === VSTOI::DRAFT && $element->hasReviewNote !== NULL) {
+          $status = "Draft (Already Reviewed)";
+        } else if($element->hasStatus === VSTOI::UNDER_REVIEW) {
+          $status = "Under Review";
+        } else {
+          $status = parse_url($element->hasStatus, PHP_URL_FRAGMENT);
         }
 
       }
@@ -87,7 +100,8 @@ class Detector {
         'element_version' => $version,
         'element_codebook' => $codebookLabel,
         'element_attribute_of' => $attributeOf,
-        'element_status' => $status
+        'element_status' => $status,
+        'element_hasStatus' => parse_url($element->hasStatus, PHP_URL_FRAGMENT),
       ];
     }
 
