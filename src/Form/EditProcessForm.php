@@ -65,6 +65,7 @@ class EditProcessForm extends FormBase {
     $add_instrument = $form_state->get('add_Instrument');
     $instrument_count = $form_state->get('instrument_count');
 
+    // LOAD INSTRUMENTS
     $uri=$processuri ?? 'default';
     $uri_decode=base64_decode($uri);
     $this->setProcessUri($uri_decode);
@@ -78,6 +79,7 @@ class EditProcessForm extends FormBase {
       //dpm($this->getProcess());
       if (is_array($this->getProcess()->instrumentUris)) {
         $totalInstruments = count($this->getProcess()->instrumentUris);
+        $instrument_count += $totalInstruments;
         $form_state->set('instrument_count', $totalInstruments);
       } else {
         $totalInstruments = 0;
@@ -90,11 +92,13 @@ class EditProcessForm extends FormBase {
     }
 
     // CASE NEW INSTRUMENT ADDED
-    dpm($instrument_count);
-    if ($add_instrument > 0 && $instrument_count > 0) $instrument_count++;
+    // if ($add_instrument === 1 && $instrument_count > 0) {
+    //   $instrument_count++;
+    //   $form_state->set('instrument_count', $instrument_count);
+    // }
 
 
-    // dpm("Form: ".$instrument_count);
+    dpm("Instrument Count: ".$instrument_count);
     // dpm("Add: ".$add_instrument);
 
     // Libraries
@@ -222,7 +226,7 @@ class EditProcessForm extends FormBase {
       $form['process_instruments']['wrapper']['instrument_information_'.$i] = [
         '#type' => 'details',
         //'#title' => $this->t('<b>Instrument ['.$form_state->getValue("instrument_selected_$i").']</b>'),
-        '#title' => $this->t("<b>Instrument" . ($instrument->label ? ": " . $instrument->label .' ['. $instrument->uri .']' : '')."</b>"),
+        '#title' => $this->t("<b>Instrument" . ($instrument->label ? ": " . $instrument->label .' ['. $instrument->uri .']' : ": ".$form_state->getValue("instrument_selected_".$i))."</b>"),
         '#open' => ($i < $instrument_count-1) ? FALSE:TRUE,
         '#attributes' => [
           'class' => ['accordion-tabs-wrapper'],
@@ -250,7 +254,7 @@ class EditProcessForm extends FormBase {
         '#type' => 'textfield',
         '#title' => '',
         '#size' => 15,
-        '#default_value' => $instrument->label ? $instrument->label .' ['. $instrument->uri .']' : '',
+        '#default_value' => $instrument->label ? $instrument->label .' ['. $instrument->uri .']' : $form_state->getValue("instrument_selected_".$i),
         '#autocomplete_route_name' => 'sir.process_instrument_autocomplete',
         '#attributes' => [
           'class' => ['form-control', 'mt-2', 'w-75', 'me-3'],
@@ -437,18 +441,21 @@ class EditProcessForm extends FormBase {
         $api->processDel($this->getProcess()->uri);
         $api->processAdd($processJSON);
 
-        // HARDCODED FOR DEBUG
-        // In my Scenario https://cienciapt.org/PC1737858644787541 = "Xuxu com camarao" AND https://cienciapt.org/INS1737852506198591 = "Nuno Instrument"
-        //$api->processInstrumentAdd('https://cienciapt.org/PC1737858644787541','https://cienciapt.org/INS1737852506198591');
 
         // Loop to add Instruments
         $instrument_count = $form_state->get('instrument_count');
+
+        dpm("SAVE_INT_Count: ".$instrument_count);
+
+
         for ($i = 0; $i < $instrument_count; $i++) {
+          //dpm("Instrument: ".$form_state->getValue('instrument_selected_'.$i));
           // Check if there is no "Add instrument Empty"
           if ($form_state->getValue('instrument_selected_'.$i) !== '') {
             $uriInstrument = Utils::uriFromAutocomplete($form_state->getValue('instrument_selected_'.$i));
+            dpm($form_state->getValue('instrument_selected_'.$i));
             $api->processInstrumentAdd($this->getProcessUri(),$uriInstrument);
-            \Drupal::messenger()->addWarning($this->t("Instrument: "), $uriInstrument);
+            //\Drupal::messenger()->addWarning($this->t("Instrument: "), $uriInstrument);
 
             // Loop to Add Detectors
             $detectors = $form_state->getValue('detectors_table_'.$i);
@@ -464,7 +471,7 @@ class EditProcessForm extends FormBase {
                   //dpm($value['checkbox']);
                   $detector = $api->processDetectorAdd($this->getProcessUri(),$value['checkbox']);
 
-                  \Drupal::messenger()->addWarning($this->t("Detector: "), $detector);
+                  //\Drupal::messenger()->addWarning($this->t("Detector: "), $detector);
                 }
               }
             }
@@ -472,10 +479,10 @@ class EditProcessForm extends FormBase {
         }
 
         //Return to Select List
-        \Drupal::messenger()->addMessage($this->t("Process has been added successfully."));
-        self::backUrl();
-        return;
-        //return false; //DEBUG
+        // \Drupal::messenger()->addMessage($this->t("Process has been added successfully."));
+        // self::backUrl();
+        // return;
+        return false; //DEBUG
 
       } catch (\Exception $e) {
         \Drupal::messenger()->addError($this->t("An error occurred while adding a process: " . $e->getMessage()));
@@ -485,16 +492,19 @@ class EditProcessForm extends FormBase {
     }
     elseif ($button_name === 'add_instrument') {
       // PREVENT NULL INSTRUMENTS
-      $last_index = $form_state->get('instrument_count') - 1;
-      dpm($last_index);
+      $last_index = $form_state->get('instrument_count')-1;
+      //dpm("Last_Inde: ".$last_index);
       if ($form_state->getValue('instrument_selected_' . $last_index) !== null) {
         $form_state->set('add_Instrument', 1);
+        // $form_state->set('instrument_count', $form_state->get('instrument_count')+1);
+        //dpm("Index_Selected: ".$form_state->getValue('instrument_selected_' . $last_index));
+      } else {
+        $form_state->set('add_Instrument', 0);
       }
-
-      $form_state->set('add_Instrument', 0);
 
       // Garante a reconstrução do formulário.
       $form_state->setRebuild(TRUE);
+      return $form['process_instruments']['wrapper'];
 
     } elseif (preg_match('/load_detectors_(\d+)/', $button_name, $matches)) {
       $i = $matches[1];
