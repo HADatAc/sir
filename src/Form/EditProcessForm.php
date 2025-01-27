@@ -21,6 +21,8 @@ class EditProcessForm extends FormBase {
 
   protected $process;
 
+  protected $instrumentsList;
+
   public function getProcessUri() {
     return $this->processUri;
   }
@@ -35,6 +37,14 @@ class EditProcessForm extends FormBase {
 
   public function setProcess($pr) {
     return $this->process = $pr;
+  }
+
+  public function getInstruments() {
+    return $this->instrumentsList;
+  }
+
+  public function setInstruments(array $instruments) {
+    return $this->instrumentsList = array_merge($this->getInstruments(),$instruments);
   }
 
   /**
@@ -70,26 +80,41 @@ class EditProcessForm extends FormBase {
     $uri_decode=base64_decode($uri);
     $this->setProcessUri($uri_decode);
 
+    //Load ALL Form Instruments
+    $instrumenst = [];
+    for ($i=0; $i < $instrument_count; $i++)
+    {
+      $instrumenst[] = Utils::uriFromAutocomplete($form_state->getValue("instrument_selected_".$i));
+    }
+
+    // LOAD DATA FROM API
     $api = \Drupal::service('rep.api_connector');
     $rawresponse = $api->getUri($this->getProcessUri());
     $obj = json_decode($rawresponse);
 
     if ($obj->isSuccessful) {
       $this->setProcess($obj->body);
-      //dpm($this->getProcess());
-      if (is_array($this->getProcess()->instrumentUris)) {
-        $totalInstruments = count($this->getProcess()->instrumentUris);
-        $instrument_count += $totalInstruments;
-        $form_state->set('instrument_count', $totalInstruments);
+
+      if (is_array($this->getProcess()->instruments)) {
+        //GET AND SET TOTAL INSTRUMENTS
+        $instrument_count = count($this->getProcess()->instrumentUris) + count($instrumenst);
+        $form_state->set('instrument_count', $instrument_count);
+        //JOIN BOTH ARRAYS
+        $this->setProcess($obj->body)->instrumentUri = array_merge($this->getProcess()->instrumentUris, $instrumenst);
+
       } else {
-        $totalInstruments = 0;
-        $form_state->set('instrument_count', 1);
+        $instrument_count = count($instrumenst);
+        $form_state->set('instrument_count', $instrument_count);
       }
+
+      //dpm("IC: ".$instrument_count . "- AI? ".$add_instrument);
     } else {
       \Drupal::messenger()->addError(t("Failed to retrieve Process."));
       self::backUrl();
       return;
     }
+
+    //dpm($instrument_count);
 
     // CASE NEW INSTRUMENT ADDED
     // if ($add_instrument === 1 && $instrument_count > 0) {
@@ -98,7 +123,7 @@ class EditProcessForm extends FormBase {
     // }
 
 
-    dpm("Instrument Count: ".$instrument_count);
+    //dpm("Instrument Count: ".$instrument_count);
     // dpm("Add: ".$add_instrument);
 
     // Libraries
@@ -210,16 +235,17 @@ class EditProcessForm extends FormBase {
     $detectors = [];
     // Loop to create fields for each instrument
     for ($i = 0; $i < $instrument_count; $i++) {
-      $instrument = '';
+      $instrument = 'X';
       // Get Detectors from Instrument
-      if ($form_state->getValue('instrument_selected_'.$i) !== '')
-        if (preg_match('/\[(https?:\/\/|)([^\]]+)\]/', $form_state->getValue('instrument_selected_'.$i) , $matches)) {
-          $instrument = $matches[1].$matches[2];
+      if (strlen($form_state->getValue('instrument_selected_'.$i)) > 0) {
+        // if (preg_match('/\[(https?:\/\/|)([^\]]+)\]/', $form_state->getValue('instrument_selected_'.$i) , $matches)) {
+        //   $instrument = $matches[1].$matches[2];
+        // $instrument = Utils::uriFromAutocomplete($form_state->getValue('instrument_selected_'.$i));
+        $instrument = Utils::uriFromAutocomplete($form_state->getValue('instrument_selected_'.$i));
       }
 
+      //dpm("Count: " . $instrument_count . "- I=". $i . " - " .$form_state->getValue('instrument_selected_'.$i));
       //dpm($i."=".$instrument."-".$form_state->getValue('instrument_selected_'.$i));
-
-
 
       $instrument = $this->getProcess()->instruments[$i];
       $detectors = $this->getDetectors($instrument->uri);
@@ -445,7 +471,7 @@ class EditProcessForm extends FormBase {
         // Loop to add Instruments
         $instrument_count = $form_state->get('instrument_count');
 
-        dpm("SAVE_INT_Count: ".$instrument_count);
+        //dpm("SAVE_INT_Count: ".$instrument_count);
 
 
         for ($i = 0; $i < $instrument_count; $i++) {
@@ -453,7 +479,7 @@ class EditProcessForm extends FormBase {
           // Check if there is no "Add instrument Empty"
           if ($form_state->getValue('instrument_selected_'.$i) !== '') {
             $uriInstrument = Utils::uriFromAutocomplete($form_state->getValue('instrument_selected_'.$i));
-            dpm($form_state->getValue('instrument_selected_'.$i));
+            //dpm($uriInstrument);
             $api->processInstrumentAdd($this->getProcessUri(),$uriInstrument);
             //\Drupal::messenger()->addWarning($this->t("Instrument: "), $uriInstrument);
 
@@ -493,32 +519,30 @@ class EditProcessForm extends FormBase {
     elseif ($button_name === 'add_instrument') {
       // PREVENT NULL INSTRUMENTS
       $last_index = $form_state->get('instrument_count')-1;
-      //dpm("Last_Inde: ".$last_index);
-      if ($form_state->getValue('instrument_selected_' . $last_index) !== null) {
-        $form_state->set('add_Instrument', 1);
-        // $form_state->set('instrument_count', $form_state->get('instrument_count')+1);
-        //dpm("Index_Selected: ".$form_state->getValue('instrument_selected_' . $last_index));
-      } else {
-        $form_state->set('add_Instrument', 0);
-      }
+
+      //dpm(strlen($form_state->getValue('instrument_selected_' . $last_index)));
+
+      // if ($last_index > 0 || strlen($form_state->getValue('instrument_selected_' . $last_index)) > 0) {
+      //   $form_state->set('add_Instrument', 1);
+      // } else {
+      //   $form_state->set('add_Instrument', 0);
+      // }
+
+      //dpm("Last Index: ".$last_index . " - Add? " . $form_state->get('add_Instrument') . " - Value: " . $form_state->getValue('instrument_selected_' . $last_index));
 
       // Garante a reconstrução do formulário.
       $form_state->setRebuild(TRUE);
-      return $form['process_instruments']['wrapper'];
+      //return $form['process_instruments']['wrapper'];
 
     } elseif (preg_match('/load_detectors_(\d+)/', $button_name, $matches)) {
       $i = $matches[1];
-      //dpm("Instrument: ".$i);
 
-        if (preg_match('/\[(https?:\/\/|)([^\]]+)\]/', $form_state->getValue('instrument_selected_'.$i), $matches)) {
-          $instrument = $matches[1].$matches[2];
-          // dpm("Instrument: ".$instrument);
-          //$form_state->setValue('detectors_selected_'.$i, $this->getDetectors($instrument));
-          $form_state->setValue('instrument_information_'.$i, $this->t('<b>Instrument ['.$form_state->getValue("instrument_selected_$i").']</b>'));
-        }
+      $form_state->setValue('instrument_information_'.$i, $this->t('<b>Instrument: '.$form_state->getValue("instrument_selected_$i").'</b>'));
+
+      $form_state->set('add_Instrument', 0);
 
       $form_state->setRebuild(TRUE);
-      return $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i];
+      //return $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i];
 
     } elseif (preg_match('/remove_instrument_(\d+)/', $button_name, $matches)) {
       $index_to_remove = $matches[1]; // Get the index from the match.
@@ -531,8 +555,11 @@ class EditProcessForm extends FormBase {
       // Remove the last instrument (now a duplicate due to shifting).
       $form_state->unsetValue("instrument_selected_" . $index_to_remove);
       $form_state->set('instrument_count', $instrument_count > 0 ? $instrument_count - 1 : 0);
+
+      $form_state->set('add_Instrument', 0);
+
       $form_state->setRebuild(TRUE);
-      return $form['process_instruments']['wrapper'];
+      //return $form['process_instruments']['wrapper'];
     }
   }
 

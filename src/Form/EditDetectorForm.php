@@ -252,15 +252,15 @@ class EditDetectorForm extends FormBase {
       }
 
       $detectorJson = '{"uri":"'.$this->getDetector()->uri.'",'.
-        '"typeUri":"'.$form_state->getValue('detector_stem').'",'.
+        '"typeUri":"'.Utils::uriFromAutocomplete($form_state->getValue('detector_stem')).'",'.
         '"hascoTypeUri":"'.VSTOI::DETECTOR.'",'.
-        '"hasDetectorStem":"'.$form_state->getValue('detector_stem').'",'.
+        '"hasDetectorStem":"'.Utils::uriFromAutocomplete($form_state->getValue('detector_stem')).'",'.
         '"hasCodebook":"'.$hasCodebook.'",'.
         '"hasContent":"'.$label.'",'.
         '"hasSIRManagerEmail":"'.$useremail.'",'.
         '"label":"'.$label.'",'.
         '"hasVersion":"1",'.
-        '"isAttributeOf":"'.$form_state->getValue('detector_isAttributeOf').'",'.
+        '"isAttributeOf":"'.Utils::uriFromAutocomplete($form_state->getValue('detector_isAttributeOf')).'",'.
         '"hasStatus":"'.VSTOI::DRAFT.'"}';
 
       // UPDATE BY DELETING AND CREATING

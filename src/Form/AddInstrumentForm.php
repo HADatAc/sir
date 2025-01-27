@@ -157,7 +157,7 @@ class AddInstrumentForm extends FormBase {
       $newInstrumentUri = Utils::uriGen('instrument');
       // dpm($newInstrumentUri);
       $instrumentJson = '{"uri":"'.$newInstrumentUri.'",'.
-        '"superUri":"'.UTILS::plainUri($form_state->getValue('instrument_type')).'",'.
+        '"superUri":"'.Utils::uriFromAutocomplete($form_state->getValue('instrument_type')).'",'.
         '"hascoTypeUri":"'.VSTOI::INSTRUMENT.'",'.
         '"hasStatus":"'.VSTOI::DRAFT.'",'.
         '"label":"'.$form_state->getValue('instrument_name').'",'.

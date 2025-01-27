@@ -368,7 +368,7 @@ class AddProcessForm extends FormBase {
         // Prepare data to be sent to the external service
         $newProcessUri = Utils::uriGen('process');
         $processJSON = '{"uri":"' . $newProcessUri . '",'
-          . '"typeUri":"' .$form_state->getValue('process_processstem') . '",'
+          . '"typeUri":"' .Utils::uriFromAutocomplete($form_state->getValue('process_processstem')) . '",'
           . '"hascoTypeUri":"' . VSTOI::PROCESS . '",'
           . '"hasStatus":"' . VSTOI::DRAFT . '",'
           . '"label":"' . $form_state->getValue('process_name') . '",'
@@ -380,10 +380,6 @@ class AddProcessForm extends FormBase {
         // Save Process on API
         $api->processAdd($processJSON);
 
-        // HARDCODED FOR DEBUG
-        // In my Scenario https://cienciapt.org/PC1737858644787541 = "Xuxu com camarao" AND https://cienciapt.org/INS1737852506198591 = "Nuno Instrument"
-        //$api->processInstrumentAdd('https://cienciapt.org/PC1737858644787541','https://cienciapt.org/INS1737852506198591');
-
         // Loop to add Instruments
         $instrument_count = $form_state->get('instrument_count');
         for ($i = 0; $i < $instrument_count; $i++) {
@@ -391,7 +387,7 @@ class AddProcessForm extends FormBase {
           if ($form_state->getValue('instrument_selected_'.$i) !== '') {
             $uriInstrument = Utils::uriFromAutocomplete($form_state->getValue('instrument_selected_'.$i));
             $api->processInstrumentAdd($newProcessUri,$uriInstrument);
-            \Drupal::messenger()->addWarning($this->t("Instrument: "), $uriInstrument);
+            //\Drupal::messenger()->addWarning($this->t("Instrument: "), $uriInstrument);
 
             // Loop to Add Detectors
             $detectors = $form_state->getValue('detectors_table_'.$i);
@@ -406,7 +402,7 @@ class AddProcessForm extends FormBase {
                 if (isset($value['checkbox'])) {
                   $detector = $api->processDetectorAdd($newProcessUri,$value['checkbox']);
 
-                  \Drupal::messenger()->addWarning($this->t("Detector: "), $detector);
+                  //\Drupal::messenger()->addWarning($this->t("Detector: "), $detector);
                 }
               }
             }

@@ -284,7 +284,7 @@ class AddDetectorForm extends FormBase {
       $useremail = \Drupal::currentUser()->getEmail();
 
       // GET THE DETECTOR STEM URI
-      $rawresponse = $api->getUri($form_state->getValue('detector_stem'));
+      $rawresponse = $api->getUri(Utils::uriFromAutocomplete($form_state->getValue('detector_stem')));
       $obj = json_decode($rawresponse);
       $result = $obj->body;
 
@@ -308,16 +308,17 @@ class AddDetectorForm extends FormBase {
       // CREATE A NEW DETECTOR
       $newDetectorUri = Utils::uriGen('detector');
       $detectorJson = '{"uri":"'.$newDetectorUri.'",'.
-        '"typeUri":"'.$form_state->getValue('detector_stem').'",'.
+        '"typeUri":"'.Utils::uriFromAutocomplete($form_state->getValue('detector_stem')).'",'.
         '"hascoTypeUri":"'.VSTOI::DETECTOR.'",'.
-        '"hasDetectorStem":"'.$form_state->getValue('detector_stem').'",'.
+        '"hasDetectorStem":"'.Utils::uriFromAutocomplete($form_state->getValue('detector_stem')).'",'.
         '"hasCodebook":"'.$hasCodebook.'",'.
         '"hasContent":"'.$label.'",'.
         '"hasSIRManagerEmail":"'.$useremail.'",'.
         '"label":"'.$label.'",'.
         '"hasVersion":"1",'.
-        '"isAttributeOf":"'.$form_state->getValue('detector_isAttributeOf').'",'.
+        '"isAttributeOf":"'.Utils::uriFromAutocomplete($form_state->getValue('detector_isAttributeOf')).'",'.
         '"hasStatus":"'.VSTOI::DRAFT.'"}';
+
       $api->detectorAdd($detectorJson);
 
       // IF IN THE CONTEXT OF AN EXISTING CONTAINER_SLOT, ATTACH THE NEWLY CREATED DETECTOR TO THE CONTAINER_SLOT

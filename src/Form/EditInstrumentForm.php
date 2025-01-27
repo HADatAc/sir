@@ -88,7 +88,7 @@ class EditInstrumentForm extends FormBase {
         '#type' => 'textfield',
         '#title' => $this->t('Type'),
         '#name' => 'instrument_type',
-        '#default_value' => $this->getInstrument()->superUri ? UTILS::namespaceUri($this->getInstrument()->superUri): '',
+        '#default_value' => $this->getInstrument()->superUri,
         '#id' => 'instrument_type',
         '#parents' => ['instrument_type'],
         '#disabled' => TRUE,

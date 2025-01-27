@@ -217,7 +217,7 @@ class AddProcessStemForm extends FormBase {
       // CREATE A NEW DETECTOR
       $newProcessStemUri = Utils::uriGen('processstem');
       $processStemJson = '{"uri":"'.$newProcessStemUri.'",'.
-        '"superUri":"'.UTILS::plainUri($form_state->getValue('process_stem_type')).'",'.
+        '"superUri":"'.Utils::uriFromAutocomplete($form_state->getValue('process_stem_type')).'",'.
         //'"typeUri":"'.VSTOI::DETECTOR_STEM.'",'.
         '"label":"'.$form_state->getValue('process_stem_content').'",'.
         '"hascoTypeUri":"'.VSTOI::PROCESS_STEM.'",'.
