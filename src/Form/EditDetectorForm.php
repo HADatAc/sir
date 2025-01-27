@@ -116,7 +116,7 @@ class EditDetectorForm extends FormBase {
         '#type' => 'markup',
         '#markup' => '</div>',
       ],
-      //'#disabled' => TRUE
+      '#disabled' => TRUE
     ];
     $form['detector_codebook'] = [
       '#type' => 'textfield',

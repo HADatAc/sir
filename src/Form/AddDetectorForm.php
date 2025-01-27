@@ -143,9 +143,7 @@ class AddDetectorForm extends FormBase {
       ],
       'main' => [
         '#type' => 'textfield',
-        '#title' => \Drupal::moduleHandler()->moduleExists('pmsr') ?
-          $this->t('Simulation Technique Stem') :
-          $this->t('Detector Stem'),
+        '#title' => $this->t('Detector Stem'),
         '#name' => 'detector_stem',
         '#default_value' => '',
         '#id' => 'detector_stem',

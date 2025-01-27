@@ -67,8 +67,11 @@ class Detector {
       }
       $attributeOf = 'None Provided';
       if ($element->isAttributeOf != NULL) {
-        $attributeOf = $element->isAttributeOf;
-        //$attributeOf = Utils::namespaceUri($element->isAttributeOf);
+        if (preg_match('/^(.*?)\s*\[/', $element->isAttributeOf, $matches)) {
+            $attributeOf = $matches[1];
+        } else {
+          $attributeOf = $element->isAttributeOf;
+        }
       }
       $status = ' ';
       $row_key = $element->uri;

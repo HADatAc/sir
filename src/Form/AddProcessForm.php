@@ -195,7 +195,7 @@ class AddProcessForm extends FormBase {
         '#type' => 'textfield',
         '#title' => '',
         '#size' => 15,
-        '#default_value' => $form_state->getValue('instrument_selected_'.$i),
+        '#default_value' => $form_state->getValue('instrument_selected_'.$i) ?? '',
         '#autocomplete_route_name' => 'sir.process_instrument_autocomplete',
         '#attributes' => [
           'class' => ['form-control', 'mt-2', 'w-75', 'me-3'],
@@ -270,6 +270,7 @@ class AddProcessForm extends FormBase {
               'value' => $item['uri'],
               'disabled' => $item['status'] !== 'Draft',
             ],
+            '#value' => TRUE
           ];
           $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i]['detectors_table_'.$i][$index]['label'] = [
             '#plain_text' => $item['name'] ?: $this->t('Unknown'),
