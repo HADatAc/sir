@@ -201,10 +201,10 @@ class AddDetectorForm extends FormBase {
           'data-dialog-options' => json_encode(['width' => 800]),
           'data-url' => Url::fromRoute('rep.tree_form', [
             'mode' => 'modal',
-            'elementtype' => 'attribute',
+            'elementtype' => 'detectorattribute',
           ], ['query' => ['field_id' => 'detector_isAttributeOf']])->toString(),
           'data-field-id' => 'detector_isAttributeOf',
-          'data-elementtype' => 'attribute',
+          'data-elementtype' => 'detectorattribute',
           'autocomplete' => 'off',
         ],
       ],
@@ -318,6 +318,7 @@ class AddDetectorForm extends FormBase {
         '"hasSIRManagerEmail":"'.$useremail.'",'.
         '"label":"'.$label.'",'.
         '"hasVersion":"1",'.
+        '"isAttributeOf":"'.$form_state->getValue('detector_isAttributeOf').'",'.
         '"hasStatus":"'.VSTOI::DRAFT.'"}';
       $api->detectorAdd($detectorJson);
 

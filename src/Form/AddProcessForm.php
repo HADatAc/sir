@@ -46,7 +46,10 @@ class AddProcessForm extends FormBase {
 
     // Libraries
     //$form['#attached']['library'][] = 'sir/sir_process';
-    $form['#attached']['library'][] = 'core/drupal.accordion';
+    //$form['#attached']['library'][] = 'core/drupal.accordion';
+    // MODAL
+    $form['#attached']['library'][] = 'rep/rep_modal';
+    $form['#attached']['library'][] = 'core/drupal.dialog';
 
     $tables = new Tables;
     $languages = $tables->getLanguages();
@@ -62,6 +65,36 @@ class AddProcessForm extends FormBase {
       '#type' => 'details',
       '#title' => $this->t('Process Main Form'),
       '#group' => 'information',
+    ];
+    $form['process_information']['process_processstem'] = [
+      'top' => [
+        '#type' => 'markup',
+        '#markup' => '<div class="pt-3 col border border-white">',
+      ],
+      'main' => [
+        '#type' => 'textfield',
+        '#title' => $this->t('Process Stem'),
+        '#name' => 'process_processstem',
+        '#default_value' => '',
+        '#id' => 'process_processstem',
+        '#parents' => ['process_processstem'],
+        '#attributes' => [
+          'class' => ['open-tree-modal'],
+          'data-dialog-type' => 'modal',
+          'data-dialog-options' => json_encode(['width' => 800]),
+          'data-url' => Url::fromRoute('rep.tree_form', [
+            'mode' => 'modal',
+            'elementtype' => 'processstem',
+          ], ['query' => ['field_id' => 'process_processstem']])->toString(),
+          'data-field-id' => 'process_processstem',
+          'data-elementtype' => 'processstem',
+          'autocomplete' => 'off',
+        ],
+      ],
+      'bottom' => [
+        '#type' => 'markup',
+        '#markup' => '</div>',
+      ],
     ];
     $form['process_information']['process_name'] = [
       '#type' => 'textfield',
@@ -248,16 +281,16 @@ class AddProcessForm extends FormBase {
       }
     }
 
-    // TAB 3: Mapping
-    $form['process_mapper'] = [
-      '#type' => 'details',
-      '#title' => $this->t('Mapper'),
-      '#group' => 'information',
-    ];
+    // TODO: TAB 3: Mapping
+    // $form['process_mapper'] = [
+    //   '#type' => 'details',
+    //   '#title' => $this->t('Mapper'),
+    //   '#group' => 'information',
+    // ];
 
-    $form['process_mapper']['message'] = [
-      '#markup' => '<p style="font-weight:bold;" class="mt-3"><b>Under Development...</b></p>',
-    ];
+    // $form['process_mapper']['message'] = [
+    //   '#markup' => '<p style="font-weight:bold;" class="mt-3"><b>Under Development...</b></p>',
+    // ];
 
     // Botões de salvar e cancelar
     $form['save_submit'] = [
@@ -301,6 +334,9 @@ class AddProcessForm extends FormBase {
       if (strlen($form_state->getValue('process_name')) < 1) {
         $form_state->setErrorByName('process_name', $this->t('Please enter a valid name for the Process'));
       }
+      if (strlen($form_state->getValue('process_processstem')) < 1) {
+        $form_state->setErrorByName('process_processstem', $this->t('Please enter a valid Process Stem'));
+      }
       if (strlen($form_state->getValue('process_description')) < 1) {
         $form_state->setErrorByName('process_description', $this->t('Please enter a valid description of the Process'));
       }
@@ -331,7 +367,7 @@ class AddProcessForm extends FormBase {
         // Prepare data to be sent to the external service
         $newProcessUri = Utils::uriGen('process');
         $processJSON = '{"uri":"' . $newProcessUri . '",'
-          . '"typeUri":"' . VSTOI::PROCESS . '",'
+          . '"typeUri":"' .$form_state->getValue('process_processstem') . '",'
           . '"hascoTypeUri":"' . VSTOI::PROCESS . '",'
           . '"hasStatus":"' . VSTOI::DRAFT . '",'
           . '"label":"' . $form_state->getValue('process_name') . '",'

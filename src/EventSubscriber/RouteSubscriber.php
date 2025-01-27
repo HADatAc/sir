@@ -66,7 +66,12 @@ class RouteSubscriber extends RouteSubscriberBase {
     if ($route = $collection->get('sir.add_processstem')) {
       $route->setDefault('_title', 'Add ' . $preferred_processstem . ' Stem');
     }
-
+    if ($route = $collection->get('sir.edit_process')) {
+      $route->setDefault('_title', 'Edit ' . $preferred_processstem);
+    }
+    if ($route = $collection->get('sir.add_process')) {
+      $route->setDefault('_title', 'Add ' . $preferred_processstem);
+    }
   }
 
 }

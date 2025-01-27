@@ -219,6 +219,7 @@ class AddProcessStemForm extends FormBase {
       $processStemJson = '{"uri":"'.$newProcessStemUri.'",'.
         '"superUri":"'.UTILS::plainUri($form_state->getValue('process_stem_type')).'",'.
         //'"typeUri":"'.VSTOI::DETECTOR_STEM.'",'.
+        '"label":"'.$form_state->getValue('process_stem_content').'",'.
         '"hascoTypeUri":"'.VSTOI::PROCESS_STEM.'",'.
         '"hasStatus":"'.VSTOI::DRAFT.'",'.
         '"hasContent":"'.$form_state->getValue('process_stem_content').'",'.

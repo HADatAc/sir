@@ -51,6 +51,18 @@ class EditProcessForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $processuri = NULL) {
 
+
+    // ADD INSTRUMENT ROUTINE
+    if (!$form_state->has('add_Instrument')) {
+      $form_state->set('add_Instrument', 0);
+    }
+
+    if ($form_state->get('add_Instrument') === 1) {
+      $form_state->set('instrument_count', $form_state->get('instrument_count') + 1);
+    }
+
+    dpm("form".$form_state->get('add_Instrument'));
+
     $uri=$processuri ?? 'default';
     $uri_decode=base64_decode($uri);
     $this->setProcessUri($uri_decode);
@@ -62,18 +74,19 @@ class EditProcessForm extends FormBase {
     if ($obj->isSuccessful) {
       $this->setProcess($obj->body);
       //dpm($this->getProcess());
-      if (is_array($this->getProcess()->instruments)) {
-        $totalInstruments = count($this->getProcess()->instruments) + 1;
+      if (is_array($this->getProcess()->instrumentUris)) {
+        $totalInstruments = count($this->getProcess()->instrumentUris);
         $form_state->set('instrument_count', $totalInstruments);
         //for ($i = 0; $i < $totalInstruments; $i++) {
           //$instrument = $this->getProcess()->instruments[$i];
-          //$form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['insURI']['instrument_selected_'.$i]['#value'] = [ 
+          //$form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['insURI']['instrument_selected_'.$i]['#value'] = [
           //  $instrument->label .' ['. $instrument->uri .']' ];
           //$form_state->set('instrument_selected_'.$i, $instrument->label .' ['. $instrument->uri .']');
           //$form_state->set('instrument_selected_'.$i, $instrument->label);
         //}
       } else {
         $totalInstruments = 0;
+        $form_state->set('instrument_count', 1);
       }
     } else {
       \Drupal::messenger()->addError(t("Failed to retrieve Process."));
@@ -81,9 +94,12 @@ class EditProcessForm extends FormBase {
       return;
     }
 
+    $instrument_count = $form_state->get('instrument_count');
+
+    dpm("X=".$form_state->get("instrument_count"));
     // Libraries
     //$form['#attached']['library'][] = 'sir/sir_process';
-    $form['#attached']['library'][] = 'core/drupal.accordion';
+    //$form['#attached']['library'][] = 'core/drupal.accordion';
 
     $tables = new Tables;
     $languages = $tables->getLanguages();
@@ -99,7 +115,6 @@ class EditProcessForm extends FormBase {
     //if (!$form_state->has('instrument_count')) {
     //  $form_state->set('instrument_count', 0);
     //}
-    $instrument_count = $form_state->get('instrument_count');
 
     // Vertical tabs
     $form['information'] = [
@@ -112,6 +127,37 @@ class EditProcessForm extends FormBase {
       '#type' => 'details',
       '#title' => $this->t('Process Main Form'),
       '#group' => 'information',
+    ];
+    $form['process_information']['process_processstem'] = [
+      'top' => [
+        '#type' => 'markup',
+        '#markup' => '<div class="pt-3 col border border-white">',
+      ],
+      'main' => [
+        '#type' => 'textfield',
+        '#title' => $this->t('Process Stem'),
+        '#name' => 'process_processstem',
+        '#default_value' => $this->getProcess()->typeUri,
+        '#id' => 'process_processstem',
+        '#parents' => ['process_processstem'],
+        '#attributes' => [
+          'class' => ['open-tree-modal'],
+          'data-dialog-type' => 'modal',
+          'data-dialog-options' => json_encode(['width' => 800]),
+          'data-url' => Url::fromRoute('rep.tree_form', [
+            'mode' => 'modal',
+            'elementtype' => 'processstem',
+          ], ['query' => ['field_id' => 'process_processstem']])->toString(),
+          'data-field-id' => 'process_processstem',
+          'data-elementtype' => 'processstem',
+          'autocomplete' => 'off',
+        ],
+      ],
+      'bottom' => [
+        '#type' => 'markup',
+        '#markup' => '</div>',
+      ],
+      '#disabled' => TRUE,
     ];
     $form['process_information']['process_name'] = [
       '#type' => 'textfield',
@@ -172,7 +218,6 @@ class EditProcessForm extends FormBase {
     $detectors = [];
     // Loop to create fields for each instrument
     for ($i = 0; $i < $instrument_count; $i++) {
-
       $instrument = '';
       // Get Detectors from Instrument
       if ($form_state->getValue('instrument_selected_'.$i) !== '')
@@ -182,9 +227,10 @@ class EditProcessForm extends FormBase {
 
       //dpm($i."=".$instrument."-".$form_state->getValue('instrument_selected_'.$i));
 
-      $detectors = $this->getDetectors($instrument);
+
 
       $instrument = $this->getProcess()->instruments[$i];
+      $detectors = $this->getDetectors($instrument->uri);
       $form['process_instruments']['wrapper']['instrument_information_'.$i] = [
         '#type' => 'details',
         //'#title' => $this->t('<b>Instrument ['.$form_state->getValue("instrument_selected_$i").']</b>'),
@@ -216,7 +262,7 @@ class EditProcessForm extends FormBase {
         '#type' => 'textfield',
         '#title' => '',
         '#size' => 15,
-        '#default_value' => $form_state->getValue('instrument_selected_'.$i),
+        '#default_value' => $instrument->label .' ['. $instrument->uri .']',
         '#autocomplete_route_name' => 'sir.process_instrument_autocomplete',
         '#attributes' => [
           'class' => ['form-control', 'mt-2', 'w-75', 'me-3'],
@@ -302,16 +348,16 @@ class EditProcessForm extends FormBase {
       }
     }
 
-    // TAB 3: Mapping
-    $form['process_mapper'] = [
-      '#type' => 'details',
-      '#title' => $this->t('Mapper'),
-      '#group' => 'information',
-    ];
+    // TODO TAB 3: Mapping
+    // $form['process_mapper'] = [
+    //   '#type' => 'details',
+    //   '#title' => $this->t('Mapper'),
+    //   '#group' => 'information',
+    // ];
 
-    $form['process_mapper']['message'] = [
-      '#markup' => '<p style="font-weight:bold;" class="mt-3"><b>Under Development...</b></p>',
-    ];
+    // $form['process_mapper']['message'] = [
+    //   '#markup' => '<p style="font-weight:bold;" class="mt-3"><b>Under Development...</b></p>',
+    // ];
 
     // Botões de salvar e cancelar
     $form['save_submit'] = [
@@ -352,6 +398,9 @@ class EditProcessForm extends FormBase {
 
     // Only validate if user clicked on the 'Save' button
     if ($button_name === 'save') {
+      if (strlen($form_state->getValue('process_processstem')) < 1) {
+        $form_state->setErrorByName('process_processstem', $this->t('Please enter a valid Process Stem'));
+      }
       if (strlen($form_state->getValue('process_name')) < 1) {
         $form_state->setErrorByName('process_name', $this->t('Please enter a valid name for the Process'));
       }
@@ -377,6 +426,7 @@ class EditProcessForm extends FormBase {
       return;
     }
     elseif ($button_name === 'save') {
+
       // Otherwise, it's a Save action
       try {
         $api = \Drupal::service('rep.api_connector');
@@ -384,9 +434,9 @@ class EditProcessForm extends FormBase {
 
         // Prepare data to be sent to the external service
         $processJSON = '{"uri":"' . $this->getProcessUri() . '",'
-          . '"typeUri":"' . VSTOI::PROCESS . '",'
+          . '"typeUri":"' . $this->process->typeUri  . '",'
           . '"hascoTypeUri":"' . VSTOI::PROCESS . '",'
-          . '"hasStatus":"' . VSTOI::DRAFT . '",'
+          . '"hasStatus":"' . $this->process->hasStatus . '",'
           . '"label":"' . $form_state->getValue('process_name') . '",'
           . '"hasLanguage":"' . $form_state->getValue('process_language') . '",'
           . '"hasVersion":"' . $form_state->getValue('process_version') . '",'
@@ -396,7 +446,7 @@ class EditProcessForm extends FormBase {
         // UPDATE BY DELETING AND CREATING
         $api = \Drupal::service('rep.api_connector');
         $api->processDel($this->getProcess()->uri);
-        $api->processAdd($processJson);
+        $api->processAdd($processJSON);
 
         // HARDCODED FOR DEBUG
         // In my Scenario https://cienciapt.org/PC1737858644787541 = "Xuxu com camarao" AND https://cienciapt.org/INS1737852506198591 = "Nuno Instrument"
@@ -423,7 +473,7 @@ class EditProcessForm extends FormBase {
               foreach ($filtered as $key => $value) {
                 if (isset($value['checkbox'])) {
                   dpm($value['checkbox']);
-                  $detector = $api->processDetectorAdd($newProcessUri,$value['checkbox']);
+                  $detector = $api->processDetectorAdd($this->getProcessUri(),$value['checkbox']);
 
                   \Drupal::messenger()->addWarning($this->t("Detector: "), $detector);
                 }
@@ -445,15 +495,15 @@ class EditProcessForm extends FormBase {
       }
     }
     elseif ($button_name === 'add_instrument') {
-
       // PREVENT NULL INSTRUMENTS
-      if ($form_state->getValue('instrument_selected_'.($form_state->get('instrument_count')-1)) !== '') {
-        $count = $form_state->get('instrument_count') ?? 0;
-        $form_state->set('instrument_count', $count + 1);
+      $last_index = $form_state->get('instrument_count') - 1;
+      if ($form_state->getValue('instrument_selected_' . $last_index) !== null) {
+        $form_state->set('instrument_count', $form_state->get('instrument_count') + 1);
+        $form_state->set('add_Instrument', 1);
       }
 
-      $form_state->setRebuild(TRUE);
-      //return false;
+  // Garante a reconstrução do formulário.
+  $form_state->setRebuild(TRUE);
 
     } elseif (preg_match('/load_detectors_(\d+)/', $button_name, $matches)) {
       $i = $matches[1];
@@ -490,7 +540,7 @@ class EditProcessForm extends FormBase {
    */
   function backUrl() {
     $uid = \Drupal::currentUser()->id();
-    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.edit_process');
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, \Drupal::request()->getRequestUri());
     if ($previousUrl) {
       $response = new RedirectResponse($previousUrl);
       $response->send();
