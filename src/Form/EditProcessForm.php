@@ -213,6 +213,7 @@ class EditProcessForm extends FormBase {
         '#type' => 'textfield',
         '#title' => $this->t('Version'),
         '#default_value' => $version,
+        '#disabled' => true
       ];
       $form['process_description'] = [
         '#type' => 'textarea',
@@ -1017,7 +1018,7 @@ class EditProcessForm extends FormBase {
 
   function backUrl() {
     $uid = \Drupal::currentUser()->id();
-    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.edit_process');
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, \Drupal::request()->getRequestUri());
     if ($previousUrl) {
       $response = new RedirectResponse($previousUrl);
       $response->send();

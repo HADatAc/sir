@@ -64,7 +64,7 @@ class AddProcessForm extends FormBase {
         'processstem' => '',
         'name' => '',
         'language' => '',
-        'version' => '',
+        'version' => '1',
         'description' => '',
       ];
       $instruments = [];
@@ -79,7 +79,7 @@ class AddProcessForm extends FormBase {
 
     // GET LANGUAGES
     $tables = new Tables;
-    $languages = $tables->getLanguages();    
+    $languages = $tables->getLanguages();
 
     // MODAL
     $form['#attached']['library'][] = 'rep/rep_modal'; // Biblioteca personalizada do módulo
@@ -175,7 +175,7 @@ class AddProcessForm extends FormBase {
           '#type' => 'textfield',
           '#title' => $this->t('Process Stem'),
           '#name' => 'process_processstem',
-          '#default_value' => '',
+          '#default_value' => $processstem,
           '#id' => 'process_processstem',
           '#parents' => ['process_processstem'],
           '#attributes' => [
@@ -210,7 +210,8 @@ class AddProcessForm extends FormBase {
       $form['process_version'] = [
         '#type' => 'textfield',
         '#title' => $this->t('Version'),
-        '#default_value' => $version,
+        '#default_value' => $version != null ? $version:1,
+        '#disabled' => true
       ];
       $form['process_description'] = [
         '#type' => 'textarea',
@@ -473,61 +474,93 @@ class AddProcessForm extends FormBase {
             '#type' => 'markup',
             '#markup' => '<div class="pt-3 col border border-white">',
           ),
-          'main' => array(
+          'instrument_instrument_'. $delta => array(
             '#type' => 'textfield',
             '#name' => 'instrument_instrument_' . $delta,
             '#value' => $instrument['instrument'],
-            //'#attributes' => [
-            //  'class' => ['open-tree-modal'],
-            //  'data-dialog-type' => 'modal',
-            //  'data-dialog-options' => json_encode(['width' => 800]),
-            //  'data-url' => Url::fromRoute(
-            //    'rep.tree_form', 
-            //    [
-            //      'mode' => 'modal',
-            //      'elementtype' => 'instrument',
-            //    ], 
-            //    [
-            //      'query' => ['field_id' => 'instrument_instrument_' . $delta]
-            //    ])->toString(),
-            //  'data-field-id' => 'instrument_instrument_' . $delta,
-            //  'data-search-value' => $instrument['instrument'],
-            //  'data-elementtype' => 'instrument',
-            //],
-            //'#ajax' => [
-            //  'callback' => '::addInstrumentCallback',
-            //  'wrapper' => 'wrapper',
-            //  'method' => 'replaceWith',
-            //  'effect' => 'fade',
-            //],
-      
+            '#attributes' => [
+             'class' => ['open-tree-modal'],
+             'data-dialog-type' => 'modal',
+             'data-dialog-options' => json_encode(['width' => 800]),
+             'data-url' => Url::fromRoute(
+               'rep.tree_form',
+               [
+                 'mode' => 'modal',
+                 'elementtype' => 'instrument',
+               ],
+               [
+                 'query' => ['field_id' => 'instrument_instrument_' . $delta]
+               ])->toString(),
+             'data-field-id' => 'instrument_instrument_' . $delta,
+             'data-search-value' => $instrument['instrument'],
+             'data-elementtype' => 'instrument',
+            ],
+            '#ajax' => [
+             'callback' => '::addDetectorCallback',
+             'event' => 'change',
+             'wrapper' => 'instrument_detectors_' . $delta,
+             'method' => 'replaceWith',
+             'effect' => 'fade',
+            ],
+
           ),
           'bottom' => array(
             '#type' => 'markup',
             '#markup' => '</div>',
           ),
         ),
+        // 'detectors' => [
+        //   'top' => [
+        //     '#type' => 'markup',
+        //     '#markup' => '<div class="pt-3 col border border-white">',
+        //   ],
+        //   'instrument_detectors_'. $delta => [
+        //     '#type' => 'container',
+        //     '#name' => 'instrument_detectors_' . $delta,
+        //     '#value' => $instrument['detectors'],
+        //     '#attributes' => [
+        //       'id' => 'instrument_detectors_' . $delta,
+        //     ]
+        //     #'#detectorss' => [
+        //     #  'class' => ['open-tree-modal'],
+        //     #  'data-dialog-type' => 'modal',
+        //     #  'data-dialog-options' => json_encode(['width' => 800]),
+        //     #  'data-url' => Url::fromRoute('rep.tree_form', [
+        //     #    'mode' => 'modal',
+        //     #    'elementtype' => 'detectors',
+        //     #  ], ['query' => ['field_id' => 'instrument_detectors_' . $delta]])->toString(),
+        //     #  'data-field-id' => 'instrument_detectors_' . $delta,
+        //     #  'data-search-value' => $instrument['detectors'],
+        //     #  'data-elementtype' => 'detectors',
+        //     #],
+        //   ],
+        //   'bottom' => [
+        //     '#type' => 'markup',
+        //     '#markup' => '</div>',
+        //   ],
+        // ],
         'detectors' => [
           'top' => [
             '#type' => 'markup',
             '#markup' => '<div class="pt-3 col border border-white">',
           ],
-          'main' => [
+          'instrument_detectors_' . $delta => [
             '#type' => 'container',
-            '#name' => 'instrument_detectors_' . $delta,
+            '#attributes' => [
+              'id' => 'instrument_detectors_' . $delta,
+            ],
+            // WILL BE THIS CODE PART
+            // 'table' => [
+            //   '#type' => 'table',
+            //   '#header' => [
+            //       $this->t('Name'),
+            //       $this->t('URI'),
+            //       $this->t('Status'),
+            //   ],
+            //   '#rows' => [], // Começa vazio e será preenchido pelo AJAX
+            //   '#empty' => $this->t('No detectors yet.'),
+            // ],
             '#value' => $instrument['detectors'],
-            #'#detectorss' => [
-            #  'class' => ['open-tree-modal'],
-            #  'data-dialog-type' => 'modal',
-            #  'data-dialog-options' => json_encode(['width' => 800]),
-            #  'data-url' => Url::fromRoute('rep.tree_form', [
-            #    'mode' => 'modal',
-            #    'elementtype' => 'detectors',
-            #  ], ['query' => ['field_id' => 'instrument_detectors_' . $delta]])->toString(),
-            #  'data-field-id' => 'instrument_detectors_' . $delta,
-            #  'data-search-value' => $instrument['detectors'],
-            #  'data-elementtype' => 'detectors',
-            #],
           ],
           'bottom' => [
             '#type' => 'markup',
@@ -544,7 +577,7 @@ class AddProcessForm extends FormBase {
             '#name' => 'instrument_remove_' . $delta,
             '#value' => $this->t('Remove'),
             '#attributes' => array(
-              'class' => array('remove-row', 'btn', 'btn-sm', 'delete-element-button'),
+              'class' => array('remove-row', 'btn', 'btn-sm', 'btn-danger' , 'delete-element-button'),
               'id' => 'instrument-' . $delta,
             ),
           ),
@@ -563,6 +596,34 @@ class AddProcessForm extends FormBase {
     }
     return $form_rows;
   }
+
+  public function addDetectorCallback(array &$form, FormStateInterface $form_state) {
+    $triggering_element = $form_state->getTriggeringElement();
+    $delta = str_replace('instrument_instrument_', '', $triggering_element['#name']);
+    $container_id = 'instrument_detectors_' . $delta;
+    $instrument_uri = Utils::uriFromAutocomplete($form_state->getValue('instrument_instrument_' . $delta));
+
+    // Verifica se o contêiner existe antes de modificar
+    if (!isset($form['instruments']['rows'][$delta]['row'.$delta]['detectors'][$container_id])) {
+        \Drupal::logger('custom_module')->error('Contêiner não encontrado para delta: @delta', ['@delta' => $delta]);
+        return [
+            '#markup' => $this->t('Error: Container not found for delta @delta.', ['@delta' => $delta]),
+        ];
+    }
+
+    // Obtém os detectores a partir da API
+    $detectors = $this->getDetectors($instrument_uri);
+
+    dpm($detectors);
+
+    // Renderiza os detectores como uma tabela e atualiza o container no formulário
+    $form['instruments']['rows'][$delta]['row'.$delta]['detectors'][$container_id] = $this->buildDetectorTable($detectors, $container_id);
+
+    return $form['instruments']['rows'][$delta]['row'.$delta]['detectors'][$container_id];
+}
+
+
+
 
   protected function updateInstruments(FormStateInterface $form_state) {
     $instruments = \Drupal::state()->get('my_form_instruments');
@@ -591,13 +652,15 @@ class AddProcessForm extends FormBase {
       return;
     }
 
+    $api = \Drupal::service('rep.api_connector');
     //dpm($instruments);
     foreach ($instruments as $instrument_id => $instrument) {
-      //dpm($instrument['instrument']);
+
+      //dpm(Utils::uriFromAutocomplete($instrument['instrument']));
       if (isset($instrument_id) && isset($instrument)) {
+        dpm($processUri." | ".$instrument['instrument']);
         try {
-          $api = \Drupal::service('rep.api_connector');
-          $api->processInstrumentAdd($processUri,$instrument['instrument']);
+          $api->processInstrumentAdd($processUri,Utils::uriFromAutocomplete($instrument['instrument']));
 
           //$useremail = \Drupal::currentUser()->getEmail();
 
@@ -943,15 +1006,14 @@ class AddProcessForm extends FormBase {
         // Prepare data to be sent to the external service
         $newProcessUri = Utils::uriGen('process');
         $processJSON = '{"uri":"' . $newProcessUri . '",'
-          . '"typeUri":"' .Utils::uriFromAutocomplete($form_state->getValue('process_processstem')) . '",'
+          . '"typeUri":"' .Utils::uriFromAutocomplete($basic['processstem']) . '",'
           . '"hascoTypeUri":"' . VSTOI::PROCESS . '",'
           . '"hasStatus":"' . VSTOI::DRAFT . '",'
-          . '"label":"' . $form_state->getValue('process_name') . '",'
-          . '"hasLanguage":"' . $form_state->getValue('process_language') . '",'
-          . '"hasVersion":"' . $form_state->getValue('process_version') . '",'
-          . '"comment":"' . $form_state->getValue('process_description') . '",'
+          . '"label":"' . $basic['name'] . '",'
+          . '"hasLanguage":"' . $basic['language'] . '",'
+          . '"hasVersion":"' . $basic['version'] . '",'
+          . '"comment":"' . $basic['description'] . '",'
           . '"hasSIRManagerEmail":"' . $useremail . '"}';
-
         $api = \Drupal::service('rep.api_connector');
         $api->elementAdd('process',$processJSON);
         if (isset($instruments)) {
@@ -1022,6 +1084,37 @@ class AddProcessForm extends FormBase {
     }
     return $detectors;
   }
+
+  protected function buildDetectorTable(array $detectors, $container_id) {
+    $header = [
+        $this->t('Name'),
+        $this->t('URI'),
+        $this->t('Status'),
+    ];
+
+    $rows = [];
+    foreach ($detectors as $detector) {
+        $rows[] = [
+            'data' => [
+                ['#markup' => $detector['name']],
+                ['#markup' => $detector['uri']],
+                ['#markup' => $detector['status']],
+            ],
+        ];
+    }
+
+    return [
+        '#type' => 'container',
+        '#attributes' => ['id' => $container_id],
+        'table' => [
+            '#type' => 'table',
+            '#header' => $header,
+            '#rows' => $rows,
+            '#empty' => $this->t('No detectors found.'),
+        ],
+    ];
+}
+
 
   /*
   $form['process_instruments']['wrapper']['detectors_table_'.$i] = [
