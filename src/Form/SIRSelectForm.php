@@ -1204,7 +1204,8 @@ class SIRSelectForm extends FormBase {
     } elseif ($this->element_type == 'process') {
       Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_process');
       $url = Url::fromRoute('sir.add_process');
-      $url->setRouteParameter('sourceprocessuri', 'EMPTY');
+      $url->setRouteParameter('state', 'basic');
+      //$url->setRouteParameter('sourceprocessuri', 'EMPTY');
     }
     $form_state->setRedirectUrl($url);
   }
@@ -1231,7 +1232,7 @@ class SIRSelectForm extends FormBase {
     } elseif ($this->element_type == 'processstem') {
       $url = Url::fromRoute('sir.edit_processstem', ['processstemuri' => base64_encode($uri)]);
     } elseif ($this->element_type == 'process') {
-      $url = Url::fromRoute('sir.edit_process', ['processuri' => base64_encode($uri)]);
+      $url = Url::fromRoute('sir.edit_process', ['state' => 'init', 'processuri' => base64_encode($uri)]);
     } else {
       \Drupal::messenger()->addError($this->t('No edit route found for this element type.'));
       return;

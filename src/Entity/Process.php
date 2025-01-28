@@ -13,6 +13,7 @@ class Process {
 
     return $header = [
       'element_uri' => t('URI'),
+      'element_type' => t('Type'),
       'element_name' => t('Name'),
       'element_language' => t('Language'),
       'element_version' => t('Version'),
@@ -40,8 +41,12 @@ class Process {
         $uri = $element->uri;
       }
       $type = ' ';
-      if ($element->superUri != NULL) {
-        $type = Utils::namespaceUri($element->superUri);
+      if ($element->typeUri != NULL) {
+        $type = Utils::namespaceUri($element->typeUri);
+      }
+      $typeLabel = ' ';
+      if ($element->typeLabel != NULL) {
+        $typeLabel = $element->typeLabel;
       }
       $uri = Utils::namespaceUri($uri);
       $label = ' ';
@@ -73,6 +78,7 @@ class Process {
       $totDet = count($element->detectors);
       $output[$element->uri] = [
         'element_uri' => t('<a href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),
+        'element_type' => $typeLabel,
         'element_name' => $label,
         'element_language' => $lang,
         'element_version' => $version,

@@ -4,18 +4,27 @@ namespace Drupal\sir\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\RedirectCommand;
+use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Url;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Drupal\rep\Constant;
 use Drupal\rep\Utils;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Vocabulary\VSTOI;
+use Drupal\rep\Vocabulary\REPGUI;
 
-/**
- * Class AddProcessForm
- *
- * Provides a form to add a new process, with dynamic instruments.
- */
 class AddProcessForm extends FormBase {
+
+  protected $state;
+
+  public function getState() {
+    return $this->state;
+  }
+  public function setState($state) {
+    return $this->state = $state;
+  }
 
   /**
    * {@inheritdoc}
@@ -24,276 +33,312 @@ class AddProcessForm extends FormBase {
     return 'add_process_form';
   }
 
+  /**************************************************************
+   **************************************************************
+   ***                                                        ***
+   ***                    BUILD FORM                          ***
+   ***                                                        ***
+   **************************************************************
+   **************************************************************/
+
   /**
    * {@inheritdoc}
-   *
-   * Builds the main form and handles dynamic addition of instruments.
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state, $state=NULL) {
 
-    //dpm($form_state->getValues());
-    // Disable caching on this form.
-    //$form_state->setCached(FALSE);
+    // FOUR groups of values are preserved in state: basic, instruments, objects and codes.
+    // for each group, we have render*, update*, save*, add*, remove* (basic has no add* and remove*)
+    //   - render* is from $ELEMENT to $form
+    //     (used in buildForm())
+    //   - update* is from $form_state to $ELEMENT and save state
+    //     (used in pills_card_callback())
+    //   - save* is from $ELEMENT to triple store
+    //     (used in save operation of submitForm())
 
-    // FOR Javascript file
-    //$form['#attached']['drupalSettings']['sir_process_form']['base_url'] = \Drupal::request()->getSchemeAndHttpHost() . base_path();
-
-    // Start counter
-    if (!$form_state->has('instrument_count')) {
-      $form_state->set('instrument_count', 0);
+    // SET STATE, INSTRUMENTS AND OBJECTS
+    if (isset($state) && $state === 'init') {
+      \Drupal::state()->delete('my_form_basic');
+      \Drupal::state()->delete('my_form_instruments');
+      //\Drupal::state()->delete('my_form_codes');
+      $basic = [
+        'processstem' => '',
+        'name' => '',
+        'language' => '',
+        'version' => '',
+        'description' => '',
+      ];
+      $instruments = [];
+      //$codes = [];
+      $state = 'basic';
+    } else {
+      $basic = \Drupal::state()->get('my_form_basic') ?? [];
+      $instruments = \Drupal::state()->get('my_form_instruments') ?? [];
+      //$codes = \Drupal::state()->get('my_form_codes') ?? [];
     }
-    $instrument_count = $form_state->get('instrument_count');
+    $this->setState($state);
 
-    // Libraries
-    //$form['#attached']['library'][] = 'sir/sir_process';
-    //$form['#attached']['library'][] = 'core/drupal.accordion';
-    // MODAL
-    $form['#attached']['library'][] = 'rep/rep_modal';
-    $form['#attached']['library'][] = 'core/drupal.dialog';
-
+    // GET LANGUAGES
     $tables = new Tables;
-    $languages = $tables->getLanguages();
+    $languages = $tables->getLanguages();    
 
-    // Vertical tabs
-    $form['information'] = [
-      '#type' => 'vertical_tabs',
-      '#default_tab' => 'process_information',
-    ];
+    // MODAL
+    $form['#attached']['library'][] = 'rep/rep_modal'; // Biblioteca personalizada do módulo
+    $form['#attached']['library'][] = 'core/drupal.dialog'; // Biblioteca do modal do Drupal
 
-    // TAB 1: Process Information
-    $form['process_information'] = [
-      '#type' => 'details',
-      '#title' => $this->t('Process Main Form'),
-      '#group' => 'information',
-    ];
-    $form['process_information']['process_processstem'] = [
-      'top' => [
-        '#type' => 'markup',
-        '#markup' => '<div class="pt-3 col border border-white">',
-      ],
-      'main' => [
-        '#type' => 'textfield',
-        '#title' => $this->t('Process Stem'),
-        '#name' => 'process_processstem',
-        '#default_value' => '',
-        '#id' => 'process_processstem',
-        '#parents' => ['process_processstem'],
-        '#attributes' => [
-          'class' => ['open-tree-modal'],
-          'data-dialog-type' => 'modal',
-          'data-dialog-options' => json_encode(['width' => 800]),
-          'data-url' => Url::fromRoute('rep.tree_form', [
-            'mode' => 'modal',
-            'elementtype' => 'processstem',
-          ], ['query' => ['field_id' => 'process_processstem']])->toString(),
-          'data-field-id' => 'process_processstem',
-          'data-elementtype' => 'processstem',
-          'autocomplete' => 'off',
-        ],
-      ],
-      'bottom' => [
-        '#type' => 'markup',
-        '#markup' => '</div>',
-      ],
-    ];
-    $form['process_information']['process_name'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Name'),
-    ];
-    $form['process_information']['process_language'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Language'),
-      '#options' => $languages,
-      '#default_value' => 'en',
-    ];
-    $form['process_information']['process_version'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Version'),
-      '#default_value' => '1',
-      '#disabled' => TRUE,
-    ];
-    $form['process_information']['process_description'] = [
-      '#type' => 'textarea',
-      '#title' => $this->t('Description'),
+    // SET SEPARATOR
+    $separator = '<div class="w-100"></div>';
+
+    $form['process_title'] = [
+      '#type' => 'markup',
+      '#markup' => '<h3 class="mt-5">Add Process</h3><br>'
     ];
 
-    // TAB 2: Instruments
-    $form['process_instruments'] = [
-      '#type' => 'details',
-      '#title' => $this->t('Instruments'),
-      '#group' => 'information',
+    $form['current_state'] = [
+      '#type' => 'hidden',
+      '#value' => $state,
     ];
 
-    $form['process_instruments']['add_instrument'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Add Instrument'),
-      '#name' => 'add_instrument',
-      '#ajax' => [
-        'callback' => '::addInstrumentCallback',
-        'wrapper' => 'wrapper',
-        'method' => 'replaceWith',
-        'effect' => 'fade',
-      ],
-      '#attributes' => [
-        'class' => ['btn', 'btn-primary', 'add-instrument-button', 'mb-3', 'mt-2'],
-      ],
-    ];
-
-    // Wrapper for instruments
-    $form['process_instruments']['wrapper'] = [
+    // Container for pills and content.
+    $form['pills_card'] = [
       '#type' => 'container',
-      '#attributes' => ['id' => 'wrapper'],
+      '#attributes' => [
+        'class' => ['nav', 'nav-pills', 'nav-justified', 'mb-3'],
+        'id' => 'pills-card-container',
+        'role' => 'tablist',
+      ],
+
     ];
 
-    $form['process_instruments']['wrapper']['instrument_tabs'] = [
-      '#type' => 'vertical_tabs',
-      '#default_tab' => 0,
+    // Define pills as links with AJAX callback.
+    $states = [
+      'basic' => 'Basic process properties',
+      'instrument' => 'Instruments and detectors',
+      //'codebook' => 'Detector mappings'
     ];
 
-    $detectors = [];
-    // Loop to create fields for each instrument
-    for ($i = 0; $i < $instrument_count; $i++) {
-
-      $instrument = '';
-      // Get Detectors from Instrument
-      if ($form_state->getValue('instrument_selected_'.$i) !== '')
-        if (preg_match('/\[(https?:\/\/|)([^\]]+)\]/', $form_state->getValue('instrument_selected_'.$i) , $matches)) {
-          $instrument = $matches[1].$matches[2];
-      }
-
-      //dpm($i."=".$instrument."-".$form_state->getValue('instrument_selected_'.$i));
-
-      $detectors = $this->getDetectors( $instrument);
-
-      $form['process_instruments']['wrapper']['instrument_information_'.$i] = [
-        '#type' => 'details',
-        '#title' => $this->t('<b>Instrument ['.$form_state->getValue("instrument_selected_$i").']</b>'),
-        '#open' => ($i < $instrument_count-1) ? FALSE:TRUE,
+    foreach ($states as $key => $label) {
+      $form['pills_card'][$key] = [
+        '#type' => 'button',
+        '#value' => $label,
+        '#name' => 'button_' . $key,
         '#attributes' => [
-          'class' => ['accordion-tabs-wrapper'],
-          'id' => 'instrument_information_'.$i,
+          'class' => ['nav-link', $state === $key ? 'active' : ''],
+          'data-state' => $key,
+          'role' => 'presentation',
         ],
-        '#group' => 'instruments'
-      ];
-
-      $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i] = [
-        '#type' => 'fieldset',
-        '#title' => $this->t(''),
-        '#name' => 'fieldset_'.$i,
-        // '#description' => count($detectors) > 0 ? $this->t('Select the ones you want to include'):'',
-        '#attributes' => [
-          'class' => ['fieldset-class'],
-          'id' => 'fieldset_'.$i
-        ],
-      ];
-
-      $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['insURI'] = [
-        '#type' => 'container'
-      ];
-
-      $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['insURI']['instrument_selected_'.$i] = [
-        '#type' => 'textfield',
-        '#title' => '',
-        '#size' => 15,
-        '#default_value' => $form_state->getValue('instrument_selected_'.$i) ?? '',
-        '#autocomplete_route_name' => 'sir.process_instrument_autocomplete',
-        '#attributes' => [
-          'class' => ['form-control', 'mt-2', 'w-75', 'me-3'],
-          'id' => 'instrument_selected_'.$i,
-          'style' => 'float:left;'
-        ]
-      ];
-
-
-      // Load detectors button
-      $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['insURI']['load_detectors_'.$i] = [
-        '#type' => 'submit',
-        '#value' => $this->t('Load Detectors'),
-        '#name' => 'load_detectors_'.$i,
         '#ajax' => [
-          'callback' => '::loadDetectorsCallback',
-          'wrapper' => 'instrument_detector_wrapper_'.$i,
+          'callback' => '::pills_card_callback',
           'event' => 'click',
-          'method' => 'replaceWith',
-          'effect' => 'fade',
-        ],
-        '#attributes' => [
-          'class' => ['btn', 'btn-secondary', 'load-detectors-button', 'mt-2', 'w-13'],
+          'wrapper' => 'pills-card-container',
+          'progress' => ['type' => 'none'],
         ],
       ];
-
-      $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['insURI']['remove_instrument_'.$i] = [
-        '#type' => 'submit',
-        '#value' => $this->t('Delete'),
-        '#name' => 'remove_instrument_'.$i,
-        '#ajax' => [
-          'callback' => '::removeInstrumentCallback',
-          'wrapper' => 'wrapper',
-          'event' => 'click',
-          'method' => 'replaceWith',
-          'effect' => 'fade',
-        ],
-        '#attributes' => [
-          'class' => ['btn', 'btn-danger', 'load-detectors-button', 'mt-2', 'w-10'],
-        ],
-      ];
-
-      $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i] = [
-        '#type' => 'container',
-        '#attributes' => [
-          'id' => 'instrument_detector_wrapper_'.$i
-        ]
-      ];
-
-      if (empty($detectors)) {
-        $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i]['message'] = [
-          '#markup' => '<p style="font-weight:bold;" class="mt-3"><b>That Instrument has no detectors available.</b></p>',
-        ];
-      } else {
-
-        $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i]['detectors_table_'.$i] = [
-          '#type' => 'table',
-          '#header' => [
-            '#',
-            $this->t('Detector Label'),
-            $this->t('Detector Status'),
-          ],
-          '#rows' => [],
-          '#attributes' => ['class' => ['detectors-table']],
-        ];
-
-        // Add line to table
-        foreach ($detectors as $index => $item) {
-          $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i]['detectors_table_'.$i][$index]['checkbox'] = [
-            '#type' => 'checkbox',
-            '#attributes' => [
-              'value' => $item['uri'],
-              'disabled' => $item['status'] !== 'Draft',
-            ],
-            '#value' => TRUE
-          ];
-          $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i]['detectors_table_'.$i][$index]['label'] = [
-            '#plain_text' => $item['name'] ?: $this->t('Unknown'),
-          ];
-          $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i]['detectors_table_'.$i][$index]['status'] = [
-            '#plain_text' => $item['status'] ?: $this->t('Unknown'),
-          ];
-        }
-      }
     }
 
-    // TODO: TAB 3: Mapping
-    // $form['process_mapper'] = [
-    //   '#type' => 'details',
-    //   '#title' => $this->t('Mapper'),
-    //   '#group' => 'information',
-    // ];
+    // Add a hidden field to capture the current state.
+    $form['state'] = [
+      '#type' => 'hidden',
+      '#value' => $state,
+    ];
 
-    // $form['process_mapper']['message'] = [
-    //   '#markup' => '<p style="font-weight:bold;" class="mt-3"><b>Under Development...</b></p>',
-    // ];
+    /* ========================== BASIC ========================= */
 
-    // Botões de salvar e cancelar
+    if ($this->getState() == 'basic') {
+
+      $processstem = '';
+      if (isset($basic['processstem'])) {
+        $processstem = $basic['processstem'];
+      }
+      $name = '';
+      if (isset($basic['name'])) {
+        $name = $basic['name'];
+      }
+      $language = '';
+      if (isset($basic['language'])) {
+        $language = $basic['language'];
+      }
+      $version = '';
+      if (isset($basic['version'])) {
+        $version = $basic['version'];
+      }
+      $description = '';
+      if (isset($basic['description'])) {
+        $description = $basic['description'];
+      }
+
+      $form['process_processstem'] = [
+        'top' => [
+          '#type' => 'markup',
+          '#markup' => '<div class="pt-3 col border border-white">',
+        ],
+        'main' => [
+          '#type' => 'textfield',
+          '#title' => $this->t('Process Stem'),
+          '#name' => 'process_processstem',
+          '#default_value' => '',
+          '#id' => 'process_processstem',
+          '#parents' => ['process_processstem'],
+          '#attributes' => [
+            'class' => ['open-tree-modal'],
+            'data-dialog-type' => 'modal',
+            'data-dialog-options' => json_encode(['width' => 800]),
+            'data-url' => Url::fromRoute('rep.tree_form', [
+              'mode' => 'modal',
+              'elementtype' => 'processstem',
+            ], ['query' => ['field_id' => 'process_processstem']])->toString(),
+            'data-field-id' => 'process_processstem',
+            'data-elementtype' => 'processstem',
+            'autocomplete' => 'off',
+          ],
+        ],
+        'bottom' => [
+          '#type' => 'markup',
+          '#markup' => '</div>',
+        ],
+      ];
+      $form['process_name'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Name'),
+        '#default_value' => $name,
+      ];
+      $form['process_language'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Language'),
+        '#options' => $languages,
+        '#default_value' => 'en',
+      ];
+      $form['process_version'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Version'),
+        '#default_value' => $version,
+      ];
+      $form['process_description'] = [
+        '#type' => 'textarea',
+        '#title' => $this->t('Description'),
+        '#default_value' => $description,
+      ];
+
+    }
+
+    /* ======================= INSTRUMENT ======================= */
+
+    if ($this->getState() == 'instrument') {
+
+      /*
+      *      INSTRUMENTS
+      */
+
+      $form['instruments_title'] = [
+        '#type' => 'markup',
+        '#markup' => 'Instruments',
+      ];
+
+      $form['instruments'] = array(
+        '#type' => 'container',
+        '#title' => $this->t('instruments'),
+        '#attributes' => array(
+          'class' => array('p-3', 'bg-light', 'text-dark', 'row', 'border', 'border-secondary', 'rounded'),
+          'id' => 'custom-table-wrapper',
+        ),
+      );
+
+      $form['instruments']['header'] = array(
+        '#type' => 'markup',
+        '#markup' =>
+          '<div class="p-2 col bg-secondary text-white border border-white">Instrument</div>' .
+          '<div class="p-2 col bg-secondary text-white border border-white">Detectors</div>' .
+          '<div class="p-2 col-md-1 bg-secondary text-white border border-white">Operations</div>' . $separator,
+      );
+
+      $form['instruments']['rows'] = $this->renderInstrumentRows($instruments);
+
+      $form['instruments']['space_3'] = [
+        '#type' => 'markup',
+        '#markup' => $separator,
+      ];
+
+      $form['instruments']['actions']['top'] = array(
+        '#type' => 'markup',
+        '#markup' => '<div class="p-3 col">',
+      );
+
+      $form['instruments']['actions']['add_row'] = [
+        '#type' => 'submit',
+        '#value' => $this->t('New Instrument'),
+        '#name' => 'new_instrument',
+        '#attributes' => array('class' => array('btn', 'btn-sm', 'save-button')),
+      ];
+
+      $form['instruments']['actions']['bottom'] = array(
+        '#type' => 'markup',
+        '#markup' => '</div>' . $separator,
+      );
+
+    }
+
+    /* ======================= CODEBOOK ======================= */
+
+    /*
+    if ($this->getState() == 'codebook') {
+
+      $form['codes_title'] = [
+        '#type' => 'markup',
+        '#markup' => 'Codes',
+      ];
+
+      $form['codes'] = array(
+        '#type' => 'container',
+        '#title' => $this->t('codes'),
+        '#attributes' => array(
+          'class' => array('p-3', 'bg-light', 'text-dark', 'row', 'border', 'border-secondary', 'rounded'),
+          'id' => 'custom-table-wrapper',
+        ),
+      );
+
+      $form['codes']['header'] = array(
+        '#type' => 'markup',
+        '#markup' =>
+          '<div class="p-2 col bg-secondary text-white border border-white">Column</div>' .
+          '<div class="p-2 col bg-secondary text-white border border-white">Code</div>' .
+          '<div class="p-2 col bg-secondary text-white border border-white">Label</div>' .
+          '<div class="p-2 col bg-secondary text-white border border-white">Class</div>' .
+          '<div class="p-2 col-md-1 bg-secondary text-white border border-white">Operations</div>' . $separator,
+      );
+
+      $form['codes']['rows'] = $this->renderCodeRows($codes);
+
+      $form['codes']['space_3'] = [
+        '#type' => 'markup',
+        '#markup' => $separator,
+      ];
+
+      $form['codes']['actions']['top'] = array(
+        '#type' => 'markup',
+        '#markup' => '<div class="p-3 col">',
+      );
+
+      $form['codes']['actions']['add_row'] = [
+        '#type' => 'submit',
+        '#value' => $this->t('New Code'),
+        '#name' => 'new_code',
+        '#attributes' => array('class' => array('btn', 'btn-sm', 'add-element-button')),
+      ];
+
+      $form['codes']['actions']['bottom'] = array(
+        '#type' => 'markup',
+        '#markup' => '</div>' . $separator,
+      );
+
+    }
+    */
+
+    /* ======================= COMMON BOTTOM ======================= */
+
+    $form['space'] = [
+      '#type' => 'markup',
+      '#markup' => '<br><br>',
+    ];
+
     $form['save_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Save'),
@@ -310,60 +355,590 @@ class AddProcessForm extends FormBase {
         'class' => ['btn', 'btn-primary', 'cancel-button'],
       ],
     ];
-
-    // Espaço extra
     $form['bottom_space'] = [
       '#type' => 'item',
-      '#markup' => '<br><br>',
+      '#title' => t('<br><br>'),
     ];
+
+    //$form['#attached']['library'][] = 'sir/sir_list';
 
     return $form;
   }
 
-  /**
-   * {@inheritdoc}
-   *
-   * Custom form validation for mandatory fields before saving.
-   */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  /**************************************************************
+   **************************************************************
+   ***                                                        ***
+   ***         VALIDATE FORM  AND AUXILIARY FUNCTIONS         ***
+   ***                                                        ***
+   **************************************************************
+   **************************************************************/
+
+   public function validateForm(array &$form, FormStateInterface $form_state) {
     $submitted_values = $form_state->cleanValues()->getValues();
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
 
-    // Only validate if user clicked on the 'Save' button
     if ($button_name === 'save') {
-      if (strlen($form_state->getValue('process_name')) < 1) {
-        $form_state->setErrorByName('process_name', $this->t('Please enter a valid name for the Process'));
+      // TODO
+      /*
+      $basic = \Drupal::state()->get('my_form_basic');
+      if(strlen($basic['name']) < 1) {
+        $form_state->setErrorByName(
+          'process_name',
+          $this->t('Please enter a valid name for the Semantic Data Dictionary')
+        );
       }
-      if (strlen($form_state->getValue('process_processstem')) < 1) {
-        $form_state->setErrorByName('process_processstem', $this->t('Please enter a valid Process Stem'));
-      }
-      if (strlen($form_state->getValue('process_description')) < 1) {
-        $form_state->setErrorByName('process_description', $this->t('Please enter a valid description of the Process'));
-      }
+      */
     }
   }
 
+  public function pills_card_callback(array &$form, FormStateInterface $form_state) {
+
+    // RETRIEVE CURRENT STATE AND SAVE IT ACCORDINGLY
+    $currentState = $form_state->getValue('state');
+    if ($currentState == 'basic') {
+      $this->updateBasic($form_state);
+    }
+    if ($currentState == 'instrument') {
+      $this->updateInstruments($form_state);
+    }
+    //if ($currentState == 'codebook') {
+    //  $this->updateCodes($form_state);
+    //}
+
+    // RETRIEVE FUTURE STATE
+    $triggering_element = $form_state->getTriggeringElement();
+    $parts = explode('_', $triggering_element['#name']);
+    $state = (isset($parts) && is_array($parts)) ? end($parts) : null;
+
+    // BUILD NEW URL
+    $root_url = \Drupal::request()->getBaseUrl();
+    $newUrl = $root_url . REPGUI::ADD_PROCESS . $state;
+
+    // REDIRECT TO NEW URL
+    $response = new AjaxResponse();
+    $response->addCommand(new RedirectCommand($newUrl));
+
+    return $response;
+  }
+
+  /******************************
+   *
+   *    BASIC'S FUNCTIONS
+   *
+   ******************************/
+
+
   /**
    * {@inheritdoc}
+   */
+  public function updateBasic(FormStateInterface $form_state) {
+    $basic = \Drupal::state()->get('my_form_basic') ?? [
+      'processstem' => '',
+      'name' => '',
+      'language' => '',
+      'version' => '',
+      'description' => '',
+    ];
+    $input = $form_state->getUserInput();
+    if (isset($input) && is_array($input) &&
+        isset($basic) && is_array($basic)) {
+
+      $basic['processstem'] = $input['process_processstem'] ?? '';
+      $basic['name']        = $input['process_name'] ?? '';
+      $basic['language']    = $input['process_language'] ?? '';
+      $basic['version']     = $input['process_version'] ?? '';
+      $basic['description'] = $input['process_description'] ?? '';
+
+    }
+    \Drupal::state()->set('my_form_basic', $basic);
+    $response = new AjaxResponse();
+    return $response;
+  }
+
+  /******************************
    *
-   * Handles form submissions for both saving and canceling.
+   *    instruments' FUNCTIONS
+   *
+   ******************************/
+
+  protected function renderInstrumentRows(array $instruments) {
+    $form_rows = [];
+    $separator = '<div class="w-100"></div>';
+    foreach ($instruments as $delta => $instrument) {
+
+      $form_row = array(
+        'instrument' => array(
+          'top' => array(
+            '#type' => 'markup',
+            '#markup' => '<div class="pt-3 col border border-white">',
+          ),
+          'main' => array(
+            '#type' => 'textfield',
+            '#name' => 'instrument_instrument_' . $delta,
+            '#value' => $instrument['instrument'],
+            //'#attributes' => [
+            //  'class' => ['open-tree-modal'],
+            //  'data-dialog-type' => 'modal',
+            //  'data-dialog-options' => json_encode(['width' => 800]),
+            //  'data-url' => Url::fromRoute(
+            //    'rep.tree_form', 
+            //    [
+            //      'mode' => 'modal',
+            //      'elementtype' => 'instrument',
+            //    ], 
+            //    [
+            //      'query' => ['field_id' => 'instrument_instrument_' . $delta]
+            //    ])->toString(),
+            //  'data-field-id' => 'instrument_instrument_' . $delta,
+            //  'data-search-value' => $instrument['instrument'],
+            //  'data-elementtype' => 'instrument',
+            //],
+            //'#ajax' => [
+            //  'callback' => '::addInstrumentCallback',
+            //  'wrapper' => 'wrapper',
+            //  'method' => 'replaceWith',
+            //  'effect' => 'fade',
+            //],
+      
+          ),
+          'bottom' => array(
+            '#type' => 'markup',
+            '#markup' => '</div>',
+          ),
+        ),
+        'detectors' => [
+          'top' => [
+            '#type' => 'markup',
+            '#markup' => '<div class="pt-3 col border border-white">',
+          ],
+          'main' => [
+            '#type' => 'container',
+            '#name' => 'instrument_detectors_' . $delta,
+            '#value' => $instrument['detectors'],
+            #'#detectorss' => [
+            #  'class' => ['open-tree-modal'],
+            #  'data-dialog-type' => 'modal',
+            #  'data-dialog-options' => json_encode(['width' => 800]),
+            #  'data-url' => Url::fromRoute('rep.tree_form', [
+            #    'mode' => 'modal',
+            #    'elementtype' => 'detectors',
+            #  ], ['query' => ['field_id' => 'instrument_detectors_' . $delta]])->toString(),
+            #  'data-field-id' => 'instrument_detectors_' . $delta,
+            #  'data-search-value' => $instrument['detectors'],
+            #  'data-elementtype' => 'detectors',
+            #],
+          ],
+          'bottom' => [
+            '#type' => 'markup',
+            '#markup' => '</div>',
+          ],
+        ],
+        'operations' => array(
+          'top' => array(
+            '#type' => 'markup',
+            '#markup' => '<div class="pt-3 col-md-1 border border-white">',
+          ),
+          'main' => array(
+            '#type' => 'submit',
+            '#name' => 'instrument_remove_' . $delta,
+            '#value' => $this->t('Remove'),
+            '#attributes' => array(
+              'class' => array('remove-row', 'btn', 'btn-sm', 'delete-element-button'),
+              'id' => 'instrument-' . $delta,
+            ),
+          ),
+          'bottom' => array(
+            '#type' => 'markup',
+            '#markup' => '</div>' . $separator,
+          ),
+        ),
+      );
+
+      $rowId = 'row' . $delta;
+      $form_rows[] = [
+        $rowId => $form_row,
+      ];
+
+    }
+    return $form_rows;
+  }
+
+  protected function updateInstruments(FormStateInterface $form_state) {
+    $instruments = \Drupal::state()->get('my_form_instruments');
+    $input = $form_state->getUserInput();
+    if (isset($input) && is_array($input) &&
+        isset($instruments) && is_array($instruments)) {
+
+      foreach ($instruments as $instrument_id => $instrument) {
+        if (isset($instrument_id) && isset($instrument)) {
+          $instruments[$instrument_id]['instrument'] = $input['instrument_instrument_' . $instrument_id] ?? '';
+          $instruments[$instrument_id]['detectors'] = $input['instrument_detectors_' . $instrument_id] ?? '';
+        }
+      }
+    }
+    \Drupal::state()->set('my_form_instruments', $instruments);
+    return;
+  }
+
+  protected function saveInstruments($processUri, array $instruments) {
+    if (!isset($processUri)) {
+      \Drupal::messenger()->addError(t("No process URI have been provided to save instruments."));
+      return;
+    }
+    if (!isset($instruments) || !is_array($instruments)) {
+      \Drupal::messenger()->addWarning(t("Process has no instrument to be saved."));
+      return;
+    }
+
+    //dpm($instruments);
+    foreach ($instruments as $instrument_id => $instrument) {
+      //dpm($instrument['instrument']);
+      if (isset($instrument_id) && isset($instrument)) {
+        try {
+          $api = \Drupal::service('rep.api_connector');
+          $api->processInstrumentAdd($processUri,$instrument['instrument']);
+
+          //$useremail = \Drupal::currentUser()->getEmail();
+
+          //$instrument = ' ';
+          //if ($instruments[$instrument_id]['instrument'] != NULL && $instruments[$instrument_id]['instrument'] != '') {
+          //  $instrument = $instruments[$instrument_id]['instrument'];
+          //}
+
+          //$detectorsUri = ' ';
+          //if ($instruments[$instrument_id]['detectors'] != NULL && $instruments[$instrument_id]['detectors'] != '') {
+          //  $detectorsUri = $instruments[$instrument_id]['detectors'];
+          //}
+
+          //dpm($instrumentJSON);
+
+        } catch(\Exception $e){
+          \Drupal::messenger()->addError(t("An error occurred while saving process's instruments: ".$e->getMessage()));
+        }
+      }
+    }
+    return;
+  }
+
+  public function addInstrumentRow() {
+    $instruments = \Drupal::state()->get('my_form_instruments') ?? [];
+
+    // Add a new row to the table.
+    $instruments[] = [
+      'instrument' => '',
+      'detectors' => '',
+    ];
+    \Drupal::state()->set('my_form_instruments', $instruments);
+
+    // Rebuild the table rows.
+    $form['instruments']['rows'] = $this->renderInstrumentRows($instruments);
+    return;
+  }
+
+  public function removeInstrumentRow($button_name) {
+    $instruments = \Drupal::state()->get('my_form_instruments') ?? [];
+
+    // from button name's value, determine which row to remove.
+    $parts = explode('_', $button_name);
+    $instrument_to_remove = (isset($parts) && is_array($parts)) ? (int) (end($parts)) : null;
+
+    if (isset($instrument_to_remove) && $instrument_to_remove > -1) {
+      unset($instruments[$instrument_to_remove]);
+      $instruments = array_values($instruments);
+      \Drupal::state()->set('my_form_instruments', $instruments);
+    }
+    return;
+  }
+
+  /******************************
+   *
+   *    CODE'S FUNCTIONS
+   *
+   ******************************/
+
+  /*
+   protected function renderCodeRows(array $codes) {
+    $form_rows = [];
+    $separator = '<div class="w-100"></div>';
+    foreach ($codes as $delta => $code) {
+
+      $form_row = array(
+        'column' => array(
+          'top' => array(
+            '#type' => 'markup',
+            '#markup' => '<div class="pt-3 col border border-white">',
+          ),
+          'main' => array(
+            '#type' => 'textfield',
+            '#name' => 'code_column_' . $delta,
+            '#value' => $code['column'],
+          ),
+          'bottom' => array(
+            '#type' => 'markup',
+            '#markup' => '</div>',
+          ),
+        ),
+        'code' => array(
+          'top' => array(
+            '#type' => 'markup',
+            '#markup' => '<div class="pt-3 col border border-white">',
+          ),
+          'main' => array(
+            '#type' => 'textfield',
+            '#name' => 'code_code_' . $delta,
+            '#value' => $code['code'],
+          ),
+          'bottom' => array(
+            '#type' => 'markup',
+            '#markup' => '</div>',
+          ),
+        ),
+        'label' => array(
+          'top' => array(
+            '#type' => 'markup',
+            '#markup' => '<div class="pt-3 col border border-white">',
+          ),
+          'main' => array(
+            '#type' => 'textfield',
+            '#name' => 'code_label_' . $delta,
+            '#value' => $code['label'],
+          ),
+          'bottom' => array(
+            '#type' => 'markup',
+            '#markup' => '</div>',
+          ),
+        ),
+        'class' => array(
+          'top' => array(
+            '#type' => 'markup',
+            '#markup' => '<div class="pt-3 col border border-white">',
+          ),
+          'main' => array(
+            '#type' => 'textfield',
+            '#name' => 'code_class_' . $delta,
+            '#value' => $code['class'],
+          ),
+          'bottom' => array(
+            '#type' => 'markup',
+            '#markup' => '</div>',
+          ),
+        ),
+        'operations' => array(
+          'top' => array(
+            '#type' => 'markup',
+            '#markup' => '<div class="pt-3 col-md-1 border border-white">',
+          ),
+          'main' => array(
+            '#type' => 'submit',
+            '#name' => 'code_remove_' . $delta,
+            '#value' => $this->t('Remove'),
+            '#attributes' => array(
+              'class' => array('remove-row', 'btn', 'btn-sm', 'delete-element-button'),
+              'id' => 'code-' . $delta,
+            ),
+          ),
+          'bottom' => array(
+            '#type' => 'markup',
+            '#markup' => '</div>' . $separator,
+          ),
+        ),
+      );
+
+      $rowId = 'row' . $delta;
+      $form_rows[] = [
+        $rowId => $form_row,
+      ];
+
+    }
+    return $form_rows;
+  }
+
+  protected function updateCodes(FormStateInterface $form_state) {
+    $codes = \Drupal::state()->get('my_form_codes');
+    $input = $form_state->getUserInput();
+    if (isset($input) && is_array($input) &&
+        isset($codes) && is_array($codes)) {
+
+      foreach ($codes as $code_id => $code) {
+        if (isset($code_id) && isset($code)) {
+          $codes[$code_id]['column']  = $input['code_column_' . $code_id] ?? '';
+          $codes[$code_id]['code']    = $input['code_code_' . $code_id] ?? '';
+          $codes[$code_id]['label']   = $input['code_label_' . $code_id] ?? '';
+          $codes[$code_id]['class']   = $input['code_class_' . $code_id] ?? '';
+        }
+      }
+    }
+    \Drupal::state()->set('my_form_codes', $codes);
+    return;
+  }
+
+  protected function saveCodes($processUri, array $codes) {
+    if (!isset($processUri)) {
+      \Drupal::messenger()->addError(t("No semantic data dictionary's URI have been provided to save possible values."));
+      return;
+    }
+    if (!isset($codes) || !is_array($codes)) {
+      \Drupal::messenger()->addWarning(t("Semantic data dictionary has no possible values to be saved."));
+      return;
+    }
+
+    foreach ($codes as $code_id => $code) {
+      if (isset($code_id) && isset($code)) {
+        try {
+          $useremail = \Drupal::currentUser()->getEmail();
+
+          $column = ' ';
+          if ($codes[$code_id]['column'] != NULL && $codes[$code_id]['column'] != '') {
+            $column = $codes[$code_id]['column'];
+          }
+
+          $codeStr = ' ';
+          if ($codes[$code_id]['code'] != NULL && $codes[$code_id]['code'] != '') {
+            $codeStr = $codes[$code_id]['code'];
+          }
+
+          $codeLabel = ' ';
+          if ($codes[$code_id]['label'] != NULL && $codes[$code_id]['label'] != '') {
+            $codeLabel = $codes[$code_id]['label'];
+          }
+
+          $class = ' ';
+          if ($codes[$code_id]['class'] != NULL && $codes[$code_id]['class'] != '') {
+            $class = $codes[$code_id]['class'];
+          }
+
+          $codeUri = str_replace(
+            Constant::PREFIX_PROCESS,
+            Constant::PREFIX_POSSIBLE_VALUE,
+            $processUri) . '/' . $code_id;
+          $codeJSON = '{"uri":"'. $codeUri .'",'.
+              '"superUri":"'.HASCO::POSSIBLE_VALUE.'",'.
+              '"hascoTypeUri":"'.HASCO::POSSIBLE_VALUE.'",'.
+              '"partOfSchema":"'.$processUri.'",'.
+              '"listPosition":"'.$code_id.'",'.
+              '"isPossibleValueOf":"'.$column.'",'.
+              '"label":"'.$column.'",'.
+              '"hasCode":"' . $codeStr . '",' .
+              '"hasCodeLabel":"' . $codeLabel . '",' .
+              '"hasClass":"' . $class . '",' .
+              '"comment":"Possible value ' . $column . ' of ' . $column . ' of SDD ' . $processUri . '",'.
+              '"hasSIRManagerEmail":"'.$useremail.'"}';
+          $api = \Drupal::service('rep.api_connector');
+          $api->elementAdd('possiblevalue',$codeJSON);
+
+          //dpm($codeJSON);
+
+        } catch(\Exception $e){
+          \Drupal::messenger()->addError(t("An error occurred while saving possible value(s): ".$e->getMessage()));
+        }
+      }
+    }
+    return;
+  }
+
+  public function addCodeRow() {
+    $codes = \Drupal::state()->get('my_form_codes') ?? [];
+
+    // Add a new row to the table.
+    $codes[] = [
+      'column' => '',
+      'code' => '',
+      'label' => '',
+      'class' => '',
+    ];
+    \Drupal::state()->set('my_form_codes', $codes);
+
+    // Rebuild the table rows.
+    $form['codes']['rows'] = $this->renderCodeRows($codes);
+    return;
+  }
+
+  public function removeCodeRow($button_name) {
+    $codes = \Drupal::state()->get('my_form_codes') ?? [];
+
+    // from button name's value, determine which row to remove.
+    $parts = explode('_', $button_name);
+    $code_to_remove = (isset($parts) && is_array($parts)) ? (int) (end($parts)) : null;
+
+    if (isset($code_to_remove) && $code_to_remove > -1) {
+      unset($codes[$code_to_remove]);
+      $codes = array_values($codes);
+      \Drupal::state()->set('my_form_codes', $codes);
+    }
+    return;
+  }
+  */
+
+  /**************************************************************
+   **************************************************************
+   ***                                                        ***
+   ***                    SUBMIT FORM                         ***
+   ***                                                        ***
+   **************************************************************
+   **************************************************************/
+
+  /**
+   * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    // If Cancel
+
+    // IDENTIFY NAME OF BUTTON triggering submitForm()
+    $submitted_values = $form_state->cleanValues()->getValues();
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
 
     if ($button_name === 'back') {
-      // Cancel button
+      \Drupal::state()->delete('my_form_basic');
+      \Drupal::state()->delete('my_form_instruments');
       self::backUrl();
       return;
     }
-    elseif ($button_name === 'save') {
-      // Otherwise, it's a Save action
+
+    // If not leaving then UPDATE STATE OF INSTRUMENTS, OBJECTS AND CODES
+    // according to the current state of the editor
+    if ($this->getState() === 'basic') {
+      $this->updateBasic($form_state);
+    }
+
+    if ($this->getState() === 'instrument') {
+      $this->updateInstruments($form_state);
+    }
+
+    //if ($this->getState() === 'codebook') {
+    //  $this->updateCodes($form_state);
+    //}
+
+    // Get the latest cached versions of values in the editor
+    $basic = \Drupal::state()->get('my_form_basic');
+    $instruments = \Drupal::state()->get('my_form_instruments');
+    //$codes = \Drupal::state()->get('my_form_codes');
+
+    if ($button_name === 'new_instrument') {
+      $this->addInstrumentRow();
+      return;
+    }
+
+    if (str_starts_with($button_name,'instrument_remove_')) {
+      $this->removeInstrumentRow($button_name);
+      return;
+    }
+
+    /*
+    if ($button_name === 'new_code') {
+      $this->addCodeRow();
+      return;
+    }
+
+    if (str_starts_with($button_name,'code_remove_')) {
+      $this->removeCodeRow($button_name);
+      return;
+    }
+    */
+
+    if ($button_name === 'save') {
       try {
-        $api = \Drupal::service('rep.api_connector');
-        $uemail = \Drupal::currentUser()->getEmail();
+        $useremail = \Drupal::currentUser()->getEmail();
 
         // Prepare data to be sent to the external service
         $newProcessUri = Utils::uriGen('process');
@@ -375,96 +950,36 @@ class AddProcessForm extends FormBase {
           . '"hasLanguage":"' . $form_state->getValue('process_language') . '",'
           . '"hasVersion":"' . $form_state->getValue('process_version') . '",'
           . '"comment":"' . $form_state->getValue('process_description') . '",'
-          . '"hasSIRManagerEmail":"' . $uemail . '"}';
+          . '"hasSIRManagerEmail":"' . $useremail . '"}';
 
-        // Save Process on API
-        $api->processAdd($processJSON);
-
-        // Loop to add Instruments
-        $instrument_count = $form_state->get('instrument_count');
-        for ($i = 0; $i < $instrument_count; $i++) {
-          // Check if there is no "Add instrument Empty"
-          if ($form_state->getValue('instrument_selected_'.$i) !== '') {
-            $uriInstrument = Utils::uriFromAutocomplete($form_state->getValue('instrument_selected_'.$i));
-            $api->processInstrumentAdd($newProcessUri,$uriInstrument);
-            //\Drupal::messenger()->addWarning($this->t("Instrument: "), $uriInstrument);
-
-            // Loop to Add Detectors
-            $detectors = $form_state->getValue('detectors_table_'.$i);
-
-            // Filter elements where value is not 0
-            if ($detectors != NULL) {
-              $filtered = array_filter($detectors, function ($item) {
-                return !empty($item['checkbox']) && $item['checkbox'] !== 0;
-              });
-
-              foreach ($filtered as $key => $value) {
-                if (isset($value['checkbox'])) {
-                  $detector = $api->processDetectorAdd($newProcessUri,$value['checkbox']);
-
-                  //\Drupal::messenger()->addWarning($this->t("Detector: "), $detector);
-                }
-              }
-            }
-          }
+        $api = \Drupal::service('rep.api_connector');
+        $api->elementAdd('process',$processJSON);
+        if (isset($instruments)) {
+          $this->saveInstruments($newProcessUri,$instruments);
         }
+        /*
+        if (isset($codes)) {
+          $this->saveCodes($newProcessUri,$codes);
+        }
+        */
 
-        //Return to Select List
-        \Drupal::messenger()->addMessage($this->t("Process has been added successfully."));
+        \Drupal::state()->delete('my_form_basic');
+        \Drupal::state()->delete('my_form_instruments');
+        //\Drupal::state()->delete('my_form_codes');
+
+        \Drupal::messenger()->addMessage(t("Process has been added successfully."));
         self::backUrl();
         return;
-        //return false; //DEBUG
 
-      } catch (\Exception $e) {
-        \Drupal::messenger()->addError($this->t("An error occurred while adding a process: " . $e->getMessage()));
+      } catch(\Exception $e){
+        \Drupal::messenger()->addMessage(t("An error occurred while adding process: ".$e->getMessage()));
         self::backUrl();
         return;
       }
     }
-    elseif ($button_name === 'add_instrument') {
 
-      // PREVENT NULL INSTRUMENTS
-      if ($form_state->getValue('instrument_selected_'.($form_state->get('instrument_count')-1)) !== '') {
-        $count = $form_state->get('instrument_count') ?? 0;
-        $form_state->set('instrument_count', $count + 1);
-      }
-
-      $form_state->setRebuild(TRUE);
-      //return false;
-
-    } elseif (preg_match('/load_detectors_(\d+)/', $button_name, $matches)) {
-      $i = $matches[1];
-      //dpm("Instrument: ".$i);
-
-        if (preg_match('/\[(https?:\/\/|)([^\]]+)\]/', $form_state->getValue('instrument_selected_'.$i), $matches)) {
-          $instrument = $matches[1].$matches[2];
-          // dpm("Instrument: ".$instrument);
-          //$form_state->setValue('detectors_selected_'.$i, $this->getDetectors($instrument));
-          $form_state->setValue('instrument_information_'.$i, $this->t('<b>Instrument ['.$form_state->getValue("instrument_selected_$i").']</b>'));
-        }
-
-      $form_state->setRebuild(TRUE);
-      return $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i];
-
-    } elseif (preg_match('/remove_instrument_(\d+)/', $button_name, $matches)) {
-      $index_to_remove = $matches[1]; // Get the index from the match.
-
-      // Remove the instrument with the extracted index.
-      $instrument_count = $form_state->get('instrument_count');
-      for ($i = $index_to_remove; $i < $instrument_count - 1; $i++) {
-        $form_state->setValue("instrument_selected_$i", $form_state->getValue("instrument_selected_" . ($i + 1)));
-      }
-      // Remove the last instrument (now a duplicate due to shifting).
-      $form_state->unsetValue("instrument_selected_" . $index_to_remove);
-      $form_state->set('instrument_count', $instrument_count > 0 ? $instrument_count - 1 : 0);
-      $form_state->setRebuild(TRUE);
-      return $form['process_instruments']['wrapper'];
-    }
   }
 
-  /**
-   * Redirects the user back to a previously tracked URL, if available.
-   */
   function backUrl() {
     $uid = \Drupal::currentUser()->id();
     $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.add_process');
@@ -476,37 +991,13 @@ class AddProcessForm extends FormBase {
   }
 
   /**
-   * AJAX addInstrument callback
-   */
-  public function addInstrumentCallback(array &$form, FormStateInterface $form_state) {
-    // If it's not possible to determine the index, return the complete wrapper
-    return $form['process_instruments']['wrapper'];
-  }
-
-
-  public function loadDetectorsCallback(array &$form, FormStateInterface $form_state) {
-    $trigger = $form_state->getTriggeringElement();
-
-    if (preg_match('/load_detectors_(\d+)/', $trigger['#name'], $matches)) {
-      $i = $matches[1];
-      if (preg_match('/\[(https?:\/\/|)([^\]]+)\]/', $form_state->getValue('instrument_selected_'.$i), $matches)) {
-        $instrument = $matches[1].$matches[2];
-        $form_state->set('detectors_selected_'.$i, $this->getDetectors($instrument));
-      }
-
-      $form_state->setRebuild(TRUE);
-      return $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i];
-    }
-  }
-
-  /**
    * get Detectors From Instrument
    */
-  public function getDetectors($instrument_uri) {
+  public function getDetectors($instrumentUri) {
 
     // Call to get Detectors
     $api = \Drupal::service('rep.api_connector');
-    $response = $api->detectorListFromInstrument($instrument_uri);
+    $response = $api->detectorListFromInstrument($instrumentUri);
 
     // Decode JSON reply
     $data = json_decode($response, true);
@@ -532,27 +1023,35 @@ class AddProcessForm extends FormBase {
     return $detectors;
   }
 
-  /**
-   * AJAX callback to remove an instrument.
-   */
-  public function removeInstrumentCallback(array &$form, FormStateInterface $form_state) {
-    // // Get the triggering element.
-    // $trigger = $form_state->getTriggeringElement();
+  /*
+  $form['process_instruments']['wrapper']['detectors_table_'.$i] = [
+    '#type' => 'table',
+    '#header' => [
+      '#',
+      $this->t('Detector Label'),
+      $this->t('Detector Status'),
+    ],
+    '#rows' => [],
+    '#attributes' => ['class' => ['detectors-table']],
+  ];
 
-    // // Extract the instrument index from the triggering element's name.
-    // if (preg_match('/remove_instrument_(\d+)/', $trigger['#name'], $matches)) {
-    //   $index_to_remove = $matches[1]; // Get the index from the match.
-
-    //   // Remove the instrument with the extracted index.
-    //   $instrument_count = $form_state->get('instrument_count');
-    //   for ($i = $index_to_remove; $i < $instrument_count - 1; $i++) {
-    //     $form_state->set("instrument_selected_$i", $form_state->get("instrument_selected_" . ($i + 1)));
-    //   }
-    //   $form_state->setRebuild(TRUE);
-    // }
-    // Return the updated wrapper.
-    return $form['process_instruments']['wrapper'];
-
+  // Add line to table
+  foreach ($detectors as $index => $item) {
+    $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i]['detectors_table_'.$i][$index]['checkbox'] = [
+      '#type' => 'checkbox',
+      '#attributes' => [
+        'value' => $item['uri'],
+        'disabled' => $item['status'] !== 'Draft',
+      ],
+      '#value' => TRUE
+    ];
+    $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i]['detectors_table_'.$i][$index]['label'] = [
+      '#plain_text' => $item['name'] ?: $this->t('Unknown'),
+    ];
+    $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i]['detectors_table_'.$i][$index]['status'] = [
+      '#plain_text' => $item['status'] ?: $this->t('Unknown'),
+    ];
   }
+  */
 
 }

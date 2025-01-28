@@ -56,6 +56,37 @@ sir.element_uri:
   options:
     no_cache: 'TRUE'
 
+# Process CRUD options
+
+sir.manage_process:
+  path: 'sir/manage/process'
+  defaults:
+    _title: 'Manage Process'    
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+sir.add_process:
+  path: 'sir/manage/addprocess/{state}'
+  defaults:
+    _form: '\Drupal\sir\Form\AddProcessForm'
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
+
+sir.edit_process:
+  path: 'sir/manage/editprocess/{state}/{processuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\EditProcessForm'
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'    
+  options:
+    no_cache: 'TRUE'
 
 # Instrument CRUD options
 
@@ -437,27 +468,27 @@ sir.edit_processstem:
 
 # Process CRUD options
 
-sir.add_process:
-  path: 'sir/manage/addprocess'
-  defaults:
-    _form: '\Drupal\sir\Form\AddProcessForm'
-    _title: 'Add Process'
-  requirements:
-    _permission: 'access content'
-    _custom_access_check: 'TRUE'
-  options:
-    no_cache: 'TRUE'
+#sir.add_process:
+#  path: 'sir/manage/addprocess'
+#  defaults:
+#    _form: '\Drupal\sir\Form\AddProcessForm'
+#    _title: 'Add Process'
+#  requirements:
+#    _permission: 'access content'
+#    _custom_access_check: 'TRUE'
+#  options:
+#    no_cache: 'TRUE'
 
-sir.edit_process:
-  path: 'sir/manage/editprocess/{processuri}'
-  defaults:
-    _form: '\Drupal\sir\Form\EditProcessForm'
-    _title: 'Edit Process'
-  requirements:
-    _permission: 'access content'
-    _custom_access_check: 'TRUE'
-  options:
-    no_cache: 'TRUE'
+#sir.edit_process:
+#  path: 'sir/manage/editprocess/{processuri}'
+#  defaults:
+#    _form: '\Drupal\sir\Form\EditProcessForm'
+#    _title: 'Edit Process'
+#  requirements:
+#    _permission: 'access content'
+#    _custom_access_check: 'TRUE'
+#  options:
+#    no_cache: 'TRUE'
 
 # REVIEW ROUTES
 
