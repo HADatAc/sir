@@ -157,7 +157,7 @@ class AddProcessForm extends FormBase {
       if (isset($basic['language'])) {
         $language = $basic['language'];
       }
-      $version = '';
+      $version = '1';
       if (isset($basic['version'])) {
         $version = $basic['version'];
       }
@@ -207,11 +207,15 @@ class AddProcessForm extends FormBase {
         '#options' => $languages,
         '#default_value' => 'en',
       ];
-      $form['process_version'] = [
+      $form['process_version_hid'] = [
         '#type' => 'textfield',
         '#title' => $this->t('Version'),
-        '#default_value' => $version != null ? $version:1,
+        '#default_value' => $version,
         '#disabled' => true
+      ];
+      $form['process_version'] = [
+        '#type' => 'hidden',
+        '#default_value' => $version,
       ];
       $form['process_description'] = [
         '#type' => 'textarea',
@@ -614,7 +618,7 @@ class AddProcessForm extends FormBase {
     // Obtém os detectores a partir da API
     $detectors = $this->getDetectors($instrument_uri);
 
-    dpm($detectors);
+    //dpm($detectors);
 
     // Renderiza os detectores como uma tabela e atualiza o container no formulário
     $form['instruments']['rows'][$delta]['row'.$delta]['detectors'][$container_id] = $this->buildDetectorTable($detectors, $container_id);
@@ -658,7 +662,7 @@ class AddProcessForm extends FormBase {
 
       //dpm(Utils::uriFromAutocomplete($instrument['instrument']));
       if (isset($instrument_id) && isset($instrument)) {
-        dpm($processUri." | ".$instrument['instrument']);
+        //dpm($processUri." | ".$instrument['instrument']);
         try {
           $api->processInstrumentAdd($processUri,Utils::uriFromAutocomplete($instrument['instrument']));
 

@@ -61,10 +61,10 @@ sir.element_uri:
 sir.manage_process:
   path: 'sir/manage/process'
   defaults:
-    _title: 'Manage Process'    
+    _title: 'Manage Process'
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
@@ -74,7 +74,7 @@ sir.add_process:
     _form: '\Drupal\sir\Form\AddProcessForm'
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
@@ -84,7 +84,7 @@ sir.edit_process:
     _form: '\Drupal\sir\Form\EditProcessForm'
   requirements:
     _permission: 'access content'
-    _custom_access_check: 'TRUE'    
+    _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 

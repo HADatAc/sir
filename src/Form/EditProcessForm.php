@@ -14,6 +14,7 @@ use Drupal\rep\Utils;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Vocabulary\HASCO;
 use Drupal\rep\Vocabulary\REPGUI;
+use Drupal\rep\Vocabulary\VSTOI;
 
 class EditProcessForm extends FormBase {
 
@@ -159,7 +160,7 @@ class EditProcessForm extends FormBase {
       if (isset($basic['language'])) {
         $language = $basic['language'];
       }
-      $version = '';
+      $version = '1';
       if (isset($basic['version'])) {
         $version = $basic['version'];
       }
@@ -197,6 +198,7 @@ class EditProcessForm extends FormBase {
           '#type' => 'markup',
           '#markup' => '</div>',
         ],
+        '#disabled' => true
       ];
       $form['process_name'] = [
         '#type' => 'textfield',
@@ -209,11 +211,15 @@ class EditProcessForm extends FormBase {
         '#options' => $languages,
         '#default_value' => 'en',
       ];
-      $form['process_version'] = [
+      $form['process_version_hid'] = [
         '#type' => 'textfield',
         '#title' => $this->t('Version'),
         '#default_value' => $version,
         '#disabled' => true
+      ];
+      $form['process_version'] = [
+        '#type' => 'hidden',
+        '#default_value' => $version,
       ];
       $form['process_description'] = [
         '#type' => 'textarea',
@@ -439,11 +445,13 @@ class EditProcessForm extends FormBase {
 
     if (isset($input) && is_array($input) &&
         isset($basic) && is_array($basic)) {
-      $basic['processstem'] = $input['process_processstem'] ?? '';
+      $basic['processstem'] = Utils::fieldToAutocomplete($this->getProcess()->typeUri,$this->getProcess()->typeLabel) ?? '';
       $basic['name']        = $input['process_name'] ?? '';
       $basic['language']    = $input['process_language'] ?? '';
-      $basic['version']     = $input['process_version'] ?? '';
+      $basic['version']     = $this->getProcess()->hasVersion ?? 1;
       $basic['description'] = $input['process_description'] ?? '';
+      $basic['status'] = $this->getProcess()->hasStatus ?? VSTOI::DRAFT;
+      $basic['typeUri'] = $this->getProcess()->typeUri ?? $input['process_processstem'];
       \Drupal::state()->set('my_form_basic', $basic);
     }
     $response = new AjaxResponse();
@@ -458,6 +466,8 @@ class EditProcessForm extends FormBase {
       'language' => $this->getProcess()->language,
       'version' => $this->getProcess()->hasVersion,
       'description' => $this->getProcess()->comment,
+      'status' => $this->getProcess()->hasStatus,
+      'typeUri' => $this->getProcess()->typeUri,
     ];
     \Drupal::state()->set('my_form_basic', $basic);
     return $basic;
@@ -494,22 +504,23 @@ class EditProcessForm extends FormBase {
             '#type' => 'markup',
             '#markup' => '<div class="pt-3 col border border-white">',
           ],
-          'main' => [
-            '#type' => 'textfield',
-            '#name' => 'instrument_detectors_' . $delta,
-            //'#value' => $instrument['detectors'],
-            //'#attributes' => [
-            //  'class' => ['open-tree-modal'],
-            //  'data-dialog-type' => 'modal',
-            //  'data-dialog-options' => json_encode(['width' => 800]),
-            //  'data-url' => Url::fromRoute('rep.tree_form', [
-            //    'mode' => 'modal',
-            //    'elementtype' => 'detector',
-            //  ], ['query' => ['field_id' => 'instrument_detectors_' . $delta]])->toString(),
-            //  'data-field-id' => 'instrument_detectors_' . $delta,
-            //  'data-search-value' => $instrument['detectors'],
-            //  'data-elementtype' => 'detector',
-            //],
+          'instrument_detectors_' . $delta => [
+            '#type' => 'container',
+            '#attributes' => [
+              'id' => 'instrument_detectors_' . $delta,
+            ],
+            // WILL BE THIS CODE PART
+            // 'table' => [
+            //   '#type' => 'table',
+            //   '#header' => [
+            //       $this->t('Name'),
+            //       $this->t('URI'),
+            //       $this->t('Status'),
+            //   ],
+            //   '#rows' => [], // Começa vazio e será preenchido pelo AJAX
+            //   '#empty' => $this->t('No detectors yet.'),
+            // ],
+            '#value' => $instrument['detectors'],
           ],
           'bottom' => [
             '#type' => 'markup',
@@ -590,9 +601,10 @@ class EditProcessForm extends FormBase {
       return;
     }
 
+    $api = \Drupal::service('rep.api_connector');
+
     foreach ($instruments as $instrument_id => $instrument) {
       if (isset($instrument_id) && isset($instrument)) {
-        //dpm($instrument);
         try {
           //$useremail = \Drupal::currentUser()->getEmail();
 
@@ -606,7 +618,6 @@ class EditProcessForm extends FormBase {
           //  $detectorUri = $instruments[$instrument_id]['detector'];
           //}
 
-          $api = \Drupal::service('rep.api_connector');
           $api->processInstrumentAdd($processUri,$instrument->uri);
 
         } catch(\Exception $e){
@@ -907,7 +918,7 @@ class EditProcessForm extends FormBase {
       \Drupal::state()->delete('my_form_instruments');
       //\Drupal::state()->delete('my_form_codes');
       self::backUrl();
-      return;
+      return true;
     }
 
     // If not leaving then UPDATE STATE OF VARIABLES, OBJECTS AND CODES
@@ -952,13 +963,16 @@ class EditProcessForm extends FormBase {
     if ($button_name === 'save') {
       try {
         $useremail = \Drupal::currentUser()->getEmail();
-        $processJSON = '{"uri":"'. $basic['uri'] .'",'.
-            '"typeUri":"'.HASCO::SEMANTIC_DATA_DICTIONARY.'",'.
-            '"hascoTypeUri":"'.HASCO::SEMANTIC_DATA_DICTIONARY.'",'.
-            '"label":"'.$basic['name'].'",'.
-            '"hasVersion":"'.$basic['version'].'",'.
-            '"comment":"'.$basic['description'].'",'.
-            '"hasSIRManagerEmail":"'.$useremail.'"}';
+
+        $processJSON = '{"uri":"' . $basic['uri'] . '",'
+          . '"typeUri":"' . $basic['typeUri'] . '",'
+          . '"hascoTypeUri":"' . VSTOI::PROCESS . '",'
+          . '"hasStatus":"' . $basic['status'] . '",'
+          . '"label":"' . $basic['name'] . '",'
+          . '"hasLanguage":"' . $basic['language'] . '",'
+          . '"hasVersion":"' . $basic['version'] . '",'
+          . '"comment":"' . $basic['description'] . '",'
+          . '"hasSIRManagerEmail":"' . $useremail . '"}';
 
         $api = \Drupal::service('rep.api_connector');
 
@@ -970,12 +984,13 @@ class EditProcessForm extends FormBase {
         // add the following to the process: the process itself, its
         // instruments, its detectors and its codes
         $api->elementAdd('process',$processJSON);
+
         if (isset($instruments)) {
           $this->saveInstruments($basic['uri'],$instruments);
         }
-        if (isset($codes)) {
-          $this->saveCodes($basic['uri'],$codes);
-        }
+        // if (isset($codes)) {
+        //   $this->saveCodes($basic['uri'],$codes);
+        // }
 
         // Release values cached in the editor
         \Drupal::state()->delete('my_form_basic');
@@ -998,27 +1013,27 @@ class EditProcessForm extends FormBase {
   /**
    * Callback para abrir o modal com o formulário.
    */
-  public function openTreeModalCallback(array &$form, FormStateInterface $form_state) {
-    $response = new AjaxResponse();
+  // public function openTreeModalCallback(array &$form, FormStateInterface $form_state) {
+  //   $response = new AjaxResponse();
 
-    // Obtenha a URL para carregar o modal (usando data-url do campo).
-    $triggering_element = $form_state->getTriggeringElement();
-    $url = $triggering_element['#attributes']['data-url'];
+  //   // Obtenha a URL para carregar o modal (usando data-url do campo).
+  //   $triggering_element = $form_state->getTriggeringElement();
+  //   $url = $triggering_element['#attributes']['data-url'];
 
-    // Adicione o comando para abrir o modal com o formulário.
-    $response->addCommand(new OpenModalDialogCommand(
-      $this->t('Tree Form'),
-      '<iframe src="' . $url . '" style="width: 100%; height: 400px; border: none;"></iframe>',
-      ['width' => '800']
-    ));
+  //   // Adicione o comando para abrir o modal com o formulário.
+  //   $response->addCommand(new OpenModalDialogCommand(
+  //     $this->t('Tree Form'),
+  //     '<iframe src="' . $url . '" style="width: 100%; height: 400px; border: none;"></iframe>',
+  //     ['width' => '800']
+  //   ));
 
-    return $response;
-  }
+  //   return $response;
+  // }
 
 
   function backUrl() {
     $uid = \Drupal::currentUser()->id();
-    $previousUrl = Utils::trackingGetPreviousUrl($uid, \Drupal::request()->getRequestUri());
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.edit_process');
     if ($previousUrl) {
       $response = new RedirectResponse($previousUrl);
       $response->send();
