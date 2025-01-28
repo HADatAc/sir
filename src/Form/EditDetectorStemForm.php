@@ -119,8 +119,8 @@ class EditDetectorStemForm extends FormBase {
     ];
 
     $form['detectorstem_content'] = [
-      '#type' => 'textarea',
-      '#title' => $this->t('Content'),
+      '#type' => 'textfield',
+      '#title' => $this->t('Name'),
       '#default_value' => $this->getDetectorStem()->hasContent,
     ];
     $form['detectorstem_language'] = [
@@ -225,14 +225,13 @@ class EditDetectorStemForm extends FormBase {
       }
 
       $detectorStemJson = '{"uri":"'.$this->getDetectorStem()->uri.'",'.
-        '"superUri":"'.UTILS::aut($form_state->getValue('detectorstem_type')).'",'.
-        //'"typeUri":"'.VSTOI::DETECTOR_STEM.'",'.
+        '"superUri":"'.$this->getDetectorStem()->superUri.'",'.
         '"label":"'.$form_state->getValue('detectorstem_content').'",'.
         '"hascoTypeUri":"'.VSTOI::DETECTOR_STEM.'",'.
-        '"hasStatus":"'.VSTOI::CURRENT.'",'.
+        '"hasStatus":"'.$this->getDetectorStem()->hasStatus.'",'.
         '"hasContent":"'.$form_state->getValue('detectorstem_content').'",'.
         '"hasLanguage":"'.$form_state->getValue('detectorstem_language').'",'.
-        '"hasVersion":"'.$form_state->getValue('detectorstem_version').'",'.
+        '"hasVersion":"'.$this->getDetectorStem()->hasVersion.'",'.
         '"comment":"'.$form_state->getValue('detectorstem_description').'",'.
         '"wasDerivedFrom":"'.$wasDerivedFrom.'",'.
         '"wasGeneratedBy":"'.$form_state->getValue('detectorstem_was_generated_by').'",'.
