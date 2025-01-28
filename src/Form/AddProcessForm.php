@@ -385,15 +385,26 @@ class AddProcessForm extends FormBase {
 
     if ($button_name === 'save') {
       // TODO
-      /*
+
       $basic = \Drupal::state()->get('my_form_basic');
       if(strlen($basic['name']) < 1) {
         $form_state->setErrorByName(
           'process_name',
-          $this->t('Please enter a valid name for the Semantic Data Dictionary')
+          $this->t('Please enter a valid name for the Simulation Process')
         );
       }
-      */
+      if(strlen($basic['processstem']) < 1) {
+        $form_state->setErrorByName(
+          'process_processstem',
+          $this->t('Please select a valid Process Stem')
+        );
+      }
+      if(strlen($basic['description']) < 1) {
+        $form_state->setErrorByName(
+          'process_description',
+          $this->t('Please enter a description')
+        );
+      }
     }
   }
 

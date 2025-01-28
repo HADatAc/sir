@@ -229,12 +229,10 @@ class EditProcessForm extends FormBase {
 
     }
 
-    /* ======================= DICTIONARY ======================= */
-
     if ($this->getState() == 'instrument') {
 
       /*
-      *      VARIABLES
+      *      INSTRUMENTS
       */
 
       $form['instruments_title'] = [
@@ -275,7 +273,7 @@ class EditProcessForm extends FormBase {
         '#type' => 'submit',
         '#value' => $this->t('New Instrument'),
         '#name' => 'new_instrument',
-        '#attributes' => array('class' => array('btn', 'btn-sm', 'add-element-button')),
+        '#attributes' => array('class' => array('btn', 'btn-sm', 'save-button')),
       ];
 
       $form['instruments']['actions']['bottom'] = array(
@@ -385,15 +383,26 @@ class EditProcessForm extends FormBase {
 
     if ($button_name === 'save') {
       // TODO
-      /*
+
       $basic = \Drupal::state()->get('my_form_basic');
       if(strlen($basic['name']) < 1) {
         $form_state->setErrorByName(
           'process_name',
-          $this->t('Please enter a valid name for the Process')
+          $this->t('Please enter a valid name for the Simulation Process')
         );
       }
-      */
+      if(strlen($basic['processstem']) < 1) {
+        $form_state->setErrorByName(
+          'process_processstem',
+          $this->t('Please select a valid Process Stem')
+        );
+      }
+      if(strlen($basic['description']) < 1) {
+        $form_state->setErrorByName(
+          'process_description',
+          $this->t('Please enter a description')
+        );
+      }
     }
   }
 
@@ -1032,13 +1041,10 @@ class EditProcessForm extends FormBase {
 
 
   function backUrl() {
-    $uid = \Drupal::currentUser()->id();
-    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.edit_process');
-    if ($previousUrl) {
-      $response = new RedirectResponse($previousUrl);
-      $response->send();
-      return;
-    }
+    $root_url = \Drupal::request()->getBaseUrl();
+    $response = new RedirectResponse($root_url . '/sir/select/process/1/9');
+    $response->send();
+    return;
   }
 
 }
