@@ -410,6 +410,7 @@ class EditProcessForm extends FormBase {
 
     // RETRIEVE CURRENT STATE AND SAVE IT ACCORDINGLY
     $currentState = $form_state->getValue('state');
+
     if ($currentState == 'basic') {
       $this->updateBasic($form_state);
     }
@@ -422,6 +423,7 @@ class EditProcessForm extends FormBase {
 
     // Need to retrieve $basic because it contains the process's URI
     $basic = \Drupal::state()->get('my_form_basic');
+    $instruments = \Drupal::state()->get('my_form_instruments');
 
     // RETRIEVE FUTURE STATE
     $triggering_element = $form_state->getTriggeringElement();
@@ -454,13 +456,13 @@ class EditProcessForm extends FormBase {
 
     if (isset($input) && is_array($input) &&
         isset($basic) && is_array($basic)) {
-      $basic['processstem'] = Utils::fieldToAutocomplete($this->getProcess()->typeUri,$this->getProcess()->typeLabel) ?? '';
-      $basic['name']        = $input['process_name'] ?? '';
-      $basic['language']    = $input['process_language'] ?? '';
-      $basic['version']     = $this->getProcess()->hasVersion ?? 1;
-      $basic['description'] = $input['process_description'] ?? '';
-      $basic['status'] = $this->getProcess()->hasStatus ?? VSTOI::DRAFT;
-      $basic['typeUri'] = $this->getProcess()->typeUri ?? $input['process_processstem'];
+      $basic['processstem'] = $input['process_processstem'] ?? Utils::fieldToAutocomplete($this->getProcess()->typeUri,$this->getProcess()->typeLabel);
+      $basic['name']        = $input['process_name'] ?? $this->getProcess()->name;
+      $basic['language']    = $input['process_language'] ?? $this->getProcess()->language;
+      $basic['version']     = $input['process_version'] ?? $this->getProcess()->hasVersion;
+      $basic['description'] = $input['process_description'] ?? $this->getProcess()->description;
+      $basic['status'] = $input['process_description'] ?? $this->getProcess()->hasStatus;
+      $basic['typeUri'] = $input['process_description'] ?? $this->getProcess()->typeUri;
       \Drupal::state()->set('my_form_basic', $basic);
     }
     $response = new AjaxResponse();
@@ -502,7 +504,7 @@ class EditProcessForm extends FormBase {
           'instrument_instrument_'. $delta => array(
             '#type' => 'textfield',
             '#name' => 'instrument_instrument_' . $delta,
-            '#value' => $instrument->uri,
+            '#value' => Utils::fieldToAutocomplete($instrument->uri,$instrument->label),
             '#attributes' => [
              'class' => ['open-tree-modal'],
              'data-dialog-type' => 'modal',
@@ -636,8 +638,9 @@ class EditProcessForm extends FormBase {
         isset($instruments) && is_array($instruments)) {
 
       foreach ($instruments as $instrument_id => $instrument) {
+        //dpm($input['instrument_instrument_' . $instrument_id]);
         if (isset($instrument_id) && isset($instrument)) {
-          $instruments[$instrument_id] = $input['instrument_instrument_' . $instrument_id] ?? '';
+          $instruments[$instrument_id]->instrument = $input['instrument_instrument_' . $instrument_id] ?? $instruments[$instrument_id];
           //$instruments[$instrument_id]->detectors = $input['instrument_detectors_' . $instrument_id] ?? [];
         }
       }
@@ -1022,6 +1025,8 @@ class EditProcessForm extends FormBase {
       return;
     }
 
+    dpm($instruments);
+    return;
     #if ($button_name === 'new_code') {
     #  $this->addCodeRow();
     #  return;
