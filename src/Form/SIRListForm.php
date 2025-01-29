@@ -169,7 +169,7 @@ class SIRListForm extends FormBase {
       '#type' => 'table',
       //'#type' => 'tableselect',
       '#header' => array_merge(
-        ['select' => ''],
+        //['select' => ''],
         $header
       ),
       '#empty' => $this->t('No ' . $this->plural_class_name . ' found'),
@@ -198,7 +198,7 @@ class SIRListForm extends FormBase {
       // $form['element_table'][$key]['select'] = $is_disabled ? [
       //     '#markup' => '',  // Célula vazia para linhas desativadas
       // ] : $checkbox;
-      $form['element_table'][$key]['select'] = [];
+      //$form['element_table'][$key]['select'] = [];
 
       // Next Columns
       foreach ($row as $field_key => $field_value) {
