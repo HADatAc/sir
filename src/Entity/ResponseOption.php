@@ -174,30 +174,17 @@ class ResponseOption {
   /**
    * Clone Response Option
    */
-  public static function cloneResponseOption($uri, $status = VSTOI::UNDER_REVIEW) {
+  public static function cloneResponseOption($uri, $status = VSTOI::UNDER_REVIEW, $reviewNote = null, $reviewOwner = null) {
 
     $api = \Drupal::service('rep.api_connector');
-    $result = $api->responseOptionGet($uri);
+    $rawresponse = $api->getUri($uri);
+    $obj = json_decode($rawresponse);
+    $result = $obj->body;
 
-    // CENARIO #1: CHECK IF IT HAS wasDerivedFrom property, means it is a derived element
-    if ($result->wasDerivedFrom !== NULL
-      && Utils::checkDerivedElements($uri) === false) {
-        \Drupal::messenger()->addError(t('There is a previous version that has the same content.'), ['@elements' => 'Response Option']);
-        return false;
-
-    } elseif ($result->wasDerivedFrom === NULL) { // CENARIO #2: CHECK IF THERE ARE ANY OTHER R.O. WITH SAME CONTENT ALREADY IN REP
-
-      //$response = $api->listSizeByKeywordAndLanguage($this->element_type, $result->hasContent, $result->hasLanguage);
-      $response = $api->listByKeywordAndLanguage('responseoption', $result->hasContent, $result->hasLanguage, 99999, 0);
-      if ($response > 1) {
-        \Drupal::messenger()->addError(t('There is already a Response Option with the same content on the Repository.'), ['@elements' => 'Response Option']);
-        return false;
-      }
-    }
-
-    // NO RESTRITIONS? SEND TO REVIEW
     $clonedObject = $result;
     $clonedObject->hasStatus = $status;
+    $clonedObject->hasReviewNote = $reviewNote;
+    $clonedObject->hasEditorEmail = $reviewOwner;
 
     // UNSET UNNECESSARY PROPERTIES
     unset($clonedObject->deletable);
@@ -217,9 +204,9 @@ class ResponseOption {
     $finalObject = json_encode($clonedObject, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
     // UPDATE BY DELETING AND CREATING
-    $api = \Drupal::service('rep.api_connector');
     $api->responseOptionDel($uri);
     $api->responseOptionAdd($finalObject);
 
+    return;
   }
 }

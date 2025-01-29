@@ -387,7 +387,7 @@ class AddProcessForm extends FormBase {
       // TODO
 
       //In case no value inputed and state is null at this point
-      if (\Drupal::state()->get('my_form_basic') === null) {
+      if (\Drupal::state()->get('my_form_basic') !== null) {
         $tmp_Obj = [
           'processstem' => $submitted_values['process_processstem'],
           'name' => $submitted_values['process_name'],
@@ -398,8 +398,31 @@ class AddProcessForm extends FormBase {
         \Drupal::state()->set('my_form_basic',$tmp_Obj);
         $form_state->setValues($tmp_Obj);
         $this->updateBasic($form_state);
-        //dpm(\Drupal::state()->get('my_form_basic'));
+
       }
+
+      if ($this->getState() == 'instrument') {
+        $input = $form_state->cleanValues()->getUserInput();
+        $instruments = [];
+        \Drupal::state()->set('my_form_instruments', []);
+
+        dpm($form_state->getValues());
+        foreach ($input as $key => $value) {
+          // Verifica se a chave começa com 'instrument_instrument_'
+          if (strpos($key, 'instrument_instrument_') === 0) {
+              // Extrai o número do identificador (delta)
+              $delta = str_replace('instrument_instrument_', '', $key);
+
+              // Adiciona ao array de instrumentos
+              $instruments[$delta]['instrument'] = $value;
+              $instruments[$delta]['detectors'] = null;
+          }
+        }
+        //dpm($instruments);
+        \Drupal::state()->set('my_form_instruments', $instruments);
+      }
+
+      //dpm(\Drupal::state()->get('my_form_instruments'));
 
       //$this->updateBasic($form_state);
       $basic = \Drupal::state()->get('my_form_basic');
@@ -423,6 +446,7 @@ class AddProcessForm extends FormBase {
         );
       }
     }
+    return;
   }
 
   public function pills_card_callback(array &$form, FormStateInterface $form_state) {
@@ -631,36 +655,34 @@ class AddProcessForm extends FormBase {
     return $form_rows;
   }
 
-  public function addDetectorCallback(array &$form, FormStateInterface $form_state) {
-    $triggering_element = $form_state->getTriggeringElement();
-    $delta = str_replace('instrument_instrument_', '', $triggering_element['#name']);
-    $container_id = 'instrument_detectors_' . $delta;
-    $instrument_uri = Utils::uriFromAutocomplete($form_state->getValue('instrument_instrument_' . $delta));
+  // public function addDetectorCallback(array &$form, FormStateInterface $form_state) {
+  //   $triggering_element = $form_state->getTriggeringElement();
+  //   $delta = str_replace('instrument_instrument_', '', $triggering_element['#name']);
+  //   $container_id = 'instrument_detectors_' . $delta;
+  //   $instrument_uri = Utils::uriFromAutocomplete($form_state->getValue('instrument_instrument_' . $delta));
 
-    // Verifica se o contêiner existe antes de modificar
-    if (!isset($form['instruments']['rows'][$delta]['row'.$delta]['detectors'][$container_id])) {
-        \Drupal::logger('custom_module')->error('Contêiner não encontrado para delta: @delta', ['@delta' => $delta]);
-        return [
-            '#markup' => $this->t('Error: Container not found for delta @delta.', ['@delta' => $delta]),
-        ];
-    }
+  //   // Verifica se o contêiner existe antes de modificar
+  //   if (!isset($form['instruments']['rows'][$delta]['row'.$delta]['detectors'][$container_id])) {
+  //       \Drupal::logger('custom_module')->error('Contêiner não encontrado para delta: @delta', ['@delta' => $delta]);
+  //       return [
+  //           '#markup' => $this->t('Error: Container not found for delta @delta.', ['@delta' => $delta]),
+  //       ];
+  //   }
 
-    // Obtém os detectores a partir da API
-    $detectors = $this->getDetectors($instrument_uri);
+  //   // Obtém os detectores a partir da API
+  //   $detectors = $this->getDetectors($instrument_uri);
 
-    //dpm($detectors);
+  //   //dpm($detectors);
 
-    // Renderiza os detectores como uma tabela e atualiza o container no formulário
-    $form['instruments']['rows'][$delta]['row'.$delta]['detectors'][$container_id] = $this->buildDetectorTable($detectors, $container_id);
+  //   // Renderiza os detectores como uma tabela e atualiza o container no formulário
+  //   $form['instruments']['rows'][$delta]['row'.$delta]['detectors'][$container_id] = $this->buildDetectorTable($detectors, $container_id);
 
-    return $form['instruments']['rows'][$delta]['row'.$delta]['detectors'][$container_id];
-}
-
-
-
+  //   return $form['instruments']['rows'][$delta]['row'.$delta]['detectors'][$container_id];
+  // }
 
   protected function updateInstruments(FormStateInterface $form_state) {
     $instruments = \Drupal::state()->get('my_form_instruments');
+
     $input = $form_state->getUserInput();
     if (isset($input) && is_array($input) &&
         isset($instruments) && is_array($instruments)) {

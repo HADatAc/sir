@@ -285,28 +285,9 @@ class ReviewResponseOptionForm extends FormBase {
 
       } else {
 
-        // REJECT
-
-        // THIS TO DRAFT
-        ResponseOption::cloneResponseOption($this->getResponseOption()->uri, VSTOI::DRAFT);
-
-
-        // $responseOptionJSON = '{"uri":"'. $this->getResponseOption()->uri .'",'.
-        // '"typeUri":"'.$this->getResponseOption()->typeUri.'",'.
-        // '"hascoTypeUri":"'.$this->getResponseOption()->hascoTypeUri.'",'.
-        // '"hasContent":"'.$this->getResponseOption()->hasContent.'",'.
-        // '"hasLanguage":"'.$this->getResponseOption()->hasLanguage.'",'.
-        // '"hasStatus":"'.VSTOI::DRAFT.'",'.
-        // '"hasVersion":"'.$this->getResponseOption()->hasVersion.'",'.
-        // '"comment":"'.$this->getResponseOption()->comment.'",'.
-        // '"hasSIRManagerEmail":"' . $this->getResponseOption()->hasSIRManagerEmail . '",'.
-        // '"hasReviewNote":"' . $form_state->getValue('responseoption_hasreviewnote') . '",'.
-        // '"hasEditorEmail":"'.\Drupal::currentUser()->getEmail().
-        // '"}';
-
-        // // UPDATE BY DELETING AND CREATING
-        // $api->responseOptionDel($this->getResponseOption()->uri);
-        // $api->responseOptionAdd($responseOptionJSON);
+      // REJECT
+        // RETURN HAS DRAFT WITH NOTES
+        ResponseOption::cloneResponseOption($this->getResponseOption()->uri, VSTOI::DRAFT, $form_state->getValue('responseoption_hasreviewnote'), \Drupal::currentUser()->getEmail());
 
         \Drupal::messenger()->addMessage(t("Response Option has been Rejected."));
         self::backUrl();

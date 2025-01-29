@@ -1300,18 +1300,25 @@ class SIRSelectForm extends FormBase {
 
         // CENARIO #1: CHECK IF IT HAS wasDerivedFrom property, means it is a derived element
         if ($result->wasDerivedFrom !== NULL
-            && $this->checkDerivedElements($uri) === false) {
+            && self::checkDerivedElements($uri, $this->element_type) === 1) {
             \Drupal::messenger()->addError($this->t('There is a previous version that has the same content.'), ['@elements' => $this->plural_class_name]);
             return false;
 
-        // CENARIO #2: CHECK IF THERE ARE ANY ONER R.O. WITH SAME CONTENT ALREADY IN REP
+        // CENARIO #2: CHECK IF THERE ARE ANY OTHER R.O. WITH SAME CONTENT ALREADY IN REP
         } elseif ($result->wasDerivedFrom === NULL) {
-
-          //$response = $api->listSizeByKeywordAndLanguage($this->element_type, $result->hasContent, $result->hasLanguage);
           $response = $api->listByKeywordAndLanguage($this->element_type, $result->hasContent, $result->hasLanguage, 99999, 0);
-          if ($response > 1) {
-            \Drupal::messenger()->addError($this->t('There is already a '.$this->single_class_name.' with the same content on the Repository.'), ['@elements' => $this->plural_class_name]);
-            return false;
+          $json_string = (string) $response; // Alternativa: $response->getBody()->getContents()
+
+          // Decodifica a resposta JSON
+          $decoded_response = json_decode($json_string, true); // true para array associativo
+
+          // Verifica se a resposta é um array e conta os elementos
+          if (is_array($decoded_response)) {
+              $count = count($decoded_response['body']);
+              if ($count > 1) {
+                      \Drupal::messenger()->addError($this->t('There is already a @element with the same content in the Repository.', ['@element' => $this->single_class_name]));
+                      return false;
+                  }
           }
         }
 
@@ -1344,7 +1351,7 @@ class SIRSelectForm extends FormBase {
 
         // CENARIO #1: CHECK IF IT HAS wasDerivedFrom property, means it is a derived element
         if ($result->wasDerivedFrom !== NULL
-            && $this->checkDerivedElements($uri) === false) {
+            && self::checkDerivedElements($uri, $this->element_type) === false) {
             \Drupal::messenger()->addError($this->t('There is a previous version that has the same content.'), ['@elements' => $this->plural_class_name]);
             return false;
 
@@ -1543,6 +1550,49 @@ class SIRSelectForm extends FormBase {
     $url = Url::fromRoute('sir.add_processstem');
     $url->setRouteParameter('sourceprocessstemuri', base64_encode($uri));
     $form_state->setRedirectUrl($url);
+  }
+
+  public static function checkDerivedElements($uri, $elementType) {
+    $api = \Drupal::service('rep.api_connector');
+    $rawresponse = $api->getUri($uri);
+    $obj = json_decode($rawresponse);
+    $result = $obj->body;
+
+    $tmpStatus = true;
+
+    // Verifica se o elemento atual está em estado de rascunho e se foi derivado de outro
+    $oldElement = $api->getUri($result->wasDerivedFrom);
+    $oldObj = json_decode($oldElement);
+    $oldResult = $oldObj->body;
+
+    // Verifica se o conteúdo, idioma ou comentário são iguais
+    switch ($elementType) {
+      default:
+      case 'responseoption':
+        if (($oldResult->hasContent === $result->hasContent &&
+            $oldResult->hasLanguage === $result->hasLanguage &&
+            $oldResult->comment === $result->comment)
+        ) {
+          $tmpStatus = FALSE;
+        }
+        break;
+    }
+
+    // $currentTime = microtime(true); // Obtém o tempo atual em segundos com microsegundos
+    // $milliseconds = round($currentTime * 1000); // Converte para milissegundos
+    // dpm("Result: " . $result->uri . "<br>Old Result:" . $oldResult->uri . "<br>Hora: " . $milliseconds);
+
+    // OUTPUT
+    if ($tmpStatus === FALSE) {
+        return false;
+    } else {
+      if ($result->wasDerivedFrom !== NULL) {
+        return self::checkDerivedElements($result->wasDerivedFrom, $elementType);
+      } else {
+        return true;
+      }
+    }
+
   }
 
 }
