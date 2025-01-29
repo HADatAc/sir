@@ -401,10 +401,8 @@ class AddProcessForm extends FormBase {
         //dpm(\Drupal::state()->get('my_form_basic'));
       }
 
-      $this->updateBasic($form_state);
+      //$this->updateBasic($form_state);
       $basic = \Drupal::state()->get('my_form_basic');
-
-      //dpm($basic);
 
       if(strlen($basic['name']) < 1) {
         $form_state->setErrorByName(
