@@ -15,6 +15,7 @@ use Drupal\rep\Entity\Tables;
 use Drupal\rep\Vocabulary\HASCO;
 use Drupal\rep\Vocabulary\REPGUI;
 use Drupal\rep\Vocabulary\VSTOI;
+use Drupal\sir\Entity\Instrument;
 
 class EditProcessForm extends FormBase {
 
@@ -169,7 +170,7 @@ class EditProcessForm extends FormBase {
         $description = $basic['description'];
       }
 
-      $form['process_processstem'] = [
+      $form['process_processstem_hid'] = [
         'top' => [
           '#type' => 'markup',
           '#markup' => '<div class="pt-3 col border border-white">',
@@ -199,6 +200,10 @@ class EditProcessForm extends FormBase {
           '#markup' => '</div>',
         ],
         '#disabled' => true
+      ];
+      $form['process_processstem'] = [
+        '#type' => 'hidden',
+        '#value' => $processstem,
       ];
       $form['process_name'] = [
         '#type' => 'textfield',
@@ -633,7 +638,7 @@ class EditProcessForm extends FormBase {
     // FIQUEI AQUI, TALVEZ SE TENHA DE FAZER UM MERGE DE ARRAY PARA ALBERGAR
     // EXISTENTES E NOVOS NO ARRAY FINAL
 
-    //dpm($input);
+
     if (isset($input) && is_array($input) &&
         isset($instruments) && is_array($instruments)) {
 
@@ -641,11 +646,13 @@ class EditProcessForm extends FormBase {
         //dpm($input['instrument_instrument_' . $instrument_id]);
         if (isset($instrument_id) && isset($instrument)) {
           $instruments[$instrument_id]->instrument = $input['instrument_instrument_' . $instrument_id] ?? $instruments[$instrument_id];
+          dpm($instruments);
           //$instruments[$instrument_id]->detectors = $input['instrument_detectors_' . $instrument_id] ?? [];
         }
       }
     }
     \Drupal::state()->set('my_form_instruments', $instruments);
+    //dpm(\Drupal::state()->get('my_form_instruments'));
     return;
   }
 
@@ -1009,11 +1016,13 @@ class EditProcessForm extends FormBase {
     #if ($this->getState() === 'codebook') {
     #  $this->updateCodes($form_state);
     #}
-
+    $this->updateInstruments($form_state);
     // Get the latest cached versions of values in the editor
     $basic = \Drupal::state()->get('my_form_basic');
     $instruments = \Drupal::state()->get('my_form_instruments');
     #$codes = \Drupal::state()->get('my_form_codes');
+
+    return;
 
     if ($button_name === 'new_instrument') {
       $this->addInstrumentRow();
@@ -1025,8 +1034,6 @@ class EditProcessForm extends FormBase {
       return;
     }
 
-    dpm($instruments);
-    return;
     #if ($button_name === 'new_code') {
     #  $this->addCodeRow();
     #  return;
@@ -1038,6 +1045,8 @@ class EditProcessForm extends FormBase {
     #}
 
     if ($button_name === 'save') {
+
+      return;
       try {
         $useremail = \Drupal::currentUser()->getEmail();
 
