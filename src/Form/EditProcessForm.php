@@ -646,7 +646,7 @@ class EditProcessForm extends FormBase {
         //dpm($input['instrument_instrument_' . $instrument_id]);
         if (isset($instrument_id) && isset($instrument)) {
           $instruments[$instrument_id]->instrument = $input['instrument_instrument_' . $instrument_id] ?? $instruments[$instrument_id];
-          dpm($instruments);
+          //dpm($instruments);
           //$instruments[$instrument_id]->detectors = $input['instrument_detectors_' . $instrument_id] ?? [];
         }
       }
