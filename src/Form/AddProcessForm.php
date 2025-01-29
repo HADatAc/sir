@@ -509,7 +509,9 @@ class AddProcessForm extends FormBase {
              'data-field-id' => 'instrument_instrument_' . $delta,
              'data-search-value' => $instrument['instrument'],
              'data-elementtype' => 'instrument',
+            "autocomplete" => 'off',
             ],
+            "#autocomplete" => 'off',
             '#ajax' => [
              'callback' => '::addDetectorCallback',
              'event' => 'change',

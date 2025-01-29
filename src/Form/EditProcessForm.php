@@ -488,26 +488,84 @@ class EditProcessForm extends FormBase {
    *
    ******************************/
 
-  protected function renderInstrumentRows(array $instruments) {
+   protected function renderInstrumentRows(array $instruments) {
     $form_rows = [];
     $separator = '<div class="w-100"></div>';
     foreach ($instruments as $delta => $instrument) {
+
       $form_row = array(
         'instrument' => array(
           'top' => array(
             '#type' => 'markup',
             '#markup' => '<div class="pt-3 col border border-white">',
           ),
-          'main' => array(
+          'instrument_instrument_'. $delta => array(
             '#type' => 'textfield',
             '#name' => 'instrument_instrument_' . $delta,
             '#value' => $instrument->uri,
+            '#attributes' => [
+             'class' => ['open-tree-modal'],
+             'data-dialog-type' => 'modal',
+             'data-dialog-options' => json_encode(['width' => 800]),
+             'data-url' => Url::fromRoute(
+               'rep.tree_form',
+               [
+                 'mode' => 'modal',
+                 'elementtype' => 'instrument',
+               ],
+               [
+                 'query' => ['field_id' => 'instrument_instrument_' . $delta]
+               ])->toString(),
+             'data-field-id' => 'instrument_instrument_' . $delta,
+             'data-search-value' => $instrument->uri,
+             'data-elementtype' => 'instrument',
+             "autocomplete" => 'off',
+            ],
+            "#autocomplete" => 'off',
+            // '#ajax' => [
+            //  'callback' => '::addDetectorCallback',
+            //  'event' => 'change',
+            //  'wrapper' => 'instrument_detectors_' . $delta,
+            //  'method' => 'replaceWith',
+            //  'effect' => 'fade',
+            // ],
+
           ),
           'bottom' => array(
             '#type' => 'markup',
             '#markup' => '</div>',
           ),
         ),
+        // 'detectors' => [
+        //   'top' => [
+        //     '#type' => 'markup',
+        //     '#markup' => '<div class="pt-3 col border border-white">',
+        //   ],
+        //   'instrument_detectors_'. $delta => [
+        //     '#type' => 'container',
+        //     '#name' => 'instrument_detectors_' . $delta,
+        //     '#value' => $instrument['detectors'],
+        //     '#attributes' => [
+        //       'id' => 'instrument_detectors_' . $delta,
+        //     ]
+        //     #'#detectorss' => [
+        //     #  'class' => ['open-tree-modal'],
+        //     #  'data-dialog-type' => 'modal',
+        //     #  'data-dialog-options' => json_encode(['width' => 800]),
+        //     #  'data-url' => Url::fromRoute('rep.tree_form', [
+        //     #    'mode' => 'modal',
+        //     #    'elementtype' => 'detectors',
+        //     #  ], ['query' => ['field_id' => 'instrument_detectors_' . $delta]])->toString(),
+        //     #  'data-field-id' => 'instrument_detectors_' . $delta,
+        //     #  'data-search-value' => $instrument['detectors'],
+        //     #  'data-elementtype' => 'detectors',
+        //     #],
+        //   ],
+        //   'bottom' => [
+        //     '#type' => 'markup',
+        //     '#markup' => '</div>',
+        //   ],
+        // ],
         'detectors' => [
           'top' => [
             '#type' => 'markup',
@@ -529,7 +587,7 @@ class EditProcessForm extends FormBase {
             //   '#rows' => [], // Começa vazio e será preenchido pelo AJAX
             //   '#empty' => $this->t('No detectors yet.'),
             // ],
-            '#value' => $instrument['detectors'],
+            '#value' => $instrument->detectors,
           ],
           'bottom' => [
             '#type' => 'markup',
@@ -546,7 +604,7 @@ class EditProcessForm extends FormBase {
             '#name' => 'instrument_remove_' . $delta,
             '#value' => $this->t('Remove'),
             '#attributes' => array(
-              'class' => array('remove-row', 'btn', 'btn-sm', 'delete-element-button'),
+              'class' => array('remove-row', 'btn', 'btn-sm', 'btn-danger' , 'delete-element-button'),
               'id' => 'instrument-' . $delta,
             ),
           ),
@@ -569,17 +627,22 @@ class EditProcessForm extends FormBase {
   protected function updateInstruments(FormStateInterface $form_state) {
     $instruments = \Drupal::state()->get('my_form_instruments');
     $input = $form_state->getUserInput();
+
+    // FIQUEI AQUI, TALVEZ SE TENHA DE FAZER UM MERGE DE ARRAY PARA ALBERGAR
+    // EXISTENTES E NOVOS NO ARRAY FINAL
+
+    //dpm($input);
     if (isset($input) && is_array($input) &&
         isset($instruments) && is_array($instruments)) {
 
       foreach ($instruments as $instrument_id => $instrument) {
         if (isset($instrument_id) && isset($instrument)) {
-          $instruments[$instrument_id]['instrument'] = $input['instrument_instrument_' . $instrument_id] ?? '';
-          //$instruments[$instrument_id]['detectors'] = $input['instrument_detectors_' . $instrument_id] ?? '';
+          $instruments[$instrument_id] = $input['instrument_instrument_' . $instrument_id] ?? '';
+          //$instruments[$instrument_id]->detectors = $input['instrument_detectors_' . $instrument_id] ?? [];
         }
       }
-      \Drupal::state()->set('my_form_instruments', $instruments);
     }
+    \Drupal::state()->set('my_form_instruments', $instruments);
     return;
   }
 
