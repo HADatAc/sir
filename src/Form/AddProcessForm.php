@@ -406,7 +406,7 @@ class AddProcessForm extends FormBase {
         $instruments = [];
         \Drupal::state()->set('my_form_instruments', []);
 
-        dpm($form_state->getValues());
+        //dpm($form_state->getValues());
         foreach ($input as $key => $value) {
           // Verifica se a chave começa com 'instrument_instrument_'
           if (strpos($key, 'instrument_instrument_') === 0) {
