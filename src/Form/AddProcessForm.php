@@ -386,7 +386,14 @@ class AddProcessForm extends FormBase {
     if ($button_name === 'save') {
       // TODO
 
-      $basic = \Drupal::state()->get('my_form_basic');
+      if (\Drupal::state()->get('my_form_basic') === null) {
+        $this->updateBasic($form_state);
+      } else {
+        $basic = \Drupal::state()->get('my_form_basic');
+      }
+
+      dpm($basic);
+
       if(strlen($basic['name']) < 1) {
         $form_state->setErrorByName(
           'process_name',

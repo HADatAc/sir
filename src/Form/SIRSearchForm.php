@@ -212,8 +212,7 @@ class SIRSearchForm extends FormBase {
     // IF ELEMENT TYPE IS CLASS
     if (($form_state->getValue('search_element_type') == 'instrument') ||
         ($form_state->getValue('search_element_type') == 'detectorstem') ||
-        ($form_state->getValue('search_element_type') == 'processstem') ||
-        ($form_state->getValue('search_element_type') == 'detector')) {
+        ($form_state->getValue('search_element_type') == 'processstem')) {
       $url = Url::fromRoute('rep.browse_tree');
       $url->setRouteParameter('mode', 'browse');
       $url->setRouteParameter('elementtype', $form_state->getValue('search_element_type'));

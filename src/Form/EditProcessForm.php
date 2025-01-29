@@ -461,7 +461,7 @@ class EditProcessForm extends FormBase {
 
     if (isset($input) && is_array($input) &&
         isset($basic) && is_array($basic)) {
-      $basic['processstem'] = $input['process_processstem'] ?? Utils::fieldToAutocomplete($this->getProcess()->typeUri,$this->getProcess()->typeLabel);
+      $basic['processstem'] = $input['process_processstem'] ?? $this->getProcess()->typeUri;
       $basic['name']        = $input['process_name'] ?? $this->getProcess()->name;
       $basic['language']    = $input['process_language'] ?? $this->getProcess()->language;
       $basic['version']     = $input['process_version'] ?? $this->getProcess()->hasVersion;
@@ -477,7 +477,7 @@ class EditProcessForm extends FormBase {
   public function populateBasic() {
     $basic = [
       'uri' => $this->getProcess()->uri,
-      'processstem' => Utils::fieldToAutocomplete($this->getProcess()->typeUri,$this->getProcess()->typeLabel),
+      'processstem' => $this->getProcess()->typeUri,
       'name' => $this->getProcess()->label,
       'language' => $this->getProcess()->language,
       'version' => $this->getProcess()->hasVersion,
@@ -642,10 +642,25 @@ class EditProcessForm extends FormBase {
     if (isset($input) && is_array($input) &&
         isset($instruments) && is_array($instruments)) {
 
+      $api = \Drupal::service('rep.api_connector');
       foreach ($instruments as $instrument_id => $instrument) {
         //dpm($input['instrument_instrument_' . $instrument_id]);
         if (isset($instrument_id) && isset($instrument)) {
-          $instruments[$instrument_id]->instrument = $input['instrument_instrument_' . $instrument_id] ?? $instruments[$instrument_id];
+
+          if (strlen($input['instrument_instrument_' . $instrument_id]) > 0) {
+            $uri_decode=Utils::uriFromAutocomplete($input['instrument_instrument_' . $instrument_id]);
+            $instr = $api->parseObjectResponse($api->getUri($uri_decode),'getUri');
+            if ($instr == NULL) {
+              \Drupal::messenger()->addMessage(t("Failed to retrieve Instrument."));
+              return;
+            } else {
+              $instruments[$instrument_id] = $instr;
+            }
+          } else {
+            $instruments[$instrument_id] = $instruments[$instrument_id];
+          }
+
+          //$instruments[$instrument_id]->instrument = strlen($input['instrument_instrument_' . $instrument_id]) > 0 ? $input['instrument_instrument_' . $instrument_id] : $instruments[$instrument_id];
           //dpm($instruments);
           //$instruments[$instrument_id]->detectors = $input['instrument_detectors_' . $instrument_id] ?? [];
         }
@@ -1016,13 +1031,13 @@ class EditProcessForm extends FormBase {
     #if ($this->getState() === 'codebook') {
     #  $this->updateCodes($form_state);
     #}
-    $this->updateInstruments($form_state);
+
     // Get the latest cached versions of values in the editor
+
     $basic = \Drupal::state()->get('my_form_basic');
+    $this->updateInstruments($form_state);
     $instruments = \Drupal::state()->get('my_form_instruments');
     #$codes = \Drupal::state()->get('my_form_codes');
-
-    return;
 
     if ($button_name === 'new_instrument') {
       $this->addInstrumentRow();
@@ -1045,8 +1060,6 @@ class EditProcessForm extends FormBase {
     #}
 
     if ($button_name === 'save') {
-
-      return;
       try {
         $useremail = \Drupal::currentUser()->getEmail();
 

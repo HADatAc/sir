@@ -154,12 +154,66 @@ class SIRListForm extends FormBase {
     }
 
     // PUT FORM TOGETHER
+
+    // OLD WAY
+    // $form['element_table'] = [
+    //   '#type' => 'table',
+    //   '#header' => $header,
+    //   '#rows' => $output,
+    //   '#empty' => t('No response options found'),
+    // ];
+
+    $output = $output['output'];
+
     $form['element_table'] = [
       '#type' => 'table',
-      '#header' => $header,
-      '#rows' => $output,
-      '#empty' => t('No response options found'),
+      //'#type' => 'tableselect',
+      '#header' => array_merge(
+        ['select' => ''],
+        $header
+      ),
+      '#empty' => $this->t('No ' . $this->plural_class_name . ' found'),
+      '#attributes' => [
+        'class' => ['table', 'table-striped'],
+      ],
+      '#js_select' => FALSE,
     ];
+
+    // ADD lines to table
+    foreach ($output as $key => $row) {
+      //$is_disabled = isset($disabled_rows[$key]);
+
+      // ADD checkbox's to row
+      $checkbox = [
+          '#type' => 'checkbox',
+          '#title' => $this->t('Select'),
+          '#title_display' => 'invisible',
+          '#return_value' => $key,
+          '#attributes' => [
+              'class' => ['element-select-checkbox checkbox-status-'. strtolower($row['element_hasStatus'])],
+          ],
+      ];
+
+      // Assemble row
+      // $form['element_table'][$key]['select'] = $is_disabled ? [
+      //     '#markup' => '',  // Célula vazia para linhas desativadas
+      // ] : $checkbox;
+      $form['element_table'][$key]['select'] = [];
+
+      // Next Columns
+      foreach ($row as $field_key => $field_value) {
+          if ($field_key !== 'element_hasStatus') {
+              $form['element_table'][$key][$field_key] = [
+                  '#markup' => $field_value,
+              ];
+          }
+      }
+
+      // Add classes to disabled rows
+      // if ($is_disabled) {
+      //     $form['element_table'][$key]['#attributes']['class'][] = 'disabled-row';
+      // }
+    }
 
     $form['pager'] = [
       '#theme' => 'list-page',
