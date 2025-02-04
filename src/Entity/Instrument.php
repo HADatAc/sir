@@ -87,7 +87,8 @@ class Instrument {
         'element_abbreviation' => $shortName,
         'element_name' => t($label . $version),
         'element_language' => $lang,
-        'element_downloads' => t($totxt . ' ' . $tohtml . ' ' . $topdf . '<br>' . $tordf . ' ' . $tofhir),
+        // 'element_downloads' => t($totxt . ' ' . $tohtml . ' ' . $topdf . '<br>' . $tordf . ' ' . $tofhir),
+        'element_downloads' => t($totxt . ' ' . $tohtml . ' ' . $tordf . ' ' . $tofhir),
         'element_status' => $status
       ];
     }
