@@ -1,38 +1,27 @@
-(function ($, Drupal, once) {
-  Drupal.behaviors.addProcessForm = {
+(function ($, Drupal) {
+  Drupal.behaviors.detectorAjaxTrigger = {
     attach: function (context, settings) {
-      once('instrumentDetectorsAjaxTrigger', 'input.instrument-detector-ajax', context)
-        .forEach(function (element) {
-          $(element).on('change', function () {
-            var $checkbox = $(element);
-            var ajaxInstance = $checkbox.data('ajax');
+      $('.instrument-detector-ajax', context).off('change').on('change', function (e) {
+        //console.log('Checkbox alterado:', $(this).val());
 
-            if (ajaxInstance) {
-              ajaxInstance.execute();
-            } else {
-              if (!$checkbox.attr('id')) {
-                $checkbox.attr('id', 'instrument-detector-' + (new Date()).getTime());
-              }
+        const element = $(this);
+        const ajaxSettings = {
+          url: window.location.href,
+          event: 'change',
+          wrapper: element.attr('data-container-id'),
+          progress: { type: 'throbber', message: null }
+        };
 
-              var containerId = $checkbox.closest('[id]').attr('id');
+        const ajaxInstance = new Drupal.Ajax(false, element[0], ajaxSettings);
 
-              var config = {
-                base: $checkbox.attr('id'),
-                element: $checkbox[0],
-                event: 'change',
-                url: Drupal.url('sir/manage/addprocess/instrument'),
-                wrapper: containerId,
-                method: 'replaceWith',
-                effect: 'fade',
-                progress: { type: 'none' }
-              };
-
-              var newAjaxInstance = new Drupal.ajax(config);
-              $checkbox.data('ajax', newAjaxInstance);
-              newAjaxInstance.execute();
-            }
+        ajaxInstance.execute()
+          .done(function () {
+            console.log('AJAX concluído com sucesso.');
+          })
+          .fail(function (jqXHR, textStatus, errorThrown) {
+            console.error('Erro no AJAX:', textStatus, errorThrown);
           });
-        });
+      });
     }
   };
-})(jQuery, Drupal, window.once);
+})(jQuery, Drupal);

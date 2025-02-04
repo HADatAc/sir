@@ -83,9 +83,12 @@ class AddProcessForm extends FormBase {
     $languages = $tables->getLanguages();
 
     // MODAL
-    $form['#attached']['library'][] = 'rep/rep_modal';
-    $form['#attached']['library'][] = 'core/drupal.dialog';
+    $form['#attached']['library'][] = 'rep/rep_modal'; // Biblioteca personalizada do módulo
+    $form['#attached']['library'][] = 'core/drupal.dialog'; // Biblioteca do modal do Drupal
+    $form['#attached']['library'][] = 'core/drupal.ajax';
+    $form['#attached']['library'][] = 'core/jquery';
     $form['#attached']['library'][] = 'sir/sir_process';
+
 
     // SET SEPARATOR
     $separator = '<div class="w-100"></div>';
@@ -374,6 +377,20 @@ class AddProcessForm extends FormBase {
       '#submit' => ['::cancelSubmitCallback'],
     ];
 
+    $form['selected_detectors'] = [
+      '#type' => 'hidden',
+      '#value' => [],
+      '#attributes' => [
+        'id' => 'selected-detectors',
+      ],
+    ];
+
+    $form['debug_container'] = [
+      '#type' => 'container',
+      '#attributes' => ['id' => 'debug-container'],
+    ];
+
+
 
     $form['bottom_space'] = [
       '#type' => 'item',
@@ -384,6 +401,7 @@ class AddProcessForm extends FormBase {
 
     return $form;
   }
+
 
   public function cancelSubmitCallback(array &$form, FormStateInterface $form_state) {
     // Perform the same logic you do in submitForm() if ($button_name === 'back').
@@ -741,45 +759,61 @@ class AddProcessForm extends FormBase {
     return;
   }
 
+  // protected function saveInstruments($processUri, array $instruments) {
+  //   if (!isset($processUri)) {
+  //     \Drupal::messenger()->addError(t("No process URI have been provided to save instruments."));
+  //     return;
+  //   }
+  //   if (!isset($instruments) || !is_array($instruments)) {
+  //     \Drupal::messenger()->addWarning(t("Process has no instrument to be saved."));
+  //     return;
+  //   }
+
+  //   $api = \Drupal::service('rep.api_connector');
+
+  //   $instrumentsJSON = '{[';
+
+  //   foreach ($instruments as $instrument_id => $instrument) {
+  //     $instrumentsJSON .= '{'.Utils::uriFromAutocomplete($instrument['instrument']).'},';
+  //   }
+
+  //   $instrumentsJSON .= ']}';
+
+  //   dpm($instrumentsJSON);
+
+  //   //$api->processInstrumentAdd($processUri,$instrumentsJSON);
+
+  //   return;
+  // }
   protected function saveInstruments($processUri, array $instruments) {
     if (!isset($processUri)) {
-      \Drupal::messenger()->addError(t("No process URI have been provided to save instruments."));
-      return;
+        \Drupal::messenger()->addError(t("No process URI have been provided to save instruments."));
+        return;
     }
-    if (!isset($instruments) || !is_array($instruments)) {
-      \Drupal::messenger()->addWarning(t("Process has no instrument to be saved."));
-      return;
+    if (empty($instruments)) {
+        \Drupal::messenger()->addWarning(t("Process has no instrument to be saved."));
+        return;
     }
 
     $api = \Drupal::service('rep.api_connector');
-    //dpm($instruments);
-    foreach ($instruments as $instrument_id => $instrument) {
 
-      //dpm(Utils::uriFromAutocomplete($instrument['instrument']));
-      if (isset($instrument_id) && isset($instrument)) {
-        //dpm($processUri." | ".$instrument['instrument']);
-        try {
-          $api->processInstrumentAdd($processUri,Utils::uriFromAutocomplete($instrument['instrument']));
+    // Cria um array com os URIs dos instrumentos
+    $instrumentUris = [];
 
-          //$useremail = \Drupal::currentUser()->getEmail();
-
-          //$instrument = ' ';
-          //if ($instruments[$instrument_id]['instrument'] != NULL && $instruments[$instrument_id]['instrument'] != '') {
-          //  $instrument = $instruments[$instrument_id]['instrument'];
-          //}
-
-          //$detectorsUri = ' ';
-          //if ($instruments[$instrument_id]['detectors'] != NULL && $instruments[$instrument_id]['detectors'] != '') {
-          //  $detectorsUri = $instruments[$instrument_id]['detectors'];
-          //}
-
-          //dpm($instrumentJSON);
-
-        } catch(\Exception $e){
-          \Drupal::messenger()->addError(t("An error occurred while saving process's instruments: ".$e->getMessage()));
+    foreach ($instruments as $instrument) {
+        if (!empty($instrument['instrument'])) {
+            $instrumentUris[] = Utils::uriFromAutocomplete($instrument['instrument']);
         }
-      }
     }
+
+    // Gera o JSON sem a chave 'instruments'
+    //$instrumentsJSON = json_encode($instrumentUris);
+
+    //dpm($instrumentsJSON); // Verifica o JSON gerado
+
+    // Envia o array diretamente para a API
+    $api->processInstrumentAdd($processUri, $instrumentUris);
+
     return;
   }
 
@@ -812,6 +846,26 @@ class AddProcessForm extends FormBase {
     }
     return;
   }
+
+  public function addNewInstrumentRow(array &$form, FormStateInterface $form_state) {
+    $instruments = \Drupal::state()->get('my_form_instruments') ?? [];
+
+    // Adiciona uma nova linha à tabela
+    $instruments[] = [
+        'instrument' => '',
+        'detectors' => '',
+    ];
+    \Drupal::state()->set('my_form_instruments', $instruments);
+
+    // Reconstrói as linhas da tabela
+    $form['instruments']['rows'] = $this->renderInstrumentRows($instruments);
+
+    // Retorna uma resposta AJAX para atualizar o container
+    $response = new AjaxResponse();
+    $response->addCommand(new HtmlCommand('#' . $form['instruments']['#attributes']['id'], $form['instruments']));
+
+    return $response;
+}
 
   /******************************
    *
@@ -1238,25 +1292,29 @@ class AddProcessForm extends FormBase {
 
     $rows = [];
     foreach ($detectors as $detector) {
+      // Build an inline template render array for the checkbox.
       $checkbox = [
         '#type' => 'checkbox',
-        '#title' => '',
-        '#checked' => in_array($detector['uri'], $arraySelected) ? 1 : 0,
-        '#ajax' => [
-          'callback' => '::addNewDetectorCallback',
-          'event' => 'change',
-          'wrapper' => $container_id,
-          'method' => 'replaceWith',
-          'effect' => 'fade',
-        ],
-        '#attributes' => [
-          'name' => $container_id . '[]',
-          'id' => $container_id,
-          'class' => ['instrument-detector-ajax', 'use-ajax'],
-          'data-drupal-selector' => 'instrument-detector-ajax',
-        ],
+        '#name' => $container_id . '[]',
         '#return_value' => $detector['uri'],
+        '#checked' => !empty($arraySelected) ? in_array($detector['uri'], $arraySelected) : 1,
+        '#ajax' => [
+          'callback' => '::addNewInstrumentRow',
+          'event' => 'change', // Garante que está ouvindo o evento correto
+          'wrapper' => $container_id,
+          'progress' => [
+            'type' => 'throbber',
+            'message' => NULL,
+          ],
+          'method' => 'replace', // Use replace para garantir atualização
+        ],
+        '#executes_submit_callback' => TRUE, // Força o submit para garantir o disparo
+        '#attributes' => [
+          'class' => ['instrument-detector-ajax'],
+          //'data-container-id' => 'body'
+        ],
       ];
+
 
       // Manually render the inline template.
       $checkbox_rendered = $renderer->render($checkbox);
@@ -1283,21 +1341,36 @@ class AddProcessForm extends FormBase {
     ];
   }
 
-  public function addNewDetectorCallback(array &$form, FormStateInterface $form_state) {
-    $triggering_element = $form_state->getTriggeringElement();
-    $delta = str_replace('instrument_instrument_', '', $triggering_element['#name']);
-    $container_id = 'instrument_detectors_' . $delta;
 
-    $instrumentURI = $form_state->getValue('instrument_instrument_' . $delta) ?? $form_state->getUserInput()['instrument_instrument_' . $delta];
-    $instrument_uri = Utils::uriFromAutocomplete($instrumentURI);
+  /*
+  $form['process_instruments']['wrapper']['detectors_table_'.$i] = [
+    '#type' => 'table',
+    '#header' => [
+      '#',
+      $this->t('Detector Label'),
+      $this->t('Detector Status'),
+    ],
+    '#rows' => [],
+    '#attributes' => ['class' => ['detectors-table']],
+  ];
 
-    $detectors = $this->getDetectors($instrument_uri);
-    $detectors_table = $this->buildDetectorTable($detectors, $container_id);
-
-    $response = new AjaxResponse();
-    $response->addCommand(new HtmlCommand('#' . $container_id, $detectors_table));
-
-    return $response;
+  // Add line to table
+  foreach ($detectors as $index => $item) {
+    $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i]['detectors_table_'.$i][$index]['checkbox'] = [
+      '#type' => 'checkbox',
+      '#attributes' => [
+        'value' => $item['uri'],
+        'disabled' => $item['status'] !== 'Draft',
+      ],
+      '#value' => TRUE
+    ];
+    $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i]['detectors_table_'.$i][$index]['label'] = [
+      '#plain_text' => $item['name'] ?: $this->t('Unknown'),
+    ];
+    $form['process_instruments']['wrapper']['instrument_information_'.$i]["instrument_$i"]['fieldset_'.$i]['instrument_detector_wrapper_'.$i]['detectors_table_'.$i][$index]['status'] = [
+      '#plain_text' => $item['status'] ?: $this->t('Unknown'),
+    ];
   }
+  */
 
 }
