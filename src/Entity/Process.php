@@ -74,8 +74,19 @@ class Process {
           $status = parse_url($element->hasStatus, PHP_URL_FRAGMENT);
         }
       }
-      $totInst = count($element->instruments);
-      $totDet = count($element->detectors);
+      $totInst = count($element->hasRequiredInstrumentationUris);
+      $totDet = 0;
+
+      if (isset($element->requiredInstrumentation) && is_array($element->requiredInstrumentation)) {
+          foreach ($element->requiredInstrumentation as $instrument) {
+              if (isset($instrument->hasRequiredDetector) && is_array($instrument->hasRequiredDetector)) {
+                  $totDet += count($instrument->hasRequiredDetector);
+              } elseif (isset($instrument->detectors) && is_array($instrument->detectors)) {
+                  $totDet += count($instrument->detectors);
+              }
+          }
+      }
+
       $output[$element->uri] = [
         'element_uri' => t('<a href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),
         'element_type' => $typeLabel,

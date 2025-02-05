@@ -759,35 +759,38 @@ class AddProcessForm extends FormBase {
     return;
   }
 
+  //V1
   // protected function saveInstruments($processUri, array $instruments) {
   //   if (!isset($processUri)) {
-  //     \Drupal::messenger()->addError(t("No process URI have been provided to save instruments."));
-  //     return;
+  //       \Drupal::messenger()->addError(t("No process URI have been provided to save instruments."));
+  //       return;
   //   }
-  //   if (!isset($instruments) || !is_array($instruments)) {
-  //     \Drupal::messenger()->addWarning(t("Process has no instrument to be saved."));
-  //     return;
+  //   if (empty($instruments)) {
+  //       \Drupal::messenger()->addWarning(t("Process has no instrument to be saved."));
+  //       return;
   //   }
 
   //   $api = \Drupal::service('rep.api_connector');
 
-  //   $instrumentsJSON = '{[';
+  //   // Cria um array com os URIs dos instrumentos
+  //   $instrumentUris = [];
 
-  //   foreach ($instruments as $instrument_id => $instrument) {
-  //     $instrumentsJSON .= '{'.Utils::uriFromAutocomplete($instrument['instrument']).'},';
+  //   foreach ($instruments as $instrument) {
+  //       if (!empty($instrument['instrument'])) {
+  //           $instrumentUris[] = Utils::uriFromAutocomplete($instrument['instrument']);
+  //       }
   //   }
 
-  //   $instrumentsJSON .= ']}';
-
-  //   dpm($instrumentsJSON);
-
-  //   //$api->processInstrumentAdd($processUri,$instrumentsJSON);
+  //   $api->processInstrumentAdd($processUri, $instrumentUris);
 
   //   return;
   // }
+
+
+  // NOVA VERSÂO COM DETETORES
   protected function saveInstruments($processUri, array $instruments) {
     if (!isset($processUri)) {
-        \Drupal::messenger()->addError(t("No process URI have been provided to save instruments."));
+        \Drupal::messenger()->addError(t("No process URI has been provided to save instruments."));
         return;
     }
     if (empty($instruments)) {
@@ -797,25 +800,40 @@ class AddProcessForm extends FormBase {
 
     $api = \Drupal::service('rep.api_connector');
 
-    // Cria um array com os URIs dos instrumentos
-    $instrumentUris = [];
+    $requiredInstrumentation = [];
 
     foreach ($instruments as $instrument) {
         if (!empty($instrument['instrument'])) {
-            $instrumentUris[] = Utils::uriFromAutocomplete($instrument['instrument']);
+            $instrumentUri = Utils::uriFromAutocomplete($instrument['instrument']);
+            $detectors = [];
+
+            // Adiciona os detectores ao array se existirem
+            if (!empty($instrument['detectors'])) {
+                foreach ($instrument['detectors'] as $detector) {
+                    $detectors[] = $detector;
+                }
+            }
+
+            // Estrutura o array com o URI do instrumento e o array de detectores
+            $requiredInstrumentation[] = [
+                'instrumentUri' => $instrumentUri,
+                'detectors' => $detectors
+            ];
         }
     }
 
-    // Gera o JSON sem a chave 'instruments'
-    //$instrumentsJSON = json_encode($instrumentUris);
+    // Estrutura final do objeto JSON
+    $processData = [
+        'processuri' => $processUri,
+        'requirednstrumentation' => $requiredInstrumentation
+    ];
 
-    //dpm($instrumentsJSON); // Verifica o JSON gerado
-
-    // Envia o array diretamente para a API
-    $api->processInstrumentAdd($processUri, $instrumentUris);
+    // Envia o objeto para a API
+    $api->processInstrumentUpdate($processData);
 
     return;
   }
+
 
   public function addInstrumentRow() {
     $instruments = \Drupal::state()->get('my_form_instruments') ?? [];
@@ -1206,6 +1224,7 @@ class AddProcessForm extends FormBase {
             . '"hasVersion":"' . $basic['version'] . '",'
             . '"comment":"' . $basic['description'] . '",'
             . '"hasSIRManagerEmail":"' . $useremail . '"}';
+
           $api = \Drupal::service('rep.api_connector');
           $api->elementAdd('process',$processJSON);
           if (isset($instruments)) {

@@ -169,6 +169,14 @@ class EditProcessForm extends FormBase {
       if (isset($basic['description'])) {
         $description = $basic['description'];
       }
+      $status = '';
+      if (isset($basic['status'])) {
+        $status = $basic['status'];
+      }
+      $typeuri = '';
+      if (isset($basic['typeUri'])) {
+        $typeuri = $basic['typeUri'];
+      }
 
       $form['process_processstem_hid'] = [
         'top' => [
@@ -214,7 +222,7 @@ class EditProcessForm extends FormBase {
         '#type' => 'select',
         '#title' => $this->t('Language'),
         '#options' => $languages,
-        '#default_value' => 'en',
+        '#default_value' => $language,
       ];
       $form['process_version_hid'] = [
         '#type' => 'textfield',
@@ -224,12 +232,20 @@ class EditProcessForm extends FormBase {
       ];
       $form['process_version'] = [
         '#type' => 'hidden',
-        '#default_value' => $version,
+        '#value' => $version,
       ];
       $form['process_description'] = [
         '#type' => 'textarea',
         '#title' => $this->t('Description'),
         '#default_value' => $description,
+      ];
+      $form['process_status'] = [
+        '#type' => 'hidden',
+        '#value' => $status,
+      ];
+      $form['process_typeuri'] = [
+        '#type' => 'hidden',
+        '#value' => $typeuri,
       ];
 
     }
@@ -381,36 +397,6 @@ class EditProcessForm extends FormBase {
     return $form;
   }
 
-  public function validateForm(array &$form, FormStateInterface $form_state) {
-    $submitted_values = $form_state->cleanValues()->getValues();
-    $triggering_element = $form_state->getTriggeringElement();
-    $button_name = $triggering_element['#name'];
-
-    if ($button_name === 'save') {
-      // TODO
-
-      $basic = \Drupal::state()->get('my_form_basic');
-      if(strlen($basic['name']) < 1) {
-        $form_state->setErrorByName(
-          'process_name',
-          $this->t('Please enter a valid name for the Simulation Process')
-        );
-      }
-      if(strlen($basic['processstem']) < 1) {
-        $form_state->setErrorByName(
-          'process_processstem',
-          $this->t('Please select a valid Process Stem')
-        );
-      }
-      if(strlen($basic['description']) < 1) {
-        $form_state->setErrorByName(
-          'process_description',
-          $this->t('Please enter a description')
-        );
-      }
-    }
-  }
-
   public function pills_card_callback(array &$form, FormStateInterface $form_state) {
 
     // RETRIEVE CURRENT STATE AND SAVE IT ACCORDINGLY
@@ -462,12 +448,12 @@ class EditProcessForm extends FormBase {
     if (isset($input) && is_array($input) &&
         isset($basic) && is_array($basic)) {
       $basic['processstem'] = $input['process_processstem'] ?? $this->getProcess()->typeUri;
-      $basic['name']        = $input['process_name'] ?? $this->getProcess()->name;
-      $basic['language']    = $input['process_language'] ?? $this->getProcess()->language;
+      $basic['name']        = $input['process_name'] ?? $this->getProcess()->label;
+      $basic['language']    = $input['process_language'] ?? $this->getProcess()->hasLanguage;
       $basic['version']     = $input['process_version'] ?? $this->getProcess()->hasVersion;
-      $basic['description'] = $input['process_description'] ?? $this->getProcess()->description;
-      $basic['status'] = $input['process_description'] ?? $this->getProcess()->hasStatus;
-      $basic['typeUri'] = $input['process_description'] ?? $this->getProcess()->typeUri;
+      $basic['description'] = $input['process_description'] ?? $this->getProcess()->comment;
+      $basic['status'] = $input['process_status'] ?? $this->getProcess()->hasStatus;
+      $basic['typeUri'] = $input['process_typeuri'] ?? $this->getProcess()->typeUri;
       \Drupal::state()->set('my_form_basic', $basic);
     }
     $response = new AjaxResponse();
@@ -477,9 +463,9 @@ class EditProcessForm extends FormBase {
   public function populateBasic() {
     $basic = [
       'uri' => $this->getProcess()->uri,
-      'processstem' => $this->getProcess()->typeUri,
+      'processstem' => UTILS::fieldToAutocomplete($this->getProcess()->typeUri, $this->getProcess()->typeLabel),
       'name' => $this->getProcess()->label,
-      'language' => $this->getProcess()->language,
+      'language' => $this->getProcess()->hasLanguage,
       'version' => $this->getProcess()->hasVersion,
       'description' => $this->getProcess()->comment,
       'status' => $this->getProcess()->hasStatus,
@@ -496,9 +482,42 @@ class EditProcessForm extends FormBase {
    ******************************/
 
    protected function renderInstrumentRows(array $instruments) {
+    //dpm($instruments);
+
     $form_rows = [];
     $separator = '<div class="w-100"></div>';
     foreach ($instruments as $delta => $instrument) {
+
+      $detectors_component = [];
+      if (empty($instrument['detectors'])) {
+        $detectors_component['table'] = [
+          '#type' => 'table',
+          '#header' => [
+            $this->t('#'),
+            $this->t('Name'),
+            $this->t('URI'),
+            $this->t('Status'),
+          ],
+          '#rows' => [],
+          '#empty' => $this->t('No detectors yet.'),
+        ];
+      }
+      else {
+        //WHEN THERE ARE DETECTORS, MUST GET ALL AND SELECT ONLY THE ONES IN ARRAY
+        $intURI = UTILS::uriFromAutocomplete($instrument['instrument']);
+
+        $detectorsList = [];
+        foreach ($instruments as $inst) {
+            $instrumentUri = UTILS::uriFromAutocomplete($inst['instrument']);
+            if ($instrumentUri === $intURI) {
+                $detectorsList = $inst['detectors'] ?? [];
+                break;
+            }
+        }
+
+        $detectors_component = $this->buildDetectorTable($this->getDetectors($intURI), 'instrument_detectors_' . $delta, $detectorsList);
+
+      }
 
       $form_row = array(
         'instrument' => array(
@@ -509,7 +528,8 @@ class EditProcessForm extends FormBase {
           'instrument_instrument_'. $delta => array(
             '#type' => 'textfield',
             '#name' => 'instrument_instrument_' . $delta,
-            '#value' => Utils::fieldToAutocomplete($instrument->uri,$instrument->label),
+            '#id' => 'instrument_instrument_' . $delta,
+            '#value' => $instrument['instrument'],
             '#attributes' => [
              'class' => ['open-tree-modal'],
              'data-dialog-type' => 'modal',
@@ -524,18 +544,18 @@ class EditProcessForm extends FormBase {
                  'query' => ['field_id' => 'instrument_instrument_' . $delta]
                ])->toString(),
              'data-field-id' => 'instrument_instrument_' . $delta,
-             'data-search-value' => $instrument->uri,
+             'data-search-value' => UTILS::uriFromAutocomplete($instrument['instrument']),
              'data-elementtype' => 'instrument',
-             "autocomplete" => 'off',
+            "autocomplete" => 'off',
             ],
             "#autocomplete" => 'off',
-            // '#ajax' => [
-            //  'callback' => '::addDetectorCallback',
-            //  'event' => 'change',
-            //  'wrapper' => 'instrument_detectors_' . $delta,
-            //  'method' => 'replaceWith',
-            //  'effect' => 'fade',
-            // ],
+            '#ajax' => [
+             'callback' => '::addDetectorCallback',
+             'event' => 'change',
+             'wrapper' => 'instrument_detectors_' . $delta,
+             'method' => 'replaceWith',
+             'effect' => 'fade',
+            ],
 
           ),
           'bottom' => array(
@@ -543,64 +563,25 @@ class EditProcessForm extends FormBase {
             '#markup' => '</div>',
           ),
         ),
-        // 'detectors' => [
-        //   'top' => [
-        //     '#type' => 'markup',
-        //     '#markup' => '<div class="pt-3 col border border-white">',
-        //   ],
-        //   'instrument_detectors_'. $delta => [
-        //     '#type' => 'container',
-        //     '#name' => 'instrument_detectors_' . $delta,
-        //     '#value' => $instrument['detectors'],
-        //     '#attributes' => [
-        //       'id' => 'instrument_detectors_' . $delta,
-        //     ]
-        //     #'#detectorss' => [
-        //     #  'class' => ['open-tree-modal'],
-        //     #  'data-dialog-type' => 'modal',
-        //     #  'data-dialog-options' => json_encode(['width' => 800]),
-        //     #  'data-url' => Url::fromRoute('rep.tree_form', [
-        //     #    'mode' => 'modal',
-        //     #    'elementtype' => 'detectors',
-        //     #  ], ['query' => ['field_id' => 'instrument_detectors_' . $delta]])->toString(),
-        //     #  'data-field-id' => 'instrument_detectors_' . $delta,
-        //     #  'data-search-value' => $instrument['detectors'],
-        //     #  'data-elementtype' => 'detectors',
-        //     #],
-        //   ],
-        //   'bottom' => [
-        //     '#type' => 'markup',
-        //     '#markup' => '</div>',
-        //   ],
-        // ],
+
         'detectors' => [
           'top' => [
             '#type' => 'markup',
             '#markup' => '<div class="pt-3 col border border-white">',
           ],
-          'instrument_detectors_' . $delta => [
+          // Mescla a configuração básica do container com o array condicional.
+          'instrument_detectors_' . $delta => array_merge([
             '#type' => 'container',
             '#attributes' => [
               'id' => 'instrument_detectors_' . $delta,
             ],
-            // WILL BE THIS CODE PART
-            // 'table' => [
-            //   '#type' => 'table',
-            //   '#header' => [
-            //       $this->t('Name'),
-            //       $this->t('URI'),
-            //       $this->t('Status'),
-            //   ],
-            //   '#rows' => [], // Começa vazio e será preenchido pelo AJAX
-            //   '#empty' => $this->t('No detectors yet.'),
-            // ],
-            '#value' => $instrument->detectors,
-          ],
+          ], $detectors_component),
           'bottom' => [
             '#type' => 'markup',
             '#markup' => '</div>',
           ],
         ],
+
         'operations' => array(
           'top' => array(
             '#type' => 'markup',
@@ -631,97 +612,134 @@ class EditProcessForm extends FormBase {
     return $form_rows;
   }
 
+  public function addDetectorCallback(array &$form, FormStateInterface $form_state) {
+    $triggering_element = $form_state->getTriggeringElement();
+    $delta = str_replace('instrument_instrument_', '', $triggering_element['#name']);
+    $container_id = 'instrument_detectors_' . $delta;
+    $instrumentURI = $form_state->getValue('instrument_instrument_' . $delta) !== '' ? $form_state->getValue('instrument_instrument_' . $delta) : $form_state->getUserInput()['instrument_instrument_' . $delta];
+    $instrument_uri = Utils::uriFromAutocomplete($instrumentURI);
+
+    // Verifica se o contêiner existe antes de modificar
+    if (!isset($form['instruments']['rows'][$delta]['row'.$delta]['detectors'][$container_id])) {
+        \Drupal::logger('custom_module')->error('Contêiner não encontrado para delta: @delta', ['@delta' => $delta]);
+        return [
+            '#markup' => $this->t('Error: Container not found for delta @delta.', ['@delta' => $delta]),
+        ];
+    }
+
+    // Obtém os detectores a partir da API
+    $detectors = $this->getDetectors($instrument_uri);
+
+    // dpm($instrument_uri);
+    //ADD DETECTORS TO INSTRUMENT
+    $instruments = \Drupal::state()->get('my_form_instruments');
+    self::updateInstruments($form_state);
+    //dpm($form_state->getUserInput());
+
+    // Renderiza os detectores como uma tabela e atualiza o container no formulário
+    $form['instruments']['rows'][$delta]['row'.$delta]['detectors'][$container_id] = $this->buildDetectorTable($detectors, $container_id);
+
+    return $form['instruments']['rows'][$delta]['row'.$delta]['detectors'][$container_id];
+  }
+
   protected function updateInstruments(FormStateInterface $form_state) {
     $instruments = \Drupal::state()->get('my_form_instruments');
+
     $input = $form_state->getUserInput();
-
-    // FIQUEI AQUI, TALVEZ SE TENHA DE FAZER UM MERGE DE ARRAY PARA ALBERGAR
-    // EXISTENTES E NOVOS NO ARRAY FINAL
-
-
     if (isset($input) && is_array($input) &&
         isset($instruments) && is_array($instruments)) {
 
-      $api = \Drupal::service('rep.api_connector');
       foreach ($instruments as $instrument_id => $instrument) {
-        //dpm($input['instrument_instrument_' . $instrument_id]);
         if (isset($instrument_id) && isset($instrument)) {
-
-          if (strlen($input['instrument_instrument_' . $instrument_id]) > 0) {
-            $uri_decode=Utils::uriFromAutocomplete($input['instrument_instrument_' . $instrument_id]);
-            $instr = $api->parseObjectResponse($api->getUri($uri_decode),'getUri');
-            if ($instr == NULL) {
-              \Drupal::messenger()->addMessage(t("Failed to retrieve Instrument."));
-              return;
-            } else {
-              $instruments[$instrument_id] = $instr;
-            }
-          } else {
-            $instruments[$instrument_id] = $instruments[$instrument_id];
+          $instruments[$instrument_id]['instrument'] = $input['instrument_instrument_' . $instrument_id] ?? '';
+          $detector = [];
+          foreach ($input['instrument_detectors_' . $instrument_id]  as $key => $value) {
+            $detector[] = $value;
           }
-
-          //$instruments[$instrument_id]->instrument = strlen($input['instrument_instrument_' . $instrument_id]) > 0 ? $input['instrument_instrument_' . $instrument_id] : $instruments[$instrument_id];
-          //dpm($instruments);
-          //$instruments[$instrument_id]->detectors = $input['instrument_detectors_' . $instrument_id] ?? [];
+          //$instruments[$instrument_id]['detectors'] = $input['instrument_detectors_' . $instrument_id] ?? '';
+          $instruments[$instrument_id]['detectors'] = $detector ?? [];
         }
       }
     }
+
+    //dpm($instruments);
     \Drupal::state()->set('my_form_instruments', $instruments);
-    //dpm(\Drupal::state()->get('my_form_instruments'));
     return;
   }
 
   protected function populateInstruments() {
-    $instruments = $this->getProcess()->instruments;
-    //if (count($instruments) > 0) {
-    //  foreach ($instruments as $instrument_id => $instrument) {
-    //    if (isset($instrument_id) && isset($instrument)) {
-    //      $listPosition = $instrument->listPosition;
-    //      $instruments[$listPosition]['instrument'] = $instrument->label;
-          //$instruments[$listPosition]['detectors'] = Utils::namespaceUriWithNS($detector->detector,$namespaces);
-    //    }
-    //  }
-    //  ksort($instruments);
-    //}
-    \Drupal::state()->set('my_form_instruments', $instruments);
+    //$instruments = $this->getProcess()->requiredInstrumentation;
 
+    $instruments = $this->getProcess()->requiredInstrumentation;
+
+    $instrumentData = [];
+
+    foreach ($instruments as $instrument) {
+
+        $instrumentUri = $instrument->instrument->uri ?? null;
+        $instrumentLabel = $instrument->instrument->label ?? 'Unknown Instrument';
+
+        if ($instrumentUri) {
+
+            $detectors = isset($instrument->detectors) && is_array($instrument->detectors)
+                ? array_map(fn($detector) => $detector->uri, $instrument->detectors)
+                : [];
+
+
+            $instrumentData[] = [
+                'instrument' => UTILS::fieldToAutocomplete($instrumentUri,$instrumentLabel),
+                'detectors' => $detectors
+            ];
+        }
+    }
+
+    \Drupal::state()->set('my_form_instruments', $instrumentData);
     return $instruments;
   }
 
   protected function saveInstruments($processUri, array $instruments) {
     if (!isset($processUri)) {
-      \Drupal::messenger()->addError(t("No process's URI have been provided to save instruments."));
-      return;
+        \Drupal::messenger()->addError(t("No process URI has been provided to save instruments."));
+        return;
     }
-    if (!isset($instruments) || !is_array($instruments)) {
-      \Drupal::messenger()->addWarning(t("Process has no instrument to be saved."));
-      return;
+    if (empty($instruments)) {
+        \Drupal::messenger()->addWarning(t("Process has no instrument to be saved."));
+        return;
     }
 
     $api = \Drupal::service('rep.api_connector');
 
-    foreach ($instruments as $instrument_id => $instrument) {
-      if (isset($instrument_id) && isset($instrument)) {
-        try {
-          //$useremail = \Drupal::currentUser()->getEmail();
+    $requiredInstrumentation = [];
 
-          //$instrument = ' ';
-          //if ($instruments[$instrument_id]['instrument'] != NULL && $instruments[$instrument_id]['instrument'] != '') {
-          //  $instrument = $instruments[$instrument_id]['instrument'];
-          //}
+    foreach ($instruments as $instrument) {
+        if (!empty($instrument['instrument'])) {
+            $instrumentUri = Utils::uriFromAutocomplete($instrument['instrument']);
+            $detectors = [];
 
-          //$detectorUri = ' ';
-          //if ($instruments[$instrument_id]['detector'] != NULL && $instruments[$instrument_id]['detector'] != '') {
-          //  $detectorUri = $instruments[$instrument_id]['detector'];
-          //}
+            // Adiciona os detectores ao array se existirem
+            if (!empty($instrument['detectors'])) {
+                foreach ($instrument['detectors'] as $detector) {
+                    $detectors[] = $detector;
+                }
+            }
 
-          $api->processInstrumentAdd($processUri,$instrument->uri);
-
-        } catch(\Exception $e){
-          \Drupal::messenger()->addError(t("An error occurred while saving the process: ".$e->getMessage()));
+            // Estrutura o array com o URI do instrumento e o array de detectores
+            $requiredInstrumentation[] = [
+                'instrumentUri' => $instrumentUri,
+                'detectors' => $detectors
+            ];
         }
-      }
     }
+
+    // Estrutura final do objeto JSON
+    $processData = [
+        'processuri' => $processUri,
+        'requiredInstrumentation' => $requiredInstrumentation
+    ];
+
+    // Envia o objeto para a API
+    $api->processInstrumentUpdate($processData);
+
     return;
   }
 
@@ -1064,7 +1082,7 @@ class EditProcessForm extends FormBase {
         $useremail = \Drupal::currentUser()->getEmail();
 
         $processJSON = '{"uri":"' . $basic['uri'] . '",'
-          . '"typeUri":"' . $basic['typeUri'] . '",'
+          . '"typeUri":"' . UTILS::uriFromAutocomplete($basic['processstem']) . '",'
           . '"hascoTypeUri":"' . VSTOI::PROCESS . '",'
           . '"hasStatus":"' . $basic['status'] . '",'
           . '"label":"' . $basic['name'] . '",'
@@ -1135,6 +1153,98 @@ class EditProcessForm extends FormBase {
     $response = new RedirectResponse($root_url . '/sir/select/process/1/9');
     $response->send();
     return;
+  }
+
+  public function getDetectors($instrumentUri) {
+
+    // Call to get Detectors
+    $api = \Drupal::service('rep.api_connector');
+    $response = $api->detectorListFromInstrument($instrumentUri);
+
+    // Decode JSON reply
+    $data = json_decode($response, true);
+    if (!$data || !isset($data['body'])) {
+      return [];
+    }
+
+    // Decode Body
+    $urls = json_decode($data['body'], true);
+
+    // Process detectors
+    $detectors = [];
+    foreach ($urls as $url) {
+      $detectorData = $api->getUri($url);
+      $obj = json_decode($detectorData);
+      $detectors[] = [
+        'name' => isset($obj->body->label) ? $obj->body->label : '',
+        'uri' => isset($obj->body->uri) ? $obj->body->uri : '',
+        'status' => isset($obj->body->hasStatus) ? Utils::plainStatus($obj->body->hasStatus) : '',
+        'hasStatus' => isset($obj->body->hasStatus) ? $obj->body->hasStatus : null,
+      ];
+    }
+    return $detectors;
+  }
+
+  protected function buildDetectorTable(array $detectors, $container_id, $arraySelected = []) {
+    $header = [
+      $this->t("#"),
+      $this->t('Name'),
+      $this->t('URI'),
+      $this->t('Status'),
+    ];
+
+    // Get the renderer service.
+    $renderer = \Drupal::service('renderer');
+
+    $rows = [];
+    foreach ($detectors as $detector) {
+      // Build an inline template render array for the checkbox.
+      $checkbox = [
+        '#type' => 'checkbox',
+        '#name' => $container_id . '[]',
+        '#return_value' => $detector['uri'],
+        '#checked' => !empty($arraySelected) ? in_array($detector['uri'], $arraySelected) : 1,
+        '#ajax' => [
+          'callback' => '::addNewInstrumentRow',
+          'event' => 'change', // Garante que está ouvindo o evento correto
+          'wrapper' => $container_id,
+          'progress' => [
+            'type' => 'throbber',
+            'message' => NULL,
+          ],
+          'method' => 'replace', // Use replace para garantir atualização
+        ],
+        '#executes_submit_callback' => TRUE, // Força o submit para garantir o disparo
+        '#attributes' => [
+          'class' => ['instrument-detector-ajax'],
+          //'data-container-id' => 'body'
+        ],
+      ];
+
+
+      // Manually render the inline template.
+      $checkbox_rendered = $renderer->render($checkbox);
+
+      $rows[] = [
+        'data' => [
+          $checkbox_rendered,
+          $detector['name'],
+          $detector['uri'],
+          $detector['status'],
+        ],
+      ];
+    }
+
+    return [
+      '#type' => 'container',
+      '#attributes' => ['id' => $container_id],
+      'table' => [
+        '#type' => 'table',
+        '#header' => $header,
+        '#rows' => $rows,
+        '#empty' => $this->t('No detectors found.'),
+      ],
+    ];
   }
 
 }
