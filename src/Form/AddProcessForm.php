@@ -825,7 +825,7 @@ class AddProcessForm extends FormBase {
     // Estrutura final do objeto JSON
     $processData = [
         'processuri' => $processUri,
-        'requirednstrumentation' => $requiredInstrumentation
+        'requiredInstrumentation' => $requiredInstrumentation
     ];
 
     // Envia o objeto para a API
@@ -1226,6 +1226,7 @@ class AddProcessForm extends FormBase {
             . '"hasSIRManagerEmail":"' . $useremail . '"}';
 
           $api = \Drupal::service('rep.api_connector');
+
           $api->elementAdd('process',$processJSON);
           if (isset($instruments)) {
             $this->saveInstruments($newProcessUri,$instruments);

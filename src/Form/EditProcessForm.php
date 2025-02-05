@@ -217,6 +217,7 @@ class EditProcessForm extends FormBase {
         '#type' => 'textfield',
         '#title' => $this->t('Name'),
         '#default_value' => $name,
+        '#required' => true
       ];
       $form['process_language'] = [
         '#type' => 'select',
@@ -238,6 +239,7 @@ class EditProcessForm extends FormBase {
         '#type' => 'textarea',
         '#title' => $this->t('Description'),
         '#default_value' => $description,
+        '#required' => true
       ];
       $form['process_status'] = [
         '#type' => 'hidden',
@@ -1078,50 +1080,91 @@ class EditProcessForm extends FormBase {
     #}
 
     if ($button_name === 'save') {
-      try {
-        $useremail = \Drupal::currentUser()->getEmail();
 
-        $processJSON = '{"uri":"' . $basic['uri'] . '",'
-          . '"typeUri":"' . UTILS::uriFromAutocomplete($basic['processstem']) . '",'
-          . '"hascoTypeUri":"' . VSTOI::PROCESS . '",'
-          . '"hasStatus":"' . $basic['status'] . '",'
-          . '"label":"' . $basic['name'] . '",'
-          . '"hasLanguage":"' . $basic['language'] . '",'
-          . '"hasVersion":"' . $basic['version'] . '",'
-          . '"comment":"' . $basic['description'] . '",'
-          . '"hasSIRManagerEmail":"' . $useremail . '"}';
+      $errors = false;
 
-        $api = \Drupal::service('rep.api_connector');
+      //VALIDATIONS BEFORE SUBMIT PREVENT THE USE OF validationForm core....
+      $basic = \Drupal::state()->get('my_form_basic');
 
-        // The DELETE of the process will also delete the
-        // instruments, objects and codes of the dictionary
-        $api->elementDel('process',$basic['uri']);
+      if (!empty($basic)) {
 
-        // In order to update the process it is necessary to
-        // add the following to the process: the process itself, its
-        // instruments, its detectors and its codes
-        $api->elementAdd('process',$processJSON);
-
-        if (isset($instruments)) {
-          $this->saveInstruments($basic['uri'],$instruments);
+        if(strlen($basic['name']) < 1 || strlen($basic['processstem']) < 1 || strlen($basic['description']) < 1) {
+          $errors = true;
+          \Drupal::messenger()->addError(t("Mandatory fields are required to be filled! Check 'Basic Process Porperties Tab'"));
         }
-        // if (isset($codes)) {
-        //   $this->saveCodes($basic['uri'],$codes);
-        // }
+      } else {
+        if(strlen($submitted_values['process_name']) < 1) {
+          $form_state->setErrorByName(
+            'process_name',
+            \Drupal::messenger()->addError(t('Please enter a valid name for the Simulation Process'))
+          );
+        }
+        if(strlen($submitted_values['process_processstem']) < 1) {
+          $form_state->setErrorByName(
+            'process_processstem',
+            \Drupal::messenger()->addError(t('Please select a valid Process Stem'))
+          );
+        }
+        if(strlen($submitted_values['process_description']) < 1) {
+          $form_state->setErrorByName(
+            'process_description',
+            \Drupal::messenger()->addError(t('Please enter a description'))
+          );
+        }
+      }
 
-        // Release values cached in the editor
-        \Drupal::state()->delete('my_form_basic');
-        \Drupal::state()->delete('my_form_instruments');
-        //\Drupal::state()->delete('my_form_codes');
+      //TRY TO RELOAD....
+      if ($errors) {
+        $form_state->setRebuild(TRUE);
 
-        \Drupal::messenger()->addMessage(t("Process has been updated successfully."));
-        self::backUrl();
-        return;
+      } else {
 
-      } catch(\Exception $e){
-        \Drupal::messenger()->addMessage(t("An error occurred while updating a process: ".$e->getMessage()));
-        self::backUrl();
-        return;
+        try {
+          $useremail = \Drupal::currentUser()->getEmail();
+
+          $processJSON = '{"uri":"' . $basic['uri'] . '",'
+            . '"typeUri":"' . UTILS::uriFromAutocomplete($basic['processstem']) . '",'
+            . '"hascoTypeUri":"' . VSTOI::PROCESS . '",'
+            . '"hasStatus":"' . $basic['status'] . '",'
+            . '"label":"' . $basic['name'] . '",'
+            . '"hasLanguage":"' . $basic['language'] . '",'
+            . '"hasVersion":"' . $basic['version'] . '",'
+            . '"comment":"' . $basic['description'] . '",'
+            . '"hasSIRManagerEmail":"' . $useremail . '"}';
+
+          $api = \Drupal::service('rep.api_connector');
+
+          // The DELETE of the process will also delete the
+          // instruments, objects and codes of the dictionary
+          $api->elementDel('process',$basic['uri']);
+
+          // In order to update the process it is necessary to
+          // add the following to the process: the process itself, its
+          // instruments, its detectors and its codes
+          $api->elementAdd('process',$processJSON);
+
+          if (isset($instruments)) {
+            $this->saveInstruments($basic['uri'],$instruments);
+          }
+          // if (isset($codes)) {
+          //   $this->saveCodes($basic['uri'],$codes);
+          // }
+
+          // Release values cached in the editor
+          \Drupal::state()->delete('my_form_basic');
+          \Drupal::state()->delete('my_form_instruments');
+          //\Drupal::state()->delete('my_form_codes');
+
+          \Drupal::messenger()->addMessage(t("Process has been updated successfully."));
+          self::backUrl();
+          return;
+
+        } catch(\Exception $e){
+          \Drupal::messenger()->addMessage(t("An error occurred while updating a process: ".$e->getMessage()));
+          self::backUrl();
+          return false;
+        }
+        return false;
       }
     }
 
