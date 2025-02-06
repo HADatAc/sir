@@ -1300,19 +1300,17 @@ class SIRSelectForm extends FormBase {
 
         // CENARIO #1: CHECK IF IT HAS wasDerivedFrom property, means it is a derived element
         if ($result->wasDerivedFrom !== NULL
-            && self::checkDerivedElements($uri, $this->element_type) === 1) {
+            && $this->checkDerivedElements($uri, $this->element_type)) {
             \Drupal::messenger()->addError($this->t('There is a previous version that has the same content.'), ['@elements' => $this->plural_class_name]);
             return false;
 
         // CENARIO #2: CHECK IF THERE ARE ANY OTHER R.O. WITH SAME CONTENT ALREADY IN REP
         } elseif ($result->wasDerivedFrom === NULL) {
           $response = $api->listByKeywordAndLanguage($this->element_type, $result->hasContent, $result->hasLanguage, 99999, 0);
-          $json_string = (string) $response; // Alternativa: $response->getBody()->getContents()
+          $json_string = (string) $response;
 
-          // Decodifica a resposta JSON
-          $decoded_response = json_decode($json_string, true); // true para array associativo
+          $decoded_response = json_decode($json_string, true);
 
-          // Verifica se a resposta é um array e conta os elementos
           if (is_array($decoded_response)) {
               $count = count($decoded_response['body']);
               if ($count > 1) {
@@ -1552,47 +1550,92 @@ class SIRSelectForm extends FormBase {
     $form_state->setRedirectUrl($url);
   }
 
+  // public static function checkDerivedElements($uri, $elementType) {
+  //   $api = \Drupal::service('rep.api_connector');
+  //   $rawresponse = $api->getUri($uri);
+  //   $obj = json_decode($rawresponse);
+  //   $result = $obj->body;
+
+  //   $tmpStatus = true;
+
+  //   // Verifica se o elemento atual está em estado de rascunho e se foi derivado de outro
+  //   $oldElement = $api->getUri($result->wasDerivedFrom);
+  //   $oldObj = json_decode($oldElement);
+  //   $oldResult = $oldObj->body;
+
+  //   // Verifica se o conteúdo, idioma ou comentário são iguais
+  //   switch ($elementType) {
+  //     default:
+  //     case 'responseoption':
+  //       if (($oldResult->hasContent === $result->hasContent &&
+  //           $oldResult->hasLanguage === $result->hasLanguage &&
+  //           $oldResult->comment === $result->comment)
+  //       ) {
+  //         $tmpStatus = FALSE;
+  //       }
+  //       break;
+  //   }
+
+  //   // OUTPUT
+  //   if ($tmpStatus === FALSE) {
+  //       return false;
+  //   } else {
+  //     if ($result->wasDerivedFrom !== NULL) {
+  //       return self::checkDerivedElements($result->wasDerivedFrom, $elementType);
+  //     } else {
+  //       return true;
+  //     }
+  //   }
+
+  // }
   public static function checkDerivedElements($uri, $elementType) {
     $api = \Drupal::service('rep.api_connector');
+
+    // Obtém o elemento atual
     $rawresponse = $api->getUri($uri);
     $obj = json_decode($rawresponse);
+
+    if (!isset($obj->body)) {
+        return false; // Se a API não retornar um corpo válido, encerra
+    }
+
     $result = $obj->body;
 
-    $tmpStatus = true;
+    // Se não há um elemento do qual foi derivado, retorna false
+    if (!isset($result->wasDerivedFrom) || empty($result->wasDerivedFrom)) {
+        return false;
+    }
 
-    // Verifica se o elemento atual está em estado de rascunho e se foi derivado de outro
+    // Obtém o elemento anterior na cadeia
     $oldElement = $api->getUri($result->wasDerivedFrom);
     $oldObj = json_decode($oldElement);
+
+    if (!isset($oldObj->body)) {
+        return false; // Evita erro caso a API falhe ao buscar o elemento anterior
+    }
+
     $oldResult = $oldObj->body;
 
-    // Verifica se o conteúdo, idioma ou comentário são iguais
+    // Verifica se há igualdade nos atributos conforme o tipo de elemento
     switch ($elementType) {
-      default:
-      case 'responseoption':
-        if (($oldResult->hasContent === $result->hasContent &&
-            $oldResult->hasLanguage === $result->hasLanguage &&
-            $oldResult->comment === $result->comment)
-        ) {
-          $tmpStatus = FALSE;
-        }
-        break;
+        case 'responseoption':
+        default:
+            if (
+                isset($oldResult->hasContent, $result->hasContent,
+                      $oldResult->hasLanguage, $result->hasLanguage,
+                      $oldResult->comment, $result->comment) &&
+                $oldResult->hasContent === $result->hasContent &&
+                $oldResult->hasLanguage === $result->hasLanguage &&
+                $oldResult->comment === $result->comment
+            ) {
+                return true; // Encontrou um elemento exatamente igual → retorna TRUE e encerra
+            }
+            break;
     }
 
-    // $currentTime = microtime(true); // Obtém o tempo atual em segundos com microsegundos
-    // $milliseconds = round($currentTime * 1000); // Converte para milissegundos
-    // dpm("Result: " . $result->uri . "<br>Old Result:" . $oldResult->uri . "<br>Hora: " . $milliseconds);
-
-    // OUTPUT
-    if ($tmpStatus === FALSE) {
-        return false;
-    } else {
-      if ($result->wasDerivedFrom !== NULL) {
-        return self::checkDerivedElements($result->wasDerivedFrom, $elementType);
-      } else {
-        return true;
-      }
-    }
-
+    // Continua verificando recursivamente os elementos derivados até o final da cadeia
+    return self::checkDerivedElements($result->wasDerivedFrom, $elementType);
   }
+
 
 }
