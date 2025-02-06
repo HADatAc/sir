@@ -1663,13 +1663,10 @@ class SIRSelectForm extends FormBase {
     $url->setRouteParameter('sourceprocessstemuri', base64_encode($uri));
     $form_state->setRedirectUrl($url);
   }
-
-  /**
-   * Checks for previous chain elements that are equal to current.
-   */
   public static function checkDerivedElements($uri, $elementType) {
     $api = \Drupal::service('rep.api_connector');
-    // Get current element
+
+    // Obtém o elemento atual
     $rawresponse = $api->getUri($uri);
     $obj = json_decode($rawresponse);
 
@@ -1748,6 +1745,4 @@ class SIRSelectForm extends FormBase {
     // continues to search recursivelly on the chain
     return self::checkDerivedElements($result->wasDerivedFrom, $elementType);
   }
-
-
 }
