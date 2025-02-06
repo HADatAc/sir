@@ -759,7 +759,8 @@ class AddProcessForm extends FormBase {
     $response->addCommand(new ReplaceCommand('#' . $container_id, $detectorTable));
 
     return $response;
-  }
+}
+
 
   protected function updateInstruments(FormStateInterface $form_state) {
     $instruments = \Drupal::state()->get('my_form_instruments');
@@ -788,35 +789,6 @@ class AddProcessForm extends FormBase {
     return;
   }
 
-  //V1
-  // protected function saveInstruments($processUri, array $instruments) {
-  //   if (!isset($processUri)) {
-  //       \Drupal::messenger()->addError(t("No process URI have been provided to save instruments."));
-  //       return;
-  //   }
-  //   if (empty($instruments)) {
-  //       \Drupal::messenger()->addWarning(t("Process has no instrument to be saved."));
-  //       return;
-  //   }
-
-  //   $api = \Drupal::service('rep.api_connector');
-
-  //   // Cria um array com os URIs dos instrumentos
-  //   $instrumentUris = [];
-
-  //   foreach ($instruments as $instrument) {
-  //       if (!empty($instrument['instrument'])) {
-  //           $instrumentUris[] = Utils::uriFromAutocomplete($instrument['instrument']);
-  //       }
-  //   }
-
-  //   $api->processInstrumentAdd($processUri, $instrumentUris);
-
-  //   return;
-  // }
-
-
-  // NOVA VERSÂO COM DETETORES
   protected function saveInstruments($processUri, array $instruments) {
     if (!isset($processUri)) {
         \Drupal::messenger()->addError(t("No process URI has been provided to save instruments."));
