@@ -703,13 +703,37 @@ class AddProcessForm extends FormBase {
   }
 
   public function addDetectorCallback(array &$form, FormStateInterface $form_state) {
+
     $triggering_element = $form_state->getTriggeringElement();
     $delta = str_replace('instrument_instrument_', '', $triggering_element['#name']);
     $container_id = 'instrument_detectors_' . $delta;
     $instrumentURI = $form_state->getValue('instrument_instrument_' . $delta) !== '' ? $form_state->getValue('instrument_instrument_' . $delta) : $form_state->getUserInput()['instrument_instrument_' . $delta];
     $instrument_uri = Utils::uriFromAutocomplete($instrumentURI);
+    $instruments = \Drupal::state()->get('my_form_instruments');
 
-    // Verifica se o contêiner existe antes de modificar
+    //CHECK IF THE INSTRUMENT HAS BEEN ALREADY ADDED
+    $filtered = array_filter($instruments, fn($instrument) => $instrument['instrument'] === $instrumentURI);
+    if (!empty($filtered)) {
+      $form_state->setValue('instrument_instrument_' . $delta, '');
+      $form_state->setRebuild(TRUE);
+
+      $response = new \Drupal\Core\Ajax\AjaxResponse();
+
+      $response->addCommand(new \Drupal\Core\Ajax\InvokeCommand('input[name="instrument_instrument_' . $delta . '"]', 'val', ['']));
+
+      $response->addCommand(new \Drupal\Core\Ajax\InvokeCommand('.instrument-error-message', 'remove'));
+
+      $response->addCommand(new \Drupal\Core\Ajax\AfterCommand(
+          'input[name="instrument_instrument_' . $delta . '"]',
+          '<div class="instrument-error-message text-danger" style="margin-top:10px; margin-left:5px;">' .
+          $this->t('You already have "@instrument" in this list.', ['@instrument' => $instrumentURI]) .
+          '</div>'
+      ));
+
+      return $response;
+    }
+
+    // Check if container exists
     if (!isset($form['instruments']['rows'][$delta]['row'.$delta]['detectors'][$container_id])) {
         \Drupal::logger('custom_module')->error('Contêiner não encontrado para delta: @delta', ['@delta' => $delta]);
         return [
@@ -717,16 +741,14 @@ class AddProcessForm extends FormBase {
         ];
     }
 
-    // Obtém os detectores a partir da API
+    // Get detectors from API
     $detectors = $this->getDetectors($instrument_uri);
 
-    // dpm($instrument_uri);
     //ADD DETECTORS TO INSTRUMENT
     $instruments = \Drupal::state()->get('my_form_instruments');
     self::updateInstruments($form_state);
-    //dpm($form_state->getUserInput());
 
-    // Renderiza os detectores como uma tabela e atualiza o container no formulário
+    // Render detectors
     $form['instruments']['rows'][$delta]['row'.$delta]['detectors'][$container_id] = $this->buildDetectorTable($detectors, $container_id);
 
     return $form['instruments']['rows'][$delta]['row'.$delta]['detectors'][$container_id];
