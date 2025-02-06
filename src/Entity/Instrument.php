@@ -12,12 +12,14 @@ class Instrument {
 
     return $header = [
       'element_uri' => t('URI'),
+      'element_type' => t('Parent Type'),
       'element_abbreviation' => t('Abbreviation'),
       'element_name' => t('Name'),
       'element_language' => t('Language'),
       'element_downloads' => t('Downloads'),
+      'element_status' => t('Status'),
     ];
-  
+
   }
 
   public static function generateOutput($list) {
@@ -28,12 +30,17 @@ class Instrument {
     // GET LANGUAGES
     $tables = new Tables;
     $languages = $tables->getLanguages();
- 
+
     $output = array();
+    $disabled_rows = [];
     foreach ($list as $element) {
       $uri = ' ';
       if ($element->uri != NULL) {
         $uri = $element->uri;
+      }
+      $type = ' ';
+      if ($element->superUri != NULL) {
+        $type = Utils::namespaceUri($element->superUri);
       }
       $uri = Utils::namespaceUri($uri);
       $shortName = ' ';
@@ -54,7 +61,7 @@ class Instrument {
       if ($element->hasVersion != NULL) {
         $version = '<br><b>Version</b>: ' . $element->hasVersion;
       }
-      $root_url = \Drupal::request()->getBaseUrl();
+
       $encodedUri = rawurlencode(rawurlencode($element->uri));
       $totxt = '<a href="'. $root_url . REPGUI::DOWNLOAD . 'plain'. '/'. $encodedUri . '">TXT</a>';
       $tohtml = '<a href="'. $root_url . REPGUI::DOWNLOAD . 'html'. '/'. $encodedUri . '">HTML</a>';
@@ -62,15 +69,37 @@ class Instrument {
       //$tordf = '<a href="'. $root_url . REPGUI::DOWNLOAD . 'rdf'. '/'. $encodedUri . '">RDF</a>';
       $tordf = ' ';
       $tofhir = '<a href="'. $root_url . REPGUI::DOWNLOAD . 'fhir'. '/'. $encodedUri . '">FHIR</a>';
-      $output[$element->uri] = [
-        'element_uri' => t('<a href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),     
-        'element_abbreviation' => $shortName,     
-        'element_name' => t($label . $version),     
+
+      $status = ' ';
+      $row_key = $element->uri;
+      if ($element->hasStatus != NULL) {
+        $status = parse_url($element->hasStatus, PHP_URL_FRAGMENT);
+
+        if (parse_url($element->hasStatus, PHP_URL_FRAGMENT) === 'Under Review') {
+          $status = "Under Review";
+          $disabled_rows[] = $row_key;
+        }
+
+      }
+      $output[$row_key] = [
+        'element_uri' => t('<a href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),
+        'element_type' => $type,
+        'element_abbreviation' => $shortName,
+        'element_name' => t($label . $version),
         'element_language' => $lang,
-        'element_downloads' => t($totxt . ' ' . $tohtml . ' ' . $topdf . '<br>' . $tordf . ' ' . $tofhir),
+        // 'element_downloads' => t($totxt . ' ' . $tohtml . ' ' . $topdf . '<br>' . $tordf . ' ' . $tofhir),
+        'element_downloads' => t($totxt . ' ' . $tohtml . ' ' . $tordf . ' ' . $tofhir),
+        'element_status' => $status
       ];
     }
-    return $output;
+
+    // Para garantir que disabled_rows seja um array associativo
+    $normalized_disabled_rows = array_fill_keys($disabled_rows, TRUE);
+
+    return [
+      'output'        => $output,
+      'disabled_rows' => $normalized_disabled_rows,
+    ];
 
   }
 

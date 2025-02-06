@@ -144,6 +144,8 @@ class SIRSearchForm extends FormBase {
         'responseoption' => $this->t('Response Options'),
         'annotationstem' => $this->t('Annotation Stems'),
         'annotation' => $this->t('Annotations'),
+        'processstem' => $this->t('Process Stems'),
+        'process' => $this->t('Processes'),
       ],
       '#default_value' => $this->getElementType(),
       '#ajax' => [
@@ -210,7 +212,7 @@ class SIRSearchForm extends FormBase {
     // IF ELEMENT TYPE IS CLASS
     if (($form_state->getValue('search_element_type') == 'instrument') ||
         ($form_state->getValue('search_element_type') == 'detectorstem') ||
-        ($form_state->getValue('search_element_type') == 'detector')) {
+        ($form_state->getValue('search_element_type') == 'processstem')) {
       $url = Url::fromRoute('rep.browse_tree');
       $url->setRouteParameter('mode', 'browse');
       $url->setRouteParameter('elementtype', $form_state->getValue('search_element_type'));

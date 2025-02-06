@@ -56,6 +56,37 @@ sir.element_uri:
   options:
     no_cache: 'TRUE'
 
+# Process CRUD options
+
+sir.manage_process:
+  path: 'sir/manage/process'
+  defaults:
+    _title: 'Manage Process'
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+sir.add_process:
+  path: 'sir/manage/addprocess/{state}'
+  defaults:
+    _form: '\Drupal\sir\Form\AddProcessForm'
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+sir.edit_process:
+  path: 'sir/manage/editprocess/{state}/{processuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\EditProcessForm'
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'
+  options:
+    no_cache: 'TRUE'
 
 # Instrument CRUD options
 
@@ -410,9 +441,56 @@ sir.manage_annotations:
   options:
     no_cache: 'TRUE'
 
-# REVIEW ROUTES
+# Process Stem CRUD options
 
-## Response Options
+sir.add_processstem:
+  path: 'sir/manage/addprocessstem/{sourceprocessstemuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\AddProcessStemForm'
+    _title: 'Add Process Stem'
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+sir.edit_processstem:
+  path: 'sir/manage/editprocessstem/{processstemuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\EditProcessStemForm'
+    _title: 'Edit Process Stem'
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+
+# Process CRUD options
+
+#sir.add_process:
+#  path: 'sir/manage/addprocess'
+#  defaults:
+#    _form: '\Drupal\sir\Form\AddProcessForm'
+#    _title: 'Add Process'
+#  requirements:
+#    _permission: 'access content'
+#    _custom_access_check: 'TRUE'
+#  options:
+#    no_cache: 'TRUE'
+
+#sir.edit_process:
+#  path: 'sir/manage/editprocess/{processuri}'
+#  defaults:
+#    _form: '\Drupal\sir\Form\EditProcessForm'
+#    _title: 'Edit Process'
+#  requirements:
+#    _permission: 'access content'
+#    _custom_access_check: 'TRUE'
+#  options:
+#    no_cache: 'TRUE'
+
+# REVIEW ROUTES
 
 sir.select_review_element:
   path: 'sir/review/{elementtype}/{page}/{pagesize}'
@@ -420,9 +498,11 @@ sir.select_review_element:
     _form: '\Drupal\sir\Form\Review\SIRReviewForm'
   requirements:
     # _permission: 'access reviewer menu'
-    _custom_access_check: 'FALSE'
+    _review_access: 'TRUE'
   options:
     no_cache: 'TRUE'
+
+## Response Options
 
 sir.review_response_option:
   path: 'sir/manage/reviewresponseoption/{responseoptionuri}'
@@ -431,6 +511,49 @@ sir.review_response_option:
     _title: 'Review Response Option'
   requirements:
     # _permission: 'access reviewer menu'
-    _custom_access_check: 'FALSE'
+    _review_access: 'TRUE'
   options:
     no_cache: 'TRUE'
+
+## Codebook
+
+sir.review_codebook:
+  path: 'sir/manage/reviewcodebook/{codebookuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\Review\ReviewCodebookForm'
+    _title: 'Review Codebook'
+  requirements:
+    # _permission: 'access reviewer menu'
+    _review_access: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+## Process
+
+sir.review_process:
+  path: 'sir/manage/reviewprocess/{processuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\Review\ReviewProcessForm'
+    _title: 'Review Process'
+  requirements:
+    # _permission: 'access reviewer menu'
+    _review_access: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+sir.process_instrument_autocomplete:
+  path: '/sir/manage/instrument/autocomplete'
+  defaults:
+    _controller: '\Drupal\sir\Controller\JsonApiInstrumentController::handleAutocomplete'
+    _format: json
+  requirements:
+    _permission: 'access content'
+
+sir.load_detectors:
+  path: '/sir/load-detectors'
+  defaults:
+    _controller: '\Drupal\sir\Controller\JsonApiProcessController::loadDetectors'
+    _title: 'Load Detectors'
+  requirements:
+    _permission: 'access content'
+  methods: [GET, POST]

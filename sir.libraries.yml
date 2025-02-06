@@ -1,13 +1,16 @@
 sir_js_css:
-  version: 1.0
-  css:
-    theme:
-      css/sir.css: {}
+  version: 1.x
   js:
     js/sir.js: {}
   dependencies:
     - core/jquery
-    - core/jquery.once
     - core/drupal
-    - core/drupalSettings
-    - rep/fontawesome
+    - core/jquery.once
+
+sir_process:
+  version: 1.x
+  js:
+    js/sir_process.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal

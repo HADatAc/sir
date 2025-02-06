@@ -2,6 +2,7 @@
 
 namespace Drupal\sir\Form;
 
+use Abraham\TwitterOAuth\Util;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
@@ -25,10 +26,44 @@ class AddInstrumentForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
 
+    // MODAL
+    $form['#attached']['library'][] = 'rep/rep_modal';
+    $form['#attached']['library'][] = 'core/drupal.dialog';
+
     $tables = new Tables;
     $languages = $tables->getLanguages();
     $informants = $tables->getInformants();
 
+    $form['instrument_type'] = [
+      'top' => [
+        '#type' => 'markup',
+        '#markup' => '<div class="pt-3 col border border-white">',
+      ],
+      'main' => [
+        '#type' => 'textfield',
+        '#title' => $this->t('Parent Type'),
+        '#name' => 'instrument_type',
+        '#default_value' => '',
+        '#id' => 'instrument_type',
+        '#parents' => ['instrument_type'],
+        '#attributes' => [
+          'class' => ['open-tree-modal'],
+          'data-dialog-type' => 'modal',
+          'data-dialog-options' => json_encode(['width' => 800]),
+          'data-url' => Url::fromRoute('rep.tree_form', [
+            'mode' => 'modal',
+            'elementtype' => 'instrument',
+          ], ['query' => ['field_id' => 'instrument_type']])->toString(),
+          'data-field-id' => 'instrument_type',
+          'data-elementtype' => 'instrument',
+          'autocomplete' => 'off',
+        ],
+      ],
+      'bottom' => [
+        '#type' => 'markup',
+        '#markup' => '</div>',
+      ],
+    ];
     $form['instrument_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name'),
@@ -52,6 +87,8 @@ class AddInstrumentForm extends FormBase {
     $form['instrument_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
+      '#default_value' => '1',
+      '#disabled' => TRUE,
     ];
     $form['instrument_description'] = [
       '#type' => 'textarea',
@@ -96,6 +133,9 @@ class AddInstrumentForm extends FormBase {
       if(strlen($form_state->getValue('instrument_language')) < 1) {
         $form_state->setErrorByName('instrument_language', $this->t('Please enter a valid language'));
       }
+      if(empty($form_state->getValue('instrument_type'))) {
+        $form_state->setErrorByName('instrument_type', $this->t('Please select a valid instrument type'));
+      }
     }
   }
 
@@ -115,8 +155,9 @@ class AddInstrumentForm extends FormBase {
     try{
       $useremail = \Drupal::currentUser()->getEmail();
       $newInstrumentUri = Utils::uriGen('instrument');
+      // dpm($newInstrumentUri);
       $instrumentJson = '{"uri":"'.$newInstrumentUri.'",'.
-        '"superUri":"'.VSTOI::INSTRUMENT.'",'.
+        '"superUri":"'.Utils::uriFromAutocomplete($form_state->getValue('instrument_type')).'",'.
         '"hascoTypeUri":"'.VSTOI::INSTRUMENT.'",'.
         '"hasStatus":"'.VSTOI::DRAFT.'",'.
         '"label":"'.$form_state->getValue('instrument_name').'",'.

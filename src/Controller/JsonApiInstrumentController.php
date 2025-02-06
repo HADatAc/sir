@@ -11,7 +11,7 @@ use Drupal\Component\Utility\Xss;
  * Class JsonApiStemController
  * @package Drupal\sir\Controller
  */
-class JsonApiStemController extends ControllerBase{
+class JsonApiInstrumentController extends ControllerBase{
 
   /**
    * @return JsonResponse
@@ -25,17 +25,17 @@ class JsonApiStemController extends ControllerBase{
     $keyword = Xss::filter($input);
     //dpm($keyword);
     $api = \Drupal::service('rep.api_connector');
-    $stem_list = $api->listByKeyword('detectorstem','_',10,0);
-    $obj = json_decode($stem_list);
-    $stems = [];
+    $instrument_list = $api->listByKeyword('instrument',$keyword,10,0);
+    $obj = json_decode($instrument_list);
+    $instruments = [];
     if ($obj->isSuccessful) {
-      $stems = $obj->body;
+      $instruments = $obj->body;
     }
-    //dpm($stems);
-    foreach ($stems as $stem) {
+    //dpm($instruments);
+    foreach ($instruments as $instrument) {
       $results[] = [
-        'value' => $stem->hasContent . ' [' . $stem->uri . ']',
-        'label' => $stem->hasContent,
+        'value' => $instrument->label . ' [' . $instrument->uri . ']',
+        'label' => $instrument->label  . ' [' . $instrument->uri . ']',
       ];
     }
     return new JsonResponse($results);

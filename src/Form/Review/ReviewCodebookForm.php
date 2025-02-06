@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\sir\Form;
+namespace Drupal\sir\Form\Review;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -10,7 +10,7 @@ use Drupal\rep\Entity\Tables;
 use Drupal\rep\Vocabulary\VSTOI;
 use Drupal\rep\Utils;
 
-class EditCodebookForm extends FormBase {
+class ReviewCodebookForm extends FormBase {
 
   protected $codebookUri;
 
@@ -36,7 +36,7 @@ class EditCodebookForm extends FormBase {
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'edit_codebook_form';
+    return 'review_codebook_form';
   }
 
   /**
@@ -63,76 +63,150 @@ class EditCodebookForm extends FormBase {
       return;
     }
 
-    // $form['codebook_type'] = [
-    //   'top' => [
-    //     '#type' => 'markup',
-    //     '#markup' => '<div class="pt-3 col border border-white">',
-    //   ],
-    //   'main' => [
-    //     '#type' => 'textfield',
-    //     '#title' => $this->t('Parent Type'),
-    //     '#name' => 'codebook_type',
-    //     '#default_value' => $this->getCodebook()->typeUri ? UTILS::namespaceUri($this->getCodebook()->typeUri) : '',
-    //     '#id' => 'codebook_type',
-    //     '#parents' => ['codebook_type'],
-    //     '#disabled' => TRUE,
-    //     '#attributes' => [
-    //       'class' => ['open-tree-modal'],
-    //       'data-dialog-type' => 'modal',
-    //       'data-dialog-options' => json_encode(['width' => 800]),
-    //       'data-url' => Url::fromRoute('rep.tree_form', [
-    //         'mode' => 'modal',
-    //         'elementtype' => 'codebook',
-    //       ], ['query' => ['field_id' => 'codebook_type']])->toString(),
-    //       'data-field-id' => 'codebook_type',
-    //       'data-elementtype' => 'codebook',
-    //       'autocomplete' => 'off',
-    //       'data-search-value' => $this->getCodebook()->typeUri ?? '',
-    //     ],
-    //   ],
-    //   'bottom' => [
-    //     '#type' => 'markup',
-    //     '#markup' => '</div>',
-    //   ],
-    // ];
-    $form['codebook_name'] = [
+    $form['information'] = [
+      '#type' => 'vertical_tabs',
+      '#default_tab' => 'edit-publication',
+    ];
+
+    $form['codebook_information'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Codebook Form'),
+      '#group' => 'information',
+    ];
+
+    $form['codebook_information']['codebook_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name'),
       '#default_value' => $this->getCodebook()->label,
+      '#disabled' => TRUE,
     ];
-    $form['codebook_language'] = [
+    $form['codebook_information']['codebook_language'] = [
       '#type' => 'select',
       '#title' => $this->t('Language'),
       '#options' => $languages,
       '#default_value' => $this->getCodebook()->hasLanguage,
+      '#disabled' => TRUE,
     ];
-    $form['codebook_version'] = [
+    $form['codebook_information']['codebook_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
-      '#default_value' =>
-        ($this->getCodebook()->hasStatus === VSTOI::CURRENT || $this->getCodebook()->hasStatus === VSTOI::DEPRECATED) ?
-        $this->getCodebook()->hasVersion + 1 : $this->getCodebook()->hasVersion,
+      '#default_value' => $this->getCodebook()->hasVersion,
+      '#disabled' => TRUE,
+    ];
+    $form['codebook_information']['codebook_description'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Description'),
+      '#default_value' => $this->getCodebook()->comment,
+      '#disabled' => TRUE,
+    ];
+    $form['codebook_information']['codebook_hasSIRManagerEmail'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Owner'),
+      '#default_value' => $this->getCodebook()->hasSIRManagerEmail,
+      '#disabled' => TRUE,
+    ];
+
+    // RESPONSE OPTIONS TAB
+
+    $form['responseoption_information'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Response Options'),
+      '#group' => 'information',
+    ];
+
+    /*****************************/
+    /* RETRIEVE RESPONSE OPTIONS */
+    /*****************************/
+    $slot_list = $api->codebookSlotList($this->getCodebook()->uri);
+    $obj = json_decode($slot_list);
+    $slots = [];
+    if ($obj->isSuccessful) {
+      $slots = $obj->body;
+    }
+
+    # BUILD HEADER
+
+    $header = [
+      'slot_priority' => t('Priority'),
+      'slot_content' => t("Response Option's Content"),
+      'slot_response_option' => t("Response Option's URI"),
+      'slot_response_status' => t("Status"),
+    ];
+
+    # POPULATE DATA
+
+    $output = array();
+    foreach ($slots as $slot) {
+      $content = "";
+      if ($slot->hasResponseOption != null) {
+        $rawresponseoption = $api->getUri($slot->hasResponseOption);
+        $objresponseoption = json_decode($rawresponseoption);
+        if ($objresponseoption->isSuccessful) {
+          $responseoption = $objresponseoption->body;
+          if (isset($responseoption->hasContent)) {
+            $content = $responseoption->hasContent;
+          }
+        }
+      }
+      $responseOptionUriStr = "";
+      if ($slot->hasResponseOption != NULL && $slot->hasResponseOption != '') {
+        $responseOptionUriStr = Utils::namespaceUri($slot->hasResponseOption);
+      }
+      $output[$slot->uri] = [
+        'slot_priority' => $slot->hasPriority,
+        'slot_content' => $content,
+        'slot_response_option' => $responseOptionUriStr,
+        'slot_response_status' => parse_url($slot->responseOption->hasStatus, PHP_URL_FRAGMENT),
+        '#disabled' => TRUE
+      ];
+    }
+
+    # PUT FORM TOGETHER
+
+    $form['responseoption_information']['subtitle'] = [
+      '#type' => 'item',
+      '#title' => t('<h4>Response Option Slots</h4>'),
+      '#attributes' => [
+        'class' => ['mt-5 mb-1'],
+      ],
+    ];
+
+    $form['responseoption_information']['slot_table'] = [
+      '#type' => 'tableselect',
+      '#header' => $header,
+      '#options' => $output,
+      '#js_select' => FALSE,
+      '#empty' => t('No response option slots found'),
+    ];
+
+    // REVIEW NOTES TAB
+    $form['codebook_hasreviewnote'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Review Notes'),
+      '#default_value' => $this->getCodebook()->hasReviewNote,
+    ];
+
+    $form['codebook_haseditoremail'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Reviewer Email'),
+      '#default_value' => \Drupal::currentUser()->getEmail(),
       '#attributes' => [
         'disabled' => 'disabled',
       ],
     ];
-    $form['codebook_description'] = [
-      '#type' => 'textarea',
-      '#title' => $this->t('Description'),
-      '#default_value' => $this->getCodebook()->comment,
-    ];
-    $form['update_submit'] = [
+
+    $form['review_approve'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Update'),
-      '#name' => 'save',
+      '#value' => $this->t('Approve'),
+      '#name' => 'review_approve',
       '#attributes' => [
-        'class' => ['btn', 'btn-primary', 'save-button'],
+        'class' => ['btn', 'btn-success', 'aprove-button'],
       ],
     ];
-    $form['cancel_submit'] = [
+    $form['review_reject'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Cancel'),
-      '#name' => 'back',
+      '#value' => $this->t('Reject'),
+      '#name' => 'review_reject',
       '#attributes' => [
         'class' => ['btn', 'btn-primary', 'cancel-button'],
       ],
@@ -173,6 +247,11 @@ class EditCodebookForm extends FormBase {
     if ($button_name === 'back') {
       self::backUrl();
       return;
+    }
+
+    if ($button_name === 'review_reject' && strlen($form_state->getValue('responseoption_hasreviewnote')) === 0) {
+      \Drupal::messenger()->addWarning(t("To reject you must type a Review Note!"));
+      return false;
     }
 
     try{

@@ -11,39 +11,39 @@ use Drupal\rep\Utils;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Vocabulary\VSTOI;
 
-class AddDetectorStemForm extends FormBase {
+class AddProcessStemForm extends FormBase {
 
   /**
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'add_detectorstem_form';
+    return 'add_process_stem_form';
   }
 
-  protected $sourceDetectorStemUri;
+  protected $sourceProcessStemUri;
 
-  protected $sourceDetectorStem;
+  protected $sourceProcessStem;
 
-  public function getSourceDetectorStemUri() {
-    return $this->sourceDetectorStemUri;
+  public function getSourceProcessStemUri() {
+    return $this->sourceProcessStemUri;
   }
 
-  public function setSourceDetectorStemUri($uri) {
-    return $this->sourceDetectorStemUri = $uri;
+  public function setSourceProcessStemUri($uri) {
+    return $this->sourceProcessStemUri = $uri;
   }
 
-  public function getSourceDetectorStem() {
-    return $this->sourceDetectorStem;
+  public function getSourceProcessStem() {
+    return $this->sourceProcessStem;
   }
 
-  public function setSourceDetectorStem($obj) {
-    return $this->sourceDetectorStem = $obj;
+  public function setSourceProcessStem($obj) {
+    return $this->sourceProcessStem = $obj;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $sourcedetectorstemuri = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, $sourceprocessstemuri = NULL) {
 
     // MODAL
     $form['#attached']['library'][] = 'rep/rep_modal';
@@ -52,35 +52,35 @@ class AddDetectorStemForm extends FormBase {
     // ESTABLISH API SERVICE
     $api = \Drupal::service('rep.api_connector');
 
-    // HANDLE SOURCE DETECTOR STEM,  IF ANY
-    $sourceuri=$sourcedetectorstemuri;
+    // HANDLE SOURCE PROCESS,  IF ANY
+    $sourceuri=$sourceprocessstemuri;
     if ($sourceuri === NULL || $sourceuri === 'EMPTY') {
-      $this->setSourceDetectorStem(NULL);
-      $this->setSourceDetectorStemUri('');
+      $this->setSourceProcessStem(NULL);
+      $this->setSourceProcessStemUri('');
     } else {
       $sourceuri_decode=base64_decode($sourceuri);
-      $this->setSourceDetectorStemUri($sourceuri_decode);
-      $rawresponse = $api->getUri($this->getSourceDetectorStemUri());
+      $this->setSourceProcessStemUri($sourceuri_decode);
+      $rawresponse = $api->getUri($this->getSourceProcessStemUri());
       $obj = json_decode($rawresponse);
       if ($obj->isSuccessful) {
-        $this->setSourceDetectorStem($obj->body);
+        $this->setSourceProcessStem($obj->body);
       } else {
-        $this->setSourceDetectorStem(NULL);
-        $this->setSourceDetectorStemUri('');
+        $this->setSourceProcessStem(NULL);
+        $this->setSourceProcessStemUri('');
       }
     }
-    $disabledDerivationOption = ($this->getSourceDetectorStem() === NULL);
+    $disabledDerivationOption = ($this->getSourceProcessStem() === NULL);
 
     $tables = new Tables;
     $languages = $tables->getLanguages();
     $derivations = $tables->getGenerationActivities();
 
     $sourceContent = '';
-    if ($this->getSourceDetectorStem() != NULL) {
-      $sourceContent = $this->getSourceDetectorStem()->hasContent;
+    if ($this->getSourceProcessStem() != NULL) {
+      $sourceContent = $this->getSourceProcessStem()->hasContent;
     }
 
-    $form['detectorstem_type'] = [
+    $form['process_stem_type'] = [
       'top' => [
         '#type' => 'markup',
         '#markup' => '<div class="pt-3 col border border-white">',
@@ -88,20 +88,20 @@ class AddDetectorStemForm extends FormBase {
       'main' => [
         '#type' => 'textfield',
         '#title' => $this->t('Parent Type'),
-        '#name' => 'detectorstem_type',
+        '#name' => 'process_stem_type',
         '#default_value' => '',
-        '#id' => 'detectorstem_type',
-        '#parents' => ['detectorstem_type'],
+        '#id' => 'process_stem_type',
+        '#parents' => ['process_stem_type'],
         '#attributes' => [
           'class' => ['open-tree-modal'],
           'data-dialog-type' => 'modal',
           'data-dialog-options' => json_encode(['width' => 800]),
           'data-url' => Url::fromRoute('rep.tree_form', [
             'mode' => 'modal',
-            'elementtype' => 'detectorstem',
-          ], ['query' => ['field_id' => 'detectorstem_type']])->toString(),
-          'data-field-id' => 'detectorstem_type',
-          'data-elementtype' => 'detectorstem',
+            'elementtype' => 'processstem',
+          ], ['query' => ['field_id' => 'process_stem_type']])->toString(),
+          'data-field-id' => 'process_stem_type',
+          'data-elementtype' => 'processstem',
           'autocomplete' => 'off',
         ],
       ],
@@ -110,44 +110,44 @@ class AddDetectorStemForm extends FormBase {
         '#markup' => '</div>',
       ],
     ];
-    $form['detectorstem_content'] = [
+    $form['process_stem_content'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name'),
     ];
-    $form['detectorstem_language'] = [
+    $form['process_stem_language'] = [
       '#type' => 'select',
       '#title' => $this->t('Language'),
       '#options' => $languages,
       '#default_value' => 'en',
     ];
-    $form['detectorstem_version_hidden'] = [
+    $form['process_stem_version_hidden'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
       '#default_value' => '1',
       '#disabled' => TRUE,
     ];
-    $form['detectorstem_version'] = [
+    $form['process_stem_version'] = [
       '#type' => 'hidden',
       '#value' => '1',
     ];
-    $form['detectorstem_description'] = [
+    $form['process_stem_description'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
     ];
-    $form['detectorstem_was_derived_from'] = [
+    $form['process_stem_was_derived_from'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Was Derived From'),
       '#default_value' => $sourceContent,
       '#disabled' => TRUE,
     ];
-    $form['detectorstem_was_generated_by'] = [
+    $form['process_stem_was_generated_by'] = [
       '#type' => 'select',
       '#title' => $this->t('Was Generated By'),
       '#options' => $derivations,
       '#default_value' => Constant::DEFAULT_WAS_GENERATED_BY,
       '#disabled' => $disabledDerivationOption,
     ];
-    $form['save_submit'] = [
+    $form['process_stem_save_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Save'),
       '#name' => 'save',
@@ -155,7 +155,7 @@ class AddDetectorStemForm extends FormBase {
         'class' => ['btn', 'btn-primary', 'save-button'],
       ],
     ];
-    $form['cancel_submit'] = [
+    $form['process_stem_cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
@@ -163,7 +163,7 @@ class AddDetectorStemForm extends FormBase {
         'class' => ['btn', 'btn-primary', 'cancel-button'],
       ],
     ];
-    $form['bottom_space'] = [
+    $form['process_stem_bottom_space'] = [
       '#type' => 'item',
       '#title' => t('<br><br>'),
     ];
@@ -177,14 +177,14 @@ class AddDetectorStemForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name != 'back') {
-      if(strlen($form_state->getValue('detectorstem_content')) < 1) {
-        $form_state->setErrorByName('detectorstem_content', $this->t('Please enter a valid content'));
+      if(strlen($form_state->getValue('process_stem_content')) < 1) {
+        $form_state->setErrorByName('process_stem_content', $this->t('Please enter a valid content'));
       }
-      if(strlen($form_state->getValue('detectorstem_language')) < 1) {
-        $form_state->setErrorByName('detectorstem_language', $this->t('Please enter a valid language'));
+      if(strlen($form_state->getValue('process_stem_language')) < 1) {
+        $form_state->setErrorByName('process_stem_language', $this->t('Please enter a valid language'));
       }
-      if(strlen($form_state->getValue('detectorstem_version')) < 1) {
-        $form_state->setErrorByName('detectorstem_version', $this->t('Please enter a valid version'));
+      if(strlen($form_state->getValue('process_stem_version')) < 1) {
+        $form_state->setErrorByName('process_stem_version', $this->t('Please enter a valid version'));
       }
     }
   }
@@ -205,37 +205,38 @@ class AddDetectorStemForm extends FormBase {
     try {
 
       $wasDerivedFrom = '';
-      if ($this->getSourceDetectorStemUri() === NULL) {
+      if ($this->getSourceProcessStemUri() === NULL) {
         $wasDerivedFrom = 'null';
       } else {
-        $wasDerivedFrom = $this->getSourceDetectorStemUri();
+        $wasDerivedFrom = $this->getSourceProcessStemUri();
       }
-      $wasGeneratedBy = $form_state->getValue('detectorstem_was_generated_by');
+      $wasGeneratedBy = $form_state->getValue('process_was_generated_by');
 
       $useremail = \Drupal::currentUser()->getEmail();
 
       // CREATE A NEW DETECTOR
-      $newDetectorStemUri = Utils::uriGen('detectorstem');
-      $detectorStemJson = '{"uri":"'.$newDetectorStemUri.'",'.
-        '"superUri":"'.UTILS::uriFromAutocomplete($form_state->getValue('detectorstem_type')).'",'.
-        '"label":"'.$form_state->getValue('detectorstem_content').'",'.
-        '"hascoTypeUri":"'.VSTOI::DETECTOR_STEM.'",'.
+      $newProcessStemUri = Utils::uriGen('processstem');
+      $processStemJson = '{"uri":"'.$newProcessStemUri.'",'.
+        '"superUri":"'.Utils::uriFromAutocomplete($form_state->getValue('process_stem_type')).'",'.
+        //'"typeUri":"'.VSTOI::DETECTOR_STEM.'",'.
+        '"label":"'.$form_state->getValue('process_stem_content').'",'.
+        '"hascoTypeUri":"'.VSTOI::PROCESS_STEM.'",'.
         '"hasStatus":"'.VSTOI::DRAFT.'",'.
-        '"hasContent":"'.$form_state->getValue('detectorstem_content').'",'.
-        '"hasLanguage":"'.$form_state->getValue('detectorstem_language').'",'.
-        '"hasVersion":"'.$form_state->getValue('detectorstem_version').'",'.
-        '"comment":"'.$form_state->getValue('detectorstem_description').'",'.
+        '"hasContent":"'.$form_state->getValue('process_stem_content').'",'.
+        '"hasLanguage":"'.$form_state->getValue('process_stem_language').'",'.
+        '"hasVersion":"'.$form_state->getValue('process_stem_version').'",'.
+        '"comment":"'.$form_state->getValue('process_stem_description').'",'.
         '"wasDerivedFrom":"'.$wasDerivedFrom.'",'.
         '"wasGeneratedBy":"'.$wasGeneratedBy.'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
       $api = \Drupal::service('rep.api_connector');
-      $message = $api->detectorStemAdd($detectorStemJson);
-      \Drupal::messenger()->addMessage(t("Added a new Detector Stem with URI: ".$newDetectorStemUri));
+      $message = $api->processStemAdd($processStemJson);
+      \Drupal::messenger()->addMessage(t("Added a new Process Stem with URI: ".$newProcessStemUri));
       self::backUrl();
       return;
 
     } catch(\Exception $e) {
-        \Drupal::messenger()->addError(t("An error occurred while adding the Detector Stem: ".$e->getMessage()));
+        \Drupal::messenger()->addError(t("An error occurred while adding the Process Stem: ".$e->getMessage()));
         self::backUrl();
         return;
       }
@@ -243,7 +244,7 @@ class AddDetectorStemForm extends FormBase {
 
   function backUrl() {
     $uid = \Drupal::currentUser()->id();
-    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.add_detectorstem');
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.add_processstem');
     if ($previousUrl) {
       $response = new RedirectResponse($previousUrl);
       $response->send();

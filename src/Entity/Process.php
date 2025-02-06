@@ -7,15 +7,18 @@ use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\REPGUI;
 use Drupal\rep\Vocabulary\VSTOI;
 
-class Codebook {
+class Process {
 
   public static function generateHeader() {
 
     return $header = [
       'element_uri' => t('URI'),
+      'element_type' => t('Type'),
       'element_name' => t('Name'),
       'element_language' => t('Language'),
       'element_version' => t('Version'),
+      'element_tot_instruments' => t('# Instruments'),
+      'element_tot_detectors' => t('# Detectors'),
       'element_status' => t('Status'),
     ];
 
@@ -38,8 +41,12 @@ class Codebook {
         $uri = $element->uri;
       }
       $type = ' ';
-      if ($element->superUri != NULL) {
-        $type = Utils::namespaceUri($element->superUri);
+      if ($element->typeUri != NULL) {
+        $type = Utils::namespaceUri($element->typeUri);
+      }
+      $typeLabel = ' ';
+      if ($element->typeLabel != NULL) {
+        $typeLabel = $element->typeLabel;
       }
       $uri = Utils::namespaceUri($uri);
       $label = ' ';
@@ -58,7 +65,6 @@ class Codebook {
       }
       $status = ' ';
       if ($element->hasStatus != NULL) {
-
         // GET STATUS
         if ($element->hasStatus === VSTOI::DRAFT && $element->hasReviewNote !== NULL) {
           $status = "Draft (Already Reviewed)";
@@ -67,13 +73,28 @@ class Codebook {
         } else {
           $status = parse_url($element->hasStatus, PHP_URL_FRAGMENT);
         }
-
       }
+      $totInst = count($element->hasRequiredInstrumentationUris);
+      $totDet = 0;
+
+      if (isset($element->requiredInstrumentation) && is_array($element->requiredInstrumentation)) {
+          foreach ($element->requiredInstrumentation as $instrument) {
+              if (isset($instrument->hasRequiredDetector) && is_array($instrument->hasRequiredDetector)) {
+                  $totDet += count($instrument->hasRequiredDetector);
+              } elseif (isset($instrument->detectors) && is_array($instrument->detectors)) {
+                  $totDet += count($instrument->detectors);
+              }
+          }
+      }
+
       $output[$element->uri] = [
         'element_uri' => t('<a href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),
+        'element_type' => $typeLabel,
         'element_name' => $label,
         'element_language' => $lang,
         'element_version' => $version,
+        'element_tot_instruments' => $totInst,
+        'element_tot_detectors' => $totDet,
         'element_status' => $status,
         'element_hasStatus' => parse_url($element->hasStatus, PHP_URL_FRAGMENT),
       ];

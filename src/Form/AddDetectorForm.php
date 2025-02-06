@@ -75,6 +75,10 @@ class AddDetectorForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $sourcedetectoruri = NULL, $containersloturi = NULL) {
 
+    // MODAL
+    $form['#attached']['library'][] = 'rep/rep_modal';
+    $form['#attached']['library'][] = 'core/drupal.dialog';
+
     // ESTABLISH API SERVICE
     $api = \Drupal::service('rep.api_connector');
 
@@ -125,15 +129,87 @@ class AddDetectorForm extends FormBase {
       $sourceContent = $this->getSourceDetector()->hasContent;
     }
 
+    // $form['detector_stem'] = [
+    //   '#type' => 'textfield',
+    //   '#title' => \Drupal::moduleHandler()->moduleExists('pmsr') ?
+    //     $this->t('Simulation Technique Stem') :
+    //     $this->t('Detector Stem'),
+    //   '#autocomplete_route_name' => 'sir.detector_stem_autocomplete',
+    // ];
     $form['detector_stem'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Detector Stem'),
-      '#autocomplete_route_name' => 'sir.detector_stem_autocomplete',
+      'top' => [
+        '#type' => 'markup',
+        '#markup' => '<div class="pt-3 col border border-white">',
+      ],
+      'main' => [
+        '#type' => 'textfield',
+        '#title' => $this->t('Detector Stem'),
+        '#name' => 'detector_stem',
+        '#default_value' => '',
+        '#id' => 'detector_stem',
+        '#parents' => ['detector_stem'],
+        '#attributes' => [
+          'class' => ['open-tree-modal'],
+          'data-dialog-type' => 'modal',
+          'data-dialog-options' => json_encode(['width' => 800]),
+          'data-url' => Url::fromRoute('rep.tree_form', [
+            'mode' => 'modal',
+            'elementtype' => 'detectorstem',
+          ], ['query' => ['field_id' => 'detector_stem']])->toString(),
+          'data-field-id' => 'detector_stem',
+          'data-elementtype' => 'detectorstem',
+          'autocomplete' => 'off',
+        ],
+      ],
+      'bottom' => [
+        '#type' => 'markup',
+        '#markup' => '</div>',
+      ],
     ];
     $form['detector_codebook'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Codebook'),
       '#autocomplete_route_name' => 'sir.detector_codebook_autocomplete',
+    ];
+    $form['detector_version_hidden'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Version'),
+      '#default_value' => '1',
+      '#disabled' => TRUE,
+    ];
+    $form['detector_version'] = [
+      '#type' => 'hidden',
+      '#value' => '1',
+    ];
+    $form['detector_isAttributeOf'] = [
+      'top' => [
+        '#type' => 'markup',
+        '#markup' => '<div class="pt-3 col border border-white">',
+      ],
+      'main' => [
+        '#type' => 'textfield',
+        '#title' => $this->t('Attribute Of <small><i>(optional)</i></small>'),
+        '#name' => 'detector_isAttributeOf',
+        '#default_value' => '',
+        '#id' => 'detector_isAttributeOf',
+        '#parents' => ['detector_isAttributeOf'],
+        '#attributes' => [
+          'class' => ['open-tree-modal'],
+          'data-dialog-type' => 'modal',
+          'data-dialog-options' => json_encode(['width' => 800]),
+          'data-url' => Url::fromRoute('rep.tree_form', [
+            'mode' => 'modal',
+            'elementtype' => 'detectorattribute',
+          ], ['query' => ['field_id' => 'detector_isAttributeOf']])->toString(),
+          'data-field-id' => 'detector_isAttributeOf',
+          'data-elementtype' => 'detectorattribute',
+          'autocomplete' => 'off',
+        ],
+      ],
+      'bottom' => [
+        '#type' => 'markup',
+        '#markup' => '</div>',
+      ],
     ];
     $form['save_submit'] = [
       '#type' => 'submit',
@@ -172,11 +248,11 @@ class AddDetectorForm extends FormBase {
       if ($form_state->getValue('detector_stem') == NULL || $form_state->getValue('detector_stem') == '') {
         $form_state->setErrorByName('detector_stem', $this->t('Detector stem value is empty. Please enter a valid stem.'));
       }
-      $stemUri = Utils::uriFromAutocomplete($form_state->getValue('detector_stem'));
-      $this->setDetectorStem($api->parseObjectResponse($api->getUri($stemUri),'getUri'));
-      if($this->getDetectorStem() == NULL) {
-        $form_state->setErrorByName('detector_stem', $this->t('Value for Detector Stem is not valid. Please enter a valid stem.'));
-      }
+      // $stemUri = Utils::uriFromAutocomplete($form_state->getValue('detector_stem'));
+      // $this->setDetectorStem($api->parseObjectResponse($api->getUri($stemUri),'getUri'));
+      // if($this->getDetectorStem() == NULL) {
+      //   $form_state->setErrorByName('detector_stem', $this->t('Value for Detector Stem is not valid. Please enter a valid stem.'));
+      // }
     }
   }
 
@@ -199,20 +275,50 @@ class AddDetectorForm extends FormBase {
     try {
 
       $hasCodebook = '';
-      if ($form_state->getValue('detector_codebook') != NULL && $form_state->getValue('detector_codebook') != '') {
+      if ($form_state->getValue('detector_codebook') !== NULL && $form_state->getValue('detector_codebook') !== '') {
         $hasCodebook = Utils::uriFromAutocomplete($form_state->getValue('detector_codebook'));
+      } else {
+        $hasCodebook = NULL;
       }
 
       $useremail = \Drupal::currentUser()->getEmail();
 
+      // GET THE DETECTOR STEM URI
+      $rawresponse = $api->getUri(Utils::uriFromAutocomplete($form_state->getValue('detector_stem')));
+      $obj = json_decode($rawresponse);
+      $result = $obj->body;
+
+      $label = "";
+      if ($result->hasContent !== NULL) {
+        $label .= $result->hasContent;
+      } else {
+        $label .= $result->label;
+      }
+
+      if ($form_state->getValue('detector_codebook') !== NULL && $form_state->getValue('detector_codebook') != '') {
+        $codebook = Utils::uriFromAutocomplete($form_state->getValue('detector_codebook'));
+        $rawresponseCB = $api->getUri($codebook);
+        $objCB = json_decode($rawresponseCB);
+        $resultCB = $objCB->body;
+        $label .= '  -- CB:'.$resultCB->label;
+      } else {
+        $label = $result->label . '  -- CB:EMPTY';
+      }
+
       // CREATE A NEW DETECTOR
       $newDetectorUri = Utils::uriGen('detector');
       $detectorJson = '{"uri":"'.$newDetectorUri.'",'.
-        '"superUri":"'.VSTOI::DETECTOR.'",'.
+        '"typeUri":"'.Utils::uriFromAutocomplete($form_state->getValue('detector_stem')).'",'.
         '"hascoTypeUri":"'.VSTOI::DETECTOR.'",'.
-        '"hasDetectorStem":"'.$this->getDetectorStem()->uri.'",'.
+        '"hasDetectorStem":"'.Utils::uriFromAutocomplete($form_state->getValue('detector_stem')).'",'.
         '"hasCodebook":"'.$hasCodebook.'",'.
-        '"hasSIRManagerEmail":"'.$useremail.'"}';
+        '"hasContent":"'.$label.'",'.
+        '"hasSIRManagerEmail":"'.$useremail.'",'.
+        '"label":"'.$label.'",'.
+        '"hasVersion":"1",'.
+        '"isAttributeOf":"'.Utils::uriFromAutocomplete($form_state->getValue('detector_isAttributeOf')).'",'.
+        '"hasStatus":"'.VSTOI::DRAFT.'"}';
+
       $api->detectorAdd($detectorJson);
 
       // IF IN THE CONTEXT OF AN EXISTING CONTAINER_SLOT, ATTACH THE NEWLY CREATED DETECTOR TO THE CONTAINER_SLOT

@@ -44,6 +44,11 @@ class EditInstrumentForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $instrumenturi = NULL) {
+
+    // MODAL
+    $form['#attached']['library'][] = 'rep/rep_modal';
+    $form['#attached']['library'][] = 'core/drupal.dialog';
+
     $uri_decode=base64_decode($instrumenturi);
     $this->setInstrumentUri($uri_decode);
 
@@ -74,6 +79,38 @@ class EditInstrumentForm extends FormBase {
       $hasLanguage = $this->getInstrument()->hasLanguage;
     }
 
+    $form['instrument_type'] = [
+      'top' => [
+        '#type' => 'markup',
+        '#markup' => '<div class="pt-3 col border border-white">',
+      ],
+      'main' => [
+        '#type' => 'textfield',
+        '#title' => $this->t('Type'),
+        '#name' => 'instrument_type',
+        '#default_value' => $this->getInstrument()->superUri,
+        '#id' => 'instrument_type',
+        '#parents' => ['instrument_type'],
+        '#disabled' => TRUE,
+        '#attributes' => [
+          'class' => ['open-tree-modal'],
+          'data-dialog-type' => 'modal',
+          'data-dialog-options' => json_encode(['width' => 800]),
+          'data-url' => Url::fromRoute('rep.tree_form', [
+            'mode' => 'modal',
+            'elementtype' => 'instrument',
+          ], ['query' => ['field_id' => 'instrument_type']])->toString(),
+          'data-field-id' => 'instrument_type',
+          'data-elementtype' => 'instrument',
+          'data-search-value' => $this->getInstrument()->superUri ?? '',
+        ],
+      ],
+      'bottom' => [
+        '#type' => 'markup',
+        '#markup' => '</div>',
+      ],
+    ];
+
     $form['instrument_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name'),
@@ -99,7 +136,12 @@ class EditInstrumentForm extends FormBase {
     $form['instrument_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
-      '#default_value' => $this->getInstrument()->hasVersion,
+      '#default_value' =>
+        ($this->getInstrument()->hasStatus === VSTOI::CURRENT || $this->getInstrument()->hasStatus === VSTOI::DEPRECATED) ?
+        $this->getInstrument()->hasVersion + 1 : $this->getInstrument()->hasVersion,
+      '#attributes' => [
+        'disabled' => 'disabled',
+      ],
     ];
     $form['instrument_description'] = [
       '#type' => 'textarea',
@@ -170,8 +212,9 @@ class EditInstrumentForm extends FormBase {
       $useremail = \Drupal::currentUser()->getEmail();
 
       $instrumentJson = '{"uri":"'.$this->getInstrumentUri().'",'.
-        '"typeUri":"'.VSTOI::QUESTIONNAIRE.'",'.
+        '"superUri":"'.UTILS::plainUri($form_state->getValue('instrument_type')).'",'.
         '"hascoTypeUri":"'.VSTOI::INSTRUMENT.'",'.
+        //'"hasType":"'.$form_state->getValue('instrument_type').'",'.
         '"hasStatus":"'.$this->getInstrument()->hasStatus.'",'.
         '"label":"'.$form_state->getValue('instrument_name').'",'.
         '"hasShortName":"'.$form_state->getValue('instrument_abbreviation').'",'.

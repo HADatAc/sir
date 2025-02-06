@@ -19,6 +19,7 @@
             <option value="questionnaries">Questionnaries</option>
             <option value="items">Items</option>
             <option value="codebooks">Codebooks</option>
+            <option value="processes">Processes</option>
             <option value="symptoms">Symptoms</option>
             <option value="scales">Scales</option>
           </select>
@@ -62,9 +63,9 @@
           </thead>
           <tbody id='searchinstrumentscontent'>
                 {% for instrument in content.instruments %}
-                    {{instrument}} 
-                {% endfor %}  
-            
+                    {{instrument}}
+                {% endfor %}
+
         </tbody>
         </table>
         {% else %}

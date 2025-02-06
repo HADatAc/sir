@@ -9,7 +9,7 @@ use Drupal\Component\Utility\Xss;
 //use Drupal\Core\Entity\Element\EntityAutocomplete;
 
 /**
- * Class JsonApiCodebookController
+ * Class JsonApiDetectorController
  * @package Drupal\sir\Controller
  */
 class JsonApiDetectorController extends ControllerBase{
@@ -20,6 +20,8 @@ class JsonApiDetectorController extends ControllerBase{
   public function handleAutocomplete(Request $request) {
     $results = [];
     $input = $request->query->get('q');
+
+
     if (!$input) {
       return new JsonResponse($results);
     }
@@ -40,10 +42,14 @@ class JsonApiDetectorController extends ControllerBase{
       //  'value' => EntityAutocomplete::getEntityLabels([$detector]),
       //  'label' => implode(' ', $label),
       //];
+      // $results[] = [
+      //   'value' => $detector->detectorStem->hasContent . '  -- CB: '  . $detector->codebook->label . ' [' . $detector->uri . ']',
+      //   'label' => $detector->detectorStem->hasContent . '  -- CB: '  . $detector->codebook->label,
+      // ];
       $results[] = [
-        'value' => $detector->detectorStem->hasContent . '  -- CB: '  . $detector->codebook->label . ' [' . $detector->uri . ']',
-        'label' => $detector->detectorStem->hasContent . '  -- CB: '  . $detector->codebook->label,
-      ];
+          'value' => $detector->label . ' [' . $detector->uri . ']',
+          'label' => $detector->label,
+        ];
     }
 
     return new JsonResponse($results);
