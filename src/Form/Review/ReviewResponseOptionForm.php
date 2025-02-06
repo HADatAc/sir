@@ -98,15 +98,40 @@ class ReviewResponseOptionForm extends FormBase {
       ],
     ];
     if ($this->getResponseOption()->wasDerivedFrom !== NULL) {
-      $form['responseoption_wasderivedfrom'] = [
+      $form['responseoption_df_wrapper'] = [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['d-flex', 'align-items-center', 'w-100'], // Flex container para alinhamento correto
+          'style' => "width: 100%; gap: 10px;", // Garante espaçamento correto
+        ],
+      ];
+
+      // Campo de texto desativado que ocupa todo o espaço disponível
+      $form['responseoption_df_wrapper']['responseoption_wasderivedfrom'] = [
         '#type' => 'textfield',
         '#title' => $this->t('Derived From'),
         '#default_value' => $this->getResponseOption()->wasDerivedFrom,
         '#attributes' => [
+          'class' => ['flex-grow-1'], // Expande ao máximo dentro do flex container
+          'style' => "width: 100%; min-width: 0;", // Corrige problemas de flexbox em alguns browsers
           'disabled' => 'disabled',
         ],
       ];
+
+      // Construção da URL
+      $elementUri = Utils::namespaceUri($this->getResponseOption()->wasDerivedFrom);
+      $elementUriEncoded = base64_encode($elementUri);
+      $url = Url::fromRoute('rep.describe_element', ['elementuri' => $elementUriEncoded], ['absolute' => TRUE])->toString();
+
+      // Botão para abrir nova janela - agora corrigido
+      $form['responseoption_df_wrapper']['responseoption_wasderivedfrom_button'] = [
+        '#type' => 'markup',
+        '#markup' => '<a href="' . $url . '" target="_blank" class="btn btn-success text-nowrap mt-2" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
+      ];
+
+
     }
+
     $form['responseoption_owner'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Owner'),
