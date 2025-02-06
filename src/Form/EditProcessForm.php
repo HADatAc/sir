@@ -6,16 +6,16 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\RedirectCommand;
-use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Url;
 use Symfony\Component\HttpFoundation\RedirectResponse;
-use Drupal\rep\Constant;
 use Drupal\rep\Utils;
 use Drupal\rep\Entity\Tables;
-use Drupal\rep\Vocabulary\HASCO;
 use Drupal\rep\Vocabulary\REPGUI;
 use Drupal\rep\Vocabulary\VSTOI;
-use Drupal\sir\Entity\Instrument;
+use Drupal\Core\Ajax\InvokeCommand;
+use Drupal\Core\Ajax\AfterCommand;
+use Drupal\Core\Ajax\RemoveCommand;
+use Drupal\Core\Ajax\ReplaceCommand;
 
 class EditProcessForm extends FormBase {
 
@@ -622,31 +622,34 @@ class EditProcessForm extends FormBase {
     $instrument_uri = Utils::uriFromAutocomplete($instrumentURI);
     $instruments = \Drupal::state()->get('my_form_instruments');
 
-    //CHECK IF THE INSTRUMENT HAS BEEN ALREADY ADDED
+    $response = new AjaxResponse();
+
+    // Always remove any previous error messages
+    $response->addCommand(new RemoveCommand('.instrument-error-message'));
+
+    // Check if the instrument has already been added
     $filtered = array_filter($instruments, fn($instrument) => $instrument['instrument'] === $instrumentURI);
     if (!empty($filtered)) {
-      $form_state->setValue('instrument_instrument_' . $delta, '');
-      $form_state->setRebuild(TRUE);
+        $form_state->setValue('instrument_instrument_' . $delta, '');
+        $form_state->setRebuild(TRUE);
 
-      $response = new \Drupal\Core\Ajax\AjaxResponse();
+        // Clear the input field in the frontend
+        $response->addCommand(new InvokeCommand('input[name="instrument_instrument_' . $delta . '"]', 'val', ['']));
 
-      $response->addCommand(new \Drupal\Core\Ajax\InvokeCommand('input[name="instrument_instrument_' . $delta . '"]', 'val', ['']));
+        // Display the error message below the input field
+        $response->addCommand(new AfterCommand(
+            'input[name="instrument_instrument_' . $delta . '"]',
+            '<div class="instrument-error-message text-danger" style="margin-top:10px; margin-left:5px;">' .
+            $this->t('You already have "@instrument" in this list.', ['@instrument' => $instrumentURI]) .
+            '</div>'
+        ));
 
-      $response->addCommand(new \Drupal\Core\Ajax\InvokeCommand('.instrument-error-message', 'remove'));
-
-      $response->addCommand(new \Drupal\Core\Ajax\AfterCommand(
-          'input[name="instrument_instrument_' . $delta . '"]',
-          '<div class="instrument-error-message text-danger" style="margin-top:10px; margin-left:5px;">' .
-          $this->t('You already have "@instrument" in this list.', ['@instrument' => $instrumentURI]) .
-          '</div>'
-      ));
-
-      return $response;
+        return $response;
     }
 
-    // Check if container exists before editing it
+    // Check if container exists
     if (!isset($form['instruments']['rows'][$delta]['row'.$delta]['detectors'][$container_id])) {
-        \Drupal::logger('custom_module')->error('Error: Container not forund for: @delta', ['@delta' => $delta]);
+        \Drupal::logger('custom_module')->error('Container not found for delta: @delta', ['@delta' => $delta]);
         return [
             '#markup' => $this->t('Error: Container not found for delta @delta.', ['@delta' => $delta]),
         ];
@@ -655,16 +658,16 @@ class EditProcessForm extends FormBase {
     // Get detectors from API
     $detectors = $this->getDetectors($instrument_uri);
 
-    // dpm($instrument_uri);
-    //ADD DETECTORS TO INSTRUMENT
-    $instruments = \Drupal::state()->get('my_form_instruments');
+    // Add detectors to instrument
     self::updateInstruments($form_state);
-    //dpm($form_state->getUserInput());
 
-    // Render detectors on form
-    $form['instruments']['rows'][$delta]['row'.$delta]['detectors'][$container_id] = $this->buildDetectorTable($detectors, $container_id);
+    // Render detectors
+    $detectorTable = $this->buildDetectorTable($detectors, $container_id);
 
-    return $form['instruments']['rows'][$delta]['row'.$delta]['detectors'][$container_id];
+    // Replace the existing detector container with the updated table
+    $response->addCommand(new ReplaceCommand('#' . $container_id, $detectorTable));
+
+    return $response;
   }
 
   protected function updateInstruments(FormStateInterface $form_state) {
