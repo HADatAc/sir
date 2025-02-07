@@ -235,50 +235,6 @@ class ReviewResponseOptionForm extends FormBase {
           // THIS TO CURRENT
           ResponseOption::cloneResponseOption($this->getResponseOption()->uri, VSTOI::CURRENT);
 
-          // $responseOptionJSON = '{"uri":"'. $this->getResponseOption()->uri .'",'.
-          //   '"typeUri":"'.$this->getResponseOption()->typeUri.'",'.
-          //   '"hascoTypeUri":"'.$this->getResponseOption()->hascoTypeUri.'",'.
-          //   '"hasContent":"'.$this->getResponseOption()->hasContent.'",'.
-          //   '"hasLanguage":"'.$this->getResponseOption()->hasLanguage.'",'.
-          //   '"hasVersion":"'.$this->getResponseOption()->hasVersion.'",'.
-          //   '"hasStatus":"'.VSTOI::CURRENT.'",'.
-          //   '"comment":"'.$this->getResponseOption()->comment.'",'.
-          //   '"hasSIRManagerEmail":"' . $this->getResponseOption()->hasSIRManagerEmail . '",'.
-          //   '"hasReviewNote":"' . $form_state->getValue('responseoption_hasreviewnote') . '",'.
-          //   '"hasEditorEmail":"' . \Drupal::currentUser()->getEmail() . '",'.
-          //   '"wasDerivedFrom":"' . $this->getResponseOption()->wasDerivedFrom .
-          //   '"}';
-
-          // //dpm($responseOptionJSON);
-
-          // // UPDATE BY DELETING AND CREATING
-          // $api->responseOptionDel($this->getResponseOption()->uri);
-          // $api->responseOptionAdd($responseOptionJSON);
-
-          // //GET PARENT VALUES
-          // $rawresponse = $api->getUri($this->getResponseOption()->wasDerivedFrom);
-          // $obj = json_decode($rawresponse);
-          // $result = $obj->body;
-          // $responseOptionParentJSON = '{"uri":"'. $this->getResponseOption()->wasDerivedFrom .'",'.
-          //   '"typeUri":"'.$result->typeUri.'",'.
-          //   '"hascoTypeUri":"'.$result->hascoTypeUri.'",'.
-          //   '"hasContent":"'.$result->hasContent.'",'.
-          //   '"hasLanguage":"'.$result->hasLanguage.'",'.
-          //   '"hasVersion":"'.$result->hasVersion.'",'.
-          //   '"hasStatus":"'.VSTOI::DEPRECATED.'",'.
-          //   '"comment":"'.$result->comment.'",'.
-          //   '"hasSIRManagerEmail":"' . $result->hasSIRManagerEmail . '",'.
-          //   '"hasReviewNote":"' . $result->hasReviewNote . '",'.
-          //   '"hasEditorEmail":"'.$result->hasEditorEmail . '",'.
-          //   '"wasDerivedFrom":"'.$result->wasDerivedFrom .
-          //   '"}';
-
-          // dpm($responseOptionParentJSON);
-
-          // // UPDATE DERIVED FROM RECORD
-          // $api->responseOptionDel($result->wasDerivedFrom);
-          // $api->responseOptionAdd($responseOptionParentJSON);
-
         } else {
 
           // THIS TO CURRENT
