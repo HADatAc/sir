@@ -461,6 +461,124 @@ class SIRSelectForm extends FormBase {
   /**
    * Build the table view.
    */
+  // protected function buildTableView(array &$form, FormStateInterface $form_state, $page, $pagesize) {
+  //   // GET TOTAL NUMBER OF PAGES
+  //   if (gettype($this->list_size) == 'string') {
+  //     $total_pages = "0";
+  //   } else {
+  //     if ($this->list_size % $pagesize == 0) {
+  //       $total_pages = $this->list_size / $pagesize;
+  //     } else {
+  //       $total_pages = floor($this->list_size / $pagesize) + 1;
+  //     }
+  //   }
+
+  //   // CREATE LINK FOR NEXT PAGE AND PREVIOUS PAGE
+  //   if ($page < $total_pages) {
+  //     $next_page = $page + 1;
+  //     $next_page_link = ListManagerEmailPage::link($this->element_type, $next_page, $pagesize);
+  //   } else {
+  //     $next_page_link = '';
+  //   }
+  //   if ($page > 1) {
+  //     $previous_page = $page - 1;
+  //     $previous_page_link = ListManagerEmailPage::link($this->element_type, $previous_page, $pagesize);
+  //   } else {
+  //     $previous_page_link = '';
+  //   }
+
+  //   // RETRIEVE ELEMENTS FOR THE CURRENT PAGE
+  //   $this->setList(ListManagerEmailPage::exec($this->element_type, $this->manager_email, $page, $pagesize));
+
+  //   // dpm($this->getList());
+
+  //   // Generate header and output
+  //   $header = $this->generateHeader();
+  //   //$output = $this->generateOutput();
+
+  //   $results = $this->generateOutput();
+
+  //   $output = $results['output'];
+  //   $disabled_rows = $results['disabled_rows'];
+
+  //   // Criar tabela personalizada
+  //   $form['element_table'] = [
+  //     '#type' => 'table',
+  //     //'#type' => 'tableselect',
+  //     '#header' => array_merge(
+  //       ['select' => ''],
+  //       $header
+  //     ),
+  //     '#empty' => $this->t('No ' . $this->plural_class_name . ' found'),
+  //     '#attributes' => [
+  //       'class' => ['table', 'table-striped'],
+  //     ],
+  //     '#js_select' => FALSE,
+  //   ];
+
+  //   // OLD METHOS TO CREATE TABLES
+  //   // $form['element_table'] = [
+  //   //   '#type' => 'tableselect',
+  //   //   '#header' => $header,
+  //   //   '#options' => $output,
+  //   //   '#js_select' => FALSE,
+  //   //   '#empty' => $this->t('No ' . $this->plural_class_name . ' found'),
+  //   // ];
+
+  //   // ADD lines to table
+  //   foreach ($output as $key => $row) {
+  //       //$is_disabled = isset($disabled_rows[$key]);
+
+  //       // ADD checkbox's to row
+  //       $checkbox = [
+  //           '#type' => 'checkbox',
+  //           '#title' => $this->t('Select'),
+  //           '#title_display' => 'invisible',
+  //           '#return_value' => $key,
+  //           '#attributes' => [
+  //               'class' => ['element-select-checkbox checkbox-status-'. strtolower($row['element_hasStatus'])],
+  //           ],
+  //       ];
+
+  //       // Assemble row
+  //       // $form['element_table'][$key]['select'] = $is_disabled ? [
+  //       //     '#markup' => '',  // Célula vazia para linhas desativadas
+  //       // ] : $checkbox;
+  //       $form['element_table'][$key]['select'] = $checkbox;
+
+  //       // Next Columns
+  //       foreach ($row as $field_key => $field_value) {
+  //           if ($field_key !== 'element_hasStatus') {
+  //               $form['element_table'][$key][$field_key] = [
+  //                   '#markup' => $field_value,
+  //               ];
+  //           }
+  //       }
+
+  //       // Add classes to disabled rows
+  //       // if ($is_disabled) {
+  //       //     $form['element_table'][$key]['#attributes']['class'][] = 'disabled-row';
+  //       // }
+  //   }
+
+  //   // Add custom CSS
+  //   $form['#attached']['library'][] = 'sir/sir_js_css';
+
+  //   // Pager
+  //   $form['pager'] = [
+  //     '#theme' => 'list-page',
+  //     '#items' => [
+  //       'page' => strval($page),
+  //       'first' => ListManagerEmailPage::link($this->element_type, 1, $pagesize),
+  //       'last' => ListManagerEmailPage::link($this->element_type, $total_pages, $pagesize),
+  //       'previous' => $previous_page_link,
+  //       'next' => $next_page_link,
+  //       'last_page' => strval($total_pages),
+  //       'links' => null,
+  //       'title' => ' ',
+  //     ],
+  //   ];
+  // }
   protected function buildTableView(array &$form, FormStateInterface $form_state, $page, $pagesize) {
     // Recuperar o status filtrado
     $status_filter = $form_state->getValue('status_filter') ?? 'all';
@@ -1311,6 +1429,7 @@ class SIRSelectForm extends FormBase {
    */
   protected function performReview(array $uris, FormStateInterface $form_state) {
 
+    dpm($this->element_type);
     $api = \Drupal::service('rep.api_connector');
     $useremail = \Drupal::currentUser()->getEmail();
 
@@ -1414,99 +1533,65 @@ class SIRSelectForm extends FormBase {
           '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.
           '"hasSIRManagerEmail":"'.$result->hasSIRManagerEmail.'",'.
           '"hasReviewNote": "'. $result->hasReviewNote .'",'.
+          '"hasWebDocument": "'. $result->hasWebDocument .'",'.
           '"hasEditorEmail": "'. $useremail .'"'.
         '}';
 
-        // UPDATE BY DELETING AND CREATING
-        $api->codebookDel($result->uri);
-        $api->codebookAdd($codebookJSON);
-
-
-
-      } elseif ($this->element_type == 'detector') {
-        // CENARIO #1: CHECK IF IT HAS wasDerivedFrom property, means it is a derived element
-        if ($result->wasDerivedFrom !== NULL
-            && $this->checkDerivedElements($uri, $this->element_type)) {
-            \Drupal::messenger()->addError($this->t('There is a previous version that has the same content.'), ['@elements' => $this->plural_class_name]);
-            return false;
-
-        // CENARIO #2: CHECK IF THERE ARE ANY OTHER DETECTOR WITH SAME CONTENT ALREADY IN REP, must have a new end-point for that
-        }
-        // elseif ($result->wasDerivedFrom === NULL) {
-        //   $response = $api->listByKeywordAndLanguage($this->element_type, $result->label, $result->hasLanguage, 99999, 0);
-        //   $json_string = (string) $response;
-
-        //   $decoded_response = json_decode($json_string, true);
-
-        //   if (is_array($decoded_response)) {
-        //     $count = count($decoded_response['body']);
-        //     if ($count > 1) {
-        //       \Drupal::messenger()->addError($this->t('There is already a @element with the same content in the Repository.', ['@element' => $this->single_class_name]));
-        //       return false;
-        //     }
-        //   }
-        // }
-
-        //MAIN BODY DETECTOR
-        $detectorJson = '{'.
-          '"uri":"'.$result->uri.'",'.
-          '"typeUri":"'.$result->typeUri.'",'.
-          '"hascoTypeUri":"'.VSTOI::DETECTOR.'",'.
-          '"hasDetectorStem":"'.$result->hasDetectorStem.'",'.
-          '"hasCodebook":"'.$result->hasCodebook.'",'.
-          '"hasContent":"'.$result->hasContent.'",'.
-          '"hasSIRManagerEmail":"'.$result->hasSIRManagerEmail.'",'.
-          '"label":"'.$result->label.'",'.
-          '"hasVersion":"'.$result->hasVersion.'",'.
-          '"isAttributeOf":"'.$result->isAttributeOf.'",'.
-          '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.
-          '"hasReviewNote":"'.$result->hasReviewNote.'",'.
-          '"hasEditorEmail":"'.$result->hasEditorEmail.'",'.
-          '"hasStatus":"'.VSTOI::UNDER_REVIEW.'"'.
-        '}';
-
-        // UPDATE BY DELETING AND CREATING
-        $api->detectorDel($result->uri);
-        $api->detectorAdd($detectorJson);
-
-      } elseif ($this->element_type == 'detectorstem') {
-        // CENARIO #1: CHECK IF IT HAS wasDerivedFrom property, means it is a derived element
-        if ($result->wasDerivedFrom !== NULL
-            && $this->checkDerivedElements($uri, $this->element_type)) {
-            \Drupal::messenger()->addError($this->t('There is a previous version that has the same content.'), ['@elements' => $this->plural_class_name]);
-            return false;
-
-        // CENARIO #2: CHECK IF THERE ARE ANY OTHER DETECTOR WITH SAME CONTENT ALREADY IN REP, must have a new end-point for that
-        }
-        elseif ($result->wasDerivedFrom === NULL) {
-          $response = $api->listByKeywordAndLanguage($this->element_type, $result->hasContent, $result->hasLanguage, 99999, 0);
-          $json_string = (string) $response;
-
-          $decoded_response = json_decode($json_string, true);
-
-          if (is_array($decoded_response)) {
-            $count = count($decoded_response['body']);
-            if ($count > 1) {
-              \Drupal::messenger()->addError($this->t('There is already a @element with the same content in the Repository.', ['@element' => $this->single_class_name]));
-              return false;
+          // ADD SLOTS
+          if (!empty($reponse->codebookSlots)){
+            $codebookJSON .= '"codebookSlots":[';
+            $slot_list = $api->codebookSlotList($uri);
+            $obj = json_decode($slot_list);
+            $slots = [];
+            if ($obj->isSuccessful) {
+              $slots = $obj->body;
             }
+            foreach ($slots as $slot) {
+              $codebookJSON .= '{'.
+                '"uri": "'.$slot->uri.'",'.
+                '"typeUri": "'.$slot->typeUri.'",'.
+                '"hascoTypeUri": "'.$slot->hascoTypeUri.'",'.
+                '"label": "'.$slot->label.'",'.
+                '"comment": "'.$slot->comment.'",'.
+                '"hasResponseOption": "'.$slot->hasResponseOption.'",'.
+                '"hasPriority": "'.$slot->hasPriority.'",'.
+                '"responseOption": {'.
+                  '"uri": "'.$slot->responseOption->uri.'",'.
+                  '"typeUri": "'.$slot->responseOption->typeUri.'",'.
+                  '"hascoTypeUri": "'.$slot->responseOption->hascoTypeUri.'",'.
+                  '"label": "'.$slot->responseOption->label.'",'.
+                  '"comment": "'.$slot->responseOption->comment.'",'.
+                  '"hasStatus": "'.($slot->responseOption->hasStatus === VSTOI::DRAFT ? VSTOI::UNDER_REVIEW : $slot->responseOption->hasStatus).'",'.
+                  '"hasContent": "'.$slot->responseOption->hasContent.'",'.
+                  '"hasLanguage": "'.$slot->responseOption->hasLanguage.'",'.
+                  '"hasVersion": "'.$slot->responseOption->hasVersion.'",'.
+                  '"wasDerivedFrom": "'.($slot->responseOption->wasDerivedFrom ?? NULL).'",'.
+                  '"hasSIRManagerEmail": "'.$slot->responseOption->hasSIRManagerEmail.'",'.
+                  '"hasEditorEmail": "'.($slot->responseOption->hasEditorEmail ?? NULL).'",'.
+                  '"typeLabel": "'.$slot->responseOption->typeLabel.'",'.
+                  '"hascoTypeLabel": "'.$slot->responseOption->hascoTypeLabel.'"'.
+                  '"hasWebDocument": "'. $slot->responseOption->hasWebDocument .'",'.
+                '},'.
+                '"typeLabel": "'.$slot->typeLabel.'",'.
+                '"hascoTypeLabel": "'.$slot->hascoTypeLabel.'"'.
+                '}';
+              $codebookJSON .= $slot->hasPriority < sizeof($slots) ? ',' : '';
+            }
+            $codebookJSON .= '],';
           }
-        }
 
-        $detectorStemJson = '{"uri":"'.$result->uri.'",'.
-        '"superUri":"'.$result->superUri.'",'.
-        '"label":"'.$result->label.'",'.
-        '"hascoTypeUri":"'.VSTOI::DETECTOR_STEM.'",'.
-        '"hasStatus":"'.VSTOI::UNDER_REVIEW.'",'.
-        '"hasContent":"'.$result->hasContent.'",'.
-        '"hasLanguage":"'.$result->hasLanguage.'",'.
-        '"hasVersion":"'.$result->hasVersion.'",'.
-        '"comment":"'.$result->comment.'",'.
-        '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.
-        '"wasGeneratedBy":"'.$result->wasGeneratedBy.'",'.
-        '"hasReviewNote":"'.$result->hasReviewNote.'",'.
-        '"hasEditorEmail":"'.$result->hasEditorEmail.'",'.
-        '"hasSIRManagerEmail":"'.$result->hasSIRManagerEmail.'"}';
+          // CLOSE JSON CODEBOOK
+          $codebookJSON .= '"uriNamespace": "'.$result->uriNamespace.'",'.
+          '"typeLabel": "'.$result->typeLabel.'",'.
+          '"hascoTypeLabel": "'.$result->hascoTypeLabel.'",'.
+          '"typeNamespace": "'.$result->typeNamespace.'"'.
+          '}';
+
+          // UPDATE BY DELETING AND CREATING
+          $api = \Drupal::service('rep.api_connector');
+          dpm($codebookJSON);
+          // $api->codebookDel($uri);
+          // $api->codebookAdd($codebookJSON);
 
         // UPDATE BY DELETING AND CREATING
         $api = \Drupal::service('rep.api_connector');
@@ -1663,10 +1748,14 @@ class SIRSelectForm extends FormBase {
     $url->setRouteParameter('sourceprocessstemuri', base64_encode($uri));
     $form_state->setRedirectUrl($url);
   }
+
+  /**
+   * Checks for previous chain elements that are equal to current.
+   */
   public static function checkDerivedElements($uri, $elementType) {
     $api = \Drupal::service('rep.api_connector');
 
-    // Obtém o elemento atual
+    // Get current element
     $rawresponse = $api->getUri($uri);
     $obj = json_decode($rawresponse);
 
