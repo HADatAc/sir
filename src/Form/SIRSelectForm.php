@@ -18,6 +18,7 @@ use Drupal\sir\Entity\ResponseOption;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Drupal\Core\Render\Markup;
 use Drupal\rep\Vocabulary\VSTOI;
+use Drupal\rep\Entity\Tables;
 
 class SIRSelectForm extends FormBase {
 
@@ -151,7 +152,24 @@ class SIRSelectForm extends FormBase {
 
     // Common buttons (only in table view)
     if ($view_type == 'table') {
-      $form['add_element'] = [
+
+      $form['actions_wrapper'] = [
+        '#type' => 'container',
+        '#attributes' => [
+            'class' => ['d-flex', 'align-items-center', 'justify-content-between', 'mb-0'],
+            'style' => 'margin-bottom:0!important;'
+        ],
+      ];
+
+      $form['actions_wrapper']['buttons_container'] = [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['d-flex', 'gap-2']],
+      ];
+
+      $status_filter = $form_state->getValue('status_filter') ?? 'all';
+      $language_filter = $form_state->getValue('language_filter') ?? 'all';
+
+      $form['actions_wrapper']['buttons_container']['add_element'] = [
         '#type' => 'submit',
         '#value' => $this->t('Add New ' . $this->single_class_name),
         '#name' => 'add_element',
@@ -160,7 +178,7 @@ class SIRSelectForm extends FormBase {
         ],
       ];
       if ($this->element_type == 'detectorstem') {
-        $form['derive_detectorstem'] = [
+        $form['actions_wrapper']['buttons_container']['derive_detectorstem'] = [
           '#type' => 'submit',
           '#value' => $this->t('Derive New ' . $this->single_class_name . ' from Selected'),
           '#name' => 'derive_detectorstem',
@@ -170,7 +188,7 @@ class SIRSelectForm extends FormBase {
         ];
       }
       if ($this->element_type == 'processstem') {
-        $form['derive_processstem'] = [
+        $form['actions_wrapper']['buttons_container']['derive_processstem'] = [
           '#type' => 'submit',
           '#value' => $this->t('Derive New ' . $this->single_class_name . ' from Selected'),
           '#name' => 'derive_processstem',
@@ -179,7 +197,7 @@ class SIRSelectForm extends FormBase {
           ],
         ];
       }
-      $form['edit_selected_element'] = [
+      $form['actions_wrapper']['buttons_container']['edit_selected_element'] = [
         '#type' => 'submit',
         '#value' => $this->t('Edit Selected'),
         '#name' => 'edit_element',
@@ -187,7 +205,7 @@ class SIRSelectForm extends FormBase {
           'class' => ['btn', 'btn-primary', 'edit-element-button'],
         ],
       ];
-      $form['delete_selected_element'] = [
+      $form['actions_wrapper']['buttons_container']['delete_selected_element'] = [
         '#type' => 'submit',
         '#value' => $this->t('Delete Selected'),
         '#name' => 'delete_element',
@@ -197,12 +215,12 @@ class SIRSelectForm extends FormBase {
         ],
       ];
       if ($this->element_type !== 'instrument' && $this->element_type !== 'codebook') {
-        $form['review_selected_element'] = [
+        $form['actions_wrapper']['buttons_container']['review_selected_element'] = [
           '#type' => 'submit',
-          '#value' => $this->t('Send to Reviewer'),
+          '#value' => $this->t('Send for Review'),
           '#name' => 'review_element',
           '#attributes' => [
-            'onclick' => 'if(!confirm("Are you sure to submit for Review selected entry?")){return false;}',
+            'onclick' => 'if(!confirm("Are you sure you want to submit for Review selected entry?")){return false;}',
             'class' => ['btn', 'btn-primary', 'review-element-button'],
             'disabled' => 'disabled',
             'id' => 'review-selected-button',
@@ -211,19 +229,21 @@ class SIRSelectForm extends FormBase {
       }
 
       if ($this->element_type == 'instrument' || $this->element_type == 'codebook') {
-        $form['review_recursive_selected_element'] = [
+        $form['actions_wrapper']['buttons_container']['review_selected_element'] = [
           '#type' => 'submit',
-          '#value' => $this->t('Send Reviewer'),
+          '#value' => $this->t('Send for Review'),
           '#name' => 'review_recursive_element',
           '#attributes' => [
             'onclick' => 'if(!confirm("Are you sure you want to submit for Review selected entry?")){return false;}',
             'class' => ['btn', 'btn-primary', 'review-element-button'],
+            'disabled' => 'disabled',
+            'id' => 'review-selected-button',
           ],
         ];
       }
 
       if ($this->element_type === 'instrument') {
-        $form['generate_ins_select_element'] = [
+        $form['actions_wrapper']['buttons_container']['generate_ins_select_element'] = [
           '#type' => 'submit',
           '#value' => $this->t('Generate INS'),
           '#name' => 'generate_ins_element',
@@ -232,7 +252,7 @@ class SIRSelectForm extends FormBase {
             'class' => ['btn', 'btn-primary', 'generate-ins-element-button'],
           ],
         ];
-        $form['manage_slotelements'] = [
+        $form['actions_wrapper']['buttons_container']['manage_slotelements'] = [
           '#type' => 'submit',
           '#value' => $this->t('Manage Structure of Selected'),
           '#name' => 'manage_slotelements',
@@ -242,18 +262,79 @@ class SIRSelectForm extends FormBase {
         ];
       }
       if ($this->element_type == 'codebook') {
-        $form['manage_codebookslots'] = [
+        $form['actions_wrapper']['buttons_container']['manage_codebookslots'] = [
           '#type' => 'submit',
           '#value' => $this->t('Manage Response Option Slots of Selected Codebook'),
           '#name' => 'manage_codebookslots',
           '#attributes' => [
             'class' => ['btn', 'btn-primary', 'manage_codebookslots-button'],
+            'id' => 'manage-codebookslots-button'
           ],
         ];
       }
+
+      $status_options = [
+        'all' => $this->t('All Status'),
+        'draft' => $this->t('Draft'),
+        'underreview' => $this->t('Under Review'),
+        'current' => $this->t('Current'),
+        'deprecated' => $this->t('Deprecated'),
+      ];
+
+      $form['actions_wrapper']['filter_container'] = [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['d-flex', 'ms-auto', 'mb-0'],
+          'style' => 'margin-bottom:0!important;'
+        ],
+      ];
+
+      $form['actions_wrapper']['filter_container']['filter_label'] = [
+        '#type' => 'label',
+        '#title' => $this->t('Filter(s): '),
+        '#attributes' => [
+          'class' => ['pt-3', 'me-2', 'fw-bold'],
+        ]
+      ];
+
+      $tables = new Tables;
+      $languages = $tables->getLanguages();
+      $languages = ['all' => $this->t('All Languages')] + $languages;
+      $form['actions_wrapper']['filter_container']['language_filter'] = [
+        '#type' => 'select',
+        '#options' => $languages,
+        '#default_value' => $language_filter,
+        '#ajax' => [
+            'callback' => '::ajaxReloadTable',
+            'wrapper' => 'element-table-wrapper',
+            'event' => 'change',
+        ],
+        '#attributes' => [
+            'class' => ['form-select', 'w-auto', 'mt-2', 'me-1'],
+            'style' => 'margin-bottom:0!important;float:right;'
+            // 'style' => 'float:right;margin-top:10px!important;'
+        ],
+      ];
+
+      $form['actions_wrapper']['filter_container']['status_filter'] = [
+          '#type' => 'select',
+          '#options' => $status_options,
+          '#default_value' => $status_filter,
+          '#ajax' => [
+              'callback' => '::ajaxReloadTable',
+              'wrapper' => 'element-table-wrapper',
+              'event' => 'change',
+          ],
+          '#attributes' => [
+              'class' => ['form-select', 'w-auto', 'mt-2'],
+              'style' => 'margin-bottom:0!important;float:right;'
+              // 'style' => 'float:right;margin-top:10px!important;'
+          ],
+      ];
+
     } else {
       // In card view, add 'Add New' button at the top
-      $form['add_element'] = [
+      $form['actions_wrapper']['buttons_container']['add_element'] = [
         '#type' => 'submit',
         '#value' => $this->t('Add New ' . $this->single_class_name),
         '#name' => 'add_element',
@@ -367,124 +448,214 @@ class SIRSelectForm extends FormBase {
   /**
    * Build the table view.
    */
+  // protected function buildTableView(array &$form, FormStateInterface $form_state, $page, $pagesize) {
+  //   // GET TOTAL NUMBER OF PAGES
+  //   if (gettype($this->list_size) == 'string') {
+  //     $total_pages = "0";
+  //   } else {
+  //     if ($this->list_size % $pagesize == 0) {
+  //       $total_pages = $this->list_size / $pagesize;
+  //     } else {
+  //       $total_pages = floor($this->list_size / $pagesize) + 1;
+  //     }
+  //   }
+
+  //   // CREATE LINK FOR NEXT PAGE AND PREVIOUS PAGE
+  //   if ($page < $total_pages) {
+  //     $next_page = $page + 1;
+  //     $next_page_link = ListManagerEmailPage::link($this->element_type, $next_page, $pagesize);
+  //   } else {
+  //     $next_page_link = '';
+  //   }
+  //   if ($page > 1) {
+  //     $previous_page = $page - 1;
+  //     $previous_page_link = ListManagerEmailPage::link($this->element_type, $previous_page, $pagesize);
+  //   } else {
+  //     $previous_page_link = '';
+  //   }
+
+  //   // RETRIEVE ELEMENTS FOR THE CURRENT PAGE
+  //   $this->setList(ListManagerEmailPage::exec($this->element_type, $this->manager_email, $page, $pagesize));
+
+  //   // dpm($this->getList());
+
+  //   // Generate header and output
+  //   $header = $this->generateHeader();
+  //   //$output = $this->generateOutput();
+
+  //   $results = $this->generateOutput();
+
+  //   $output = $results['output'];
+  //   $disabled_rows = $results['disabled_rows'];
+
+  //   // Criar tabela personalizada
+  //   $form['element_table'] = [
+  //     '#type' => 'table',
+  //     //'#type' => 'tableselect',
+  //     '#header' => array_merge(
+  //       ['select' => ''],
+  //       $header
+  //     ),
+  //     '#empty' => $this->t('No ' . $this->plural_class_name . ' found'),
+  //     '#attributes' => [
+  //       'class' => ['table', 'table-striped'],
+  //     ],
+  //     '#js_select' => FALSE,
+  //   ];
+
+  //   // OLD METHOS TO CREATE TABLES
+  //   // $form['element_table'] = [
+  //   //   '#type' => 'tableselect',
+  //   //   '#header' => $header,
+  //   //   '#options' => $output,
+  //   //   '#js_select' => FALSE,
+  //   //   '#empty' => $this->t('No ' . $this->plural_class_name . ' found'),
+  //   // ];
+
+  //   // ADD lines to table
+  //   foreach ($output as $key => $row) {
+  //       //$is_disabled = isset($disabled_rows[$key]);
+
+  //       // ADD checkbox's to row
+  //       $checkbox = [
+  //           '#type' => 'checkbox',
+  //           '#title' => $this->t('Select'),
+  //           '#title_display' => 'invisible',
+  //           '#return_value' => $key,
+  //           '#attributes' => [
+  //               'class' => ['element-select-checkbox checkbox-status-'. strtolower($row['element_hasStatus'])],
+  //           ],
+  //       ];
+
+  //       // Assemble row
+  //       // $form['element_table'][$key]['select'] = $is_disabled ? [
+  //       //     '#markup' => '',  // Célula vazia para linhas desativadas
+  //       // ] : $checkbox;
+  //       $form['element_table'][$key]['select'] = $checkbox;
+
+  //       // Next Columns
+  //       foreach ($row as $field_key => $field_value) {
+  //           if ($field_key !== 'element_hasStatus') {
+  //               $form['element_table'][$key][$field_key] = [
+  //                   '#markup' => $field_value,
+  //               ];
+  //           }
+  //       }
+
+  //       // Add classes to disabled rows
+  //       // if ($is_disabled) {
+  //       //     $form['element_table'][$key]['#attributes']['class'][] = 'disabled-row';
+  //       // }
+  //   }
+
+  //   // Add custom CSS
+  //   $form['#attached']['library'][] = 'sir/sir_js_css';
+
+  //   // Pager
+  //   $form['pager'] = [
+  //     '#theme' => 'list-page',
+  //     '#items' => [
+  //       'page' => strval($page),
+  //       'first' => ListManagerEmailPage::link($this->element_type, 1, $pagesize),
+  //       'last' => ListManagerEmailPage::link($this->element_type, $total_pages, $pagesize),
+  //       'previous' => $previous_page_link,
+  //       'next' => $next_page_link,
+  //       'last_page' => strval($total_pages),
+  //       'links' => null,
+  //       'title' => ' ',
+  //     ],
+  //   ];
+  // }
   protected function buildTableView(array &$form, FormStateInterface $form_state, $page, $pagesize) {
-    // GET TOTAL NUMBER OF PAGES
-    if (gettype($this->list_size) == 'string') {
-      $total_pages = "0";
-    } else {
-      if ($this->list_size % $pagesize == 0) {
-        $total_pages = $this->list_size / $pagesize;
-      } else {
-        $total_pages = floor($this->list_size / $pagesize) + 1;
-      }
-    }
+    // Recuperar o status filtrado
+    $status_filter = $form_state->getValue('status_filter') ?? 'all';
+    $language_filter = $form_state->getValue('language_filter') ?? 'all';
 
-    // CREATE LINK FOR NEXT PAGE AND PREVIOUS PAGE
-    if ($page < $total_pages) {
-      $next_page = $page + 1;
-      $next_page_link = ListManagerEmailPage::link($this->element_type, $next_page, $pagesize);
-    } else {
-      $next_page_link = '';
-    }
-    if ($page > 1) {
-      $previous_page = $page - 1;
-      $previous_page_link = ListManagerEmailPage::link($this->element_type, $previous_page, $pagesize);
-    } else {
-      $previous_page_link = '';
-    }
-
-    // RETRIEVE ELEMENTS FOR THE CURRENT PAGE
+    // Get elements based on status
     $this->setList(ListManagerEmailPage::exec($this->element_type, $this->manager_email, $page, $pagesize));
 
-    // dpm($this->getList());
-
-    // Generate header and output
     $header = $this->generateHeader();
-    //$output = $this->generateOutput();
-
     $results = $this->generateOutput();
 
     $output = $results['output'];
-    $disabled_rows = $results['disabled_rows'];
 
-    // Criar tabela personalizada
-    $form['element_table'] = [
-      '#type' => 'table',
-      //'#type' => 'tableselect',
-      '#header' => array_merge(
-        ['select' => ''],
-        $header
-      ),
-      '#empty' => $this->t('No ' . $this->plural_class_name . ' found'),
-      '#attributes' => [
-        'class' => ['table', 'table-striped'],
-      ],
-      '#js_select' => FALSE,
+    $form['element_table_wrapper'] = [
+        '#type' => 'container',
+        '#attributes' => ['id' => 'element-table-wrapper'],
     ];
 
-    // OLD METHOS TO CREATE TABLES
-    // $form['element_table'] = [
-    //   '#type' => 'tableselect',
-    //   '#header' => $header,
-    //   '#options' => $output,
-    //   '#js_select' => FALSE,
-    //   '#empty' => $this->t('No ' . $this->plural_class_name . ' found'),
-    // ];
+    $form['element_table_wrapper']['element_table'] = [
+        '#type' => 'table',
+        '#header' => array_merge(['select' => ''], $header),
+        '#empty' => $this->t('No ' . $this->plural_class_name . ' found'),
+        '#attributes' => ['class' => ['table', 'table-striped']],
+        '#js_select' => FALSE,
+    ];
 
-    // ADD lines to table
     foreach ($output as $key => $row) {
-        //$is_disabled = isset($disabled_rows[$key]);
+        $row_status = strtolower($row['element_hasStatus']);
+        $row_language = strtolower($row['element_hasLanguage']);
 
-        // ADD checkbox's to row
+        if ($status_filter !== 'all' && $row_status !== $status_filter) {
+            continue;
+        }
+
+        if ($language_filter !== 'all' && $row_language !== $language_filter) {
+          continue;
+        }
+
+        // Checkbox for Selection
         $checkbox = [
             '#type' => 'checkbox',
             '#title' => $this->t('Select'),
             '#title_display' => 'invisible',
             '#return_value' => $key,
             '#attributes' => [
-                'class' => ['element-select-checkbox checkbox-status-'. strtolower($row['element_hasStatus'])],
+                'class' => ['element-select-checkbox', 'checkbox-status-' . $row_status],
             ],
         ];
 
-        // Assemble row
-        // $form['element_table'][$key]['select'] = $is_disabled ? [
-        //     '#markup' => '',  // Célula vazia para linhas desativadas
-        // ] : $checkbox;
-        $form['element_table'][$key]['select'] = $checkbox;
+        // Create Table Row
+        $form['element_table_wrapper']['element_table'][$key]['select'] = $checkbox;
 
-        // Next Columns
+        //Hide Colums
         foreach ($row as $field_key => $field_value) {
-            if ($field_key !== 'element_hasStatus') {
-                $form['element_table'][$key][$field_key] = [
-                    '#markup' => $field_value,
-                ];
+            if (
+                $field_key !== 'element_hasStatus' &&
+                $field_key !== 'element_hasLanguage'
+            ) {
+              $form['element_table_wrapper']['element_table'][$key][$field_key] = [
+                  '#markup' => $field_value,
+              ];
             }
         }
-
-        // Add classes to disabled rows
-        // if ($is_disabled) {
-        //     $form['element_table'][$key]['#attributes']['class'][] = 'disabled-row';
-        // }
     }
 
-    // Add custom CSS
-    $form['#attached']['library'][] = 'sir/sir_js_css';
-
-    // Pager
-    $form['pager'] = [
-      '#theme' => 'list-page',
-      '#items' => [
-        'page' => strval($page),
-        'first' => ListManagerEmailPage::link($this->element_type, 1, $pagesize),
-        'last' => ListManagerEmailPage::link($this->element_type, $total_pages, $pagesize),
-        'previous' => $previous_page_link,
-        'next' => $next_page_link,
-        'last_page' => strval($total_pages),
-        'links' => null,
-        'title' => ' ',
-      ],
+    // Adicionar paginação
+    $form['element_table_wrapper']['pager'] = [
+        '#theme' => 'list-page',
+        '#items' => [
+            'page' => strval($page),
+            'first' => ListManagerEmailPage::link($this->element_type, 1, $pagesize),
+            'last' => ListManagerEmailPage::link($this->element_type, ceil($this->list_size / $pagesize), $pagesize),
+            'previous' => ($page > 1) ? ListManagerEmailPage::link($this->element_type, $page - 1, $pagesize) : '',
+            'next' => ($page < ceil($this->list_size / $pagesize)) ? ListManagerEmailPage::link($this->element_type, $page + 1, $pagesize) : '',
+            'last_page' => strval(ceil($this->list_size / $pagesize)),
+            'links' => null,
+            'title' => ' ',
+        ],
     ];
+
+    return $form;
   }
+
+  /**
+   * Callback AJAX para recarregar a tabela quando um filtro for aplicado.
+   */
+  public function ajaxReloadTable(array &$form, FormStateInterface $form_state) {
+      return $form['element_table_wrapper'];
+  }
+
 
   /**
    * Build the card view.
@@ -1049,10 +1220,10 @@ class SIRSelectForm extends FormBase {
 
     // $selected_rows = array_filter($form_state->getValue('element_table'));
     $element_table = $form_state->getValue('element_table');
-    // Filtra as linhas onde o valor de 'select' não é igual a zero
+
     if ($element_table !== "" && $element_table !== NULL) {
       $selected_rows = array_filter($element_table, function($item) {
-          return isset($item['select']) && $item['select'] !== 0; // Verifica se 'select' existe e não é igual a zero
+          return isset($item['select']) && $item['select'] !== 0;
       });
     }
 
@@ -1278,6 +1449,7 @@ class SIRSelectForm extends FormBase {
    */
   protected function performReview(array $uris, FormStateInterface $form_state) {
 
+    dpm($this->element_type);
     $api = \Drupal::service('rep.api_connector');
     $useremail = \Drupal::currentUser()->getEmail();
 
@@ -1347,13 +1519,13 @@ class SIRSelectForm extends FormBase {
 
       } elseif ($this->element_type == 'codebook') {
 
-        // CENARIO #1: CHECK IF IT HAS wasDerivedFrom property, means it is a derived element
+        // CENARIO #1: CHECK IF IT HAS wasDerivedFrom property, means it is a derived element, checks chain for previous equal versions
         if ($result->wasDerivedFrom !== NULL
-            && self::checkDerivedElements($uri, $this->element_type) === false) {
+            && self::checkDerivedElements($uri, $this->element_type)) {
             \Drupal::messenger()->addError($this->t('There is a previous version that has the same content.'), ['@elements' => $this->plural_class_name]);
             return false;
 
-        // CENARIO #2: CHECK IF THERE ARE ANY ONER Codebook WITH SAME CONTENT ALREADY IN REP
+        // CENARIO #2: CHECK IF THERE ARE ANY OTHER Codebook WITH SAME CONTENT ALREADY IN REP
         } elseif ($result->wasDerivedFrom === NULL) {
 
           //$response = $api->listSizeByKeywordAndLanguage($this->element_type, $result->hasContent, $result->hasLanguage);
@@ -1378,44 +1550,46 @@ class SIRSelectForm extends FormBase {
           '"hasSIRManagerEmail":"'.$useremail.'",';
 
           // ADD SLOTS
-          $codebookJSON .= '"codebookSlots":[';
-          $slot_list = $api->codebookSlotList($uri);
-          $obj = json_decode($slot_list);
-          $slots = [];
-          if ($obj->isSuccessful) {
-            $slots = $obj->body;
+          if (!empty($reponse->codebookSlots)){
+            $codebookJSON .= '"codebookSlots":[';
+            $slot_list = $api->codebookSlotList($uri);
+            $obj = json_decode($slot_list);
+            $slots = [];
+            if ($obj->isSuccessful) {
+              $slots = $obj->body;
+            }
+            foreach ($slots as $slot) {
+              $codebookJSON .= '{'.
+                '"uri": "'.$slot->uri.'",'.
+                '"typeUri": "'.$slot->typeUri.'",'.
+                '"hascoTypeUri": "'.$slot->hascoTypeUri.'",'.
+                '"label": "'.$slot->label.'",'.
+                '"comment": "'.$slot->comment.'",'.
+                '"hasResponseOption": "'.$slot->hasResponseOption.'",'.
+                '"hasPriority": "'.$slot->hasPriority.'",'.
+                '"responseOption": {'.
+                  '"uri": "'.$slot->responseOption->uri.'",'.
+                  '"typeUri": "'.$slot->responseOption->typeUri.'",'.
+                  '"hascoTypeUri": "'.$slot->responseOption->hascoTypeUri.'",'.
+                  '"label": "'.$slot->responseOption->label.'",'.
+                  '"comment": "'.$slot->responseOption->comment.'",'.
+                  '"hasStatus": "'.($slot->responseOption->hasStatus === VSTOI::DRAFT ? VSTOI::UNDER_REVIEW : $slot->responseOption->hasStatus).'",'.
+                  '"hasContent": "'.$slot->responseOption->hasContent.'",'.
+                  '"hasLanguage": "'.$slot->responseOption->hasLanguage.'",'.
+                  '"hasVersion": "'.$slot->responseOption->hasVersion.'",'.
+                  '"wasDerivedFrom": "'.($slot->responseOption->wasDerivedFrom ?? NULL).'",'.
+                  '"hasSIRManagerEmail": "'.$slot->responseOption->hasSIRManagerEmail.'",'.
+                  '"hasEditorEmail": "'.($slot->responseOption->hasEditorEmail ?? NULL).'",'.
+                  '"typeLabel": "'.$slot->responseOption->typeLabel.'",'.
+                  '"hascoTypeLabel": "'.$slot->responseOption->hascoTypeLabel.'"'.
+                '},'.
+                '"typeLabel": "'.$slot->typeLabel.'",'.
+                '"hascoTypeLabel": "'.$slot->hascoTypeLabel.'"'.
+                '}';
+              $codebookJSON .= $slot->hasPriority < sizeof($slots) ? ',' : '';
+            }
+            $codebookJSON .= '],';
           }
-          foreach ($slots as $slot) {
-            $codebookJSON .= '{'.
-              '"uri": "'.$slot->uri.'",'.
-              '"typeUri": "'.$slot->typeUri.'",'.
-              '"hascoTypeUri": "'.$slot->hascoTypeUri.'",'.
-              '"label": "'.$slot->label.'",'.
-              '"comment": "'.$slot->comment.'",'.
-              '"hasResponseOption": "'.$slot->hasResponseOption.'",'.
-              '"hasPriority": "'.$slot->hasPriority.'",'.
-              '"responseOption": {'.
-                '"uri": "'.$slot->responseOption->uri.'",'.
-                '"typeUri": "'.$slot->responseOption->typeUri.'",'.
-                '"hascoTypeUri": "'.$slot->responseOption->hascoTypeUri.'",'.
-                '"label": "'.$slot->responseOption->label.'",'.
-                '"comment": "'.$slot->responseOption->comment.'",'.
-                '"hasStatus": "'.($slot->responseOption->hasStatus === VSTOI::DRAFT ? VSTOI::UNDER_REVIEW : $slot->responseOption->hasStatus).'",'.
-                '"hasContent": "'.$slot->responseOption->hasContent.'",'.
-                '"hasLanguage": "'.$slot->responseOption->hasLanguage.'",'.
-                '"hasVersion": "'.$slot->responseOption->hasVersion.'",'.
-                '"wasDerivedFrom": "'.($slot->responseOption->wasDerivedFrom ?? NULL).'",'.
-                '"hasSIRManagerEmail": "'.$slot->responseOption->hasSIRManagerEmail.'",'.
-                '"hasEditorEmail": "'.($slot->responseOption->hasEditorEmail ?? NULL).'",'.
-                '"typeLabel": "'.$slot->responseOption->typeLabel.'",'.
-                '"hascoTypeLabel": "'.$slot->responseOption->hascoTypeLabel.'"'.
-              '},'.
-              '"typeLabel": "'.$slot->typeLabel.'",'.
-              '"hascoTypeLabel": "'.$slot->hascoTypeLabel.'"'.
-              '}';
-            $codebookJSON .= $slot->hasPriority < sizeof($slots) ? ',' : '';
-          }
-          $codebookJSON .= '],';
 
           // CLOSE JSON CODEBOOK
           $codebookJSON .= '"uriNamespace": "'.$result->uriNamespace.'",'.
@@ -1426,7 +1600,7 @@ class SIRSelectForm extends FormBase {
 
           // UPDATE BY DELETING AND CREATING
           $api = \Drupal::service('rep.api_connector');
-          // dpm($codebookJSON);
+          dpm($codebookJSON);
           // $api->codebookDel($uri);
           // $api->codebookAdd($codebookJSON);
 
@@ -1550,90 +1724,66 @@ class SIRSelectForm extends FormBase {
     $form_state->setRedirectUrl($url);
   }
 
-  // public static function checkDerivedElements($uri, $elementType) {
-  //   $api = \Drupal::service('rep.api_connector');
-  //   $rawresponse = $api->getUri($uri);
-  //   $obj = json_decode($rawresponse);
-  //   $result = $obj->body;
-
-  //   $tmpStatus = true;
-
-  //   // Verifica se o elemento atual está em estado de rascunho e se foi derivado de outro
-  //   $oldElement = $api->getUri($result->wasDerivedFrom);
-  //   $oldObj = json_decode($oldElement);
-  //   $oldResult = $oldObj->body;
-
-  //   // Verifica se o conteúdo, idioma ou comentário são iguais
-  //   switch ($elementType) {
-  //     default:
-  //     case 'responseoption':
-  //       if (($oldResult->hasContent === $result->hasContent &&
-  //           $oldResult->hasLanguage === $result->hasLanguage &&
-  //           $oldResult->comment === $result->comment)
-  //       ) {
-  //         $tmpStatus = FALSE;
-  //       }
-  //       break;
-  //   }
-
-  //   // OUTPUT
-  //   if ($tmpStatus === FALSE) {
-  //       return false;
-  //   } else {
-  //     if ($result->wasDerivedFrom !== NULL) {
-  //       return self::checkDerivedElements($result->wasDerivedFrom, $elementType);
-  //     } else {
-  //       return true;
-  //     }
-  //   }
-
-  // }
+  /**
+   * Checks for previous chain elements that are equal to current.
+   */
   public static function checkDerivedElements($uri, $elementType) {
     $api = \Drupal::service('rep.api_connector');
 
-    // Obtém o elemento atual
+    // Get current element
     $rawresponse = $api->getUri($uri);
     $obj = json_decode($rawresponse);
 
     if (!isset($obj->body)) {
-        return false; // Se a API não retornar um corpo válido, encerra
+        return false; // If API does not return an valid Body exits
     }
 
     $result = $obj->body;
 
-    // Se não há um elemento do qual foi derivado, retorna false
+    // If there is no derivated element returns false
     if (!isset($result->wasDerivedFrom) || empty($result->wasDerivedFrom)) {
         return false;
     }
 
-    // Obtém o elemento anterior na cadeia
+    // Gets previous chain element
     $oldElement = $api->getUri($result->wasDerivedFrom);
     $oldObj = json_decode($oldElement);
 
     if (!isset($oldObj->body)) {
-        return false; // Evita erro caso a API falhe ao buscar o elemento anterior
+        return false; // Avoids errors on API part
     }
 
     $oldResult = $oldObj->body;
 
-    // Verifica se há igualdade nos atributos conforme o tipo de elemento
+    // Check if its equal
     switch ($elementType) {
+        case 'codebook':
+          if (
+            isset($oldResult->label, $result->label,
+                  $oldResult->hasLanguage, $result->hasLanguage,
+                  $oldResult->comment, $result->comment) &&
+            $oldResult->label === $result->label &&
+            $oldResult->hasLanguage === $result->hasLanguage &&
+            $oldResult->comment === $result->comment
+        ) {
+            return true; // Found an exact equal element → returns TRUE and exit
+        }
         case 'responseoption':
         default:
-            if (
-                isset($oldResult->hasContent, $result->hasContent,
-                      $oldResult->hasLanguage, $result->hasLanguage,
-                      $oldResult->comment, $result->comment) &&
-                $oldResult->hasContent === $result->hasContent &&
-                $oldResult->hasLanguage === $result->hasLanguage &&
-                $oldResult->comment === $result->comment
-            ) {
-                return true; // Encontrou um elemento exatamente igual → retorna TRUE e encerra
-            }
-            break;
+          if (
+              isset($oldResult->hasContent, $result->hasContent,
+                    $oldResult->hasLanguage, $result->hasLanguage,
+                    $oldResult->comment, $result->comment) &&
+              $oldResult->hasContent === $result->hasContent &&
+              $oldResult->hasLanguage === $result->hasLanguage &&
+              $oldResult->comment === $result->comment
+          ) {
+              return true; // Found an exact equal element → returns TRUE and exit
+          }
+          break;
     }
 
-    // Continua verificando recursivamente os elementos derivados até o final da cadeia
+    // continues to search recursivelly on the chain
     return self::checkDerivedElements($result->wasDerivedFrom, $elementType);
   }
 
