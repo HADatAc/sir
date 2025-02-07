@@ -97,7 +97,7 @@ class ManageCodebookSlotsForm extends FormBase {
         'slot_priority' => $slot->hasPriority,
         'slot_content' => $content,
         'slot_response_option' => $responseOptionUriStr,
-        'slot_response_status' => Utils::plainStatus($responseoption->hasStatus),
+        'slot_response_status' => Utils::plainStatus($responseoption->hasStatus) ?? '',
       ];
     }
 

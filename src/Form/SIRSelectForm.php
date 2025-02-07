@@ -214,7 +214,7 @@ class SIRSelectForm extends FormBase {
           'class' => ['btn', 'btn-primary', 'delete-element-button'],
         ],
       ];
-      if ($this->element_type !== 'instrument' && $this->element_type !== 'codebook') {
+      if ($this->element_type !== 'instrument' /*&& $this->element_type !== 'codebook'*/) {
         $form['actions_wrapper']['buttons_container']['review_selected_element'] = [
           '#type' => 'submit',
           '#value' => $this->t('Send for Review'),
@@ -228,7 +228,7 @@ class SIRSelectForm extends FormBase {
         ];
       }
 
-      if ($this->element_type == 'instrument' || $this->element_type == 'codebook') {
+      if ($this->element_type == 'instrument' /*|| $this->element_type == 'codebook'*/) {
         $form['actions_wrapper']['buttons_container']['review_selected_element'] = [
           '#type' => 'submit',
           '#value' => $this->t('Send for Review'),
@@ -1449,7 +1449,6 @@ class SIRSelectForm extends FormBase {
    */
   protected function performReview(array $uris, FormStateInterface $form_state) {
 
-    dpm($this->element_type);
     $api = \Drupal::service('rep.api_connector');
     $useremail = \Drupal::currentUser()->getEmail();
 
@@ -1518,25 +1517,29 @@ class SIRSelectForm extends FormBase {
         $api->responseOptionAdd($finalObject);
 
       } elseif ($this->element_type == 'codebook') {
-
-        // CENARIO #1: CHECK IF IT HAS wasDerivedFrom property, means it is a derived element, checks chain for previous equal versions
+        // CENARIO #1: CHECK IF IT HAS wasDerivedFrom property, means it is a derived element
         if ($result->wasDerivedFrom !== NULL
-            && self::checkDerivedElements($uri, $this->element_type)) {
+            && $this->checkDerivedElements($uri, $this->element_type)) {
             \Drupal::messenger()->addError($this->t('There is a previous version that has the same content.'), ['@elements' => $this->plural_class_name]);
             return false;
 
-        // CENARIO #2: CHECK IF THERE ARE ANY OTHER Codebook WITH SAME CONTENT ALREADY IN REP
+        // CENARIO #2: CHECK IF THERE ARE ANY OTHER R.O. WITH SAME CONTENT ALREADY IN REP
         } elseif ($result->wasDerivedFrom === NULL) {
+          $response = $api->listByKeywordAndLanguage($this->element_type, $result->label, $result->hasLanguage, 99999, 0);
+          $json_string = (string) $response;
 
-          //$response = $api->listSizeByKeywordAndLanguage($this->element_type, $result->hasContent, $result->hasLanguage);
-          $response = $api->listByKeywordAndLanguage($this->element_type, $result->hasContent, $result->hasLanguage, 99999, 0);
-          if ($response > 1) {
-            \Drupal::messenger()->addError($this->t('There is already a '.$this->single_class_name.' with the same content on the Repository.'), ['@elements' => $this->plural_class_name]);
-            return false;
+          $decoded_response = json_decode($json_string, true);
+
+          if (is_array($decoded_response)) {
+            $count = count($decoded_response['body']);
+            if ($count > 1) {
+              \Drupal::messenger()->addError($this->t('There is already a @element with the same content in the Repository.', ['@element' => $this->single_class_name]));
+              return false;
+            }
           }
         }
 
-        // NO RESTRITIONS? SEND TO REVIEW
+        //MAIN BODY CODEBOOK
         $codebookJSON = '{'.
           '"uri":"'.$result->uri.'",'.
           '"typeUri":"'.VSTOI::CODEBOOK.'",'.
@@ -1547,62 +1550,16 @@ class SIRSelectForm extends FormBase {
           '"hasLanguage":"'.$result->hasLanguage.'",' .
           '"hasVersion":"'.$result->hasVersion.'",' .
           '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.
-          '"hasSIRManagerEmail":"'.$useremail.'",';
+          '"hasSIRManagerEmail":"'.$result->hasSIRManagerEmail.'",'.
+          '"hasReviewNote": "'. $result->hasReviewNote .'",'.
+          '"hasEditorEmail": "'. $useremail .'"'.
+        '}';
 
-          // ADD SLOTS
-          if (!empty($reponse->codebookSlots)){
-            $codebookJSON .= '"codebookSlots":[';
-            $slot_list = $api->codebookSlotList($uri);
-            $obj = json_decode($slot_list);
-            $slots = [];
-            if ($obj->isSuccessful) {
-              $slots = $obj->body;
-            }
-            foreach ($slots as $slot) {
-              $codebookJSON .= '{'.
-                '"uri": "'.$slot->uri.'",'.
-                '"typeUri": "'.$slot->typeUri.'",'.
-                '"hascoTypeUri": "'.$slot->hascoTypeUri.'",'.
-                '"label": "'.$slot->label.'",'.
-                '"comment": "'.$slot->comment.'",'.
-                '"hasResponseOption": "'.$slot->hasResponseOption.'",'.
-                '"hasPriority": "'.$slot->hasPriority.'",'.
-                '"responseOption": {'.
-                  '"uri": "'.$slot->responseOption->uri.'",'.
-                  '"typeUri": "'.$slot->responseOption->typeUri.'",'.
-                  '"hascoTypeUri": "'.$slot->responseOption->hascoTypeUri.'",'.
-                  '"label": "'.$slot->responseOption->label.'",'.
-                  '"comment": "'.$slot->responseOption->comment.'",'.
-                  '"hasStatus": "'.($slot->responseOption->hasStatus === VSTOI::DRAFT ? VSTOI::UNDER_REVIEW : $slot->responseOption->hasStatus).'",'.
-                  '"hasContent": "'.$slot->responseOption->hasContent.'",'.
-                  '"hasLanguage": "'.$slot->responseOption->hasLanguage.'",'.
-                  '"hasVersion": "'.$slot->responseOption->hasVersion.'",'.
-                  '"wasDerivedFrom": "'.($slot->responseOption->wasDerivedFrom ?? NULL).'",'.
-                  '"hasSIRManagerEmail": "'.$slot->responseOption->hasSIRManagerEmail.'",'.
-                  '"hasEditorEmail": "'.($slot->responseOption->hasEditorEmail ?? NULL).'",'.
-                  '"typeLabel": "'.$slot->responseOption->typeLabel.'",'.
-                  '"hascoTypeLabel": "'.$slot->responseOption->hascoTypeLabel.'"'.
-                '},'.
-                '"typeLabel": "'.$slot->typeLabel.'",'.
-                '"hascoTypeLabel": "'.$slot->hascoTypeLabel.'"'.
-                '}';
-              $codebookJSON .= $slot->hasPriority < sizeof($slots) ? ',' : '';
-            }
-            $codebookJSON .= '],';
-          }
+        // UPDATE BY DELETING AND CREATING
+        $api->codebookDel($result->uri);
+        $api->codebookAdd($codebookJSON);
 
-          // CLOSE JSON CODEBOOK
-          $codebookJSON .= '"uriNamespace": "'.$result->uriNamespace.'",'.
-          '"typeLabel": "'.$result->typeLabel.'",'.
-          '"hascoTypeLabel": "'.$result->hascoTypeLabel.'",'.
-          '"typeNamespace": "'.$result->typeNamespace.'"'.
-          '}';
 
-          // UPDATE BY DELETING AND CREATING
-          $api = \Drupal::service('rep.api_connector');
-          dpm($codebookJSON);
-          // $api->codebookDel($uri);
-          // $api->codebookAdd($codebookJSON);
 
       }
 
@@ -1643,10 +1600,10 @@ class SIRSelectForm extends FormBase {
       $obj = json_decode($rawresponse);
       $result = $obj->body;
 
+      //Case elementTypes are Instrument OR Codebook => Recursive Submit
       if ($this->element_type == 'instrument') {
 
         // UPDATE BY DELETING AND CREATING
-        $api = \Drupal::service('rep.api_connector');
         // dpm($uri);
         //dpr($responseOptionJSON);
         $resp = $api->reviewRecursive($uri);
@@ -1661,7 +1618,39 @@ class SIRSelectForm extends FormBase {
         }
         // dpm($total);
 
-      // } elseif ($this->element_type == 'annotationstem') {
+      // } elseif ($this->element_type == 'codebook') {
+
+      //   // CENARIO #1: CHECK IF IT HAS wasDerivedFrom property, means it is a derived element, checks chain for previous equal versions
+      //   if ($result->wasDerivedFrom !== NULL
+      //       && self::checkDerivedElements($uri, $this->element_type)) {
+      //       \Drupal::messenger()->addError($this->t('There is a previous version that has the same content.'), ['@elements' => $this->plural_class_name]);
+      //       return false;
+
+      //   // CENARIO #2: CHECK IF THERE ARE ANY OTHER Codebook WITH SAME CONTENT ALREADY IN REP
+      //   } elseif ($result->wasDerivedFrom === NULL) {
+
+      //     //$response = $api->listSizeByKeywordAndLanguage($this->element_type, $result->hasContent, $result->hasLanguage);
+      //     $response = $api->listByKeywordAndLanguage($this->element_type, $result->hasContent, $result->hasLanguage, 99999, 0);
+      //     if ($response > 1) {
+      //       \Drupal::messenger()->addError($this->t('There is already a '.$this->single_class_name.' with the same content on the Repository.'), ['@elements' => $this->plural_class_name]);
+      //       return false;
+      //     }
+      //   }
+
+      //   // UPDATE BY DELETING AND CREATING
+      //   // dpm($uri);
+      //   //dpr($responseOptionJSON);
+      //   $resp = $api->reviewRecursive($uri);
+      //   $total = -1;
+      //   if ($resp != null) {
+      //     $obj = json_decode($resp);
+      //     if ($obj->isSuccessful) {
+      //       $totalStr = $obj->body;
+      //       $obj2 = json_decode($totalStr);
+      //       $total = $obj2->total;
+      //     }
+      //   }
+      //   // dpm($total);
 
       }
     }
@@ -1729,7 +1718,6 @@ class SIRSelectForm extends FormBase {
    */
   public static function checkDerivedElements($uri, $elementType) {
     $api = \Drupal::service('rep.api_connector');
-
     // Get current element
     $rawresponse = $api->getUri($uri);
     $obj = json_decode($rawresponse);
