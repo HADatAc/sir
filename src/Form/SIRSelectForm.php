@@ -1459,6 +1459,35 @@ class SIRSelectForm extends FormBase {
         // CENARIO #2: CHECK IF THERE ARE ANY OTHER R.O. WITH SAME CONTENT ALREADY IN REP
         } elseif ($result->wasDerivedFrom === NULL) {
           $response = $api->listByKeywordAndLanguage($this->element_type, $result->hasContent, $result->hasLanguage, 99999, 0);
+          $json_string = (st    $api = \Drupal::service('rep.api_connector');
+    $useremail = \Drupal::currentUser()->getEmail();
+
+    // DETECT ELEMENT
+    foreach ($uris as $shortUri) {
+      $uri = Utils::plainUri($shortUri);
+
+      // GET OBJECT
+      $rawresponse = $api->getUri($uri);
+      $obj = json_decode($rawresponse);
+      $result = $obj->body;
+
+      //GLOBAL CHECKBOX STATUS
+      if ($result->hasStatus !== VSTOI::DRAFT) {
+        \Drupal::messenger()->addWarning($this->t('ATTENTION: Only draft elements can be submitted for review. Check the status of the elements and submit again. '),['@elements' => $this->plural_class_name]);
+        return false;
+      }
+
+      if ($this->element_type == 'responseoption') {
+
+        // CENARIO #1: CHECK IF IT HAS wasDerivedFrom property, means it is a derived element
+        if ($result->wasDerivedFrom !== NULL
+            && $this->checkDerivedElements($uri, $this->element_type)) {
+            \Drupal::messenger()->addError($this->t('There is a previous version that has the same content.'), ['@elements' => $this->plural_class_name]);
+            return false;
+
+        // CENARIO #2: CHECK IF THERE ARE ANY OTHER R.O. WITH SAME CONTENT ALREADY IN REP
+        } elseif ($result->wasDerivedFrom === NULL) {
+          $response = $api->listByKeywordAndLanguage($this->element_type, $result->hasContent, $result->hasLanguage, 99999, 0);
           $json_string = (string) $response;
 
           $decoded_response = json_decode($json_string, true);
@@ -1580,18 +1609,9 @@ class SIRSelectForm extends FormBase {
             $codebookJSON .= '],';
           }
 
-          // CLOSE JSON CODEBOOK
-          $codebookJSON .= '"uriNamespace": "'.$result->uriNamespace.'",'.
-          '"typeLabel": "'.$result->typeLabel.'",'.
-          '"hascoTypeLabel": "'.$result->hascoTypeLabel.'",'.
-          '"typeNamespace": "'.$result->typeNamespace.'"'.
-          '}';
-
-          // UPDATE BY DELETING AND CREATING
-          $api = \Drupal::service('rep.api_connector');
-          dpm($codebookJSON);
-          // $api->codebookDel($uri);
-          // $api->codebookAdd($codebookJSON);
+        // UPDATE BY DELETING AND CREATING
+        $api->codebookDel($result->uri);
+        $api->codebookAdd($codebookJSON);
 
         // UPDATE BY DELETING AND CREATING
         $api = \Drupal::service('rep.api_connector');
@@ -1754,59 +1774,7 @@ class SIRSelectForm extends FormBase {
    */
   public static function checkDerivedElements($uri, $elementType) {
     $api = \Drupal::service('rep.api_connector');
-
-    // Get current element
-    $rawresponse = $api->getUri($uri);
-    $obj = json_decode($rawresponse);
-
-    if (!isset($obj->body)) {
-        return false; // If API does not return an valid Body exits
-    }
-
-    $result = $obj->body;
-
-    // If there is no derivated element returns false
-    if (!isset($result->wasDerivedFrom) || empty($result->wasDerivedFrom)) {
-        return false;
-    }
-
-    // Gets previous chain element
-    $oldElement = $api->getUri($result->wasDerivedFrom);
-    $oldObj = json_decode($oldElement);
-
-    if (!isset($oldObj->body)) {
-        return false; // Avoids errors on API part
-    }
-
-    $oldResult = $oldObj->body;
-
-    // Check if its equal
-    switch ($elementType) {
-      case 'detectorstem':
-        if (
-            isset($oldResult->hasContent, $result->hasContent,
-                  $oldResult->hasLanguage, $result->hasLanguage) &&
-            $oldResult->hasContent === $result->hasContent &&
-            $oldResult->hasLanguage === $result->hasLanguage
-        ) {
-            return true; // Found an exact equal element → returns TRUE and exit
-        }
-        break;
-      case 'detector':
-        if (
-          isset($oldResult->hasDetectorStem, $result->hasDetectorStem,
-                $oldResult->hasCodebook, $result->hasCodebook,
-                $oldResult->isAttributeOf, $result->isAttributeOf) &&
-          $oldResult->hasDetectorStem === $result->hasDetectorStem &&
-          $oldResult->hasCodebook === $result->hasCodebook &&
-          $oldResult->isAttributeOf === $result->isAttributeOf
-          ) {
-            return true; // Found an exact equal element → returns TRUE and exit
-          }
-        break;
-      case 'codebook':
-        if (
-          isset($oldResult->label, $result->label,
+label,
                 $oldResult->hasLanguage, $result->hasLanguage,
                 $oldResult->comment, $result->comment) &&
           $oldResult->label === $result->label &&
