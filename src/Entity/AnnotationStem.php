@@ -77,7 +77,9 @@ class AnnotationStem {
         'element_language' => $lang,
         'element_version' => $version,
         'element_generated_by' => $derivationVal,
-        'element_status' => $status
+        'element_status' => $status,
+        'element_hasStatus' => parse_url($element->hasStatus, PHP_URL_FRAGMENT),
+        'element_hasLanguage' => $element->hasLanguage,
       ];
     }
 

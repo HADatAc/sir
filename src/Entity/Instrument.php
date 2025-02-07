@@ -89,7 +89,9 @@ class Instrument {
         'element_language' => $lang,
         // 'element_downloads' => t($totxt . ' ' . $tohtml . ' ' . $topdf . '<br>' . $tordf . ' ' . $tofhir),
         'element_downloads' => t($totxt . ' ' . $tohtml . ' ' . $tordf . ' ' . $tofhir),
-        'element_status' => $status
+        'element_status' => $status,
+        'element_hasStatus' => parse_url($element->hasStatus, PHP_URL_FRAGMENT),
+        'element_hasLanguage' => $element->hasLanguage,
       ];
     }
 
