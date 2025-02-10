@@ -262,6 +262,9 @@ class ReviewDetectorForm extends FormBase {
       //     $form_state->setErrorByName('detector_hasreviewnote', $this->t('You must enter a Reject Note'));
       //   }
       // }
+      if(strlen($form_state->getValue('detector_stem')) < 1) {
+        $form_state->setErrorByName('detector_stem', $this->t('Please enter a valid detector stem'));
+      }
     }
   }
 
