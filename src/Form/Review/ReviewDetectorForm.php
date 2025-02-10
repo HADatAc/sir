@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\sir\Form;
+namespace Drupal\sir\Form\Review;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -12,7 +12,7 @@ use Drupal\rep\Constant;
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\VSTOI;
 
-class EditDetectorForm extends FormBase {
+class ReviewDetectorForm extends FormBase {
 
   protected $detectorUri;
 
@@ -48,7 +48,7 @@ class EditDetectorForm extends FormBase {
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'edit_detector_form';
+    return 'review_detector_form';
   }
 
   /**
@@ -83,7 +83,7 @@ class EditDetectorForm extends FormBase {
       }
     }
 
-    // dpm($this->getDetector());
+    //dpm($this->getDetector());
 
     $form['detector_stem'] = [
       'top' => [
@@ -116,13 +116,14 @@ class EditDetectorForm extends FormBase {
         '#type' => 'markup',
         '#markup' => '</div>',
       ],
-      '#disabled' => FALSE
+      '#disabled' => TRUE
     ];
     $form['detector_codebook'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Codebook'),
       '#default_value' => $codebookLabel,
       '#autocomplete_route_name' => 'sir.detector_codebook_autocomplete',
+      '#disabled' => TRUE
     ];
     $form['detector_version'] = [
       '#type' => 'textfield',
@@ -130,9 +131,7 @@ class EditDetectorForm extends FormBase {
       '#default_value' =>
         ($this->getDetector()->hasStatus === VSTOI::CURRENT || $this->getDetector()->hasStatus === VSTOI::DEPRECATED) ?
         $this->getDetector()->hasVersion + 1 : $this->getDetector()->hasVersion,
-      '#attributes' => [
-        'disabled' => 'disabled',
-      ],
+      '#disabled' => TRUE
     ];
     $form['detector_isAttributeOf'] = [
       'top' => [
@@ -163,55 +162,91 @@ class EditDetectorForm extends FormBase {
         '#type' => 'markup',
         '#markup' => '</div>',
       ],
-      '#disabled' => FALSE
+      '#disabled' => TRUE
     ];
-    $form['detector_webdocument'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Web Document'),
-      '#default_value' => $this->getDetector()->hasWebDocument,
-      '#attributes' => [
-        'placeholder' => 'http://',
-      ]
-    ];
-    if ($this->getDetector()->hasReviewNote !== NULL) {
-      $form['detector_hasreviewnote'] = [
-        '#type' => 'textarea',
-        '#title' => $this->t('Review Notes'),
-        '#default_value' => $this->getDetector()->hasReviewNote,
+    if ($this->getDetector()->wasDerivedFrom !== NULL) {
+      $form['detector_df_wrapper'] = [
+        '#type' => 'container',
         '#attributes' => [
-          'disabled' => 'disabled',
-        ]
+          'class' => ['d-flex', 'align-items-center', 'w-100'], // Flex container para alinhamento correto
+          'style' => "width: 100%; gap: 10px;", // Garante espaçamento correto
+        ],
       ];
-      $form['detector_haseditoremail'] = [
+
+      $form['detector_df_wrapper']['detector_wasderivedfrom'] = [
         '#type' => 'textfield',
-        '#title' => $this->t('Reviewer Email'),
-        '#default_value' => $this->getDetector()->hasEditorEmail,
+        '#title' => $this->t('Derived From'),
+        '#default_value' => $this->getDetector()->wasDerivedFrom,
         '#attributes' => [
+          'class' => ['flex-grow-1'],
+          'style' => "width: 100%; min-width: 0;",
           'disabled' => 'disabled',
         ],
       ];
+
+      $elementUri = Utils::namespaceUri($this->getDetector()->wasDerivedFrom);
+      $elementUriEncoded = base64_encode($elementUri);
+      $url = Url::fromRoute('rep.describe_element', ['elementuri' => $elementUriEncoded], ['absolute' => TRUE])->toString();
+
+      $form['detector_df_wrapper']['detector_wasderivedfrom_button'] = [
+        '#type' => 'markup',
+        '#markup' => '<a href="' . $url . '" target="_blank" class="btn btn-success text-nowrap mt-2" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
+      ];
     }
-    $form['update_submit'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Update'),
-      '#name' => 'save',
+
+    $form['detector_owner'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Owner'),
+      '#default_value' => $this->getDetector()->hasSIRManagerEmail,
       '#attributes' => [
-        'class' => ['btn', 'btn-primary', 'save-button'],
+        'disabled' => 'disabled',
       ],
     ];
-    $form['cancel_submit'] = [
+    $form['detector_hasreviewnote'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Review Notes'),
+      '#default_value' => $this->getDetector()->hasReviewNote,
+    ];
+    $form['detector_haseditoremail'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Reviewer Email'),
+      '#default_value' => \Drupal::currentUser()->getEmail(),
+      '#attributes' => [
+        'disabled' => 'disabled',
+      ],
+    ];
+    $form['review_approve'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Cancel'),
-      '#name' => 'back',
+      '#value' => $this->t('Approve'),
+      '#name' => 'review_approve',
+      '#attributes' => [
+        'class' => ['btn', 'btn-success', 'aprove-button'],
+      ],
+    ];
+    $form['review_reject'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Reject'),
+      '#name' => 'review_reject',
       '#attributes' => [
         'class' => ['btn', 'btn-primary', 'cancel-button'],
       ],
     ];
     $form['bottom_space'] = [
       '#type' => 'item',
+      '#title' => t('<br>'),
+    ];
+    $form['back'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Back'),
+      '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'back-button'],
+      ],
+    ];
+    $form['bottom_space'] = [
+      '#type' => 'item',
       '#title' => t('<br><br>'),
     ];
-
 
     return $form;
   }
@@ -242,88 +277,106 @@ class EditDetectorForm extends FormBase {
       return;
     }
 
+    if ($button_name === 'review_reject' && strlen($form_state->getValue('detector_hasreviewnote')) === 0) {
+      \Drupal::messenger()->addWarning(t("To reject you must type a Review Note!"));
+      return false;
+    }
+
+    $api = \Drupal::service('rep.api_connector');
+
     try{
 
-      $uid = \Drupal::currentUser()->id();
       $useremail = \Drupal::currentUser()->getEmail();
+      $result = $this->getDetector();
 
-      // GET THE DETECTOR STEM URI
-      $rawresponse = $api->getUri(Utils::uriFromAutocomplete($form_state->getValue('detector_stem')));
-      $obj = json_decode($rawresponse);
-      $result = $obj->body;
+      //APROVE
+      if ($button_name !== 'review_reject') {
 
-      $label = "";
-      if ($result->hasContent !== NULL) {
-        $label .= $result->hasContent;
-      } else {
-        $label .= $result->label;
-      }
-
-      if ($form_state->getValue('detector_codebook') !== NULL && $form_state->getValue('detector_codebook') != '') {
-        $codebook = Utils::uriFromAutocomplete($form_state->getValue('detector_codebook'));
-        $rawresponseCB = $api->getUri($codebook);
-        $objCB = json_decode($rawresponseCB);
-        $resultCB = $objCB->body;
-        $label .= '  -- CB:'.$resultCB->label;
-      } else {
-        $label = $result->label . '  -- CB:EMPTY';
-      }
-
-      $hasCodebook = '';
-      if ($form_state->getValue('detector_codebook') != NULL && $form_state->getValue('detector_codebook') != '') {
-        $hasCodebook = Utils::uriFromAutocomplete($form_state->getValue('detector_codebook'));
-      }
-
-      // CHECK if Status is CURRENT OR DEPRECATED FOR NEW CREATION
-      if ($this->getDetector()->hasStatus === VSTOI::CURRENT || $this->getDetector()->hasStatus === VSTOI::DEPRECATED) {
-
-        $newDetectorUri = Utils::uriGen('detector');
-        $detectorJson = '{"uri":"'.$newDetectorUri.'",'.
-        '"typeUri":"'.Utils::uriFromAutocomplete($form_state->getValue('detector_stem')).'",'.
-        '"hascoTypeUri":"'.VSTOI::DETECTOR.'",'.
-        '"hasDetectorStem":"'.Utils::uriFromAutocomplete($form_state->getValue('detector_stem')).'",'.
-        '"hasCodebook":"'.$hasCodebook.'",'.
-        '"hasContent":"'.$label.'",'.
-        '"hasSIRManagerEmail":"'.$useremail.'",'.
-        '"label":"'.$label.'",'.
-        '"hasWebDocument":"'.$form_state->getValue('detector_webdocument').'",'.
-        '"hasVersion":"'.$form_state->getValue('detector_version').'",'.
-        '"isAttributeOf":"'.$form_state->getValue('detector_isAttributeOf').'",'.
-        '"wasDerivedFrom":"'.$this->getDetector()->uri.'",'.
-        '"hasReviewNote":"'.$this->getDetector()->hasReviewNote.'",'.
-        '"hasEditorEmail":"'.$this->getDetector()->hasEditorEmail.'",'.
-        '"hasStatus":"'.VSTOI::DRAFT.'"}';
-
-        $api->detectorAdd($detectorJson);
-        \Drupal::messenger()->addMessage(t("New Version detector has been created successfully."));
-
-      } else {
-
-        $detectorJson = '{"uri":"'.$this->getDetector()->uri.'",'.
-          '"typeUri":"'.Utils::uriFromAutocomplete($form_state->getValue('detector_stem')).'",'.
+        $detectorJson = '{'.
+          '"uri":"'.$result->uri.'",'.
+          '"typeUri":"'.$result->typeUri.'",'.
           '"hascoTypeUri":"'.VSTOI::DETECTOR.'",'.
-          '"hasDetectorStem":"'.Utils::uriFromAutocomplete($form_state->getValue('detector_stem')).'",'.
-          '"hasCodebook":"'.$hasCodebook.'",'.
-          '"hasContent":"'.$label.'",'.
-          '"hasSIRManagerEmail":"'.$useremail.'",'.
-          '"label":"'.$label.'",'.
-          '"hasWebDocument":"'.$form_state->getValue('detector_webdocument').'",'.
-          '"hasVersion":"'.$form_state->getValue('detector_version').'",'.
-          '"isAttributeOf":"'.$form_state->getValue('detector_isAttributeOf').'",'.
-          '"wasDerivedFrom":"'.$this->getDetector()->wasDerivedFrom.'",'.
-          '"hasReviewNote":"'.$this->getDetector()->hasReviewNote.'",'.
-          '"hasEditorEmail":"'.$this->getDetector()->hasEditorEmail.'",'.
-          '"hasStatus":"'.VSTOI::DRAFT.'"}';
+          '"hasDetectorStem":"'.$result->hasDetectorStem.'",'.
+          '"hasCodebook":"'.$result->hasCodebook.'",'.
+          '"hasContent":"'.$result->label.'",'.
+          '"hasSIRManagerEmail":"'.$result->hasSIRManagerEmail.'",'.
+          '"label":"'.$result->label.'",'.
+          '"hasVersion":"'.$result->hasVersion.'",'.
+          '"isAttributeOf":"'.$result->isAttributeOf.'",'.
+          '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.
+          '"hasReviewNote":"'.$form_state->getValue('detector_hasreviewnote').'",'.
+          '"hasEditorEmail":"'.$useremail.'",'.
+          '"hasStatus":"'.VSTOI::CURRENT.'"'.
+        '}';
 
         // UPDATE BY DELETING AND CREATING
-        $api = \Drupal::service('rep.api_connector');
-        $api->detectorDel($this->getDetectorUri());
+        $api->detectorDel($result->uri);
         $api->detectorAdd($detectorJson);
-        \Drupal::messenger()->addMessage(t("Detector has been updated successfully."));
-      }
 
-      self::backUrl();
-      return;
+        //IF ITS A DERIVATION APROVAL PARENT MUST BECOME DEPRECATED
+        if ($result->wasDerivedFrom !== null && $result->wasDerivedFrom !== '') {
+
+          $rawresponse = $api->getUri($result->wasDerivedFrom);
+          $obj = json_decode($rawresponse);
+          $resultParent = $obj->body;
+
+          $parentDetectorJson = '{'.
+            '"uri":"'.$resultParent->uri.'",'.
+            '"typeUri":"'.$resultParent->typeUri.'",'.
+            '"hascoTypeUri":"'.VSTOI::DETECTOR.'",'.
+            '"hasDetectorStem":"'.$resultParent->hasDetectorStem.'",'.
+            '"hasCodebook":"'.$resultParent->hasCodebook.'",'.
+            '"hasContent":"'.$resultParent->label.'",'.
+            '"hasSIRManagerEmail":"'.$resultParent->hasSIRManagerEmail.'",'.
+            '"label":"'.$resultParent->label.'",'.
+            '"hasVersion":"'.$resultParent->hasVersion.'",'.
+            '"isAttributeOf":"'.$resultParent->isAttributeOf.'",'.
+            '"wasDerivedFrom":"'.$resultParent->wasDerivedFrom.'",'.
+            '"hasReviewNote":"'.$resultParent->hasReviewNote.'",'.
+            '"hasEditorEmail":"'.$resultParent->hasEditorEmail.'",'.
+            '"hasStatus":"'.VSTOI::DEPRECATED.'"'.
+          '}';
+
+          // UPDATE BY DELETING AND CREATING
+          $api->detectorDel($resultParent->uri);
+          $api->detectorAdd($parentDetectorJson);
+        }
+
+        \Drupal::messenger()->addMessage(t("Detector has been APPROVED successfully."));
+          self::backUrl();
+          return;
+
+      // REJECT
+      } else {
+
+        //MAIN BODY CODEBOOK
+        $detectorJson = '{'.
+          '"uri":"'.$result->uri.'",'.
+          '"typeUri":"'.$result->typeUri.'",'.
+          '"hascoTypeUri":"'.VSTOI::DETECTOR.'",'.
+          '"hasDetectorStem":"'.$result->hasDetectorStem.'",'.
+          '"hasCodebook":"'.$result->hasCodebook.'",'.
+          '"hasContent":"'.$result->label.'",'.
+          '"hasSIRManagerEmail":"'.$result->hasSIRManagerEmail.'",'.
+          '"label":"'.$result->label.'",'.
+          '"hasVersion":"'.$result->hasVersion.'",'.
+          '"isAttributeOf":"'.$result->isAttributeOf.'",'.
+          '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.
+          '"hasReviewNote":"'.$form_state->getValue('detector_hasreviewnote').'",'.
+          '"hasEditorEmail":"'.$useremail.'",'.
+          '"hasStatus":"'.VSTOI::DRAFT.'"}';
+
+        // \Drupal::messenger()->addWarning($detectorJson);
+        // return false;
+
+        // UPDATE BY DELETING AND CREATING
+        $api->detectorDel($result->uri);
+        $api->detectorAdd($detectorJson);
+
+        \Drupal::messenger()->addWarning(t("Detector has been REJECTED."));
+          self::backUrl();
+          return;
+      }
 
     }catch(\Exception $e){
       \Drupal::messenger()->addError(t("An error occurred while updating the Detector: ".$e->getMessage()));

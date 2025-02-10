@@ -128,8 +128,6 @@ class ReviewResponseOptionForm extends FormBase {
         '#type' => 'markup',
         '#markup' => '<a href="' . $url . '" target="_blank" class="btn btn-success text-nowrap mt-2" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
       ];
-
-
     }
 
     $form['responseoption_owner'] = [
@@ -240,24 +238,6 @@ class ReviewResponseOptionForm extends FormBase {
           // THIS TO CURRENT
           ResponseOption::cloneResponseOption($this->getResponseOption()->uri, VSTOI::CURRENT);
 
-          // // MUST UPDATE STATUS FROM PREVIOUS PARENT
-          // $responseOptionJSON = '{"uri":"'. $this->getResponseOption()->uri .'",'.
-          //   '"typeUri":"'.$this->getResponseOption()->typeUri.'",'.
-          //   '"hascoTypeUri":"'.$this->getResponseOption()->hascoTypeUri.'",'.
-          //   '"hasContent":"'.$this->getResponseOption()->hasContent.'",'.
-          //   '"hasLanguage":"'.$this->getResponseOption()->hasLanguage.'",'.
-          //   '"hasVersion":"'.$this->getResponseOption()->hasVersion.'",'.
-          //   '"hasStatus":"'.VSTOI::CURRENT.'",'.
-          //   '"comment":"'.$this->getResponseOption()->comment.'",'.
-          //   '"hasSIRManagerEmail":"' . $this->getResponseOption()->hasSIRManagerEmail.'",'.
-          //   '"hasReviewNote":"' . $form_state->getValue('responseoption_hasreviewnote').'",'.
-          //   '"hasEditorEmail":"'.\Drupal::currentUser()->getEmail().'",'.
-          //   '"wasDerivedFrom":"'.$this->getResponseOption()->wasDerivedFrom.
-          //   '"}';
-
-          // // UPDATE BY DELETING AND CREATING
-          // $api->responseOptionDel($this->getResponseOption()->uri);
-          // $api->responseOptionAdd($responseOptionJSON);
         }
 
         \Drupal::messenger()->addMessage(t("Response Option has been Approved."));
