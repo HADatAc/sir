@@ -157,6 +157,7 @@ class Codebook {
         'element_status' => $status,
         'element_owner' => $owner,
         'element_hasStatus' => parse_url($element->hasStatus, PHP_URL_FRAGMENT),
+        'element_hasLanguage' => $element->hasLanguage,
       ];
     }
 

@@ -528,6 +528,32 @@ sir.review_codebook:
   options:
     no_cache: 'TRUE'
 
+## Detector
+
+sir.review_detector:
+  path: 'sir/manage/reviewdetector/{detectoruri}'
+  defaults:
+    _form: '\Drupal\sir\Form\Review\ReviewDetectorForm'
+    _title: 'Review Detector'
+  requirements:
+    # _permission: 'access reviewer menu'
+    _review_access: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+## Detector Stem
+
+sir.review_detectorstem:
+  path: 'sir/manage/reviewdetectorstem/{detectoruri}'
+  defaults:
+    _form: '\Drupal\sir\Form\Review\ReviewDetectorStemForm'
+    _title: 'Review Detector Stem'
+  requirements:
+    # _permission: 'access reviewer menu'
+    _review_access: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
 ## Process
 
 sir.review_process:

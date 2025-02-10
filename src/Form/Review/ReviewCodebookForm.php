@@ -329,9 +329,36 @@ class ReviewCodebookForm extends FormBase {
         $api->codebookDel($result->uri);
         $api->codebookAdd($codebookJSON);
 
+        //IF ITS A DERIVATION APROVAL PARENT MUST BECOME DEPRECATED
+        if ($result->wasDerivedFrom !== null && $result->wasDerivedFrom !== '') {
+
+          $rawresponse = $api->getUri($result->wasDerivedFrom);
+          $obj = json_decode($rawresponse);
+          $resultParent = $obj->body;
+
+          //MAIN BODY PARENT CODEBOOK
+          $parentCodeBookJSON = '{'.
+            '"uri":"'.$resultParent->uri.'",'.
+            '"typeUri":"'.VSTOI::CODEBOOK.'",'.
+            '"hascoTypeUri":"'.VSTOI::CODEBOOK.'",'.
+            '"label":"' . $resultParent->label . '",' .
+            '"comment":"'.$resultParent->comment.'",' .
+            '"hasStatus":"'.VSTOI::DEPRECATED.'",'.
+            '"hasLanguage":"'.$resultParent->hasLanguage.'",' .
+            '"hasVersion":"'.$resultParent->hasVersion.'",' .
+            '"wasDerivedFrom":"'.$resultParent->wasDerivedFrom.'",'.
+            '"hasSIRManagerEmail":"'.$resultParent->hasSIRManagerEmail.'",'.
+            '"hasReviewNote": "'. $resultParent->hasReviewNote .'",'.
+            '"hasEditorEmail": "'. $resultParent->hasEditorEmail .'"'.
+          '}';
+
+          // UPDATE BY DELETING AND CREATING
+          $api->codebookDel($resultParent->uri);
+          $api->codebookAdd($parentCodeBookJSON);
+
+        }
+
         \Drupal::messenger()->addMessage(t("Codebook has been APPROVED successfully."));
-        self::backUrl();
-        return;
 
       // REJECT
       } else {
@@ -357,12 +384,11 @@ class ReviewCodebookForm extends FormBase {
         $api->codebookAdd($codebookJSON);
 
         \Drupal::messenger()->addWarning(t("Codebook has been REJECTED."));
-        self::backUrl();
-        return;
 
       }
 
-
+      self::backUrl();
+      return;
 
     }catch(\Exception $e){
       \Drupal::messenger()->addError(t("An error occurred while updating Codebook: ".$e->getMessage()));

@@ -77,7 +77,7 @@ class AddDetectorStemForm extends FormBase {
 
     $sourceContent = '';
     if ($this->getSourceDetectorStem() != NULL) {
-      $sourceContent = $this->getSourceDetectorStem()->hasContent;
+      $sourceContent = Utils::fieldToAutocomplete($this->getSourceDetectorStem()->uri,$this->getSourceDetectorStem()->hasContent);
     }
 
     $form['detectorstem_type'] = [
