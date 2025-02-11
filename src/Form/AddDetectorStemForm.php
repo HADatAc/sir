@@ -227,9 +227,11 @@ class AddDetectorStemForm extends FormBase {
         '"comment":"'.$form_state->getValue('detectorstem_description').'",'.
         '"wasDerivedFrom":"'.$wasDerivedFrom.'",'.
         '"wasGeneratedBy":"'.$wasGeneratedBy.'",'.
+        '"hasReviewNote":"'.$this->getSourceDetectorStem()->hasReviewNote.'",'.
+        '"hasEditorEmail":"'.$this->getSourceDetectorStem()->hasEditorEmail.'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
       $api = \Drupal::service('rep.api_connector');
-      $message = $api->detectorStemAdd($detectorStemJson);
+      $api->detectorStemAdd($detectorStemJson);
       \Drupal::messenger()->addMessage(t("Added a new Detector Stem with URI: ".$newDetectorStemUri));
       self::backUrl();
       return;

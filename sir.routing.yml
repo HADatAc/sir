@@ -544,7 +544,7 @@ sir.review_detector:
 ## Detector Stem
 
 sir.review_detectorstem:
-  path: 'sir/manage/reviewdetectorstem/{detectoruri}'
+  path: 'sir/manage/reviewdetectorstem/{detectorstemuri}'
   defaults:
     _form: '\Drupal\sir\Form\Review\ReviewDetectorStemForm'
     _title: 'Review Detector Stem'

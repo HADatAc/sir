@@ -121,7 +121,7 @@ class EditCodebookForm extends FormBase {
       '#title' => $this->t('Description'),
       '#default_value' => $this->getCodebook()->comment,
     ];
-    if ($this->getCodebook()->hasReviewNote !== NULL) {
+    if ($this->getCodebook()->hasReviewNote !== NULL && $this->getCodebook()->hasSatus !== null) {
       $form['responseoption_hasreviewnote'] = [
         '#type' => 'textarea',
         '#title' => $this->t('Review Notes'),
@@ -209,8 +209,8 @@ class EditCodebookForm extends FormBase {
           '"hasLanguage":"'.$form_state->getValue('codebook_language').'",'.
           '"hasVersion":"'.$form_state->getValue('codebook_version').'",'.
           '"comment":"'.$form_state->getValue('codebook_description').'",'.
-          '"hasReviewNote":"'.$this->getCodebook()->hasReviewNote.'",'.
-          '"hasEditorEmail":"'.$this->getCodebook()->hasEditorEmail.'",'.
+          '"hasReviewNote":"'.($this->getCodebook()->hasSatus !== null ? $this->getCodebook()->hasReviewNote : '').'",'.
+          '"hasEditorEmail":"'.($this->getCodebook()->hasSatus !== null ? $this->getCodebook()->hasEditorEmail : '').'",'.
           '"wasDerivedFrom":"'.$this->getCodebook()->uri.'",'.
           '"hasSIRManagerEmail":"'.$useremail.'"}';
 

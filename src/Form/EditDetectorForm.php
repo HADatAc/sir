@@ -165,7 +165,7 @@ class EditDetectorForm extends FormBase {
       ],
       '#disabled' => FALSE
     ];
-    if ($this->getDetector()->hasReviewNote !== NULL) {
+    if ($this->getDetector()->hasReviewNote !== NULL && $this->getDetector()->hasSatus !== null) {
       $form['detector_hasreviewnote'] = [
         '#type' => 'textarea',
         '#title' => $this->t('Review Notes'),
@@ -286,8 +286,8 @@ class EditDetectorForm extends FormBase {
         '"hasVersion":"'.$form_state->getValue('detector_version').'",'.
         '"isAttributeOf":"'.$form_state->getValue('detector_isAttributeOf').'",'.
         '"wasDerivedFrom":"'.$this->getDetector()->uri.'",'.
-        '"hasReviewNote":"'.$this->getDetector()->hasReviewNote.'",'.
-        '"hasEditorEmail":"'.$this->getDetector()->hasEditorEmail.'",'.
+        '"hasReviewNote":"'.($this->getDetector()->hasSatus !== null ? $this->getDetector()->hasReviewNote : '').'",'.
+        '"hasEditorEmail":"'.($this->getDetector()->hasSatus !== null ? $this->getDetector()->hasEditorEmail : '').'",'.
         '"hasStatus":"'.VSTOI::DRAFT.'"}';
 
         $api->detectorAdd($detectorJson);
