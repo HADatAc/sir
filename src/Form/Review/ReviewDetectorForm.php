@@ -257,9 +257,11 @@ class ReviewDetectorForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name != 'back') {
-      if(strlen($form_state->getValue('detector_stem')) < 1) {
-        $form_state->setErrorByName('detector_stem', $this->t('Please enter a valid detector stem'));
-      }
+      // if ($button_name === 'review_reject') {
+      //   if(strlen($form_state->getValue('detector_hasreviewnote')) < 1) {
+      //     $form_state->setErrorByName('detector_hasreviewnote', $this->t('You must enter a Reject Note'));
+      //   }
+      // }
     }
   }
 

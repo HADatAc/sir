@@ -80,7 +80,7 @@ class EditDetectorStemForm extends FormBase {
       if ($this->getDetectorStem()->wasDerivedFrom != NULL) {
         $this->setSourceDetectorStem($this->retrieveDetectorStem($this->getDetectorStem()->wasDerivedFrom));
         if ($this->getSourceDetectorStem() != NULL && $this->getSourceDetectorStem()->hasContent != NULL) {
-          $sourceContent = $this->getSourceDetectorStem()->hasContent;
+          $sourceContent = Utils::fieldToAutocomplete($this->getSourceDetectorStem()->uri,$this->getSourceDetectorStem()->hasContent);
         }
       }
     }
@@ -95,7 +95,7 @@ class EditDetectorStemForm extends FormBase {
         '#type' => 'textfield',
         '#title' => $this->t('Type'),
         '#name' => 'detectorstem_type',
-        '#default_value' => $this->getDetectorStem()->superUri ?? '',
+        '#default_value' => $this->getDetectorStem()->superUri ? Utils::fieldToAutocomplete($this->getDetectorStem()->superUri, $this->getDetectorStem()->superClassLabel) : '',
         '#disabled' => TRUE,
         '#id' => 'detectorstem_type',
         '#parents' => ['detectorstem_type'],
@@ -152,18 +152,35 @@ class EditDetectorStemForm extends FormBase {
         'placeholder' => 'http://',
       ]
     ];
-    $form['detectorstem_was_derived_from'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Was Derived From'),
-      '#default_value' => $sourceContent,
-      '#disabled' => TRUE,
-    ];
+    if ($this->getDetectorStem()->wasDerivedFrom != NULL) {
+      $form['detectorstem_was_derived_from'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Was Derived From'),
+        '#default_value' => $sourceContent,
+        '#disabled' => TRUE,
+      ];
+    }
     $form['detectorstem_was_generated_by'] = [
       '#type' => 'select',
       '#title' => $this->t('Was Derived By'),
       '#options' => $derivations,
       '#default_value' => $wasGeneratedBy,
     ];
+    if ($this->getDetectorStem()->hasReviewNote !== NULL && $this->getDetectorStem()->hasSatus !== null) {
+      $form['detectorstem_hasreviewnote'] = [
+        '#type' => 'textarea',
+        '#title' => $this->t('Review Notes'),
+        '#default_value' => $this->getDetectorStem()->hasReviewNote,
+      ];
+      $form['detectorstem_haseditoremail'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Reviewer Email'),
+        '#default_value' => \Drupal::currentUser()->getEmail(),
+        '#attributes' => [
+          'disabled' => 'disabled',
+        ],
+      ];
+    }
     $form['update_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Update'),
@@ -196,13 +213,7 @@ class EditDetectorStemForm extends FormBase {
 
     if ($button_name != 'back') {
       if(strlen($form_state->getValue('detectorstem_content')) < 1) {
-        $form_state->setErrorByName('detectorstem_content', $this->t('Please enter a valid content'));
-      }
-      if(strlen($form_state->getValue('detectorstem_language')) < 1) {
-        $form_state->setErrorByName('detectorstem_language', $this->t('Please enter a valid language'));
-      }
-      if(strlen($form_state->getValue('detectorstem_version')) < 1) {
-        $form_state->setErrorByName('detectorstem_version', $this->t('Please enter a valid version'));
+        $form_state->setErrorByName('detectorstem_content', $this->t('Please enter a valid Name'));
       }
     }
   }
@@ -244,6 +255,8 @@ class EditDetectorStemForm extends FormBase {
         '"comment":"'.$form_state->getValue('detectorstem_description').'",'.
         '"wasDerivedFrom":"'.$wasDerivedFrom.'",'.
         '"wasGeneratedBy":"'.$form_state->getValue('detectorstem_was_generated_by').'",'.
+        '"hasReviewNote":"'.($this->getDetectorStem()->hasSatus !== null ? $this->getDetectorStem()->hasReviewNote : '').'",'.
+        '"hasEditorEmail":"'.($this->getDetectorStem()->hasSatus !== null ? $this->getDetectorStem()->hasEditorEmail : '').'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
 
       // UPDATE BY DELETING AND CREATING
