@@ -128,7 +128,6 @@ class DetectorStem {
     $derivations = $tables->getGenerationActivities();
 
     $output = array();
-    $disabled_rows = [];
     foreach ($list as $element) {
       $uri = ' ';
       if ($element->uri != NULL) {
@@ -191,13 +190,7 @@ class DetectorStem {
       ];
     }
 
-    // Para garantir que disabled_rows seja um array associativo
-    $normalized_disabled_rows = array_fill_keys($disabled_rows, TRUE);
-
-    return [
-      'output'        => $output,
-      'disabled_rows' => $normalized_disabled_rows,
-    ];
+    return $output;
 
   }
 

@@ -300,7 +300,7 @@ class SIRReviewForm extends FormBase {
       case "instrument":
         return Instrument::generateHeader();
       case "detectorstem":
-        return DetectorStem::generateHeader();
+        return DetectorStem::generateReviewHeader();
       case "detector":
         return Detector::generateReviewHeader();
       case "codebook":
@@ -326,7 +326,7 @@ class SIRReviewForm extends FormBase {
       case "instrument":
         return Instrument::generateOutput($this->getList());
       case "detectorstem":
-        return DetectorStem::generateOutput($this->getList());
+        return DetectorStem::generateReviewOutput($this->getList());
       case "detector":
         return Detector::generatereviewOutput($this->getList());
       case "codebook":

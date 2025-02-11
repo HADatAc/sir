@@ -1490,6 +1490,52 @@ class SIRSelectForm extends FormBase {
         // UPDATE BY DELETING AND CREATING
         $api->detectorDel($result->uri);
         $api->detectorAdd($detectorJson);
+
+      } elseif ($this->element_type == 'detectorstem') {
+        // CENARIO #1: CHECK IF IT HAS wasDerivedFrom property, means it is a derived element
+        if ($result->wasDerivedFrom !== NULL
+            && $this->checkDerivedElements($uri, $this->element_type)) {
+            \Drupal::messenger()->addError($this->t('There is a previous version that has the same content.'), ['@elements' => $this->plural_class_name]);
+            return false;
+
+        // CENARIO #2: CHECK IF THERE ARE ANY OTHER DETECTOR WITH SAME CONTENT ALREADY IN REP, must have a new end-point for that
+        }
+        elseif ($result->wasDerivedFrom === NULL) {
+          $response = $api->listByKeywordAndLanguage($this->element_type, $result->label, $result->hasLanguage, 99999, 0);
+          $json_string = (string) $response;
+
+          $decoded_response = json_decode($json_string, true);
+
+          if (is_array($decoded_response)) {
+            $count = count($decoded_response['body']);
+            if ($count > 1) {
+              \Drupal::messenger()->addError($this->t('There is already a @element with the same content in the Repository.', ['@element' => $this->single_class_name]));
+              return false;
+            }
+          }
+        }
+
+        $detectorStemJson = '{"uri":"'.$result->uri.'",'.
+        '"superUri":"'.$result->superUri.'",'.
+        '"label":"'.$result->label.'",'.
+        '"hascoTypeUri":"'.VSTOI::DETECTOR_STEM.'",'.
+        '"hasStatus":"'.VSTOI::UNDER_REVIEW.'",'.
+        '"hasContent":"'.$result->hasContent.'",'.
+        '"hasLanguage":"'.$result->hasLanguage.'",'.
+        '"hasVersion":"'.$result->hasVersion.'",'.
+        '"comment":"'.$result->comment.'",'.
+        '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.
+        '"wasGeneratedBy":"'.$result->wasGeneratedBy.'",'.
+        '"hasReviewNote":"'.$result->hasReviewNote.'",'.
+        '"hasEditorEmail":"'.$result->hasEditorEmail.'",'.
+        '"hasSIRManagerEmail":"'.$result->hasSIRManagerEmail.'"}';
+
+        // UPDATE BY DELETING AND CREATING
+        $api = \Drupal::service('rep.api_connector');
+        $api->detectorStemDel($result->uri);
+        $api->detectorStemAdd($detectorStemJson);
+
+
       }
 
 

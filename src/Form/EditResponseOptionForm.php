@@ -89,7 +89,7 @@ class EditResponseOptionForm extends FormBase {
       '#default_value' => $this->getResponseOption()->comment,
     ];
 
-    if ($this->getResponseOption()->hasReviewNote !== NULL) {
+    if ($this->getResponseOption()->hasReviewNote !== NULL && $this->getResponseOption()->hasSatus !== null) {
       $form['responseoption_hasreviewnote'] = [
         '#type' => 'textarea',
         '#title' => $this->t('Review Notes'),
