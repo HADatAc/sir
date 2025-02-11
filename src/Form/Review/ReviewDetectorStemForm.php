@@ -86,45 +86,43 @@ class ReviewDetectorStemForm extends FormBase {
     }
 
     //dpm($this->getDetector());
-    if ($this->getDetectorStem()->superUri) {
-      $form['detectorstem_type'] = [
-        'top' => [
-          '#type' => 'markup',
-          '#markup' => '<div class="pt-3 col border border-white">',
+    $form['detectorstem_type'] = [
+      'top' => [
+        '#type' => 'markup',
+        '#markup' => '<div class="pt-3 col border border-white">',
+      ],
+      'main' => [
+        '#type' => 'textfield',
+        '#title' => $this->t('Type'),
+        '#name' => 'detectorstem_type',
+        '#default_value' => $this->getDetectorStem()->superUri ? Utils::fieldToAutocomplete($this->getDetectorStem()->superUri, $this->getDetectorStem()->superClassLabel) : '',
+        '#disabled' => TRUE,
+        '#id' => 'detectorstem_type',
+        '#parents' => ['detectorstem_type'],
+        '#attributes' => [
+          'class' => ['open-tree-modal'],
+          'data-dialog-type' => 'modal',
+          'data-dialog-options' => json_encode(['width' => 800]),
+          'data-url' => Url::fromRoute('rep.tree_form', [
+            'mode' => 'modal',
+            'elementtype' => 'detectorstem',
+          ], ['query' => ['field_id' => 'detectorstem_type']])->toString(),
+          'data-field-id' => 'detectorstem_type',
+          'data-elementtype' => 'detectorstem',
+          'data-search-value' => $this->getDetectorStem()->superUri ?? '',
         ],
-        'main' => [
-          '#type' => 'textfield',
-          '#title' => $this->t('Type'),
-          '#name' => 'detectorstem_type',
-          '#default_value' => $this->getDetectorStem()->superUri ? Utils::fieldToAutocomplete($this->getDetectorStem()->superUri, $this->getDetectorStem()->superClassLabel) : '',
-          '#disabled' => TRUE,
-          '#id' => 'detectorstem_type',
-          '#parents' => ['detectorstem_type'],
-          '#attributes' => [
-            'class' => ['open-tree-modal'],
-            'data-dialog-type' => 'modal',
-            'data-dialog-options' => json_encode(['width' => 800]),
-            'data-url' => Url::fromRoute('rep.tree_form', [
-              'mode' => 'modal',
-              'elementtype' => 'detectorstem',
-            ], ['query' => ['field_id' => 'detectorstem_type']])->toString(),
-            'data-field-id' => 'detectorstem_type',
-            'data-elementtype' => 'detectorstem',
-            'data-search-value' => $this->getDetectorStem()->superUri ?? '',
-          ],
-        ],
-        'bottom' => [
-          '#type' => 'markup',
-          '#markup' => '</div>',
-        ],
-      ];
-    }
-
+      ],
+      'bottom' => [
+        '#type' => 'markup',
+        '#markup' => '</div>',
+      ],
+    ];
     $form['detectorstem_content'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name'),
       '#default_value' => $this->getDetectorStem()->hasContent,
       '#disabled' => TRUE,
+
     ];
     $form['detectorstem_language'] = [
       '#type' => 'select',
@@ -138,6 +136,12 @@ class ReviewDetectorStemForm extends FormBase {
       '#title' => $this->t('Version'),
       '#default_value' => $this->getDetectorStem()->hasVersion,
       '#disabled' => TRUE,
+      '#default_value' =>
+        ($this->getDetectorStem()->hasStatus === VSTOI::CURRENT || $this->getDetectorStem()->hasStatus === VSTOI::DEPRECATED) ?
+        $this->getDetectorStem()->hasVersion + 1 : $this->getDetectorStem()->hasVersion,
+      '#attributes' => [
+        'disabled' => 'disabled',
+      ],
     ];
     $form['detectorstem_description'] = [
       '#type' => 'textarea',
@@ -302,6 +306,7 @@ class ReviewDetectorStemForm extends FormBase {
           '"wasDerivedFrom":"'.$this->getDetectorStem()->wasDerivedFrom.'",'.
           '"wasGeneratedBy":"'.$this->getDetectorStem()->wasGeneratedBy.'",'.
           '"hasReviewNote":"'.$form_state->getValue('detectorstem_hasreviewnote').'",'.
+          '"hasWebDocument":"'.$form_state->getValue('detectorstem_webdocument').'",'.
           '"hasEditorEmail":"'.$useremail.'",'.
           '"hasSIRManagerEmail":"'.$this->getDetectorStem()->hasSIRManagerEmail.'"}';
 
@@ -312,7 +317,6 @@ class ReviewDetectorStemForm extends FormBase {
         // IF ITS A DERIVATION APROVAL PARENT MUST BECOME DEPRECATED, but in this case version must be also greater than 1, because
         // Detector Stems can start to be like a derivation element by itself
         if (($result->wasDerivedFrom !== null && $result->wasDerivedFrom !== '') && $result->hasVersion > 1) {
-
           $rawresponse = $api->getUri($result->wasDerivedFrom);
           $obj = json_decode($rawresponse);
           $resultParent = $obj->body;
@@ -329,6 +333,7 @@ class ReviewDetectorStemForm extends FormBase {
           (!empty($resultParent->wasDerivedFrom) ? '"wasDerivedFrom":"'.$resultParent->wasDerivedFrom.'",' : '').
           '"wasGeneratedBy":"'.$resultParent->wasGeneratedBy.'",'.
           '"hasReviewNote":"'.$resultParent->hasReviewNote.'",'.
+          '"hasWebDocument":"'.$resultParent->hasWebDocument.'",'.
           '"hasEditorEmail":"'.$useremail.'",'.
           '"hasSIRManagerEmail":"'.$resultParent->hasSIRManagerEmail.'"}';
 
@@ -353,6 +358,7 @@ class ReviewDetectorStemForm extends FormBase {
           '"wasDerivedFrom":"'.$this->getDetectorStem()->wasDerivedFrom.'",'.
           '"wasGeneratedBy":"'.$this->getDetectorStem()->wasGeneratedBy.'",'.
           '"hasReviewNote":"'.$form_state->getValue('detectorstem_hasreviewnote').'",'.
+          '"hasWebDocument":"'.$form_state->getValue('detectorstem_webdocument').'",'.
           '"hasEditorEmail":"'.$useremail.'",'.
           '"hasSIRManagerEmail":"'.$this->getDetectorStem()->hasSIRManagerEmail.'"}';
 
