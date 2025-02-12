@@ -312,3 +312,12 @@
     }
   };
 })(jQuery, Drupal);
+
+(function ($, Drupal) {
+  Drupal.behaviors.removeCheckboxMargin = {
+    attach: function (context, settings) {
+      $('.js-form-type-checkbox').removeClass('mb-3');
+      $('.table.table-striped.responsive-enabled').addClass('align-middle');
+    }
+  };
+})(jQuery, Drupal);

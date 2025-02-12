@@ -86,63 +86,64 @@ class ReviewDetectorStemForm extends FormBase {
     }
 
     //dpm($this->getDetector());
-    $form['detectorstem_type'] = [
-      'top' => [
-        '#type' => 'markup',
-        '#markup' => '<div class="pt-3 col border border-white">',
-      ],
-      'main' => [
-        '#type' => 'textfield',
-        '#title' => $this->t('Type'),
-        '#name' => 'detectorstem_type',
-        '#default_value' => $this->getDetectorStem()->superUri ? Utils::fieldToAutocomplete($this->getDetectorStem()->superUri, $this->getDetectorStem()->superClassLabel) : '',
-        '#disabled' => TRUE,
-        '#id' => 'detectorstem_type',
-        '#parents' => ['detectorstem_type'],
-        '#attributes' => [
-          'class' => ['open-tree-modal'],
-          'data-dialog-type' => 'modal',
-          'data-dialog-options' => json_encode(['width' => 800]),
-          'data-url' => Url::fromRoute('rep.tree_form', [
-            'mode' => 'modal',
-            'elementtype' => 'detectorstem',
-          ], ['query' => ['field_id' => 'detectorstem_type']])->toString(),
-          'data-field-id' => 'detectorstem_type',
-          'data-elementtype' => 'detectorstem',
-          'data-search-value' => $this->getDetectorStem()->superUri ?? '',
+    if ($this->getDetectorStem()->superUri) {
+      $form['detectorstem_type'] = [
+        'top' => [
+          '#type' => 'markup',
+          '#markup' => '<div class="pt-3 col border border-white">',
         ],
-      ],
-      'bottom' => [
-        '#type' => 'markup',
-        '#markup' => '</div>',
-      ],
-    ];
+        'main' => [
+          '#type' => 'textfield',
+          '#title' => $this->t('Type'),
+          '#name' => 'detectorstem_type',
+          '#default_value' => $this->getDetectorStem()->superUri ? Utils::fieldToAutocomplete($this->getDetectorStem()->superUri, $this->getDetectorStem()->superClassLabel) : '',
+          '#disabled' => TRUE,
+          '#id' => 'detectorstem_type',
+          '#parents' => ['detectorstem_type'],
+          '#attributes' => [
+            'class' => ['open-tree-modal'],
+            'data-dialog-type' => 'modal',
+            'data-dialog-options' => json_encode(['width' => 800]),
+            'data-url' => Url::fromRoute('rep.tree_form', [
+              'mode' => 'modal',
+              'elementtype' => 'detectorstem',
+            ], ['query' => ['field_id' => 'detectorstem_type']])->toString(),
+            'data-field-id' => 'detectorstem_type',
+            'data-elementtype' => 'detectorstem',
+            'data-search-value' => $this->getDetectorStem()->superUri ?? '',
+          ],
+        ],
+        'bottom' => [
+          '#type' => 'markup',
+          '#markup' => '</div>',
+        ],
+      ];
+    }
 
     $form['detectorstem_content'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name'),
       '#default_value' => $this->getDetectorStem()->hasContent,
+      '#disabled' => TRUE,
     ];
     $form['detectorstem_language'] = [
       '#type' => 'select',
       '#title' => $this->t('Language'),
       '#options' => $languages,
       '#default_value' => $this->getDetectorStem()->hasLanguage,
+      '#disabled' => TRUE,
     ];
     $form['detectorstem_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
-      '#default_value' =>
-        ($this->getDetectorStem()->hasStatus === VSTOI::CURRENT || $this->getDetectorStem()->hasStatus === VSTOI::DEPRECATED) ?
-        $this->getDetectorStem()->hasVersion + 1 : $this->getDetectorStem()->hasVersion,
-      '#attributes' => [
-        'disabled' => 'disabled',
-      ],
+      '#default_value' => $this->getDetectorStem()->hasVersion,
+      '#disabled' => TRUE,
     ];
     $form['detectorstem_description'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
       '#default_value' => $this->getDetectorStem()->comment,
+      '#disabled' => TRUE,
     ];
     if ($this->getDetectorStem()->wasDerivedFrom !== NULL) {
       $api = \Drupal::service('rep.api_connector');
@@ -165,7 +166,7 @@ class ReviewDetectorStemForm extends FormBase {
           '#default_value' => Utils::fieldToAutocomplete($this->getDetectorStem()->wasDerivedFrom, $result->label),
           '#attributes' => [
             'class' => ['flex-grow-1'],
-            'style' => "width: 100%; min-width: 0;",
+            'style' => "width: 100%; min-width: 1045px;",
             'disabled' => 'disabled',
           ],
         ];
@@ -186,6 +187,7 @@ class ReviewDetectorStemForm extends FormBase {
       '#title' => $this->t('Was Derived By'),
       '#options' => $derivations,
       '#default_value' => $wasGeneratedBy,
+      '#disabled' => TRUE,
     ];
 
     $form['detectorstem_owner'] = [
@@ -309,14 +311,14 @@ class ReviewDetectorStemForm extends FormBase {
 
         // IF ITS A DERIVATION APROVAL PARENT MUST BECOME DEPRECATED, but in this case version must be also greater than 1, because
         // Detector Stems can start to be like a derivation element by itself
-        if (($result->wasDerivedFrom !== null && $result->wasDerivedFrom !== '') && $result->version > 1) {
+        if (($result->wasDerivedFrom !== null && $result->wasDerivedFrom !== '') && $result->hasVersion > 1) {
 
           $rawresponse = $api->getUri($result->wasDerivedFrom);
           $obj = json_decode($rawresponse);
           $resultParent = $obj->body;
 
           $parentDetectorStemJson = '{"uri":"'.$resultParent->uri.'",'.
-          '"superUri":"'.$resultParent->superUri.'",'.
+          (!empty($resultParent->superUri) ? '"superUri":"'.$resultParent->superUri.'",' : '').
           '"label":"'.$resultParent->label.'",'.
           '"hascoTypeUri":"'.VSTOI::DETECTOR_STEM.'",'.
           '"hasStatus":"'.VSTOI::DEPRECATED.'",'.
@@ -324,15 +326,15 @@ class ReviewDetectorStemForm extends FormBase {
           '"hasLanguage":"'.$resultParent->hasLanguage.'",'.
           '"hasVersion":"'.$resultParent->hasVersion.'",'.
           '"comment":"'.$resultParent->comment.'",'.
-          '"wasDerivedFrom":"'.$resultParent->wasDerivedFrom.'",'.
+          (!empty($resultParent->wasDerivedFrom) ? '"wasDerivedFrom":"'.$resultParent->wasDerivedFrom.'",' : '').
           '"wasGeneratedBy":"'.$resultParent->wasGeneratedBy.'",'.
           '"hasReviewNote":"'.$resultParent->hasReviewNote.'",'.
-          '"hasEditorEmail":"'.$resultParent->hasEditorEmail.'",'.
+          '"hasEditorEmail":"'.$useremail.'",'.
           '"hasSIRManagerEmail":"'.$resultParent->hasSIRManagerEmail.'"}';
 
           // UPDATE BY DELETING AND CREATING
-          $api->detectorDel($resultParent->uri);
-          $api->detectorAdd($parentDetectorStemJson);
+          $api->detectorStemDel($resultParent->uri);
+          $api->detectorStemAdd($parentDetectorStemJson);
         }
 
         \Drupal::messenger()->addMessage(t("Detector Stem has been updated successfully."));
