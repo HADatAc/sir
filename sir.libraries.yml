@@ -14,3 +14,11 @@ sir_process:
   dependencies:
     - core/jquery
     - core/drupal
+
+sir_detectorstem:
+  version: 1.x
+  js:
+    js/sir_detectorstem.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
