@@ -344,6 +344,16 @@ class SIRSelectForm extends FormBase {
           'class' => ['btn', 'btn-primary', 'add-element-button', 'mb-3'],
         ],
       ];
+      if ($this->element_type == 'detectorstem') {
+        $form['actions_wrapper']['buttons_container']['derive_detectorstem'] = [
+          '#type' => 'submit',
+          '#value' => $this->t('Derive New ' . $this->single_class_name),
+          '#name' => 'derive_detectorstem',
+          '#attributes' => [
+            'class' => ['btn', 'btn-primary', 'derive-button', 'mb-3'],
+          ],
+        ];
+      }
     }
 
     // Render output based on view type
@@ -800,22 +810,6 @@ class SIRSelectForm extends FormBase {
           ];
         }
 
-        if ($this->element_type == 'detectorstem') {
-          $card['card']['footer']['actions']['derive_detectorstem'] = [
-              '#type' => 'submit',
-              '#value' => $this->t('Derive New '),
-              '#name' => 'derive_detectorstemelements_' . md5($uri),
-              '#attributes' => [
-                  'class' => ['btn', 'btn-secondary', 'btn-sm', 'derive-button', 'button', 'js-form-submit', 'form-submit'],
-                  'data-drupal-selector' => 'edit-derive',
-                  'id' => 'edit-derive--' . md5($uri),
-              ],
-              '#submit' => ['::deriveDetectorStemSubmit'],
-              '#limit_validation_errors' => [],
-              '#element_uri' => $uri,
-          ];
-        }
-
         if ($this->element_type == 'processstem') {
           $card['card']['footer']['actions']['derive_processstem'] = [
             '#type' => 'submit',
@@ -1077,7 +1071,7 @@ class SIRSelectForm extends FormBase {
     $triggering_element = $form_state->getTriggeringElement();
     $uri = $triggering_element['#element_uri'];
 
-    $this->performDeriveDetectorStem($uri, $form_state);
+    $this->performDeriveDetectorStem($form_state);
   }
 
   /**
@@ -1133,12 +1127,7 @@ class SIRSelectForm extends FormBase {
       // $uri = $triggering_element['#element_uri'];
       $uri = array_keys($selected_rows)[0];
       $this->performManageCodebookSlots($uri, $form_state);
-    } elseif (strpos($button_name, 'derive_detectorstem_') === 0) {
-      // // $uri = $triggering_element['#element_uri'];
-      // $uri = array_keys($selected_rows)[0];
-      // $this->performDeriveDetectorStem($uri, $form_state);
     } elseif (strpos($button_name, 'derive_processstem_') === 0) {
-      // $uri = $triggering_element['#element_uri'];
       $uri = array_keys($selected_rows)[0];
       $this->performDeriveProcessStem($uri, $form_state);
     } elseif ($button_name === 'add_element') {
@@ -1203,22 +1192,7 @@ class SIRSelectForm extends FormBase {
         \Drupal::messenger()->addWarning($this->t('Please select exactly one codebook to manage.'));
       }
     } elseif ($button_name === 'derive_detectorstem') {
-      // if (count($selected_rows) == 1) {
-      //   $uri = array_keys($selected_rows)[0];
-      //   $this->performDeriveDetectorStem($uri, $form_state);
-      // } else {
-      //   \Drupal::messenger()->addWarning($this->t('Please select exactly one item stem to derive.'));
-      // }
-      $url = Url::fromRoute('sir.add_detectorstem');
-      $url->setRouteParameter('sourcedetectorstemuri', 'DERIVED');
-      $form_state->setRedirectUrl($url);
-    } elseif ($button_name === 'derive_processstem') {
-      if (count($selected_rows) == 1) {
-        $uri = array_keys($selected_rows)[0];
-        $this->performDeriveProcessStem($uri, $form_state);
-      } else {
-        \Drupal::messenger()->addWarning($this->t('Please select exactly one item stem to derive.'));
-      }
+      $this->performDeriveDetectorStem($form_state);
     } elseif ($button_name === 'back') {
       $url = Url::fromRoute('sir.search');
       $form_state->setRedirectUrl($url);
@@ -1504,7 +1478,7 @@ class SIRSelectForm extends FormBase {
         // CENARIO #2: CHECK IF THERE ARE ANY OTHER DETECTOR WITH SAME CONTENT ALREADY IN REP, must have a new end-point for that
         }
         elseif ($result->wasDerivedFrom === NULL) {
-          $response = $api->listByKeywordAndLanguage($this->element_type, $result->label, $result->hasLanguage, 99999, 0);
+          $response = $api->listByKeywordAndLanguage($this->element_type, $result->hasContent, $result->hasLanguage, 99999, 0);
           $json_string = (string) $response;
 
           $decoded_response = json_decode($json_string, true);
@@ -1537,8 +1511,6 @@ class SIRSelectForm extends FormBase {
         $api = \Drupal::service('rep.api_connector');
         $api->detectorStemDel($result->uri);
         $api->detectorStemAdd($detectorStemJson);
-
-
       }
 
 
@@ -1669,13 +1641,13 @@ class SIRSelectForm extends FormBase {
   /**
    * Perform derive detector stem action.
    */
-  protected function performDeriveDetectorStem($uri, FormStateInterface $form_state) {
+  protected function performDeriveDetectorStem(FormStateInterface $form_state) {
     $uid = \Drupal::currentUser()->id();
     $previousUrl = \Drupal::request()->getRequestUri();
     Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_detectorstem');
     $url = Url::fromRoute('sir.add_detectorstem');
-    $url->setRouteParameter('sourcedetectorstemuri', base64_encode($uri));
-    $url->setRouteParameter('containersloturi', 'EMPTY');
+    $url->setRouteParameter('sourcedetectorstemuri', 'DERIVED');
+    // $url->setRouteParameter('containersloturi', 'DERIVED');
     $form_state->setRedirectUrl($url);
   }
 
@@ -1723,17 +1695,27 @@ class SIRSelectForm extends FormBase {
 
     // Check if its equal
     switch ($elementType) {
-      case 'detector':
-      if (
-        isset($oldResult->hasDetectorStem, $result->hasDetectorStem,
-              $oldResult->hasCodebook, $result->hasCodebook,
-              $oldResult->isAttributeOf, $result->isAttributeOf) &&
-        $oldResult->hasDetectorStem === $result->hasDetectorStem &&
-        $oldResult->hasCodebook === $result->hasCodebook &&
-        $oldResult->isAttributeOf === $result->isAttributeOf
+      case 'detectorstem':
+        if (
+            isset($oldResult->hasContent, $result->hasContent,
+                  $oldResult->hasLanguage, $result->hasLanguage) &&
+            $oldResult->hasContent === $result->hasContent &&
+            $oldResult->hasLanguage === $result->hasLanguage
         ) {
-          return true; // Found an exact equal element → returns TRUE and exit
+            return true; // Found an exact equal element → returns TRUE and exit
         }
+        break;
+      case 'detector':
+        if (
+          isset($oldResult->hasDetectorStem, $result->hasDetectorStem,
+                $oldResult->hasCodebook, $result->hasCodebook,
+                $oldResult->isAttributeOf, $result->isAttributeOf) &&
+          $oldResult->hasDetectorStem === $result->hasDetectorStem &&
+          $oldResult->hasCodebook === $result->hasCodebook &&
+          $oldResult->isAttributeOf === $result->isAttributeOf
+          ) {
+            return true; // Found an exact equal element → returns TRUE and exit
+          }
         break;
       case 'codebook':
         if (

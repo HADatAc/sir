@@ -55,23 +55,24 @@ class AddDetectorStemForm extends FormBase {
     $api = \Drupal::service('rep.api_connector');
 
     // HANDLE SOURCE DETECTOR STEM,  IF ANY
-    $sourceuri=$sourcedetectorstemuri;
-    if ($sourceuri === NULL || $sourceuri === 'EMPTY') {
-      $this->setSourceDetectorStem(NULL);
-      $this->setSourceDetectorStemUri('');
-    } else {
-      $sourceuri_decode=base64_decode($sourceuri);
-      $this->setSourceDetectorStemUri($sourceuri_decode);
-      $rawresponse = $api->getUri($this->getSourceDetectorStemUri());
-      $obj = json_decode($rawresponse);
-      if ($obj->isSuccessful) {
-        $this->setSourceDetectorStem($obj->body);
-      } else {
-        $this->setSourceDetectorStem(NULL);
-        $this->setSourceDetectorStemUri('');
-      }
-    }
-    $disabledDerivationOption = ($this->getSourceDetectorStem() === NULL);
+    $sourceuri = $sourcedetectorstemuri;
+    $this->setSourceDetectorStemUri($sourceuri);
+    // if ($sourceuri === NULL || $sourceuri === 'EMPTY') {
+    //   $this->setSourceDetectorStem(NULL);
+    //   $this->setSourceDetectorStemUri('');
+    // } else {
+    //   $sourceuri_decode=base64_decode($sourceuri);
+    //   $this->setSourceDetectorStemUri($sourceuri_decode);
+    //   $rawresponse = $api->getUri($this->getSourceDetectorStemUri());
+    //   $obj = json_decode($rawresponse);
+    //   if ($obj->isSuccessful) {
+    //     $this->setSourceDetectorStem($obj->body);
+    //   } else {
+    //     $this->setSourceDetectorStem(NULL);
+    //     $this->setSourceDetectorStemUri('');
+    //   }
+    // }
+    // $disabledDerivationOption = ($this->getSourceDetectorStem() === NULL);
 
     $tables = new Tables;
     $languages = $tables->getLanguages();
@@ -129,7 +130,7 @@ class AddDetectorStemForm extends FormBase {
       '#type' => 'select',
       '#title' => $this->t('Language'),
       '#options' => $languages,
-      '#default_value' => '',
+      '#default_value' => 'en',
       '#attributes' => [
         'id' => 'detectorstem_language'
       ]
@@ -225,43 +226,71 @@ class AddDetectorStemForm extends FormBase {
     $submitted_values = $form_state->cleanValues()->getValues();
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
+    $sourceuri = $this->getSourceDetectorStemUri();
 
     if ($button_name === 'back') {
       self::backUrl();
       return;
     }
 
+    $api = \Drupal::service('rep.api_connector');
+
     try {
-
-      $wasDerivedFrom = '';
-      if ($this->getSourceDetectorStemUri() === NULL) {
-        $wasDerivedFrom = 'null';
-      } else {
-        $wasDerivedFrom = $this->getSourceDetectorStemUri();
-      }
-      $wasGeneratedBy = $form_state->getValue('detectorstem_was_generated_by');
-
       $useremail = \Drupal::currentUser()->getEmail();
 
       // CREATE A NEW DETECTOR
-      $newDetectorStemUri = Utils::uriGen('detectorstem');
-      $detectorStemJson = '{"uri":"'.$newDetectorStemUri.'",'.
-        '"superUri":"'.UTILS::uriFromAutocomplete($form_state->getValue('detectorstem_type')).'",'.
-        '"label":"'.$form_state->getValue('detectorstem_content').'",'.
-        '"hascoTypeUri":"'.VSTOI::DETECTOR_STEM.'",'.
-        '"hasStatus":"'.VSTOI::DRAFT.'",'.
-        '"hasContent":"'.$form_state->getValue('detectorstem_content').'",'.
-        '"hasLanguage":"'.$form_state->getValue('detectorstem_language').'",'.
-        '"hasVersion":"'.$form_state->getValue('detectorstem_version').'",'.
-        '"hasWebDocument":"'.$form_state->getValue('detectorstem_webdocument').'",'.
-        '"comment":"'.$form_state->getValue('detectorstem_description').'",'.
-        '"wasDerivedFrom":"'.$wasDerivedFrom.'",'.
-        '"wasGeneratedBy":"'.$wasGeneratedBy.'",'.
-        '"hasReviewNote":"'.$this->getSourceDetectorStem()->hasReviewNote.'",'.
-        '"hasEditorEmail":"'.$this->getSourceDetectorStem()->hasEditorEmail.'",'.
-        '"hasSIRManagerEmail":"'.$useremail.'"}';
-      $api = \Drupal::service('rep.api_connector');
-      $api->detectorStemAdd($detectorStemJson);
+      // #1 CENARIO - ADD DETECTOR NO DERIVED FROM
+      if ($sourceuri === 'EMPTY') {
+        $newDetectorStemUri = Utils::uriGen('detectorstem');
+        $detectorStemJson = '{"uri":"'.$newDetectorStemUri.'",'.
+          '"superUri":"'.UTILS::uriFromAutocomplete($form_state->getValue('detectorstem_type')).'",'.
+          '"label":"'.$form_state->getValue('detectorstem_content').'",'.
+          '"hascoTypeUri":"'.VSTOI::DETECTOR_STEM.'",'.
+          '"hasStatus":"'.VSTOI::DRAFT.'",'.
+          '"hasContent":"'.$form_state->getValue('detectorstem_content').'",'.
+          '"hasLanguage":"'.$form_state->getValue('detectorstem_language').'",'.
+          '"hasVersion":"'.$form_state->getValue('detectorstem_version').'",'.
+          '"comment":"'.$form_state->getValue('detectorstem_description').'",'.
+          '"hasWebDocument":"'.$form_state->getValue('detectorstem_webdocument').'",'.
+          '"wasGeneratedBy":"'.$form_state->getValue('detectorstem_was_generated_by').'",'.
+          '"hasSIRManagerEmail":"'.$useremail.'"}';
+
+        $api->detectorStemAdd($detectorStemJson);
+
+      } else {
+        // #2 CENARIO - ADD DETECTOR THAT WAS DERIVED FROM
+        // DERIVED FROM VALUES
+        $parentResult = '';
+        $rawresponse = $api->getUri(UTILS::uriFromAutocomplete($form_state->getValue('detectorstem_type')));
+        $obj = json_decode($rawresponse);
+        if ($obj->isSuccessful) {
+          $parentResult = $obj->body;
+        }
+
+        if ($parentResult !== '') {
+          $newDetectorStemUri = Utils::uriGen('detectorstem');
+          $detectorStemJson = '{"uri":"'.$newDetectorStemUri.'",'.
+            '"superUri":"'.$parentResult->superUri.'",'.
+            '"label":"'.$form_state->getValue('detectorstem_content').'",'.
+            '"hascoTypeUri":"'.VSTOI::DETECTOR_STEM.'",'.
+            '"hasStatus":"'.VSTOI::DRAFT.'",'.
+            '"hasContent":"'.$form_state->getValue('detectorstem_content').'",'.
+            '"hasLanguage":"'.$form_state->getValue('detectorstem_language').'",'.
+            '"hasVersion":"'.$form_state->getValue('detectorstem_version').'",'.
+            '"comment":"'.$form_state->getValue('detectorstem_description').'",'.
+            '"hasWebDocument":"'.$form_state->getValue('detectorstem_webdocument').'",'.
+            '"wasDerivedFrom":"'.UTILS::uriFromAutocomplete($form_state->getValue('detectorstem_type')).'",'.
+            '"wasGeneratedBy":"'.$form_state->getValue('detectorstem_was_generated_by').'",'.
+            '"hasSIRManagerEmail":"'.$useremail.'"}';
+
+          $api->detectorStemAdd($detectorStemJson);
+
+        } else {
+          \Drupal::messenger()->addError(t("An error occurred while getting Derived From element"));
+          self::backUrl();
+          return;
+        }
+      }
       \Drupal::messenger()->addMessage(t("Added a new Detector Stem with URI: ".$newDetectorStemUri));
       self::backUrl();
       return;
