@@ -180,7 +180,7 @@ class SIRSelectForm extends FormBase {
       if ($this->element_type == 'detectorstem') {
         $form['actions_wrapper']['buttons_container']['derive_detectorstem'] = [
           '#type' => 'submit',
-          '#value' => $this->t('Derive New ' . $this->single_class_name . ' from Selected'),
+          '#value' => $this->t('Derive New ' . $this->single_class_name),
           '#name' => 'derive_detectorstem',
           '#attributes' => [
             'class' => ['btn', 'btn-primary', 'derive-button'],
@@ -1134,9 +1134,9 @@ class SIRSelectForm extends FormBase {
       $uri = array_keys($selected_rows)[0];
       $this->performManageCodebookSlots($uri, $form_state);
     } elseif (strpos($button_name, 'derive_detectorstem_') === 0) {
-      // $uri = $triggering_element['#element_uri'];
-      $uri = array_keys($selected_rows)[0];
-      $this->performDeriveDetectorStem($uri, $form_state);
+      // // $uri = $triggering_element['#element_uri'];
+      // $uri = array_keys($selected_rows)[0];
+      // $this->performDeriveDetectorStem($uri, $form_state);
     } elseif (strpos($button_name, 'derive_processstem_') === 0) {
       // $uri = $triggering_element['#element_uri'];
       $uri = array_keys($selected_rows)[0];
@@ -1203,12 +1203,15 @@ class SIRSelectForm extends FormBase {
         \Drupal::messenger()->addWarning($this->t('Please select exactly one codebook to manage.'));
       }
     } elseif ($button_name === 'derive_detectorstem') {
-      if (count($selected_rows) == 1) {
-        $uri = array_keys($selected_rows)[0];
-        $this->performDeriveDetectorStem($uri, $form_state);
-      } else {
-        \Drupal::messenger()->addWarning($this->t('Please select exactly one item stem to derive.'));
-      }
+      // if (count($selected_rows) == 1) {
+      //   $uri = array_keys($selected_rows)[0];
+      //   $this->performDeriveDetectorStem($uri, $form_state);
+      // } else {
+      //   \Drupal::messenger()->addWarning($this->t('Please select exactly one item stem to derive.'));
+      // }
+      $url = Url::fromRoute('sir.add_detectorstem');
+      $url->setRouteParameter('sourcedetectorstemuri', 'DERIVED');
+      $form_state->setRedirectUrl($url);
     } elseif ($button_name === 'derive_processstem') {
       if (count($selected_rows) == 1) {
         $uri = array_keys($selected_rows)[0];
