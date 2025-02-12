@@ -65,33 +65,13 @@ class EditDetectorStemForm extends FormBase {
     $uri=$detectorstemuri;
     $uri_decode=base64_decode($uri);
     $this->setDetectorStemUri($uri_decode);
+
     $tables = new Tables;
     $languages = $tables->getLanguages();
     $derivations = $tables->getGenerationActivities();
 
     //Removed has decided on 10/fev/2025
     unset($derivations['http://hadatac.org/ont/vstoi#Generalization']);
-
-    $sourceContent = '';
-    $wasGeneratedBy = Constant::DEFAULT_WAS_GENERATED_BY;
-    $this->setDetectorStem($this->retrieveDetectorStem($this->getDetectorStemUri()));
-    if ($this->getDetectorStem() == NULL) {
-      \Drupal::messenger()->addError(t("Failed to retrieve Detector Stem."));
-      self::backUrl();
-      return;
-    } else {
-      $wasGeneratedBy = $this->getDetectorStem()->wasGeneratedBy;
-      if ($this->getDetectorStem()->wasDerivedFrom != NULL) {
-        $this->setSourceDetectorStem($this->retrieveDetectorStem($this->getDetectorStem()->wasDerivedFrom));
-        if ($this->getSourceDetectorStem() != NULL && $this->getSourceDetectorStem()->hasContent != NULL) {
-          $sourceContent = Utils::fieldToAutocomplete($this->getSourceDetectorStem()->uri,$this->getSourceDetectorStem()->hasContent);
-        }
-      }
-    }
-
-    $tables = new Tables;
-    $languages = $tables->getLanguages();
-    $derivations = $tables->getGenerationActivities();
 
     // IN CASE ITS A DERIVATION ORIGINAL MUST BE REMOVED ALSO
     if ($this->getDetectorStem()->hasStatus === VSTOI::CURRENT || $this->getDetectorStem()->hasVersion > 1) {
@@ -102,30 +82,11 @@ class EditDetectorStemForm extends FormBase {
     $derivations = ['' => $this->t('Select one please')] + $derivations;
 
     //dpm($this->getDetector());
-    $form['detectorstem_type'] = [
-      'top' => [
-        '#type' => 'markup',
-        '#markup' => '<div class="pt-3 col border border-white">',
-      ],
-      'main' => [
-        '#type' => 'textfield',
-        '#title' => $this->t('Type'),
-        '#name' => 'detectorstem_type',
-        '#default_value' => $this->getDetectorStem()->superUri ? Utils::fieldToAutocomplete($this->getDetectorStem()->superUri, $this->getDetectorStem()->superClassLabel) : '',
-        '#disabled' => TRUE,
-        '#id' => 'detectorstem_type',
-        '#parents' => ['detectorstem_type'],
-        '#attributes' => [
-          'class' => ['open-tree-modal'],
-          'data-dialog-type' => 'modal',
-          'data-dialog-options' => json_encode(['width' => 800]),
-          'data-url' => Url::fromRoute('rep.tree_form', [
-            'mode' => 'modal',
-            'elementtype' => 'detectorstem',
-          ], ['query' => ['field_id' => 'detectorstem_type']])->toString(),
-          'data-field-id' => 'detectorstem_type',
-          'data-elementtype' => 'detectorstem',
-          'data-search-value' => $this->getDetectorStem()->superUri ?? '',
+    if ($this->getDetectorStem()->superUri) {
+      $form['detectorstem_type'] = [
+        'top' => [
+          '#type' => 'markup',
+          '#markup' => '<div class="pt-3 col border border-white">',
         ],
         'main' => [
           '#type' => 'textfield',

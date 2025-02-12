@@ -1505,18 +1505,97 @@ class SIRSelectForm extends FormBase {
         $api->codebookDel($result->uri);
         $api->codebookAdd($codebookJSON);
 
+      } elseif ($this->element_type == 'detector') {
+        // CENARIO #1: CHECK IF IT HAS wasDerivedFrom property, means it is a derived element
+        if ($result->wasDerivedFrom !== NULL
+            && $this->checkDerivedElements($uri, $this->element_type)) {
+            \Drupal::messenger()->addError($this->t('There is a previous version that has the same content.'), ['@elements' => $this->plural_class_name]);
+            return false;
+
+        // CENARIO #2: CHECK IF THERE ARE ANY OTHER DETECTOR WITH SAME CONTENT ALREADY IN REP, must have a new end-point for that
+        }
+        // elseif ($result->wasDerivedFrom === NULL) {
+        //   $response = $api->listByKeywordAndLanguage($this->element_type, $result->label, $result->hasLanguage, 99999, 0);
+        //   $json_string = (string) $response;
+
+        //   $decoded_response = json_decode($json_string, true);
+
+        //   if (is_array($decoded_response)) {
+        //     $count = count($decoded_response['body']);
+        //     if ($count > 1) {
+        //       \Drupal::messenger()->addError($this->t('There is already a @element with the same content in the Repository.', ['@element' => $this->single_class_name]));
+        //       return false;
+        //     }
+        //   }
+        // }
+
+        //MAIN BODY DETECTOR
+        $detectorJson = '{'.
+          '"uri":"'.$result->uri.'",'.
+          '"typeUri":"'.$result->typeUri.'",'.
+          '"hascoTypeUri":"'.VSTOI::DETECTOR.'",'.
+          '"hasDetectorStem":"'.$result->hasDetectorStem.'",'.
+          '"hasCodebook":"'.$result->hasCodebook.'",'.
+          '"hasContent":"'.$result->hasContent.'",'.
+          '"hasSIRManagerEmail":"'.$result->hasSIRManagerEmail.'",'.
+          '"label":"'.$result->label.'",'.
+          '"hasVersion":"'.$result->hasVersion.'",'.
+          '"isAttributeOf":"'.$result->isAttributeOf.'",'.
+          '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.
+          '"hasReviewNote":"'.$result->hasReviewNote.'",'.
+          '"hasEditorEmail":"'.$result->hasEditorEmail.'",'.
+          '"hasStatus":"'.VSTOI::UNDER_REVIEW.'"'.
+        '}';
+
+        // UPDATE BY DELETING AND CREATING
+        $api->detectorDel($result->uri);
+        $api->detectorAdd($detectorJson);
+
+      } elseif ($this->element_type == 'detectorstem') {
+        // CENARIO #1: CHECK IF IT HAS wasDerivedFrom property, means it is a derived element
+        if ($result->wasDerivedFrom !== NULL
+            && $this->checkDerivedElements($uri, $this->element_type)) {
+            \Drupal::messenger()->addError($this->t('There is a previous version that has the same content.'), ['@elements' => $this->plural_class_name]);
+            return false;
+
+        // CENARIO #2: CHECK IF THERE ARE ANY OTHER DETECTOR WITH SAME CONTENT ALREADY IN REP, must have a new end-point for that
+        }
+        elseif ($result->wasDerivedFrom === NULL) {
+          $response = $api->listByKeywordAndLanguage($this->element_type, $result->hasContent, $result->hasLanguage, 99999, 0);
+          $json_string = (string) $response;
+
+          $decoded_response = json_decode($json_string, true);
+
+          if (is_array($decoded_response)) {
+            $count = count($decoded_response['body']);
+            if ($count > 1) {
+              \Drupal::messenger()->addError($this->t('There is already a @element with the same content in the Repository.', ['@element' => $this->single_class_name]));
+              return false;
+            }
+          }
+        }
+
+        $detectorStemJson = '{"uri":"'.$result->uri.'",'.
+        '"superUri":"'.$result->superUri.'",'.
+        '"label":"'.$result->label.'",'.
+        '"hascoTypeUri":"'.VSTOI::DETECTOR_STEM.'",'.
+        '"hasStatus":"'.VSTOI::UNDER_REVIEW.'",'.
+        '"hasContent":"'.$result->hasContent.'",'.
+        '"hasLanguage":"'.$result->hasLanguage.'",'.
+        '"hasVersion":"'.$result->hasVersion.'",'.
+        '"comment":"'.$result->comment.'",'.
+        '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.
+        '"wasGeneratedBy":"'.$result->wasGeneratedBy.'",'.
+        '"hasReviewNote":"'.$result->hasReviewNote.'",'.
+        '"hasWebDocument":"'.$result->hasWebDocument.'",'.
+        '"hasEditorEmail":"'.$result->hasEditorEmail.'",'.
+        '"hasSIRManagerEmail":"'.$result->hasSIRManagerEmail.'"}';
+
         // UPDATE BY DELETING AND CREATING
         $api = \Drupal::service('rep.api_connector');
         $api->detectorStemDel($result->uri);
         $api->detectorStemAdd($detectorStemJson);
       }
-
-
-      // } elseif ($this->element_type == 'detectorstem') {
-
-      // } elseif ($this->element_type == 'detector') {
-
-      // } elseif ($this->element_type == 'codebook') {
 
       // } elseif ($this->element_type == 'instrument') {
 
@@ -1693,17 +1772,27 @@ class SIRSelectForm extends FormBase {
 
     // Check if its equal
     switch ($elementType) {
-      case 'detector':
-      if (
-        isset($oldResult->hasDetectorStem, $result->hasDetectorStem,
-              $oldResult->hasCodebook, $result->hasCodebook,
-              $oldResult->isAttributeOf, $result->isAttributeOf) &&
-        $oldResult->hasDetectorStem === $result->hasDetectorStem &&
-        $oldResult->hasCodebook === $result->hasCodebook &&
-        $oldResult->isAttributeOf === $result->isAttributeOf
+      case 'detectorstem':
+        if (
+            isset($oldResult->hasContent, $result->hasContent,
+                  $oldResult->hasLanguage, $result->hasLanguage) &&
+            $oldResult->hasContent === $result->hasContent &&
+            $oldResult->hasLanguage === $result->hasLanguage
         ) {
-          return true; // Found an exact equal element → returns TRUE and exit
+            return true; // Found an exact equal element → returns TRUE and exit
         }
+        break;
+      case 'detector':
+        if (
+          isset($oldResult->hasDetectorStem, $result->hasDetectorStem,
+                $oldResult->hasCodebook, $result->hasCodebook,
+                $oldResult->isAttributeOf, $result->isAttributeOf) &&
+          $oldResult->hasDetectorStem === $result->hasDetectorStem &&
+          $oldResult->hasCodebook === $result->hasCodebook &&
+          $oldResult->isAttributeOf === $result->isAttributeOf
+          ) {
+            return true; // Found an exact equal element → returns TRUE and exit
+          }
         break;
       case 'codebook':
         if (

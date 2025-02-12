@@ -86,43 +86,44 @@ class ReviewDetectorStemForm extends FormBase {
     }
 
     //dpm($this->getDetector());
-    $form['detectorstem_type'] = [
-      'top' => [
-        '#type' => 'markup',
-        '#markup' => '<div class="pt-3 col border border-white">',
-      ],
-      'main' => [
-        '#type' => 'textfield',
-        '#title' => $this->t('Type'),
-        '#name' => 'detectorstem_type',
-        '#default_value' => $this->getDetectorStem()->superUri ? Utils::fieldToAutocomplete($this->getDetectorStem()->superUri, $this->getDetectorStem()->superClassLabel) : '',
-        '#disabled' => TRUE,
-        '#id' => 'detectorstem_type',
-        '#parents' => ['detectorstem_type'],
-        '#attributes' => [
-          'class' => ['open-tree-modal'],
-          'data-dialog-type' => 'modal',
-          'data-dialog-options' => json_encode(['width' => 800]),
-          'data-url' => Url::fromRoute('rep.tree_form', [
-            'mode' => 'modal',
-            'elementtype' => 'detectorstem',
-          ], ['query' => ['field_id' => 'detectorstem_type']])->toString(),
-          'data-field-id' => 'detectorstem_type',
-          'data-elementtype' => 'detectorstem',
-          'data-search-value' => $this->getDetectorStem()->superUri ?? '',
+    if ($this->getDetectorStem()->superUri) {
+      $form['detectorstem_type'] = [
+        'top' => [
+          '#type' => 'markup',
+          '#markup' => '<div class="pt-3 col border border-white">',
         ],
-      ],
-      'bottom' => [
-        '#type' => 'markup',
-        '#markup' => '</div>',
-      ],
-    ];
+        'main' => [
+          '#type' => 'textfield',
+          '#title' => $this->t('Type'),
+          '#name' => 'detectorstem_type',
+          '#default_value' => $this->getDetectorStem()->superUri ? Utils::fieldToAutocomplete($this->getDetectorStem()->superUri, $this->getDetectorStem()->superClassLabel) : '',
+          '#disabled' => TRUE,
+          '#id' => 'detectorstem_type',
+          '#parents' => ['detectorstem_type'],
+          '#attributes' => [
+            'class' => ['open-tree-modal'],
+            'data-dialog-type' => 'modal',
+            'data-dialog-options' => json_encode(['width' => 800]),
+            'data-url' => Url::fromRoute('rep.tree_form', [
+              'mode' => 'modal',
+              'elementtype' => 'detectorstem',
+            ], ['query' => ['field_id' => 'detectorstem_type']])->toString(),
+            'data-field-id' => 'detectorstem_type',
+            'data-elementtype' => 'detectorstem',
+            'data-search-value' => $this->getDetectorStem()->superUri ?? '',
+          ],
+        ],
+        'bottom' => [
+          '#type' => 'markup',
+          '#markup' => '</div>',
+        ],
+      ];
+    }
     $form['detectorstem_content'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name'),
       '#default_value' => $this->getDetectorStem()->hasContent,
       '#disabled' => TRUE,
-
     ];
     $form['detectorstem_language'] = [
       '#type' => 'select',
@@ -135,7 +136,6 @@ class ReviewDetectorStemForm extends FormBase {
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
       '#default_value' => $this->getDetectorStem()->hasVersion,
-      '#disabled' => TRUE,
       '#default_value' =>
         ($this->getDetectorStem()->hasStatus === VSTOI::CURRENT || $this->getDetectorStem()->hasStatus === VSTOI::DEPRECATED) ?
         $this->getDetectorStem()->hasVersion + 1 : $this->getDetectorStem()->hasVersion,
