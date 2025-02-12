@@ -71,9 +71,9 @@ class Detector {
       $attributeOf = 'None Provided';
       if ($element->isAttributeOf != NULL) {
         if (preg_match('/^(.*?)\s*\[/', $element->isAttributeOf, $matches)) {
-            $attributeOf = $matches[1];
+            $attributeOf = Utils::namespaceUri($matches[1]);
         } else {
-          $attributeOf = $element->isAttributeOf;
+          $attributeOf = Utils::namespaceUri($element->isAttributeOf);
         }
       }
       $status = ' ';
@@ -100,11 +100,11 @@ class Detector {
 
       }
       $output[$row_key] = [
-        'element_uri' => t('<a href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),
+        'element_uri' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),
         'element_content' => $content,
         'element_version' => $version,
         'element_codebook' => $codebookLabel,
-        'element_attribute_of' => $attributeOf,
+        'element_attribute_of' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($attributeOf).'">'.$attributeOf.'</a>'),
         'element_status' => $status,
         'element_hasStatus' => parse_url($element->hasStatus, PHP_URL_FRAGMENT),
       ];
@@ -150,9 +150,9 @@ class Detector {
       $attributeOf = 'None Provided';
       if ($element->isAttributeOf != NULL) {
         if (preg_match('/^(.*?)\s*\[/', $element->isAttributeOf, $matches)) {
-            $attributeOf = $matches[1];
+            $attributeOf = Utils::namespaceUri($matches[1]);
         } else {
-          $attributeOf = $element->isAttributeOf;
+          $attributeOf = Utils::namespaceUri($element->isAttributeOf);
         }
       }
       $status = ' ';
@@ -173,11 +173,11 @@ class Detector {
         $owner = $element->hasSIRManagerEmail;
       }
       $output[$element->uri] = [
-        'element_uri' => t('<a href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),
+        'element_uri' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),
         'element_content' => $content,
         'element_version' => $version,
         'element_codebook' => $codebookLabel,
-        'element_attribute_of' => $attributeOf,
+        'element_attribute_of' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($attributeOf).'">'.$attributeOf.'</a>'),
         'element_owner' => $owner,
         'element_status' => $status,
         'element_hasStatus' => parse_url($element->hasStatus, PHP_URL_FRAGMENT),
