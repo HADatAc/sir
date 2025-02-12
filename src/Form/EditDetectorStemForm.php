@@ -68,6 +68,9 @@ class EditDetectorStemForm extends FormBase {
     $languages = $tables->getLanguages();
     $derivations = $tables->getGenerationActivities();
 
+    //Removed has decided on 10/fev/2025
+    unset($derivations['http://hadatac.org/ont/vstoi#Generalization']);
+
     $sourceContent = '';
     $wasGeneratedBy = Constant::DEFAULT_WAS_GENERATED_BY;
     $this->setDetectorStem($this->retrieveDetectorStem($this->getDetectorStemUri()));
@@ -144,7 +147,7 @@ class EditDetectorStemForm extends FormBase {
       '#title' => $this->t('Description'),
       '#default_value' => $this->getDetectorStem()->comment,
     ];
-    if ($this->getDetectorStem()->wasDerivedFrom != NULL) {
+    if ($this->getDetectorStem()->wasDerivedFrom !== NULL) {
       $form['detectorstem_was_derived_from'] = [
         '#type' => 'textfield',
         '#title' => $this->t('Was Derived From'),
