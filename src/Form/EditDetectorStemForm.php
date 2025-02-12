@@ -65,6 +65,12 @@ class EditDetectorStemForm extends FormBase {
     $uri=$detectorstemuri;
     $uri_decode=base64_decode($uri);
     $this->setDetectorStemUri($uri_decode);
+    $tables = new Tables;
+    $languages = $tables->getLanguages();
+    $derivations = $tables->getGenerationActivities();
+
+    //Removed has decided on 10/fev/2025
+    unset($derivations['http://hadatac.org/ont/vstoi#Generalization']);
 
     $sourceContent = '';
     $wasGeneratedBy = Constant::DEFAULT_WAS_GENERATED_BY;
@@ -197,16 +203,18 @@ class EditDetectorStemForm extends FormBase {
         ],
       ];
 
-      $form['detectorstem_df_wrapper']['detectorstem_wasderivedfrom'] = [
-        '#type' => 'textfield',
-        '#title' => $this->t('Derived From'),
-        '#default_value' => $this->getDetectorStem()->wasDerivedFrom,
-        '#attributes' => [
-          'class' => ['flex-grow-1'],
-          'style' => "width: 100%; min-width: 0;",
-          'disabled' => 'disabled',
-        ],
-      ];
+      if ($this->getDetectorStem()->wasDerivedFrom !== NULL) {
+        $form['detectorstem_df_wrapper']['detectorstem_wasderivedfrom'] = [
+          '#type' => 'textfield',
+          '#title' => $this->t('Derived From'),
+          '#default_value' => $this->getDetectorStem()->wasDerivedFrom,
+          '#attributes' => [
+            'class' => ['flex-grow-1'],
+            'style' => "width: 100%; min-width: 0;",
+            'disabled' => 'disabled',
+          ],
+        ];
+      }
 
       $elementUri = Utils::namespaceUri($this->getDetectorStem()->wasDerivedFrom);
       $elementUriEncoded = base64_encode($elementUri);
