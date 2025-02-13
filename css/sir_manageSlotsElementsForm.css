@@ -1,0 +1,70 @@
+.floating-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Initially, the label is hidden */
+.floating-label-text {
+  position: absolute;
+  /* left: 10px; */
+  bottom: 70px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  font-weight: 600;
+  color: #777;
+  opacity: 0;
+  transition: all 0.3s ease-in-out;
+}
+
+/* When input is focused or has content, move label above */
+.floating-label-input:focus ~ .floating-label-text,
+.floating-label-input:not(:placeholder-shown) ~ .floating-label-text {
+  top: -12px;
+  opacity: 1;
+  font-size: 12px;
+  color: #333;
+}
+
+/* Hide placeholder when input is focused */
+.floating-label-input:focus::placeholder {
+  color: transparent;
+}
+
+/* Restore placeholder if input is empty */
+.floating-label-input:placeholder-shown ~ .floating-label-text {
+  opacity: 0;
+}
+
+.top-annotations-wrapper {
+  background-color: rgba(0,0,0,0.105);
+  border-radius: 15px;
+  border-color: #333;
+  padding: 15px 10px 10px 10px;
+}
+
+.collapsible-footer,
+.collapsible-header {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.collapse-icon {
+  transition: transform 0.3s ease;
+}
+
+.collapsible-content {
+  margin-top: 10px;
+}
+
+.collapsed .collapse-icon {
+  transform: rotate(180deg); /* Rotates when collapsed */
+}

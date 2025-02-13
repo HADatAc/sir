@@ -34,6 +34,10 @@ class AddInstrumentForm extends FormBase {
     $languages = $tables->getLanguages();
     $informants = $tables->getInformants();
 
+    //SELECT ONE
+    $languages = ['' => $this->t('Select language please')] + $languages;
+    $informants = ['' => $this->t('Select Informant please')] + $informants;
+
     $form['instrument_type'] = [
       'top' => [
         '#type' => 'markup',
@@ -82,7 +86,7 @@ class AddInstrumentForm extends FormBase {
       '#type' => 'select',
       '#title' => $this->t('Language'),
       '#options' => $languages,
-      '#default_value' => Constant::DEFAULT_LANGUAGE,
+      '#default_value' => '',
     ];
     $form['instrument_version'] = [
       '#type' => 'textfield',
@@ -124,17 +128,17 @@ class AddInstrumentForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name != 'back') {
+      if(empty($form_state->getValue('instrument_type'))) {
+        $form_state->setErrorByName('instrument_type', $this->t('Please select a valid Instrument Parent type'));
+      }
       if(strlen($form_state->getValue('instrument_name')) < 1) {
-        $form_state->setErrorByName('instrument_name', $this->t('Please enter a valid name'));
+        $form_state->setErrorByName('instrument_name', $this->t('Please enter a valid Name'));
       }
       if(strlen($form_state->getValue('instrument_abbreviation')) < 1) {
-        $form_state->setErrorByName('instrument_abbreviation', $this->t('Please enter a valid abbreviation'));
+        $form_state->setErrorByName('instrument_abbreviation', $this->t('Please enter a valid Abbreviation'));
       }
       if(strlen($form_state->getValue('instrument_language')) < 1) {
-        $form_state->setErrorByName('instrument_language', $this->t('Please enter a valid language'));
-      }
-      if(empty($form_state->getValue('instrument_type'))) {
-        $form_state->setErrorByName('instrument_type', $this->t('Please select a valid instrument type'));
+        $form_state->setErrorByName('instrument_language', $this->t('Please enter a valid Language'));
       }
     }
   }

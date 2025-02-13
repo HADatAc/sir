@@ -71,7 +71,10 @@ class Detector {
       $attributeOf = 'None Provided';
       if ($element->isAttributeOf != NULL) {
         if (preg_match('/^(.*?)\s*\[/', $element->isAttributeOf, $matches)) {
-            $attributeOf = t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode(Utils::namespaceUri($matches[1])).'">'.$matches[1].'</a>');
+          if (preg_match('/\[(.*?)\]/', $element->isAttributeOf, $links)) {
+            $link = $links[1];
+          }
+            $attributeOf = t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode(Utils::namespaceUri($link)).'">'.$matches[1].'</a>');
         } else {
           $attributeOf = t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode(Utils::namespaceUri($element->isAttributeOf)).'">'.Utils::namespaceUri($element->isAttributeOf).'</a>');
         }

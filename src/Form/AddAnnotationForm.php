@@ -28,6 +28,9 @@ class AddAnnotationForm extends FormBase {
 
   protected $crumbs;
 
+  protected $manager_name;
+  protected $manager_email;
+
   public function getContainer() {
     return $this->container;
   }
