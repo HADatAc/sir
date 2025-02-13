@@ -83,8 +83,8 @@ class ManageContainerAnnotationsForm extends FormBase {
       $this->topleftOriginal = $this->retrieveAnnotation(VSTOI::PAGE_TOP_LEFT);
       $this->topcenterOriginal = $this->retrieveAnnotation(VSTOI::PAGE_TOP_CENTER);
       $this->toprightOriginal = $this->retrieveAnnotation(VSTOI::PAGE_TOP_RIGHT);
-      $this->linebelowtopOriginal = $this->retrieveAnnotation(VSTOI::PAGE_LINE_BELOW_TOP);
-      $this->lineabovebottomOriginal = $this->retrieveAnnotation(VSTOI::PAGE_LINE_ABOVE_BOTTOM);
+      $this->lineBelowTopOrigonal = $this->retrieveAnnotation(VSTOI::PAGE_LINE_BELOW_TOP);
+      $this->lineAboveBottomOriginal = $this->retrieveAnnotation(VSTOI::PAGE_LINE_ABOVE_BOTTOM);
       $this->bottomleftOriginal = $this->retrieveAnnotation(VSTOI::PAGE_BOTTOM_LEFT);
       $this->bottomcenterOriginal = $this->retrieveAnnotation(VSTOI::PAGE_BOTTOM_CENTER);
       $this->bottomrightOriginal = $this->retrieveAnnotation(VSTOI::PAGE_BOTTOM_RIGHT);
@@ -92,8 +92,8 @@ class ManageContainerAnnotationsForm extends FormBase {
       $this->topleftOriginal = $this->retrieveAnnotation(VSTOI::TOP_LEFT);
       $this->topcenterOriginal = $this->retrieveAnnotation(VSTOI::TOP_CENTER);
       $this->toprightOriginal = $this->retrieveAnnotation(VSTOI::TOP_RIGHT);
-      $this->linebelowtopOriginal = $this->retrieveAnnotation(VSTOI::LINE_BELOW_TOP);
-      $this->lineabovebottomOriginal = $this->retrieveAnnotation(VSTOI::LINE_ABOVE_BOTTOM);
+      $this->lineBelowTopOrigonal = $this->retrieveAnnotation(VSTOI::LINE_BELOW_TOP);
+      $this->lineAboveBottomOriginal = $this->retrieveAnnotation(VSTOI::LINE_ABOVE_BOTTOM);
       $this->bottomleftOriginal = $this->retrieveAnnotation(VSTOI::BOTTOM_LEFT);
       $this->bottomcenterOriginal = $this->retrieveAnnotation(VSTOI::BOTTOM_CENTER);
       $this->bottomrightOriginal = $this->retrieveAnnotation(VSTOI::BOTTOM_RIGHT);
@@ -105,8 +105,8 @@ class ManageContainerAnnotationsForm extends FormBase {
     $topleftLabel = $this->labelPreparation($this->topleftOriginal);
     $topcenterLabel = $this->labelPreparation($this->topcenterOriginal);
     $toprightLabel = $this->labelPreparation($this->toprightOriginal);
-    $linebelowtopLabel = $this->labelPreparation($this->linebelowtopOriginal);
-    $lineabovebottomLabel = $this->labelPreparation($this->lineabovebottomOriginal);
+    $linebelowtopLabel = $this->labelPreparation($this->lineBelowTopOrigonal);
+    $lineabovebottomLabel = $this->labelPreparation($this->lineAboveBottomOriginal);
     $bottomleftLabel = $this->labelPreparation($this->bottomleftOriginal);
     $bottomcenterLabel = $this->labelPreparation($this->bottomcenterOriginal);
     $bottomrightLabel = $this->labelPreparation($this->bottomrightOriginal);
@@ -140,7 +140,11 @@ class ManageContainerAnnotationsForm extends FormBase {
         '#type' => 'textfield',
         '#title' => $this->t('PageTopLeft'),
         '#default_value' => $topleftLabel,
-        '#autocomplete_route_name' => 'sir.annotation_stem_autocomplete',
+        '#autocomplete_route_name' => 'sir.annotation_autocomplete',
+        // '#autocomplete_route_parameters' => [
+        //   'containeruri' => base64_encode($this->getContainer()->uri), // Encode if needed
+        //   'manageremail' => \base64_encode($uemail), // Get current user's email
+        // ],
       ];
       $form['annotation_topcenter'] = [
         '#type' => 'textfield',
@@ -294,7 +298,7 @@ class ManageContainerAnnotationsForm extends FormBase {
         $annotation->annotationStem->hasContent == "") {
       return "";
     }
-    
+
     return Utils::trimAutoCompleteString($annotation->annotationStem->hasContent,$annotation->annotationStem->uri);
   }
 

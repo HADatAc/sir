@@ -396,6 +396,15 @@ sir.annotation_stem_autocomplete:
   requirements:
     _permission: 'access content'
 
+sir.annotation_autocomplete:
+  # path: '/sir/manage/annotation/autocomplete/{containeruri}/{manageremail}'
+  path: '/sir/manage/annotation/autocomplete'
+  defaults:
+    _controller: '\Drupal\sir\Controller\JsonApiAnnotationController::handleAutocomplete'
+    _format: json
+  requirements:
+    _permission: 'access content'
+
 # Annotation CRUD options
 
 sir.add_annotation:
