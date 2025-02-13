@@ -87,9 +87,6 @@ class EditDetectorStemForm extends FormBase {
     $languages = $tables->getLanguages();
     $derivations = $tables->getGenerationActivities();
 
-    //Removed has decided on 10/fev/2025
-    unset($derivations['http://hadatac.org/ont/vstoi#Generalization']);
-
     // IN CASE ITS A DERIVATION ORIGINAL MUST BE REMOVED ALSO
     if ($this->getDetectorStem()->hasStatus === VSTOI::CURRENT || $this->getDetectorStem()->hasVersion > 1) {
       unset($derivations[Constant::DEFAULT_WAS_GENERATED_BY]);
@@ -198,7 +195,8 @@ class EditDetectorStemForm extends FormBase {
       '#default_value' => $this->getDetectorStem()->wasGeneratedBy,
       '#attributes' => [
         'id' => 'detectorstem_was_generated_by'
-      ]
+      ],
+      '#disabled' => ($this->getDetectorStem()->wasGeneratedBy === Constant::WGB_ORIGINAL ? true:false)
     ];
     if ($this->getDetectorStem()->hasReviewNote !== NULL && $this->getDetectorStem()->hasStatus !== null) {
       $form['detectorstem_hasreviewnote'] = [
@@ -230,6 +228,7 @@ class EditDetectorStemForm extends FormBase {
       '#name' => 'back',
       '#attributes' => [
         'class' => ['btn', 'btn-primary', 'cancel-button'],
+        'id' => 'cancel_button'
       ],
     ];
     $form['bottom_space'] = [

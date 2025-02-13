@@ -71,9 +71,9 @@ class Detector {
       $attributeOf = 'None Provided';
       if ($element->isAttributeOf != NULL) {
         if (preg_match('/^(.*?)\s*\[/', $element->isAttributeOf, $matches)) {
-            $attributeOf = Utils::namespaceUri($matches[1]);
+            $attributeOf = t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode(Utils::namespaceUri($matches[1])).'">'.$matches[1].'</a>');
         } else {
-          $attributeOf = Utils::namespaceUri($element->isAttributeOf);
+          $attributeOf = t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode(Utils::namespaceUri($element->isAttributeOf)).'">'.Utils::namespaceUri($element->isAttributeOf).'</a>');
         }
       }
       $status = ' ';
@@ -103,8 +103,8 @@ class Detector {
         'element_uri' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),
         'element_content' => $content,
         'element_version' => $version,
-        'element_codebook' => $codebookLabel,
-        'element_attribute_of' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($attributeOf).'">'.$attributeOf.'</a>'),
+        'element_codebook' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($element->codebook->uri).'">'.$codebookLabel.'</a>'),
+        'element_attribute_of' => $attributeOf,
         'element_status' => $status,
         'element_hasStatus' => parse_url($element->hasStatus, PHP_URL_FRAGMENT),
       ];

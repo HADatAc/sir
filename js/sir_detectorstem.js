@@ -4,6 +4,11 @@
       setTimeout(function () {
         var previousValue = ''; // Store the previous value before any change
 
+        $('#cancel_button').on('click', function () {
+          var $languageField = $('#detectorstem_language');
+          $languageField.prop('required', false);
+        });
+
         $('#detectorstem_was_generated_by').on('change', function () {
           var selectedValue = $(this).val();
           var translation = 'http://hadatac.org/ont/vstoi#Translation';

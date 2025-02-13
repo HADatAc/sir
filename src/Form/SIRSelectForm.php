@@ -300,7 +300,8 @@ class SIRSelectForm extends FormBase {
       If ($this->element_type !== 'detector'){
         $tables = new Tables;
         $languages = $tables->getLanguages();
-        $languages = ['all' => $this->t('All Languages')] + $languages;
+        if ($languages)
+          $languages = ['all' => $this->t('All Languages')] + $languages;
         $form['actions_wrapper']['filter_container']['language_filter'] = [
           '#type' => 'select',
           '#options' => $languages,
@@ -368,7 +369,7 @@ class SIRSelectForm extends FormBase {
       '#markup' => '<div class="info-label">Informative Notes:</div>
       <ul>
         <li>You cannot Delete nor Edit if the status is "Deprecated".</li>
-        <li>You cannot submit for Review if the status is different from "Draft".</li>
+        <li>You cannot Submit for Review if the status is different from "Draft".</li>
       </ul>',
       '#allowed_tags' => ['div', 'ul', 'li'],
     ];
