@@ -35,7 +35,7 @@ class JsonApiAnnotationContainerController extends ControllerBase{
     foreach ($containers as $container) {
       $results[] = [
         'value' => $container->label . ' [' . $container->uri . ']',
-        'label' => $container->label,
+        'label' => $container->label . ' [' . $container->uri . ']',
       ];
     }
     return new JsonResponse($results);

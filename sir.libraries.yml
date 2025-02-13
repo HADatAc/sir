@@ -22,3 +22,14 @@ sir_detectorstem:
   dependencies:
     - core/jquery
     - core/drupal
+
+sir_manageSlotsElementsForm:
+  version: 1.x
+  css:
+    theme:
+      css/sir_manageSlotsElementsForm.css: {}
+  js:
+    js/sir_manageSlotsElementsForm.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal

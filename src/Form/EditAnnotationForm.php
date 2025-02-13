@@ -81,8 +81,8 @@ class EditAnnotationForm extends FormBase {
     }
     $stemLabel = "";
     if ($this->getAnnotation()->annotationStem != NULL) {
-      //$stemLabel = $this->getAnnotation()->annotationStem->hasContent . ' [' . $this->getAnnotation()->annotationStem->uri . ']';
-      $stemLabel = Utils::trimAutoCompleteString($this->getAnnotation()->annotationStem->hasContent, $this->getAnnotation()->annotationStem->uri);
+      $stemLabel = $this->getAnnotation()->annotationStem->hasContent . ' [' . $this->getAnnotation()->annotationStem->uri . ']';
+      //$stemLabel = Utils::trimAutoCompleteString($this->getAnnotation()->annotationStem->hasContent, $this->getAnnotation()->annotationStem->uri);
     }
 
 
