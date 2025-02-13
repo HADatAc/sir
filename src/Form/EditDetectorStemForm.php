@@ -70,9 +70,6 @@ class EditDetectorStemForm extends FormBase {
     $languages = $tables->getLanguages();
     $derivations = $tables->getGenerationActivities();
 
-    //Removed has decided on 10/fev/2025
-    unset($derivations['http://hadatac.org/ont/vstoi#Generalization']);
-
     // IN CASE ITS A DERIVATION ORIGINAL MUST BE REMOVED ALSO
     if ($this->getDetectorStem()->hasStatus === VSTOI::CURRENT || $this->getDetectorStem()->hasVersion > 1) {
       unset($derivations[Constant::DEFAULT_WAS_GENERATED_BY]);
