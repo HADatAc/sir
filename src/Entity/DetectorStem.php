@@ -43,7 +43,7 @@ class DetectorStem {
       if ($element->superUri != NULL) {
         $type = Utils::namespaceUri($element->superUri);
       }
-      $derived = '-';
+      $derived = ' ';
       if ($element->wasDerivedFrom != NULL) {
         $derived = Utils::namespaceUri($element->wasDerivedFrom);
       }
@@ -142,7 +142,7 @@ class DetectorStem {
       if ($element->superUri != NULL) {
         $type = Utils::namespaceUri($element->superUri);
       }
-      $derived = '-';
+      $derived = ' ';
       if ($element->wasDerivedFrom != NULL) {
         $derived = Utils::namespaceUri($element->wasDerivedFrom);
       }

@@ -82,8 +82,8 @@ class Instrument {
 
       }
       $output[$row_key] = [
-        'element_uri' => t('<a href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),
-        'element_type' => $type,
+        'element_uri' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),
+        'element_type' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($type).'">'.$type.'</a>'),
         'element_abbreviation' => $shortName,
         'element_name' => t($label . $version),
         'element_language' => $lang,

@@ -329,6 +329,25 @@ class ReviewCodebookForm extends FormBase {
         $api->codebookDel($result->uri);
         $api->codebookAdd($codebookJSON);
 
+        //Change Status OF R.O. to Current, only change if they are Draft and Owned by the Submiter for Review
+        //LOOP TO ASSIGN RO TO CB
+        $slot_list = $api->codebookSlotList($result->uri);
+        $obj = json_decode($slot_list);
+        $slots = [];
+        if ($obj->isSuccessful) {
+          $slots = $obj->body;
+        }
+        $count = 1;
+        foreach ($slots as $slot) {
+          //GET RO->URI AND ATTACH TO SLOT
+          if ($result->codebookSlots[$count-1]->hasPriority === $slot->hasPriority) {
+            $roURI = $result->codebookSlots[$count-1]->responseOption->uri;
+          }
+          $api->responseOptionAttachStatus($roURI,$slot->uri, VSTOI::CURRENT); //Change to Current the Status if Draft
+          $count++;
+        }
+
+
         //IF ITS A DERIVATION APROVAL PARENT MUST BECOME DEPRECATED
         if ($result->wasDerivedFrom !== null && $result->wasDerivedFrom !== '') {
 
