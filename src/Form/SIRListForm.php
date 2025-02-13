@@ -115,7 +115,8 @@ class SIRListForm extends FormBase {
 
     $tables = new Tables;
     $languages = $tables->getLanguages();
-    $languages = ['all' => $this->t('All Languages')] + $languages;
+    if ($languages)
+      $languages = ['all' => $this->t('All Languages')] + $languages;
     $form['actions_wrapper']['filter_container']['language_filter'] = [
       '#type' => 'select',
       '#options' => $languages,
