@@ -218,7 +218,7 @@ class AddAnnotationStemForm extends FormBase {
         '"typeUri":"'.VSTOI::ANNOTATION_STEM.'",'.
         '"hascoTypeUri":"'.VSTOI::ANNOTATION_STEM.'",'.
         '"hasStatus":"'.VSTOI::DRAFT.'",'.
-        '"hasContent":"'.$form_state->getValue('annotationstem_content').'",'.
+        '"hasContent":"'.htmlentities($form_state->getValue('annotationstem_content')).'",'.
         '"hasLanguage":"'.$form_state->getValue('annotationstem_language').'",'.
         '"hasVersion":"'.$form_state->getValue('annotationstem_version').'",'.
         '"comment":"'.$form_state->getValue('annotationstem_description').'",'.
