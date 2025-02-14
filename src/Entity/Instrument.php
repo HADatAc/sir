@@ -33,7 +33,9 @@ class Instrument {
 
     $output = array();
     $disabled_rows = [];
+    $isQuestionnaire = false;
     foreach ($list as $element) {
+      $isQuestionnaire = Utils::hasQuestionnaireAncestor($element->uri);
       $uri = ' ';
       if ($element->uri != NULL) {
         $uri = $element->uri;
@@ -64,11 +66,19 @@ class Instrument {
 
       $encodedUri = rawurlencode(rawurlencode($element->uri));
       $totxt = '<a href="'. $root_url . REPGUI::DOWNLOAD . 'plain'. '/'. $encodedUri . '">TXT</a>';
-      $tohtml = '<a href="'. $root_url . REPGUI::DOWNLOAD . 'html'. '/'. $encodedUri . '">HTML</a>';
-      $topdf = '<a href="'. $root_url . REPGUI::DOWNLOAD . 'pdf'. '/'. $encodedUri . '">PDF</a>';
-      //$tordf = '<a href="'. $root_url . REPGUI::DOWNLOAD . 'rdf'. '/'. $encodedUri . '">RDF</a>';
-      $tordf = ' ';
-      $tofhir = '<a href="'. $root_url . REPGUI::DOWNLOAD . 'fhir'. '/'. $encodedUri . '">FHIR</a>';
+
+      if ($isQuestionnaire) {
+        $tohtml = '<a href="'. $root_url . REPGUI::DOWNLOAD . 'html'. '/'. $encodedUri . '">HTML</a>';
+        $topdf = '<a href="'. $root_url . REPGUI::DOWNLOAD . 'pdf'. '/'. $encodedUri . '">PDF</a>';
+        //$tordf = '<a href="'. $root_url . REPGUI::DOWNLOAD . 'rdf'. '/'. $encodedUri . '">RDF</a>';
+        $tordf = ' ';
+        $tofhir = '<a href="'. $root_url . REPGUI::DOWNLOAD . 'fhir'. '/'. $encodedUri . '">FHIR</a>';
+      } else {
+        $tohtml = '';
+        $topdf = '';
+        $tordf = '';
+        $tofhir = '';
+      }
 
       $status = ' ';
       $row_key = $element->uri;

@@ -85,7 +85,7 @@ class EditAnnotationStemForm extends FormBase {
     $form['annotationstem_content'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Content'),
-      '#default_value' => $this->getAnnotationStem()->hasContent,
+      '#default_value' => html_entity_decode($this->getAnnotationStem()->hasContent),
     ];
     $form['annotationstem_language'] = [
       '#type' => 'select',
@@ -188,7 +188,7 @@ class EditAnnotationStemForm extends FormBase {
         '"typeUri":"'.VSTOI::ANNOTATION_STEM.'",'.
         '"hascoTypeUri":"'.VSTOI::ANNOTATION_STEM.'",'.
         '"hasStatus":"'.$this->getAnnotationStem()->hasStatus.'",'.
-        '"hasContent":"'.$form_state->getValue('annotationstem_content').'",'.
+        '"hasContent":"'.htmlentities($form_state->getValue('annotationstem_content')).'",'.
         '"hasLanguage":"'.$form_state->getValue('annotationstem_language').'",'.
         '"hasVersion":"'.$form_state->getValue('annotationstem_version').'",'.
         '"comment":"'.$form_state->getValue('annotationstem_description').'",'.

@@ -93,35 +93,39 @@ class ManageSlotElementsForm extends FormBase {
     //dpm($container);
 
     // RETRIEVE CONTAINER'S ANNOTATIONS
-    if ($this->getContainer()->hascoTypeUri == VSTOI::INSTRUMENT) {
-      $this->topleftOriginal = $this->retrieveAnnotation(VSTOI::PAGE_TOP_LEFT);
-      $this->topcenterOriginal = $this->retrieveAnnotation(VSTOI::PAGE_TOP_CENTER);
-      $this->toprightOriginal = $this->retrieveAnnotation(VSTOI::PAGE_TOP_RIGHT);
-      $this->lineBelowTopOrigonal = $this->retrieveAnnotation(VSTOI::PAGE_LINE_BELOW_TOP);
-      $this->lineAboveBottomOriginal = $this->retrieveAnnotation(VSTOI::PAGE_LINE_ABOVE_BOTTOM);
-      $this->bottomleftOriginal = $this->retrieveAnnotation(VSTOI::PAGE_BOTTOM_LEFT);
-      $this->bottomcenterOriginal = $this->retrieveAnnotation(VSTOI::PAGE_BOTTOM_CENTER);
-      $this->bottomrightOriginal = $this->retrieveAnnotation(VSTOI::PAGE_BOTTOM_RIGHT);
-    } else {
-      $this->topleftOriginal = $this->retrieveAnnotation(VSTOI::TOP_LEFT);
-      $this->topcenterOriginal = $this->retrieveAnnotation(VSTOI::TOP_CENTER);
-      $this->toprightOriginal = $this->retrieveAnnotation(VSTOI::TOP_RIGHT);
-      $this->lineBelowTopOrigonal = $this->retrieveAnnotation(VSTOI::LINE_BELOW_TOP);
-      $this->lineAboveBottomOriginal = $this->retrieveAnnotation(VSTOI::LINE_ABOVE_BOTTOM);
-      $this->bottomleftOriginal = $this->retrieveAnnotation(VSTOI::BOTTOM_LEFT);
-      $this->bottomcenterOriginal = $this->retrieveAnnotation(VSTOI::BOTTOM_CENTER);
-      $this->bottomrightOriginal = $this->retrieveAnnotation(VSTOI::BOTTOM_RIGHT);
-    }
+    $isQuestionnaire = Utils::hasQuestionnaireAncestor($uri);
 
-    // CREATE LABELS
-    $topleftLabel = $this->labelPreparation($this->topleftOriginal);
-    $topcenterLabel = $this->labelPreparation($this->topcenterOriginal);
-    $toprightLabel = $this->labelPreparation($this->toprightOriginal);
-    $linebelowtopLabel = $this->labelPreparation($this->lineBelowTopOrigonal);
-    $lineabovebottomLabel = $this->labelPreparation($this->lineAboveBottomOriginal);
-    $bottomleftLabel = $this->labelPreparation($this->bottomleftOriginal);
-    $bottomcenterLabel = $this->labelPreparation($this->bottomcenterOriginal);
-    $bottomrightLabel = $this->labelPreparation($this->bottomrightOriginal);
+    if ($isQuestionnaire) {
+      if ($this->getContainer()->hascoTypeUri == VSTOI::INSTRUMENT) {
+        $this->topleftOriginal = $this->retrieveAnnotation(VSTOI::PAGE_TOP_LEFT);
+        $this->topcenterOriginal = $this->retrieveAnnotation(VSTOI::PAGE_TOP_CENTER);
+        $this->toprightOriginal = $this->retrieveAnnotation(VSTOI::PAGE_TOP_RIGHT);
+        $this->lineBelowTopOrigonal = $this->retrieveAnnotation(VSTOI::PAGE_LINE_BELOW_TOP);
+        $this->lineAboveBottomOriginal = $this->retrieveAnnotation(VSTOI::PAGE_LINE_ABOVE_BOTTOM);
+        $this->bottomleftOriginal = $this->retrieveAnnotation(VSTOI::PAGE_BOTTOM_LEFT);
+        $this->bottomcenterOriginal = $this->retrieveAnnotation(VSTOI::PAGE_BOTTOM_CENTER);
+        $this->bottomrightOriginal = $this->retrieveAnnotation(VSTOI::PAGE_BOTTOM_RIGHT);
+      } else {
+        $this->topleftOriginal = $this->retrieveAnnotation(VSTOI::TOP_LEFT);
+        $this->topcenterOriginal = $this->retrieveAnnotation(VSTOI::TOP_CENTER);
+        $this->toprightOriginal = $this->retrieveAnnotation(VSTOI::TOP_RIGHT);
+        $this->lineBelowTopOrigonal = $this->retrieveAnnotation(VSTOI::LINE_BELOW_TOP);
+        $this->lineAboveBottomOriginal = $this->retrieveAnnotation(VSTOI::LINE_ABOVE_BOTTOM);
+        $this->bottomleftOriginal = $this->retrieveAnnotation(VSTOI::BOTTOM_LEFT);
+        $this->bottomcenterOriginal = $this->retrieveAnnotation(VSTOI::BOTTOM_CENTER);
+        $this->bottomrightOriginal = $this->retrieveAnnotation(VSTOI::BOTTOM_RIGHT);
+      }
+
+      // CREATE LABELS
+      $topleftLabel = $this->labelPreparation($this->topleftOriginal);
+      $topcenterLabel = $this->labelPreparation($this->topcenterOriginal);
+      $toprightLabel = $this->labelPreparation($this->toprightOriginal);
+      $linebelowtopLabel = $this->labelPreparation($this->lineBelowTopOrigonal);
+      $lineabovebottomLabel = $this->labelPreparation($this->lineAboveBottomOriginal);
+      $bottomleftLabel = $this->labelPreparation($this->bottomleftOriginal);
+      $bottomcenterLabel = $this->labelPreparation($this->bottomcenterOriginal);
+      $bottomrightLabel = $this->labelPreparation($this->bottomrightOriginal);
+    }
 
     // RETRIEVE SLOT_ELEMENTS BY CONTAINER
     $slotElements = $api->parseObjectResponse($api->slotElements($this->getContainer()->uri),'slotElements');
@@ -243,118 +247,114 @@ class ManageSlotElementsForm extends FormBase {
 
     //SHOW TOP PAGE/SECTION STRUCTURE
     // Create a wrapper container
-    $form['top_annotations_wrapper'] = [
-      '#type' => 'container',
-      '#attributes' => ['class' => ['top-annotations-wrapper', 'mb-4']],
-    ];
-
-    // Header with toggle functionality
-    $form['top_annotations_wrapper']['header'] = [
-      '#type' => 'markup',
-      '#markup' => '<div class="collapsible-header">
-                      <span class="fw-bold">PAGE HEADER</span>
-                      <span class="collapse-icon">▼</span>
-                    </div>',
-      '#allowed_tags' => ['div', 'span'],
-    ];
-
-    // Content wrapper (initially hidden)
-    $form['top_annotations_wrapper']['content'] = [
-      '#type' => 'container',
-      '#attributes' => ['class' => ['collapsible-content', 'd-none']], // Hide by default
-    ];
-
-    if ($this->getContainer()->hascoTypeUri == VSTOI::INSTRUMENT) {
-      // First row (3 columns) inside collapsible section
-      $form['top_annotations_wrapper']['content']['first_row'] = [
+    if ($isQuestionnaire) {
+      $form['top_annotations_wrapper'] = [
         '#type' => 'container',
-        '#attributes' => ['class' => ['row', 'no-margin']],
+        '#attributes' => ['class' => ['top-annotations-wrapper', 'mb-4']],
       ];
 
-      $form['top_annotations_wrapper']['content']['first_row']['col_1'] = [
+      // Header with toggle functionality
+      $form['top_annotations_wrapper']['header'] = [
+        '#type' => 'markup',
+        '#markup' => '<div class="collapsible-header">
+                        <span class="fw-bold">PAGE HEADER</span>
+                        <span class="collapse-icon">▼</span>
+                      </div>',
+        '#allowed_tags' => ['div', 'span'],
+      ];
+
+      // Content wrapper (initially hidden)
+      $form['top_annotations_wrapper']['content'] = [
         '#type' => 'container',
-        '#attributes' => ['class' => ['col-md-4']],
+        '#attributes' => ['class' => ['collapsible-content', 'd-none']], // Hide by default
       ];
 
-      $form['top_annotations_wrapper']['content']['first_row']['col_1']['annotation_topleft'] = [
-        '#type' => 'textfield',
-        '#title' => $this->t('PageTopLeft'),
-        '#default_value' => $topleftLabel,
-        '#autocomplete_route_name' => 'sir.annotation_stem_autocomplete',
-        '#autocomplete_route_parameters' => [
-          'containeruri' => base64_encode($this->getContainer()->uri), // Encode if needed
-          'manageremail' => $uemail, // Get current user's email
-        ],
-        '#attributes' => [
-          'class' => ['form-control', 'floating-label-input', 'mt-4'],
-          'placeholder' => $this->t('PageTopLeft'),
-        ],
-        '#prefix' => '<div class="floating-container">',
-        '#suffix' => '</div>',
-      ];
+      if ($this->getContainer()->hascoTypeUri == VSTOI::INSTRUMENT) {
+        // First row (3 columns) inside collapsible section
+        $form['top_annotations_wrapper']['content']['first_row'] = [
+          '#type' => 'container',
+          '#attributes' => ['class' => ['row', 'no-margin']],
+        ];
 
-      $form['top_annotations_wrapper']['content']['first_row']['col_2'] = [
-        '#type' => 'container',
-        '#attributes' => ['class' => ['col-md-4']],
-      ];
+        $form['top_annotations_wrapper']['content']['first_row']['col_1'] = [
+          '#type' => 'container',
+          '#attributes' => ['class' => ['col-md-4']],
+        ];
 
-      $form['top_annotations_wrapper']['content']['first_row']['col_2']['annotation_topcenter'] = [
-        '#type' => 'textfield',
-        '#title' => $this->t('PageTopCenter'),
-        '#default_value' => $topcenterLabel,
-        '#autocomplete_route_name' => 'sir.annotation_stem_autocomplete',
-        '#attributes' => [
-          'class' => ['form-control', 'floating-label-input', 'mt-4'],
-          'placeholder' => $this->t('PageTopCenter'),
-        ],
-        '#prefix' => '<div class="floating-container">',
-        '#suffix' => '</div>',
-      ];
+        $form['top_annotations_wrapper']['content']['first_row']['col_1']['annotation_topleft'] = [
+          '#type' => 'textfield',
+          '#title' => $this->t('PageTopLeft'),
+          '#default_value' => $topleftLabel,
+          '#autocomplete_route_name' => 'sir.annotation_autocomplete',
+          '#attributes' => [
+            'class' => ['form-control', 'floating-label-input', 'mt-4'],
+            'placeholder' => $this->t('PageTopLeft'),
+          ],
+          '#prefix' => '<div class="floating-container">',
+          '#suffix' => '</div>',
+        ];
 
-      $form['top_annotations_wrapper']['content']['first_row']['col_3'] = [
-        '#type' => 'container',
-        '#attributes' => ['class' => ['col-md-4']],
-      ];
+        $form['top_annotations_wrapper']['content']['first_row']['col_2'] = [
+          '#type' => 'container',
+          '#attributes' => ['class' => ['col-md-4']],
+        ];
 
-      $form['top_annotations_wrapper']['content']['first_row']['col_3']['annotation_topright'] = [
-        '#type' => 'textfield',
-        '#title' => $this->t('PageTopRight'),
-        '#default_value' => $toprightLabel,
-        '#autocomplete_route_name' => 'sir.annotation_stem_autocomplete',
-        '#attributes' => [
-          'class' => ['form-control', 'floating-label-input', 'mt-4'],
-          'placeholder' => $this->t('PageTopRight'),
-        ],
-        '#prefix' => '<div class="floating-container">',
-        '#suffix' => '</div>',
-      ];
+        $form['top_annotations_wrapper']['content']['first_row']['col_2']['annotation_topcenter'] = [
+          '#type' => 'textfield',
+          '#title' => $this->t('PageTopCenter'),
+          '#default_value' => $topcenterLabel,
+          '#autocomplete_route_name' => 'sir.annotation_autocomplete',
+          '#attributes' => [
+            'class' => ['form-control', 'floating-label-input', 'mt-4'],
+            'placeholder' => $this->t('PageTopCenter'),
+          ],
+          '#prefix' => '<div class="floating-container">',
+          '#suffix' => '</div>',
+        ];
 
-      // Second row (1 full-width column) inside collapsible section
-      $form['top_annotations_wrapper']['content']['second_row'] = [
-        '#type' => 'container',
-        '#attributes' => ['class' => ['row', 'no-margin']],
-      ];
+        $form['top_annotations_wrapper']['content']['first_row']['col_3'] = [
+          '#type' => 'container',
+          '#attributes' => ['class' => ['col-md-4']],
+        ];
 
-      $form['top_annotations_wrapper']['content']['second_row']['col_full'] = [
-        '#type' => 'container',
-        '#attributes' => ['class' => ['col-md-12']],
-      ];
+        $form['top_annotations_wrapper']['content']['first_row']['col_3']['annotation_topright'] = [
+          '#type' => 'textfield',
+          '#title' => $this->t('PageTopRight'),
+          '#default_value' => $toprightLabel,
+          '#autocomplete_route_name' => 'sir.annotation_autocomplete',
+          '#attributes' => [
+            'class' => ['form-control', 'floating-label-input', 'mt-4'],
+            'placeholder' => $this->t('PageTopRight'),
+          ],
+          '#prefix' => '<div class="floating-container">',
+          '#suffix' => '</div>',
+        ];
 
-      $form['top_annotations_wrapper']['content']['second_row']['col_full']['annotation_linebelowtop'] = [
-        '#type' => 'textfield',
-        '#title' => $this->t('PageLineBelowTop'),
-        '#default_value' => $linebelowtopLabel,
-        '#autocomplete_route_name' => 'sir.annotation_stem_autocomplete',
-        '#attributes' => [
-          'class' => ['form-control', 'floating-label-input', 'mt-4'],
-          'placeholder' => $this->t('PageLineBelowTop'),
-        ],
-        '#prefix' => '<div class="floating-container">',
-        '#suffix' => '</div>',
-      ];
+        // Second row (1 full-width column) inside collapsible section
+        $form['top_annotations_wrapper']['content']['second_row'] = [
+          '#type' => 'container',
+          '#attributes' => ['class' => ['row', 'no-margin']],
+        ];
+
+        $form['top_annotations_wrapper']['content']['second_row']['col_full'] = [
+          '#type' => 'container',
+          '#attributes' => ['class' => ['col-md-12']],
+        ];
+
+        $form['top_annotations_wrapper']['content']['second_row']['col_full']['annotation_linebelowtop'] = [
+          '#type' => 'textfield',
+          '#title' => $this->t('PageLineBelowTop'),
+          '#default_value' => $linebelowtopLabel,
+          '#autocomplete_route_name' => 'sir.annotation_autocomplete',
+          '#attributes' => [
+            'class' => ['form-control', 'floating-label-input', 'mt-4'],
+            'placeholder' => $this->t('PageLineBelowTop'),
+          ],
+          '#prefix' => '<div class="floating-container">',
+          '#suffix' => '</div>',
+        ];
+      }
     }
-
-
 
     //PAGE OR SECTION CONTENT
     //BUTTONS
@@ -439,114 +439,118 @@ class ManageSlotElementsForm extends FormBase {
     }
 
     //SHOW BOTTOM PAGE/SECTION STRUCTURE
-    $form['bottom_annotations_wrapper'] = [
-      '#type' => 'container',
-      '#attributes' => ['class' => ['top-annotations-wrapper', 'mb-4']],
-    ];
-
-    // Header with toggle functionality
-    $form['bottom_annotations_wrapper']['footer'] = [
-      '#type' => 'markup',
-      '#markup' => '<div class="collapsible-footer">
-                      <span class="fw-bold">PAGE FOOTER</span>
-                      <span class="collapse-icon">▼</span>
-                    </div>',
-      '#allowed_tags' => ['div', 'span'],
-    ];
-
-    // Content wrapper (initially hidden)
-    $form['bottom_annotations_wrapper']['content'] = [
-      '#type' => 'container',
-      '#attributes' => ['class' => ['collapsible-content', 'd-none']], // Hide by default
-    ];
-
-    if ($this->getContainer()->hascoTypeUri == VSTOI::INSTRUMENT) {
-
-      // First row (1 full-width column) inside collapsible section
-      $form['bottom_annotations_wrapper']['content']['first_row'] = [
+    if ($isQuestionnaire) {
+      $form['bottom_annotations_wrapper'] = [
         '#type' => 'container',
-        '#attributes' => ['class' => ['row', 'no-margin']],
+        '#attributes' => ['class' => ['top-annotations-wrapper', 'mb-4']],
       ];
 
-      $form['bottom_annotations_wrapper']['content']['first_row']['col_full'] = [
+      // Header with toggle functionality
+      $form['bottom_annotations_wrapper']['footer'] = [
+        '#type' => 'markup',
+        '#markup' => '<div class="collapsible-footer">
+                        <span class="fw-bold">PAGE FOOTER</span>
+                        <span class="collapse-icon">▼</span>
+                      </div>',
+        '#allowed_tags' => ['div', 'span'],
+      ];
+
+      // Content wrapper (initially hidden)
+      $form['bottom_annotations_wrapper']['content'] = [
         '#type' => 'container',
-        '#attributes' => ['class' => ['col-md-12']],
+        '#attributes' => ['class' => ['collapsible-content', 'd-none']], // Hide by default
       ];
 
-      $form['bottom_annotations_wrapper']['content']['first_row']['col_full']['annotation_lineabovebottom'] = [
-        '#type' => 'textfield',
-        '#title' => $this->t('PageLineAboveBottom'),
-        '#default_value' => $lineabovebottomLabel,
-        '#autocomplete_route_name' => 'sir.annotation_stem_autocomplete',
-        '#attributes' => [
-          'class' => ['form-control', 'floating-label-input', 'mt-4'],
-          'placeholder' => $this->t('PageLineBelowTop'),
-        ],
-        '#prefix' => '<div class="floating-container">',
-        '#suffix' => '</div>',
-      ];
+      if ($this->getContainer()->hascoTypeUri == VSTOI::INSTRUMENT) {
 
-      // Second row (3 columns) inside collapsible section
-      $form['bottom_annotations_wrapper']['content']['second_row'] = [
-        '#type' => 'container',
-        '#attributes' => ['class' => ['row', 'no-margin']],
-      ];
+        // First row (1 full-width column) inside collapsible section
+        $form['bottom_annotations_wrapper']['content']['first_row'] = [
+          '#type' => 'container',
+          '#attributes' => ['class' => ['row', 'no-margin']],
+        ];
 
-      $form['bottom_annotations_wrapper']['content']['second_row']['col_1'] = [
-        '#type' => 'container',
-        '#attributes' => ['class' => ['col-md-4']],
-      ];
+        $form['bottom_annotations_wrapper']['content']['first_row']['col_full'] = [
+          '#type' => 'container',
+          '#attributes' => ['class' => ['col-md-12']],
+        ];
 
-      $form['bottom_annotations_wrapper']['content']['second_row']['col_1']['annotation_bottomleft'] = [
-        '#type' => 'textfield',
-        '#title' => $this->t('PageBottomLeft'),
-        '#default_value' => $bottomleftLabel,
-        '#autocomplete_route_name' => 'sir.annotation_stem_autocomplete',
-        '#attributes' => [
-          'class' => ['form-control', 'floating-label-input', 'mt-4'],
-          'placeholder' => $this->t('PageBottomLeft'),
-        ],
-        '#prefix' => '<div class="floating-container">',
-        '#suffix' => '</div>',
-      ];
+        $form['bottom_annotations_wrapper']['content']['first_row']['col_full']['annotation_lineabovebottom'] = [
+          '#type' => 'textfield',
+          '#title' => $this->t('PageLineAboveBottom'),
+          '#default_value' => $lineabovebottomLabel,
+          '#autocomplete_route_name' => 'sir.annotation_autocomplete',
+          '#attributes' => [
+            'class' => ['form-control', 'floating-label-input', 'mt-4'],
+            'placeholder' => $this->t('PageLineBelowTop'),
+          ],
+          '#prefix' => '<div class="floating-container">',
+          '#suffix' => '</div>',
+        ];
 
-      $form['bottom_annotations_wrapper']['content']['second_row']['col_2'] = [
-        '#type' => 'container',
-        '#attributes' => ['class' => ['col-md-4']],
-      ];
+        // Second row (3 columns) inside collapsible section
+        $form['bottom_annotations_wrapper']['content']['second_row'] = [
+          '#type' => 'container',
+          '#attributes' => ['class' => ['row', 'no-margin']],
+        ];
 
-      $form['bottom_annotations_wrapper']['content']['second_row']['col_2']['annotation_bottomcenter'] = [
-        '#type' => 'textfield',
-        '#title' => $this->t('PageBottomCenter'),
-        '#default_value' => $bottomcenterLabel,
-        '#autocomplete_route_name' => 'sir.annotation_stem_autocomplete',
-        '#attributes' => [
-          'class' => ['form-control', 'floating-label-input', 'mt-4'],
-          'placeholder' => $this->t('PageBottomCenter'),
-        ],
-        '#prefix' => '<div class="floating-container">',
-        '#suffix' => '</div>',
-      ];
+        $form['bottom_annotations_wrapper']['content']['second_row']['col_1'] = [
+          '#type' => 'container',
+          '#attributes' => ['class' => ['col-md-4']],
+        ];
 
-      $form['bottom_annotations_wrapper']['content']['second_row']['col_3'] = [
-        '#type' => 'container',
-        '#attributes' => ['class' => ['col-md-4']],
-      ];
+        $form['bottom_annotations_wrapper']['content']['second_row']['col_1']['annotation_bottomleft'] = [
+          '#type' => 'textfield',
+          '#title' => $this->t('PageBottomLeft'),
+          '#default_value' => $bottomleftLabel,
+          '#autocomplete_route_name' => 'sir.annotation_autocomplete',
+          '#attributes' => [
+            'class' => ['form-control', 'floating-label-input', 'mt-4'],
+            'placeholder' => $this->t('PageBottomLeft'),
+          ],
+          '#prefix' => '<div class="floating-container">',
+          '#suffix' => '</div>',
+        ];
 
-      $form['bottom_annotations_wrapper']['content']['second_row']['col_3']['annotation_bottomright'] = [
-        '#type' => 'textfield',
-        '#title' => $this->t('PageBottomRight'),
-        '#default_value' => $bottomrightLabel,
-        '#autocomplete_route_name' => 'sir.annotation_stem_autocomplete',
-        '#attributes' => [
-          'class' => ['form-control', 'floating-label-input', 'mt-4'],
-          'placeholder' => $this->t('PageBottomRight'),
-        ],
-        '#prefix' => '<div class="floating-container">',
-        '#suffix' => '</div>',
-      ];
+        $form['bottom_annotations_wrapper']['content']['second_row']['col_2'] = [
+          '#type' => 'container',
+          '#attributes' => ['class' => ['col-md-4']],
+        ];
+
+        $form['bottom_annotations_wrapper']['content']['second_row']['col_2']['annotation_bottomcenter'] = [
+          '#type' => 'textfield',
+          '#title' => $this->t('PageBottomCenter'),
+          '#default_value' => $bottomcenterLabel,
+          '#autocomplete_route_name' => 'sir.annotation_autocomplete',
+          '#attributes' => [
+            'class' => ['form-control', 'floating-label-input', 'mt-4'],
+            'placeholder' => $this->t('PageBottomCenter'),
+          ],
+          '#prefix' => '<div class="floating-container">',
+          '#suffix' => '</div>',
+        ];
+
+        $form['bottom_annotations_wrapper']['content']['second_row']['col_3'] = [
+          '#type' => 'container',
+          '#attributes' => ['class' => ['col-md-4']],
+        ];
+
+        $form['bottom_annotations_wrapper']['content']['second_row']['col_3']['annotation_bottomright'] = [
+          '#type' => 'textfield',
+          '#title' => $this->t('PageBottomRight'),
+          '#default_value' => $bottomrightLabel,
+          '#autocomplete_route_name' => 'sir.annotation_autocomplete',
+          '#attributes' => [
+            'class' => ['form-control', 'floating-label-input', 'mt-4'],
+            'placeholder' => $this->t('PageBottomRight'),
+          ],
+          '#prefix' => '<div class="floating-container">',
+          '#suffix' => '</div>',
+        ];
+      }
     }
 
+
+    //END FORM
     $form['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Back to ' . $preferred_instrument . ' Management'),
@@ -715,6 +719,9 @@ class ManageSlotElementsForm extends FormBase {
       $url->setRouteParameter('pagesize', '10');
       $url->setRouteParameter('containeruri', base64_encode($this->getContainer()->uri));
       $url->setRouteParameter('breadcrumbs', $breadcrumbsArg);
+      // $uid = \Drupal::currentUser()->id();
+      // $previousUrl = \Drupal::request()->getRequestUri();
+      // Utils::trackingStoreUrls($uid, $previousUrl, 'sir.manage_slotelements');
       $form_state->setRedirectUrl($url);
       return;
     }
@@ -802,89 +809,82 @@ class ManageSlotElementsForm extends FormBase {
       return "";
     }
 
-    $annotationStemUri = Utils::uriFromAutocomplete($newValue);
+    $annotationUri = Utils::uriFromAutocomplete($newValue);
 
-    if ($original == NULL) {
+    dpm($original);
 
-      // ADD NEW ANNOTATION
+    if ($original->uri !== NULL) {
+
       try {
 
-        $belongsTo = $this->getContainer()->uri;
-        $useremail = \Drupal::currentUser()->getEmail();
-
-        // CREATE A NEW ANNOTATION
-        $newAnnotationUri = Utils::uriGen('annotation');
-        $annotationJson = '{"uri":"'.$newAnnotationUri.'",'.
+        // UPDATE EXISTING ANNOTATION POSITION TO NOT VISIBLE
+        $annotationJson = '{"uri":"'.$original->uri.'",'.
           '"typeUri":"'.VSTOI::ANNOTATION.'",'.
           '"hascoTypeUri":"'.VSTOI::ANNOTATION.'",'.
-          '"hasAnnotationStem":"'.$annotationStemUri.'",'.
-          '"hasPosition":"'.$position.'",'.
-          '"belongsTo":"'.$belongsTo.'",'.
-          '"hasSIRManagerEmail":"'.$useremail.'"}';
+          '"hasAnnotationStem":"'.$original->hasAnnotationStem.'",'.
+          '"hasPosition":"'.VSTOI::NOT_VISIBLE.'",'.
+          '"hasContentWithStyle":"'.$original->hasContentWithStyle.'",'.
+          '"comment":"'.$original->comment.'",'.
+          '"belongsTo":"'.$original->belongsTo.'",'.
+          '"hasSIRManagerEmail":"'.$original->hasSIRManagerEmail.'"}';
 
+        $api->annotationDel($original->uri);
         $api->annotationAdd($annotationJson);
 
-        return "Annotation added for ".Utils::namespaceUri($position).". ";
+        // SET NEW ANNOTATION TO POSITION
+        //Get Content of Annotation
+        $annotation = $api->parseObjectResponse($api->getUri($annotationUri),'getUri');
+        $result = $annotation->isSuccessful ? $annotation->body : [];
 
-      } catch(\Exception $e) {
-        \Drupal::messenger()->addError(t("An error occurred while adding the Annotation: ".$e->getMessage()));
+        $annotationNewJson = '{"uri":"'.$result->uri.'",'.
+        '"typeUri":"'.VSTOI::ANNOTATION.'",'.
+        '"hascoTypeUri":"'.VSTOI::ANNOTATION.'",'.
+        '"hasAnnotationStem":"'.$result->hasAnnotationStem.'",'.
+        '"hasPosition":"'.$position.'",'.
+        '"hasContentWithStyle":"'.$result->hasContentWithStyle.'",'.
+        '"comment":"'.$result->comment.'",'.
+        '"belongsTo":"'.$result->belongsTo.'",'.
+        '"hasSIRManagerEmail":"'.$result->hasSIRManagerEmail.'"}';
+
+        $api->annotationDel($result->uri);
+        $api->annotationAdd($annotationNewJson);
+
+      } catch(\Exception $e){
+        \Drupal::messenger()->addError(t("An error occurred while updating the Annotation: ".$e->getMessage()));
         $this->backToSlotElement($form_state);
       }
 
     } else {
 
-      // UPDATE EXISTING ANNOTATION
+      try {
 
-      // UPDATE IF CURRENT AND ORIGINAL ANNOTATION STEM URIS ARE DIFFERENT
-      if ($annotationStemUri != $original->annotationStem->uri) {
+        // SET NEW ANNOTATION TO POSITION
+        //Get Content of Annotation
+        $annotation = $api->parseObjectResponse($api->getUri($annotationUri),'getUri');
+        $result = $annotation->isSuccessful ? $annotation->body : [];
 
-        // DELETE EXISTING ANNOTATION
-        if (($annotationStemUri == NULL || $annotationStemUri == "") &&
-            ($original->annotationStem->uri != NULL && $original->annotationStem->uri != "")) {
+        $annotationNewJson = '{"uri":"'.$result->uri.'",'.
+        '"typeUri":"'.VSTOI::ANNOTATION.'",'.
+        '"hascoTypeUri":"'.VSTOI::ANNOTATION.'",'.
+        '"hasAnnotationStem":"'.$result->hasAnnotationStem.'",'.
+        '"hasPosition":"'.$position.'",'.
+        '"hasContentWithStyle":"'.$result->hasContentWithStyle.'",'.
+        '"comment":"'.$result->comment.'",'.
+        '"belongsTo":"'.$result->belongsTo.'",'.
+        '"hasSIRManagerEmail":"'.$result->hasSIRManagerEmail.'"}';
 
-          try {
+        $api->annotationDel($result->uri);
+        $api->annotationAdd($annotationNewJson);
 
-            // DELETE ANNOTATION
-            $api = \Drupal::service('rep.api_connector');
-            $api->annotationDel($original->uri);
-            return "Annotation deleted for ".Utils::namespaceUri($position).". ";
-
-          } catch(\Exception $e){
-            \Drupal::messenger()->addError(t("An error occurred while updating the Annotation: ".$e->getMessage()));
-            $this->backToSlotElement($form_state);
-          }
-        } else {
-
-          try {
-
-            $uid = \Drupal::currentUser()->id();
-            $useremail = \Drupal::currentUser()->getEmail();
-
-            $annotationJson = '{"uri":"'.$original->uri.'",'.
-              '"typeUri":"'.VSTOI::ANNOTATION.'",'.
-              '"hascoTypeUri":"'.VSTOI::ANNOTATION.'",'.
-              '"hasAnnotationStem":"'.$annotationStemUri.'",'.
-              '"hasPosition":"'.$position.'",'.
-              '"hasContentWithStyle":"'.$original->hasContentWithStyle.'",'.
-              '"comment":"'.$original->comment.'",'.
-              '"belongsTo":"'.$original->belongsTo.'",'.
-              '"hasSIRManagerEmail":"'.$useremail.'"}';
-            //dpm($annotationJson);
-
-            // UPDATE BY DELETING AND CREATING
-            $api = \Drupal::service('rep.api_connector');
-            $api->annotationDel($original->uri);
-            $updatedAnnotation = $api->annotationAdd($annotationJson);
-            return "Annotation updated for ".Utils::namespaceUri($position).". ";
-
-          } catch(\Exception $e){
-            \Drupal::messenger()->addError(t("An error occurred while updating the Annotation: ".$e->getMessage()));
-            $this->backToSlotElement($form_state);
-          }
-
-        }
+      } catch(\Exception $e){
+        \Drupal::messenger()->addError(t("An error occurred while updating the Annotation: ".$e->getMessage()));
+        $this->backToSlotElement($form_state);
       }
     }
+
+    return "Annotation added for ".Utils::namespaceUri($position).". ";
+
+
   }
 
   /**
@@ -928,11 +928,12 @@ class ManageSlotElementsForm extends FormBase {
         $annotation->uri == "" ||
         $annotation->annotationStem == NULL ||
         $annotation->annotationStem->hasContent == NULL ||
-        $annotation->annotationStem->hasContent == "") {
+        $annotation->annotationStem->hasContent == ""
+      ){
       return "";
     }
 
-    return Utils::trimAutoCompleteString($annotation->annotationStem->hasContent,$annotation->annotationStem->uri);
+    return Utils::trimAutoCompleteString(html_entity_decode($annotation->annotationStem->comment),$annotation->uri);
   }
 
   function backUrl() {

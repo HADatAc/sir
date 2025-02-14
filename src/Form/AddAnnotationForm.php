@@ -161,11 +161,15 @@ class AddAnnotationForm extends FormBase {
     if ($button_name != 'back') {
       if ($form_state->getValue('annotation_stem') == NULL || $form_state->getValue('annotation_stem') == '') {
         $form_state->setErrorByName('annotation_stem', $this->t('Annotation stem value is empty. Please enter a valid stem.'));
+      } else {
+        $stemUri = Utils::uriFromAutocomplete($form_state->getValue('annotation_stem'));
+        $this->setAnnotationStem($api->parseObjectResponse($api->getUri($stemUri),'getUri'));
+        if($this->getAnnotationStem() == NULL) {
+          $form_state->setErrorByName('annotation_stem', $this->t('Value for Annotation Stem is not valid. Please enter a valid stem.'));
+        }
       }
-      $stemUri = Utils::uriFromAutocomplete($form_state->getValue('annotation_stem'));
-      $this->setAnnotationStem($api->parseObjectResponse($api->getUri($stemUri),'getUri'));
-      if($this->getAnnotationStem() == NULL) {
-        $form_state->setErrorByName('annotation_stem', $this->t('Value for Annotation Stem is not valid. Please enter a valid stem.'));
+      if ($form_state->getValue('annotation_description') == NULL) {
+        $form_state->setErrorByName('annotation_description', $this->t('Annotation description value cannot be empty.'));
       }
     }
   }
@@ -202,7 +206,7 @@ class AddAnnotationForm extends FormBase {
         '"hascoTypeUri":"'.VSTOI::ANNOTATION.'",'.
         '"hasAnnotationStem":"'.$this->getAnnotationStem()->uri.'",'.
         '"hasPosition":"'.$form_state->getValue('annotation_position').'",'.
-        '"hasContentWithStyle":"'.$form_state->getValue('annotation_style').'",'.
+        '"hasContentWithStyle":"'.htmlentities($form_state->getValue('annotation_style')).'",'.
         '"comment":"'.$form_state->getValue('annotation_description').'",'.
         '"belongsTo":"'.$belongsTo.'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
