@@ -16,6 +16,33 @@ class JsonApiAnnotationController extends ControllerBase{
   /**
    * @return JsonResponse
    */
+  // public function handleAutocomplete(Request $request) {
+  //   $results = [];
+  //   $input = $request->query->get('q');
+  //   if (!$input) {
+  //     return new JsonResponse($results);
+  //   }
+  //   $keyword = Xss::filter($input);
+
+  //   // $containeruri = base64_decode($containeruri);
+  //   // $manageremail = base64_decode($manageremail);
+  //   //dpm($containeruri);
+  //   $api = \Drupal::service('rep.api_connector');
+  //   $annotation_list = $api->listByKeyword('annotation',$keyword,10,0);
+  //   //$annotation_list = $api->listByManagerEmailByContainer($containeruri, 'annotation',$manageremail,10,0);
+  //   $obj = json_decode($annotation_list);
+  //   $annotations = [];
+  //   if ($obj->isSuccessful) {
+  //     $annotations = $obj->body;
+  //   }
+  //   foreach ($annotations as $annotation) {
+  //     $results[] = [
+  //       'value' => $annotation->hasContentWithStyle . ' [' . $annotation->uri . ']',
+  //       'label' => $annotation->hasContentWithStyle . ' [' . $annotation->uri . ']',
+  //     ];
+  //   }
+  //   return new JsonResponse($results);
+  // }
   public function handleAutocomplete(Request $request) {
     $results = [];
     $input = $request->query->get('q');
