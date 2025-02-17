@@ -811,7 +811,7 @@ class ManageSlotElementsForm extends FormBase {
 
     $annotationUri = Utils::uriFromAutocomplete($newValue);
 
-    dpm($original);
+    //dpm($original);
 
     if ($original->uri !== NULL) {
 
@@ -833,8 +833,7 @@ class ManageSlotElementsForm extends FormBase {
 
         // SET NEW ANNOTATION TO POSITION
         //Get Content of Annotation
-        $annotation = $api->parseObjectResponse($api->getUri($annotationUri),'getUri');
-        $result = $annotation->isSuccessful ? $annotation->body : [];
+        $result = $api->parseObjectResponse($api->getUri($annotationUri),'getUri');
 
         $annotationNewJson = '{"uri":"'.$result->uri.'",'.
         '"typeUri":"'.VSTOI::ANNOTATION.'",'.
@@ -860,8 +859,10 @@ class ManageSlotElementsForm extends FormBase {
 
         // SET NEW ANNOTATION TO POSITION
         //Get Content of Annotation
-        $annotation = $api->parseObjectResponse($api->getUri($annotationUri),'getUri');
-        $result = $annotation->isSuccessful ? $annotation->body : [];
+        $result = $api->parseObjectResponse($api->getUri($annotationUri),'getUri');
+        //$result = $annotation->isSuccessful ? $annotation->body : [];
+
+        // dpm($result);
 
         $annotationNewJson = '{"uri":"'.$result->uri.'",'.
         '"typeUri":"'.VSTOI::ANNOTATION.'",'.
@@ -872,6 +873,8 @@ class ManageSlotElementsForm extends FormBase {
         '"comment":"'.$result->comment.'",'.
         '"belongsTo":"'.$result->belongsTo.'",'.
         '"hasSIRManagerEmail":"'.$result->hasSIRManagerEmail.'"}';
+
+        // dpm($annotationNewJson);
 
         $api->annotationDel($result->uri);
         $api->annotationAdd($annotationNewJson);

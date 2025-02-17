@@ -106,13 +106,13 @@ class AddAnnotationForm extends FormBase {
       '#title' => $this->t('Container'),
       '#default_value' => $belongsTo,
       '#disabled' => TRUE,
-  ];
-    $form['annotation_position'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Position'),
-      '#options' => $positions,
-      '#default_value' => 'en',
     ];
+    // $form['annotation_position'] = [
+    //   '#type' => 'select',
+    //   '#title' => $this->t('Position'),
+    //   '#options' => $positions,
+    //   '#default_value' => 'en',
+    // ];
     $form['annotation_stem'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Annotation Stem'),
@@ -205,7 +205,7 @@ class AddAnnotationForm extends FormBase {
         '"typeUri":"'.VSTOI::ANNOTATION.'",'.
         '"hascoTypeUri":"'.VSTOI::ANNOTATION.'",'.
         '"hasAnnotationStem":"'.$this->getAnnotationStem()->uri.'",'.
-        '"hasPosition":"'.$form_state->getValue('annotation_position').'",'.
+        '"hasPosition":"'.VSTOI::NOT_VISIBLE.'",'.
         '"hasContentWithStyle":"'.htmlentities($form_state->getValue('annotation_style')).'",'.
         '"comment":"'.$form_state->getValue('annotation_description').'",'.
         '"belongsTo":"'.$belongsTo.'",'.
