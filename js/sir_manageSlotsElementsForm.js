@@ -68,10 +68,30 @@
 (function ($, Drupal) {
   Drupal.behaviors.autoSaveForm = {
     attach: function (context, settings) {
-      $('input, select, textarea', context).on('change', function () {
-        $('#auto-save-button').click(); // Trigger hidden submit button
-      });
+      $('input[type="text"]', context)
+        .off('change.autoSaveForm')
+        .on('change.autoSaveForm', function () {
+          // Capture the ID or, if not present, the name of the element that triggered the event.
+          var triggeringElement = $(this).attr('id') || $(this).attr('name');
+          console.log("Triggered by element: ", triggeringElement);
+
+          // Find the hidden field.
+          var $hidden = $('#auto-save-trigger');
+          if ($hidden.length === 0) {
+            console.warn("Hidden field #auto-save-trigger not found!");
+          } else {
+            // Set the value in the hidden field.
+            $hidden.val(triggeringElement);
+            console.log("Hidden field value set to: ", $hidden.val());
+          }
+
+          // Trigger the auto-save button.
+          $('#auto-save-button').click();
+        });
     }
   };
 })(jQuery, Drupal);
+
+
+
 
