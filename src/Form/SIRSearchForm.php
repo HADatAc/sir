@@ -183,6 +183,22 @@ class SIRSearchForm extends FormBase {
       ],
     ];
 
+    $form['bottom_space'] = [
+      '#type' => 'item',
+      '#title' => t('<br><br>'),
+    ];
+
+    $form['node_comment_display'] = [
+      '#type' => 'container',
+      '#text' => '',
+      '#attributes' => [
+          'id' => 'node-comment-display',
+          'class' => ['mt-2', 'w-100'],
+          'style' => 'display:none;'
+          //'style' => 'float:left',
+      ],
+    ];
+
     return $form;
   }
 
