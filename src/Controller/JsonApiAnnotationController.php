@@ -46,6 +46,7 @@ class JsonApiAnnotationController extends ControllerBase{
   public function handleAutocomplete(Request $request) {
     $results = [];
     $input = $request->query->get('q');
+    $parentType = $request->query->get('parent_type') ?? 'instrument';
 
     if (!$input) {
         return new JsonResponse($results);
@@ -58,21 +59,53 @@ class JsonApiAnnotationController extends ControllerBase{
     $obj = json_decode($annotation_list);
     $annotations = $obj->isSuccessful ? $obj->body : [];
 
+    // foreach ($annotations as $annotation) {
+    //   // Must check if its and Instrument(INS) or a Sub-Container (SCT)
+    //   if (strpos($annotation->belongsTo, '/SCT') === true && $parentType === 'instrument') {
+    //     continue;
+    //   } else {
+    //     if (strpos($annotation->belongsTo, '/SCT') === false && $parentType === 'instrument')
+    //   }
+
+    //   $originalText = $annotation->hasContentWithStyle;
+
+    //   // Expressão regex para encontrar a palavra-chave e o contexto ao redor
+    //   if (preg_match('/(.{0,5})(' . preg_quote($keyword, '/') . ')(.{0,5})/iu', $originalText, $matches)) {
+    //       $trimmedText = trim($matches[1] . $matches[2] . $matches[3]);
+    //   } else {
+    //       $trimmedText = $originalText; // Se não encontrar, mantém o original
+    //   }
+
+    //   $results[] = [
+    //       'value' => html_entity_decode($trimmedText) . ' [' . $annotation->uri . ']',
+    //       'label' => $trimmedText . ' [' . $annotation->uri . ']',
+    //   ];
+    // }
     foreach ($annotations as $annotation) {
-        $originalText = $annotation->hasContentWithStyle;
+      // For 'instrument', skip annotations that belong to subcontainers.
+      if ($parentType === 'instrument' && strpos($annotation->belongsTo, '/SCT') !== false) {
+        continue;
+      }
+      // For 'subcontainer', skip annotations that do not belong to subcontainers.
+      if ($parentType === 'subcontainer' && strpos($annotation->belongsTo, '/SCT') === false) {
+        continue;
+      }
 
-        // Expressão regex para encontrar a palavra-chave e o contexto ao redor
-        if (preg_match('/(.{0,5})(' . preg_quote($keyword, '/') . ')(.{0,5})/iu', $originalText, $matches)) {
-            $trimmedText = trim($matches[1] . $matches[2] . $matches[3]);
-        } else {
-            $trimmedText = $originalText; // Se não encontrar, mantém o original
-        }
+      $originalText = $annotation->hasContentWithStyle;
 
-        $results[] = [
-            'value' => html_entity_decode($trimmedText) . ' [' . $annotation->uri . ']',
-            'label' => $trimmedText . ' [' . $annotation->uri . ']',
-        ];
+      // Use a regex to capture up to 5 characters before and after the keyword.
+      if (preg_match('/(.{0,5})(' . preg_quote($keyword, '/') . ')(.{0,5})/iu', $originalText, $matches)) {
+          $trimmedText = trim($matches[1] . $matches[2] . $matches[3]);
+      } else {
+          $trimmedText = $originalText; // If no match is found, keep the original text.
+      }
+
+      $results[] = [
+          'value' => html_entity_decode($trimmedText) . ' [' . $annotation->uri . ']',
+          'label' => $trimmedText . ' [' . $annotation->uri . ']',
+      ];
     }
+
 
     return new JsonResponse($results);
 }
