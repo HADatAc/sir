@@ -169,6 +169,10 @@ class EditProcessForm extends FormBase {
       if (isset($basic['description'])) {
         $description = $basic['description'];
       }
+      $webDocument = '';
+      if (isset($basic['webdocument'])) {
+        $webDocument = $basic['webdocument'];
+      }
       $status = '';
       if (isset($basic['status'])) {
         $status = $basic['status'];
@@ -207,7 +211,7 @@ class EditProcessForm extends FormBase {
           '#type' => 'markup',
           '#markup' => '</div>',
         ],
-        '#disabled' => true
+        '#disabled' => false
       ];
       $form['process_processstem'] = [
         '#type' => 'hidden',
@@ -240,6 +244,14 @@ class EditProcessForm extends FormBase {
         '#title' => $this->t('Description'),
         '#default_value' => $description,
         '#required' => true
+      ];
+      $form['process_webdocument'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Web Document'),
+        '#default_value' => $webDocument,
+        '#attributes' => [
+          'placeholder' => 'http://',
+        ]
       ];
       $form['process_status'] = [
         '#type' => 'hidden',
@@ -454,6 +466,7 @@ class EditProcessForm extends FormBase {
       $basic['language']    = $input['process_language'] ?? $this->getProcess()->hasLanguage;
       $basic['version']     = $input['process_version'] ?? $this->getProcess()->hasVersion;
       $basic['description'] = $input['process_description'] ?? $this->getProcess()->comment;
+      $basic['webdocument'] = $input['process_webdocument'] ?? $this->getProcess()->hasWebDocument;
       $basic['status'] = $input['process_status'] ?? $this->getProcess()->hasStatus;
       $basic['typeUri'] = $input['process_typeuri'] ?? $this->getProcess()->typeUri;
       \Drupal::state()->set('my_form_basic', $basic);
@@ -470,6 +483,7 @@ class EditProcessForm extends FormBase {
       'language' => $this->getProcess()->hasLanguage,
       'version' => $this->getProcess()->hasVersion,
       'description' => $this->getProcess()->comment,
+      'webdocument' => $this->getProcess()->hasWebDocument,
       'status' => $this->getProcess()->hasStatus,
       'typeUri' => $this->getProcess()->typeUri,
     ];
@@ -1152,6 +1166,7 @@ class EditProcessForm extends FormBase {
             . '"hasLanguage":"' . $basic['language'] . '",'
             . '"hasVersion":"' . $basic['version'] . '",'
             . '"comment":"' . $basic['description'] . '",'
+            . '"hasWebDocument":"'. $basic['webdocument'] .'",'
             . '"hasSIRManagerEmail":"' . $useremail . '"}';
 
           $api = \Drupal::service('rep.api_connector');

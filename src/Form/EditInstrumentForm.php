@@ -148,6 +148,14 @@ class EditInstrumentForm extends FormBase {
       '#title' => $this->t('Description'),
       '#default_value' => $this->getInstrument()->comment,
     ];
+    $form['instrument_webdocument'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Web Document'),
+      '#default_value' => $this->getInstrument()->hasWebDocument,
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ]
+    ];
     $form['update_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Update'),
@@ -220,6 +228,7 @@ class EditInstrumentForm extends FormBase {
         '"hasInformant":"'.$form_state->getValue('instrument_informant').'",'.
         '"hasLanguage":"'.$form_state->getValue('instrument_language').'",'.
         '"hasVersion":"'.$form_state->getValue('instrument_version').'",'.
+        '"hasWebDocument":"'.$form_state->getValue('instrument_webdocument').'",'.
         '"comment":"'.$form_state->getValue('instrument_description').'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
 

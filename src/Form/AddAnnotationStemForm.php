@@ -132,6 +132,13 @@ class AddAnnotationStemForm extends FormBase {
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
     ];
+    $form['annotationstem_webdocument'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Web Document'),
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ]
+    ];
     $form['annotationstem_was_derived_from'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Was Derived From'),
@@ -222,6 +229,7 @@ class AddAnnotationStemForm extends FormBase {
         '"hasLanguage":"'.$form_state->getValue('annotationstem_language').'",'.
         '"hasVersion":"'.$form_state->getValue('annotationstem_version').'",'.
         '"comment":"'.$form_state->getValue('annotationstem_description').'",'.
+        '"hasWebDocument":"'.$form_state->getValue('annotationstem_webdocument').'",'.
         '"wasDerivedFrom":"'.$wasDerivedFrom.'",'.
         '"wasGeneratedBy":"'.$wasGeneratedBy.'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';

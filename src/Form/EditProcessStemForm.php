@@ -86,7 +86,7 @@ class EditProcessStemForm extends FormBase {
     }
 
     //dpm($this->getProcessStem());
-    $form['process_type'] = [
+    $form['process_stem_type'] = [
       'top' => [
         '#type' => 'markup',
         '#markup' => '<div class="pt-3 col border border-white">',
@@ -95,8 +95,7 @@ class EditProcessStemForm extends FormBase {
         '#type' => 'textfield',
         '#title' => $this->t('Type'),
         '#name' => 'process_stem_type',
-          '#default_value' => $this->getProcessStem()->superUri ?? '',
-        '#disabled' => TRUE,
+          '#default_value' => Utils::fieldToAutocomplete($this->getProcessStem()->superUri, $this->getProcessStem()->superClassLabel),
         '#id' => 'process_stem_type',
         '#parents' => ['process_stem_type'],
         '#attributes' => [
@@ -116,7 +115,7 @@ class EditProcessStemForm extends FormBase {
         '#type' => 'markup',
         '#markup' => '</div>',
       ],
-      '#disabled' => TRUE,
+      '#disabled' => false,
     ];
 
     $form['process_stem_content'] = [
@@ -144,6 +143,14 @@ class EditProcessStemForm extends FormBase {
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
       '#default_value' => $this->getProcessStem()->comment,
+    ];
+    $form['process_stem_webdocument'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Web Document'),
+      '#default_value' => $this->getProcessStem()->hasWebDocument,
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ]
     ];
     $form['process_stem_was_derived_from'] = [
       '#type' => 'textfield',
@@ -194,9 +201,9 @@ class EditProcessStemForm extends FormBase {
       if(strlen($form_state->getValue('process_stem_language')) < 1) {
         $form_state->setErrorByName('process_stem_language', $this->t('Please enter a valid language'));
       }
-      if(strlen($form_state->getValue('process_stem_version')) < 1) {
-        $form_state->setErrorByName('process_stem_version', $this->t('Please enter a valid version'));
-      }
+      // if(strlen($form_state->getValue('process_stem_version')) < 1) {
+      //   $form_state->setErrorByName('process_stem_version', $this->t('Please enter a valid version'));
+      // }
     }
   }
 
@@ -219,30 +226,28 @@ class EditProcessStemForm extends FormBase {
       $useremail = \Drupal::currentUser()->getEmail();
 
       $wasDerivedFrom = '';
-      if ($this->getSourceProcessStem() === NULL || $this->getSourceProcessStem()->uri === NULL) {
-        $wasDerivedFrom = 'null';
-      } else {
+      if ($this->getSourceProcessStem() !== NULL || $this->getSourceProcessStem()->uri !== NULL) {
         $wasDerivedFrom = $this->getSourceProcessStem()->uri;
       }
 
       $processJson = '{"uri":"'.$this->getProcessStem()->uri.'",'.
-        '"superUri":"'.UTILS::plainUri($form_state->getValue('process_stem_type')).'",'.
-        //'"typeUri":"'.VSTOI::DETECTOR_STEM.'",'.
+        '"superUri":"'.UTILS::uriFromAutocomplete($form_state->getValue('process_stem_type')).'",'.
         '"label":"'.$form_state->getValue('process_stem_content').'",'.
-        '"hascoTypeUri":"'.VSTOI::PROCESS.'",'.
-        '"hasStatus":"'.VSTOI::CURRENT.'",'.
+        '"hascoTypeUri":"'.VSTOI::PROCESS_STEM.'",'.
+        '"hasStatus":"'.VSTOI::DRAFT.'",'.
         '"hasContent":"'.$form_state->getValue('process_stem_content').'",'.
         '"hasLanguage":"'.$form_state->getValue('process_stem_language').'",'.
-        '"hasVersion":"'.$form_state->getValue('process_stem_version').'",'.
+        '"hasVersion":"1",'.
         '"comment":"'.$form_state->getValue('process_stem_description').'",'.
+        '"hasWebDocument":"'.$form_state->getValue('process_stem_webdocument').'",'.
         '"wasDerivedFrom":"'.$wasDerivedFrom.'",'.
         '"wasGeneratedBy":"'.$form_state->getValue('process_stem_was_generated_by').'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
 
       // UPDATE BY DELETING AND CREATING
       $api = \Drupal::service('rep.api_connector');
-      $api->processStemDel($this->getProcessStemUri());
-      $updatedProcessStem = $api->processStemAdd($processJson);
+      $api->processStemDel($this->getProcessStem()->uri);
+      $api->processStemAdd($processJson);
       \Drupal::messenger()->addMessage(t("Process Stem has been updated successfully."));
       self::backUrl();
       return;

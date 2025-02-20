@@ -83,7 +83,7 @@ class EditDetectorForm extends FormBase {
       }
     }
 
-    //dpm($this->getDetector());
+    // dpm($this->getDetector());
 
     $form['detector_stem'] = [
       'top' => [
@@ -96,7 +96,7 @@ class EditDetectorForm extends FormBase {
           $this->t('Simulation Technique Stem') :
           $this->t('Detector Stem'),
         '#name' => 'detector_stem',
-        '#default_value' => $this->getDetector()->typeUri,
+        '#default_value' => Utils::fieldToAutocomplete($this->getDetector()->typeUri, $this->getDetector()->typeLabel),
         '#id' => 'detector_stem',
         '#parents' => ['detector_stem'],
         '#attributes' => [
@@ -116,7 +116,7 @@ class EditDetectorForm extends FormBase {
         '#type' => 'markup',
         '#markup' => '</div>',
       ],
-      '#disabled' => TRUE
+      '#disabled' => FALSE
     ];
     $form['detector_codebook'] = [
       '#type' => 'textfield',
@@ -162,6 +162,14 @@ class EditDetectorForm extends FormBase {
         '#markup' => '</div>',
       ],
       '#disabled' => FALSE
+    ];
+    $form['detector_webdocument'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Web Document'),
+      '#default_value' => $this->getDetector()->hasWebDocument,
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ]
     ];
     $form['update_submit'] = [
       '#type' => 'submit',
@@ -251,6 +259,8 @@ class EditDetectorForm extends FormBase {
         $hasCodebook = Utils::uriFromAutocomplete($form_state->getValue('detector_codebook'));
       }
 
+      // dpm(Utils::uriFromAutocomplete($form_state->getValue('detector_isAttributeOf')));
+
       $detectorJson = '{"uri":"'.$this->getDetector()->uri.'",'.
         '"typeUri":"'.Utils::uriFromAutocomplete($form_state->getValue('detector_stem')).'",'.
         '"hascoTypeUri":"'.VSTOI::DETECTOR.'",'.
@@ -260,7 +270,8 @@ class EditDetectorForm extends FormBase {
         '"hasSIRManagerEmail":"'.$useremail.'",'.
         '"label":"'.$label.'",'.
         '"hasVersion":"1",'.
-        '"isAttributeOf":"'.Utils::uriFromAutocomplete($form_state->getValue('detector_isAttributeOf')).'",'.
+        '"isAttributeOf":"'.( Utils::uriFromAutocomplete($form_state->getValue('detector_isAttributeOf')) !== null ? Utils::uriFromAutocomplete($form_state->getValue('detector_isAttributeOf')) : $form_state->getValue('detector_isAttributeOf') ).'",'.
+        '"hasWebDocument":"'.$form_state->getValue('detector_webdocument').'",'.
         '"hasStatus":"'.VSTOI::DRAFT.'"}';
 
       // UPDATE BY DELETING AND CREATING

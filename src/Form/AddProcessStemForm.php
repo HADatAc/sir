@@ -134,6 +134,13 @@ class AddProcessStemForm extends FormBase {
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
     ];
+    $form['process_stem_webdocument'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Web Document'),
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ]
+    ];
     $form['process_stem_was_derived_from'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Was Derived From'),
@@ -218,7 +225,6 @@ class AddProcessStemForm extends FormBase {
       $newProcessStemUri = Utils::uriGen('processstem');
       $processStemJson = '{"uri":"'.$newProcessStemUri.'",'.
         '"superUri":"'.Utils::uriFromAutocomplete($form_state->getValue('process_stem_type')).'",'.
-        //'"typeUri":"'.VSTOI::DETECTOR_STEM.'",'.
         '"label":"'.$form_state->getValue('process_stem_content').'",'.
         '"hascoTypeUri":"'.VSTOI::PROCESS_STEM.'",'.
         '"hasStatus":"'.VSTOI::DRAFT.'",'.
@@ -226,6 +232,7 @@ class AddProcessStemForm extends FormBase {
         '"hasLanguage":"'.$form_state->getValue('process_stem_language').'",'.
         '"hasVersion":"'.$form_state->getValue('process_stem_version').'",'.
         '"comment":"'.$form_state->getValue('process_stem_description').'",'.
+        '"hasWebDocument":"'.$form_state->getValue('process_stem_webdocument').'",'.
         '"wasDerivedFrom":"'.$wasDerivedFrom.'",'.
         '"wasGeneratedBy":"'.$wasGeneratedBy.'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';

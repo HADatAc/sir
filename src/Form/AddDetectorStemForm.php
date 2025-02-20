@@ -134,6 +134,13 @@ class AddDetectorStemForm extends FormBase {
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
     ];
+    $form['detectorstem_webdocument'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Web Document'),
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ]
+    ];
     $form['detectorstem_was_derived_from'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Was Derived From'),
@@ -224,6 +231,7 @@ class AddDetectorStemForm extends FormBase {
         '"hasContent":"'.$form_state->getValue('detectorstem_content').'",'.
         '"hasLanguage":"'.$form_state->getValue('detectorstem_language').'",'.
         '"hasVersion":"'.$form_state->getValue('detectorstem_version').'",'.
+        '"hasWebDocument":"'.$form_state->getValue('detectorstem_webdocument').'",'.
         '"comment":"'.$form_state->getValue('detectorstem_description').'",'.
         '"wasDerivedFrom":"'.$wasDerivedFrom.'",'.
         '"wasGeneratedBy":"'.$wasGeneratedBy.'",'.
