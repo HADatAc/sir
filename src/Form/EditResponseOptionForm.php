@@ -88,7 +88,14 @@ class EditResponseOptionForm extends FormBase {
       '#title' => $this->t('Description'),
       '#default_value' => $this->getResponseOption()->comment,
     ];
-
+    $form['responseoption_webdocument'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Web Document'),
+      '#default_value' => $this->getResponseOption()->hasWebDocument,
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ]
+    ];
     if ($this->getResponseOption()->hasReviewNote !== NULL) {
       $form['responseoption_hasreviewnote'] = [
         '#type' => 'textarea',
@@ -180,6 +187,7 @@ class EditResponseOptionForm extends FormBase {
           '"hasVersion":"'.$form_state->getValue('responseoption_version').'",'.
           '"comment":"'.$form_state->getValue('responseoption_description').'",'.
           '"wasDerivedFrom":"'.$this->getResponseOption()->uri.'",'.
+          '"hasWebDocument":"'.$form_state->getValue('responseoption_webdocument').'",'.
           '"hasSIRManagerEmail":"'.$useremail.'"}';
 
         $api->responseOptionAdd($responseOptionJSON_new);
@@ -197,6 +205,7 @@ class EditResponseOptionForm extends FormBase {
           '"hasVersion":"'.$form_state->getValue('responseoption_version').'",'.
           '"comment":"'.$form_state->getValue('responseoption_description').'",'.
           '"wasDerivedFrom":"'.$this->getResponseOption()->wasDerivedFrom.'",'.
+          '"hasWebDocument":"'.$form_state->getValue('responseoption_webdocument').'",'.
           '"hasSIRManagerEmail":"'.$useremail.'"}';
 
         // UPDATE BY DELETING AND CREATING

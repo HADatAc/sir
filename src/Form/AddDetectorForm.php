@@ -184,7 +184,7 @@ class AddDetectorForm extends FormBase {
     $form['detector_isAttributeOf'] = [
       'top' => [
         '#type' => 'markup',
-        '#markup' => '<div class="pt-3 col border border-white">',
+        '#markup' => '<div class="col border border-white">',
       ],
       'main' => [
         '#type' => 'textfield',
@@ -210,6 +210,13 @@ class AddDetectorForm extends FormBase {
         '#type' => 'markup',
         '#markup' => '</div>',
       ],
+    ];
+    $form['detector_webdocument'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Web Document'),
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ]
     ];
     $form['save_submit'] = [
       '#type' => 'submit',
@@ -317,6 +324,7 @@ class AddDetectorForm extends FormBase {
         '"label":"'.$label.'",'.
         '"hasVersion":"1",'.
         '"isAttributeOf":"'.Utils::uriFromAutocomplete($form_state->getValue('detector_isAttributeOf')).'",'.
+        '"hasWebDocument":"'.$form_state->getValue('detector_webdocument').'",'.
         '"hasStatus":"'.VSTOI::DRAFT.'"}';
 
       $api->detectorAdd($detectorJson);

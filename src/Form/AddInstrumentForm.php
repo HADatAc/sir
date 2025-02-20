@@ -94,6 +94,13 @@ class AddInstrumentForm extends FormBase {
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
     ];
+    $form['instrument_webdocument'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Web Document'),
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ]
+    ];
     $form['save_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Save'),
@@ -165,6 +172,7 @@ class AddInstrumentForm extends FormBase {
         '"hasInformant":"'.$form_state->getValue('instrument_informant').'",'.
         '"hasLanguage":"'.$form_state->getValue('instrument_language').'",'.
         '"hasVersion":"'.$form_state->getValue('instrument_version').'",'.
+        '"hasWebDocument":"'.$form_state->getValue('instrument_webdocument').'",'.
         '"comment":"'.$form_state->getValue('instrument_description').'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
 

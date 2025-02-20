@@ -252,7 +252,18 @@ class SIRSearchForm extends FormBase {
     $response = new AjaxResponse();
     $this->setPage(1);
     $this->setPageSize(12);
-    $url = $this->redirectUrl($form_state);
+    $elementType = $form_state->getValue('search_element_type');
+
+    // Build URL for the route 'sir.search' with parameters.
+    if ($elementType === 'instrument' || $elementType === 'detectorstem' || $elementType === 'processstem'){
+      $url = Url::fromRoute('sir.search', [
+        'mode' => 'browse',
+        'elementtype' => $elementType,
+      ]);
+    } else {
+      $url = $this->redirectUrl($form_state);
+    }
+
     $response->addCommand(new RedirectCommand($url->toString()));
     return $response;
   }

@@ -81,6 +81,13 @@ class AddCodebookForm extends FormBase {
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
     ];
+    $form['codebook_webdocument'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Web Document'),
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ]
+    ];
     $form['save_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Save'),
@@ -144,6 +151,7 @@ class AddCodebookForm extends FormBase {
         '"hasLanguage":"' . $form_state->getValue('codebook_language') . '",' .
         '"hasVersion":"' . $form_state->getValue('codebook_version') . '",' .
         '"comment":"' . $form_state->getValue('codebook_description') . '",' .
+        '"hasWebDocument":"'.$form_state->getValue('codebook_webdocument').'",'.
         '"hasSIRManagerEmail":"' . $uemail . '"}';
 
       $api = \Drupal::service('rep.api_connector');

@@ -86,12 +86,12 @@ class EditInstrumentForm extends FormBase {
       ],
       'main' => [
         '#type' => 'textfield',
-        '#title' => $this->t('Type'),
+        '#title' => $this->t('Parent Type'),
         '#name' => 'instrument_type',
-        '#default_value' => $this->getInstrument()->superUri,
+        '#default_value' => Utils::fieldToAutocomplete($this->getInstrument()->superUri, $this->getInstrument()->superClassLabel),
         '#id' => 'instrument_type',
         '#parents' => ['instrument_type'],
-        '#disabled' => TRUE,
+        // '#disabled' => TRUE,
         '#attributes' => [
           'class' => ['open-tree-modal'],
           'data-dialog-type' => 'modal',
@@ -147,6 +147,14 @@ class EditInstrumentForm extends FormBase {
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
       '#default_value' => $this->getInstrument()->comment,
+    ];
+    $form['instrument_webdocument'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Web Document'),
+      '#default_value' => $this->getInstrument()->hasWebDocument,
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ]
     ];
     $form['update_submit'] = [
       '#type' => 'submit',
@@ -212,22 +220,25 @@ class EditInstrumentForm extends FormBase {
       $useremail = \Drupal::currentUser()->getEmail();
 
       $instrumentJson = '{"uri":"'.$this->getInstrumentUri().'",'.
-        '"superUri":"'.UTILS::plainUri($form_state->getValue('instrument_type')).'",'.
+        '"superUri":"'.Utils::uriFromAutocomplete($form_state->getValue('instrument_type')).'",'.
         '"hascoTypeUri":"'.VSTOI::INSTRUMENT.'",'.
-        //'"hasType":"'.$form_state->getValue('instrument_type').'",'.
         '"hasStatus":"'.$this->getInstrument()->hasStatus.'",'.
         '"label":"'.$form_state->getValue('instrument_name').'",'.
         '"hasShortName":"'.$form_state->getValue('instrument_abbreviation').'",'.
         '"hasInformant":"'.$form_state->getValue('instrument_informant').'",'.
         '"hasLanguage":"'.$form_state->getValue('instrument_language').'",'.
         '"hasVersion":"'.$form_state->getValue('instrument_version').'",'.
+        '"hasWebDocument":"'.$form_state->getValue('instrument_webdocument').'",'.
         '"comment":"'.$form_state->getValue('instrument_description').'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
+
+      //dpm($instrumentJson);
+      //return false;
 
       // UPDATE BY DELETING AND CREATING
       $api = \Drupal::service('rep.api_connector');
       $api->instrumentDel($this->getInstrumentUri());
-      $newInstrument = $api->instrumentAdd($instrumentJson);
+      $api->instrumentAdd($instrumentJson);
 
       \Drupal::messenger()->addMessage(t("Instrument has been updated successfully."));
       self::backUrl();

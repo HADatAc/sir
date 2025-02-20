@@ -121,6 +121,14 @@ class EditCodebookForm extends FormBase {
       '#title' => $this->t('Description'),
       '#default_value' => $this->getCodebook()->comment,
     ];
+    $form['codebook_webdocument'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Web Document'),
+      '#default_value' => $this->getCodebook()->hasWebDocument,
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ]
+    ];
     $form['update_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Update'),
@@ -186,6 +194,7 @@ class EditCodebookForm extends FormBase {
         '"hasLanguage":"'.$form_state->getValue('codebook_language').'",'.
         '"hasVersion":"'.$form_state->getValue('codebook_version').'",'.
         '"comment":"'.$form_state->getValue('codebook_description').'",'.
+        '"hasWebDocument":"'.$form_state->getValue('codebook_webdocument').'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
 
       // UPDATE BY DELETING AND CREATING

@@ -70,6 +70,7 @@ class AddProcessForm extends FormBase {
         'language' => '',
         'version' => '1',
         'description' => '',
+        'webdocument' => '',
       ];
       $instruments = [];
       //$codes = [];
@@ -173,6 +174,10 @@ class AddProcessForm extends FormBase {
       if (isset($basic['description'])) {
         $description = $basic['description'];
       }
+      $webDocument = '';
+      if (isset($basic['webdocument'])) {
+        $webDocument = $basic['webdocument'];
+      }
 
       $form['process_processstem'] = [
         'top' => [
@@ -232,6 +237,14 @@ class AddProcessForm extends FormBase {
         '#title' => $this->t('Description'),
         '#default_value' => $description,
         '#required' => true,
+      ];
+      $form['process_webdocument'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Web Document'),
+        '#default_value' => $webDocument,
+        '#attributes' => [
+          'placeholder' => 'http://',
+        ]
       ];
 
     }
@@ -536,6 +549,7 @@ class AddProcessForm extends FormBase {
       'language' => '',
       'version' => '1',
       'description' => '',
+      'webdocument' => ''
     ];
     $input = $form_state->getUserInput();
     if (isset($input) && is_array($input) &&
@@ -546,6 +560,7 @@ class AddProcessForm extends FormBase {
       $basic['language']    = $input['process_language'] ?? '';
       $basic['version']     = $input['process_version'] ?? 1;
       $basic['description'] = $input['process_description'] ?? '';
+      $basic['webdocument'] = $input['process_webdocument'] ?? '';
 
     }
     \Drupal::state()->set('my_form_basic', $basic);
@@ -759,8 +774,7 @@ class AddProcessForm extends FormBase {
     $response->addCommand(new ReplaceCommand('#' . $container_id, $detectorTable));
 
     return $response;
-}
-
+  }
 
   protected function updateInstruments(FormStateInterface $form_state) {
     $instruments = \Drupal::state()->get('my_form_instruments');
@@ -1224,6 +1238,7 @@ class AddProcessForm extends FormBase {
             . '"hasLanguage":"' . $basic['language'] . '",'
             . '"hasVersion":"' . $basic['version'] . '",'
             . '"comment":"' . $basic['description'] . '",'
+            . '"hasWebDocument":"'. $basic['webdocument'] .'",'
             . '"hasSIRManagerEmail":"' . $useremail . '"}';
 
           $api = \Drupal::service('rep.api_connector');
