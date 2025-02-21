@@ -193,7 +193,15 @@ class ReviewDetectorForm extends FormBase {
         '#markup' => '<a href="' . $url . '" target="_blank" class="btn btn-success text-nowrap mt-2" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
       ];
     }
-
+    $form['detector_webdocument'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Web Document'),
+      '#default_value' => $this->getDetector()->hasWebDocument,
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ],
+      '#disabled' => TRUE,
+    ];
     $form['detector_owner'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Owner'),
@@ -312,6 +320,7 @@ class ReviewDetectorForm extends FormBase {
           '"hasReviewNote":"'.$form_state->getValue('detector_hasreviewnote').'",'.
           '"hasEditorEmail":"'.$useremail.'",'.
           '"hasStatus":"'.VSTOI::CURRENT.'"'.
+          '"hasWebDocument":"'.$result->hasWebDocument.'",'.
         '}';
 
         // UPDATE BY DELETING AND CREATING
@@ -340,6 +349,7 @@ class ReviewDetectorForm extends FormBase {
             '"hasReviewNote":"'.$resultParent->hasReviewNote.'",'.
             '"hasEditorEmail":"'.$resultParent->hasEditorEmail.'",'.
             '"hasStatus":"'.VSTOI::DEPRECATED.'"'.
+            '"hasWebDocument":"'.$resultParent->hasWebDocument.'",'.
           '}';
 
           // UPDATE BY DELETING AND CREATING
@@ -369,6 +379,7 @@ class ReviewDetectorForm extends FormBase {
           '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.
           '"hasReviewNote":"'.$form_state->getValue('detector_hasreviewnote').'",'.
           '"hasEditorEmail":"'.$useremail.'",'.
+          '"hasWebDocument":"'.$result->hasWebDocument.'",'.
           '"hasStatus":"'.VSTOI::DRAFT.'"}';
 
         // \Drupal::messenger()->addWarning($detectorJson);

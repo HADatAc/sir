@@ -99,6 +99,15 @@ class ReviewCodebookForm extends FormBase {
       '#default_value' => $this->getCodebook()->comment,
       '#disabled' => TRUE,
     ];
+    $form['codebook_information']['codebook_webdocument'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Web Document'),
+      '#default_value' => $this->getCodebook()->hasWebDocument,
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ],
+      '#disabled' => TRUE,
+    ];
 
     if ($this->getCodebook()->wasDerivedFrom !== null && $this->getCodebook()->wasDerivedFrom !== '') {
 
@@ -321,6 +330,7 @@ class ReviewCodebookForm extends FormBase {
           '"hasVersion":"'.$result->hasVersion.'",' .
           '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.
           '"hasSIRManagerEmail":"'.$result->hasSIRManagerEmail.'",'.
+          '"hasWebDocument":"'.$result->hasWebDocument.'",'.
           '"hasReviewNote": "'. $form_state->getValue('codebook_hasreviewnote') .'",'.
           '"hasEditorEmail": "'. $useremail .'"'.
         '}';
@@ -369,6 +379,7 @@ class ReviewCodebookForm extends FormBase {
             '"hasSIRManagerEmail":"'.$resultParent->hasSIRManagerEmail.'",'.
             '"hasReviewNote": "'. $resultParent->hasReviewNote .'",'.
             '"hasEditorEmail": "'. $resultParent->hasEditorEmail .'"'.
+            '"hasWebDocument":"'.$resultParent->hasWebDocument.'",'.
           '}';
 
           // UPDATE BY DELETING AND CREATING
@@ -396,6 +407,7 @@ class ReviewCodebookForm extends FormBase {
           '"hasSIRManagerEmail":"'.$result->hasSIRManagerEmail.'",'.
           '"hasReviewNote": "'. $form_state->getValue('codebook_hasreviewnote') .'",'.
           '"hasEditorEmail": "'. $useremail .'"'.
+          '"hasWebDocument":"'.$result->hasWebDocument.'",'.
         '}';
 
         $api = \Drupal::service('rep.api_connector');

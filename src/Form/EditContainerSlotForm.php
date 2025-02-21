@@ -69,8 +69,8 @@ class EditContainerSlotForm extends FormBase {
     $content = "";
     if ($this->getContainerSlot() != NULL) {
       if (isset($this->getContainerSlot()->detector) &&
-          isset($this->getContainerSlot()->detector->detectorStem)) {
-          $content = $this->getContainerSlot()->detector->detectorStem->hasContent . ' [' . $this->getContainerSlot()->hasDetector . ']';
+          isset($this->getContainerSlot()->detector)) {
+          $content = $this->getContainerSlot()->detector->label . ' [' . $this->getContainerSlot()->hasDetector . ']';
         }
     } else {
       \Drupal::messenger()->addMessage(t("Failed to retrieve ContainerSlot."));
@@ -88,6 +88,8 @@ class EditContainerSlotForm extends FormBase {
             $path .= ' > ';
         }
     }
+
+    // dpm($this->getContainerSlot());
 
     $form['scope'] = [
       '#type' => 'item',

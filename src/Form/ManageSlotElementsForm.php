@@ -9,6 +9,7 @@ use Drupal\Core\Url;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\VSTOI;
+use Drupal\rep\Vocabulary\REPGUI;
 use Drupal\Component\Serialization\Json;
 
 class ManageSlotElementsForm extends FormBase {
@@ -158,7 +159,7 @@ class ManageSlotElementsForm extends FormBase {
     ];
 
     # POPULATE DATA
-
+    $root_url = \Drupal::request()->getBaseUrl();
     $output = array();
     $uriType = array();
     if ($slotElements != NULL) {
@@ -183,13 +184,18 @@ class ManageSlotElementsForm extends FormBase {
                 $detector = $api->parseObjectResponse($api->getUri($slotElement->hasDetector),'getUri');
                 if ($detector != NULL) {
                   if (isset($detector->uri)) {
-                    $detectorUri = '<b>URI</b>: [' . Utils::namespaceUri($slotElement->hasDetector) . "] ";
+                    $detectorUri = t('<b>Detector</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($detector->uri).'">' . $detector->typeLabel . '</a>] ');
+                    //$detectorUri = '<b>URI</b>: [' . Utils::namespaceUri($slotElement->hasDetector) . "] ";
                   }
-                  if (isset($detector->detectorStem->hasContent)) {
-                    $content = '<b>Item</b>: [' . $detector->detectorStem->hasContent . "]";
+                  if (isset($detector->isAttributeOf)) {
+                    $content = '<b>Attribute Of</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode(Utils::uriFromAutocomplete($detector->isAttributeOf)).'">'. Utils::getLabelFromURI($detector->isAttributeOf) . "</a>]";
+                  } else {
+                    $content = '<b>Attribute Of</b>: [EMPTY]';
                   }
                   if (isset($detector->codebook->label)) {
-                    $codebook = '<b>CB</b>: [' . $detector->codebook->label . "]";
+                    $codebook = '<b>CB</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($detector->codebook->uri).'">' . $detector->codebook->label . "</a>]";
+                  } else {
+                    $codebook = '<b>CB</b>: [EMPTY]';
                   }
                 }
               }
@@ -214,7 +220,7 @@ class ManageSlotElementsForm extends FormBase {
         }
         $label = " ";
         if (isset($slotElement->label)) {
-          $label = $slotElement->label;
+          $label = t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($slotElement->uri).'">' . $slotElement->label . '</a>');
         }
         $output[$uri] = [
           'containerslot_up' => 'Up',

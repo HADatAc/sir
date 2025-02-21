@@ -66,6 +66,13 @@ class EditDetectorStemForm extends FormBase {
     $uri_decode=base64_decode($uri);
     $this->setDetectorStemUri($uri_decode);
 
+    $this->setDetectorStem($this->retrieveDetectorStem($this->getDetectorStemUri()));
+    if ($this->getDetectorStem() == NULL) {
+      \Drupal::messenger()->addError(t("Failed to retrieve Detector."));
+      self::backUrl();
+      return;
+    }
+
     $tables = new Tables;
     $languages = $tables->getLanguages();
     $derivations = $tables->getGenerationActivities();
@@ -78,7 +85,7 @@ class EditDetectorStemForm extends FormBase {
     $languages = ['' => $this->t('Select one please')] + $languages;
     $derivations = ['' => $this->t('Select one please')] + $derivations;
 
-    //dpm($this->getDetector());
+    // dpm($this->getDetectorStem());
     if ($this->getDetectorStem()->superUri) {
       $form['detectorstem_type'] = [
         'top' => [
@@ -90,7 +97,6 @@ class EditDetectorStemForm extends FormBase {
           '#title' => $this->t('Parent Type'),
           '#name' => 'detectorstem_type',
           '#default_value' => $this->getDetectorStem()->superUri ? Utils::fieldToAutocomplete($this->getDetectorStem()->superUri, $this->getDetectorStem()->superClassLabel) : '',
-          '#disabled' => TRUE,
           '#id' => 'detectorstem_type',
           '#parents' => ['detectorstem_type'],
           '#attributes' => [

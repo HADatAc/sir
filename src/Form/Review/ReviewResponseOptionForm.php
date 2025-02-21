@@ -97,6 +97,15 @@ class ReviewResponseOptionForm extends FormBase {
         'disabled' => 'disabled',
       ],
     ];
+    $form['responseoption_webdocument'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Web Document'),
+      '#default_value' => $this->getResponseOption()->hasWebDocument,
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ],
+      '#disabled' => TRUE,
+    ];
     if ($this->getResponseOption()->wasDerivedFrom !== NULL) {
       $form['responseoption_df_wrapper'] = [
         '#type' => 'container',

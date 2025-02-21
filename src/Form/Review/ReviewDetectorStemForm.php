@@ -149,6 +149,15 @@ class ReviewDetectorStemForm extends FormBase {
       '#default_value' => $this->getDetectorStem()->comment,
       '#disabled' => TRUE,
     ];
+    $form['detectorstem_webdocument'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Web Document'),
+      '#default_value' => $this->getDetectorStem()->hasWebDocument,
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ],
+      '#disabled' => TRUE,
+    ];
     if ($this->getDetectorStem()->wasDerivedFrom !== NULL) {
       $api = \Drupal::service('rep.api_connector');
       $rawresponse = $api->getUri($this->getDetectorStem()->wasDerivedFrom);

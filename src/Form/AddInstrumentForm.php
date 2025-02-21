@@ -86,7 +86,7 @@ class AddInstrumentForm extends FormBase {
       '#type' => 'select',
       '#title' => $this->t('Language'),
       '#options' => $languages,
-      '#default_value' => '',
+      '#default_value' => 'en',
     ];
     $form['instrument_version'] = [
       '#type' => 'textfield',

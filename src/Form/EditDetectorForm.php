@@ -116,7 +116,6 @@ class EditDetectorForm extends FormBase {
         '#type' => 'markup',
         '#markup' => '</div>',
       ],
-      '#disabled' => FALSE
     ];
     $form['detector_codebook'] = [
       '#type' => 'textfield',
@@ -163,7 +162,6 @@ class EditDetectorForm extends FormBase {
         '#type' => 'markup',
         '#markup' => '</div>',
       ],
-      '#disabled' => FALSE
     ];
     $form['detector_webdocument'] = [
       '#type' => 'textfield',

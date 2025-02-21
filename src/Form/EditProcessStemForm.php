@@ -115,7 +115,6 @@ class EditProcessStemForm extends FormBase {
         '#type' => 'markup',
         '#markup' => '</div>',
       ],
-      '#disabled' => false,
     ];
 
     $form['process_stem_content'] = [

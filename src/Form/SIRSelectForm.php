@@ -243,15 +243,15 @@ class SIRSelectForm extends FormBase {
       }
 
       if ($this->element_type === 'instrument') {
-        $form['actions_wrapper']['buttons_container']['generate_ins_select_element'] = [
-          '#type' => 'submit',
-          '#value' => $this->t('Generate INS'),
-          '#name' => 'generate_ins_element',
-          '#attributes' => [
-            'onclick' => 'if(!confirm("Are you sure you want to generate an INS file?")){return false;}',
-            'class' => ['btn', 'btn-primary', 'generate-ins-element-button'],
-          ],
-        ];
+        // $form['actions_wrapper']['buttons_container']['generate_ins_select_element'] = [
+        //   '#type' => 'submit',
+        //   '#value' => $this->t('Generate INS'),
+        //   '#name' => 'generate_ins_element',
+        //   '#attributes' => [
+        //     'onclick' => 'if(!confirm("Are you sure you want to generate an INS file?")){return false;}',
+        //     'class' => ['btn', 'btn-primary', 'generate-ins-element-button'],
+        //   ],
+        // ];
         $form['actions_wrapper']['buttons_container']['manage_slotelements'] = [
           '#type' => 'submit',
           '#value' => $this->t('Manage Structure of Selected'),
@@ -1321,7 +1321,7 @@ class SIRSelectForm extends FormBase {
    */
   protected function performReview(array $uris, FormStateInterface $form_state) {
 
-    dpm($this->element_type);
+    // dpm($this->element_type);
     $api = \Drupal::service('rep.api_connector');
     $useremail = \Drupal::currentUser()->getEmail();
 

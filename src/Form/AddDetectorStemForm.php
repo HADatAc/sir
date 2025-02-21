@@ -127,7 +127,7 @@ class AddDetectorStemForm extends FormBase {
       '#type' => 'select',
       '#title' => $this->t('Language'),
       '#options' => $languages,
-      '#default_value' => '',
+      '#default_value' => 'en',
       '#attributes' => [
         'id' => 'detectorstem_language'
       ]

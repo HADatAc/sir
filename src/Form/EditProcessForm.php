@@ -211,7 +211,6 @@ class EditProcessForm extends FormBase {
           '#type' => 'markup',
           '#markup' => '</div>',
         ],
-        '#disabled' => false
       ];
       $form['process_processstem'] = [
         '#type' => 'hidden',
