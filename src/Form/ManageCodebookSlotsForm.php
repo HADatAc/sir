@@ -125,6 +125,7 @@ class ManageCodebookSlotsForm extends FormBase {
       '#name' => 'delete_slots',
       '#attributes' => [
         'class' => ['btn', 'btn-primary', 'delete-element-button'],
+        'onclick' => 'if(!confirm("Really Delete?")){return false;}',
       ],
     ];
     $form['slot_table'] = [
