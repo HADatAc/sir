@@ -72,7 +72,7 @@ class AnnotationStem {
 
       }
       $output[$row_key] = [
-        'element_uri' => t('<a href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),
+        'element_uri' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),
         'element_content' => $content,
         'element_language' => $lang,
         'element_version' => $version,

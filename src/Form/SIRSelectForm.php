@@ -214,7 +214,15 @@ class SIRSelectForm extends FormBase {
           'class' => ['btn', 'btn-primary', 'delete-element-button'],
         ],
       ];
-      if ($this->element_type !== 'instrument' /*&& $this->element_type !== 'codebook'*/) {
+      if ($this->element_type !== 'instrument'
+        &&
+          ( // TO DELETE HAS BEEING DONE
+            $this->element_type !== 'process' &&
+            $this->element_type !== 'processstem' &&
+            $this->element_type !== 'annotationstem'
+          )
+        )
+      {
         $form['actions_wrapper']['buttons_container']['review_selected_element'] = [
           '#type' => 'submit',
           '#value' => $this->t('Send for Review'),
@@ -229,17 +237,17 @@ class SIRSelectForm extends FormBase {
       }
 
       if ($this->element_type == 'instrument' /*|| $this->element_type == 'codebook'*/) {
-        $form['actions_wrapper']['buttons_container']['review_selected_element'] = [
-          '#type' => 'submit',
-          '#value' => $this->t('Send for Review'),
-          '#name' => 'review_recursive_element',
-          '#attributes' => [
-            'onclick' => 'if(!confirm("Are you sure you want to submit for Review selected entry?")){return false;}',
-            'class' => ['btn', 'btn-primary', 'review-element-button'],
-            'disabled' => 'disabled',
-            'id' => 'review-selected-button',
-          ],
-        ];
+        // $form['actions_wrapper']['buttons_container']['review_selected_element'] = [
+        //   '#type' => 'submit',
+        //   '#value' => $this->t('Send for Review'),
+        //   '#name' => 'review_recursive_element',
+        //   '#attributes' => [
+        //     'onclick' => 'if(!confirm("Are you sure you want to submit for Review selected entry?")){return false;}',
+        //     'class' => ['btn', 'btn-primary', 'review-element-button'],
+        //     'disabled' => 'disabled',
+        //     'id' => 'review-selected-button',
+        //   ],
+        // ];
       }
 
       if ($this->element_type === 'instrument') {
@@ -1194,9 +1202,10 @@ class SIRSelectForm extends FormBase {
         \Drupal::messenger()->addWarning($this->t('Please select exactly one codebook to manage.'));
       }
     } elseif ($button_name === 'derive_detectorstem') {
-      $url = Url::fromRoute('sir.add_detectorstem');
-      $url->setRouteParameter('sourcedetectorstemuri', 'DERIVED');
-      $form_state->setRedirectUrl($url);
+      // $url = Url::fromRoute('sir.add_detectorstem');
+      // $url->setRouteParameter('sourcedetectorstemuri', 'DERIVED');
+      // $form_state->setRedirectUrl($url);
+      $this->performDeriveDetectorStem($form_state);
     } elseif ($button_name === 'derive_processstem') {
       if (count($selected_rows) == 1) {
         $uri = array_keys($selected_rows)[0];
@@ -1460,8 +1469,8 @@ class SIRSelectForm extends FormBase {
                   '"hasSIRManagerEmail": "'.$slot->responseOption->hasSIRManagerEmail.'",'.
                   '"hasEditorEmail": "'.($slot->responseOption->hasEditorEmail ?? NULL).'",'.
                   '"typeLabel": "'.$slot->responseOption->typeLabel.'",'.
-                  '"hascoTypeLabel": "'.$slot->responseOption->hascoTypeLabel.'"'.
                   '"hasWebDocument": "'. $slot->responseOption->hasWebDocument .'",'.
+                  '"hascoTypeLabel": "'.$slot->responseOption->hascoTypeLabel.'"'.
                 '},'.
                 '"typeLabel": "'.$slot->typeLabel.'",'.
                 '"hascoTypeLabel": "'.$slot->hascoTypeLabel.'"'.
@@ -1514,6 +1523,7 @@ class SIRSelectForm extends FormBase {
           '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.
           '"hasReviewNote":"'.$result->hasReviewNote.'",'.
           '"hasEditorEmail":"'.$result->hasEditorEmail.'",'.
+          '"hasWebDocument": "'. $result->hasWebDocument .'",'.
           '"hasStatus":"'.VSTOI::UNDER_REVIEW.'"'.
         '}';
 

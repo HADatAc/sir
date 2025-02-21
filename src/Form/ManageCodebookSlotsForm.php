@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\Utils;
+use Drupal\rep\Vocabulary\REPGUI;
 
 class ManageCodebookSlotsForm extends FormBase {
 
@@ -75,8 +76,10 @@ class ManageCodebookSlotsForm extends FormBase {
     ];
 
     # POPULATE DATA
-
+    $root_url = \Drupal::request()->getBaseUrl();
     $output = array();
+    // dpm($slots);
+
     foreach ($slots as $slot) {
       $content = "";
       if ($slot->hasResponseOption != null) {
@@ -91,7 +94,7 @@ class ManageCodebookSlotsForm extends FormBase {
       }
       $responseOptionUriStr = "";
       if ($slot->hasResponseOption != NULL && $slot->hasResponseOption != '') {
-        $responseOptionUriStr = Utils::namespaceUri($slot->hasResponseOption);
+        $responseOptionUriStr = t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($slot->hasResponseOption).'">' . Utils::namespaceUri($slot->hasResponseOption) . '</a>');
       }
       $output[$slot->uri] = [
         'slot_priority' => $slot->hasPriority,
