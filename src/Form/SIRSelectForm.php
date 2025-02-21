@@ -1351,45 +1351,15 @@ class SIRSelectForm extends FormBase {
         // CENARIO #2: CHECK IF THERE ARE ANY OTHER R.O. WITH SAME CONTENT ALREADY IN REP
         } elseif ($result->wasDerivedFrom === NULL) {
           $response = $api->listByKeywordAndLanguage($this->element_type, $result->hasContent, $result->hasLanguage, 99999, 0);
-          $json_string = (st    $api = \Drupal::service('rep.api_connector');
-    $useremail = \Drupal::currentUser()->getEmail();
-
-    // DETECT ELEMENT
-    foreach ($uris as $shortUri) {
-      $uri = Utils::plainUri($shortUri);
-
-      // GET OBJECT
-      $rawresponse = $api->getUri($uri);
-      $obj = json_decode($rawresponse);
-      $result = $obj->body;
-
-      //GLOBAL CHECKBOX STATUS
-      if ($result->hasStatus !== VSTOI::DRAFT) {
-        \Drupal::messenger()->addWarning($this->t('ATTENTION: Only draft elements can be submitted for review. Check the status of the elements and submit again. '),['@elements' => $this->plural_class_name]);
-        return false;
-      }
-
-      if ($this->element_type == 'responseoption') {
-
-        // CENARIO #1: CHECK IF IT HAS wasDerivedFrom property, means it is a derived element
-        if ($result->wasDerivedFrom !== NULL
-            && $this->checkDerivedElements($uri, $this->element_type)) {
-            \Drupal::messenger()->addError($this->t('There is a previous version that has the same content.'), ['@elements' => $this->plural_class_name]);
-            return false;
-
-        // CENARIO #2: CHECK IF THERE ARE ANY OTHER R.O. WITH SAME CONTENT ALREADY IN REP
-        } elseif ($result->wasDerivedFrom === NULL) {
-          $response = $api->listByKeywordAndLanguage($this->element_type, $result->hasContent, $result->hasLanguage, 99999, 0);
           $json_string = (string) $response;
-
           $decoded_response = json_decode($json_string, true);
 
           if (is_array($decoded_response)) {
-              $count = count($decoded_response['body']);
-              if ($count > 1) {
-                      \Drupal::messenger()->addError($this->t('There is already a @element with the same content in the Repository.', ['@element' => $this->single_class_name]));
-                      return false;
-                  }
+            $count = count($decoded_response['body']);
+            if ($count > 1) {
+              \Drupal::messenger()->addError($this->t('There is already a @element with the same content in the Repository.', ['@element' => $this->single_class_name]));
+              return false;
+            }
           }
         }
 
