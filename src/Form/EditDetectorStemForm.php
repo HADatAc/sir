@@ -276,7 +276,7 @@ class EditDetectorStemForm extends FormBase {
       if ($this->getDetectorStem()->hasStatus === VSTOI::CURRENT || $this->getDetectorStem()->hasStatus === VSTOI::DEPRECATED) {
 
         $detectorStemJson = '{"uri":"'.Utils::uriGen('detectorstem').'",'.
-          '"superUri":"'.$this->getDetectorStem()->superUri.'",'.
+          '"superUri":"'.Utils::uriFromAutocomplete($this->getDetectorStem()->superUri).'",'.
           '"label":"'.$form_state->getValue('detectorstem_content').'",'.
           '"hascoTypeUri":"'.VSTOI::DETECTOR_STEM.'",'.
           '"hasStatus":"'.VSTOI::DRAFT.'",'.
@@ -295,7 +295,7 @@ class EditDetectorStemForm extends FormBase {
       } else {
 
         $detectorStemJson = '{"uri":"'.$this->getDetectorStem()->uri.'",'.
-        '"superUri":"'.$this->getDetectorStem()->superUri.'",'.
+        '"superUri":"'.Utils::uriFromAutocomplete($this->getDetectorStem()->superUri).'",'.
         '"label":"'.$form_state->getValue('detectorstem_content').'",'.
         '"hascoTypeUri":"'.VSTOI::DETECTOR_STEM.'",'.
         '"hasStatus":"'.$this->getDetectorStem()->hasStatus.'",'.
