@@ -82,6 +82,9 @@ class SIRListForm extends FormBase {
     // Gets Filter Values
     $status_filter = $form_state->getValue('status_filter') ?? 'all';
     $language_filter = $form_state->getValue('language_filter') ?? 'all';
+    $text_filter = $form_state->getValue('text_filter') ?? '';
+    // Convert the text filter to lowercase for case-insensitive comparison
+    $text_filter = strtolower($text_filter);
 
     // RETRIEVE ELEMENTS
     $this->setList(ListKeywordLanguagePage::exec($elementtype, $keyword, $language, $page, $pagesize));
@@ -113,14 +116,9 @@ class SIRListForm extends FormBase {
       ]
     ];
 
-    $tables = new Tables;
-    $languages = $tables->getLanguages();
-    if ($languages)
-      $languages = ['all' => $this->t('All Languages')] + $languages;
-    $form['actions_wrapper']['filter_container']['language_filter'] = [
-      '#type' => 'select',
-      '#options' => $languages,
-      '#default_value' => $language_filter,
+    $form['actions_wrapper']['filter_container']['text_filter'] = [
+      '#type' => 'textfield',
+      '#default_value' => $text_filter,
       '#ajax' => [
           'callback' => '::ajaxReloadTable',
           'wrapper' => 'element-table-wrapper',
@@ -128,10 +126,34 @@ class SIRListForm extends FormBase {
       ],
       '#attributes' => [
           'class' => ['form-select', 'w-auto', 'mt-2', 'me-1'],
-          'style' => 'margin-bottom:0!important;float:right;'
-          // 'style' => 'float:right;margin-top:10px!important;'
+          'style' => 'margin-bottom:0!important;float:right;',
+          'placeholder' => 'Type in your search criteria',
+          // Ao pressionar Enter, previne o submit e dispara o evento "change"
+          'onkeydown' => 'if (event.keyCode == 13) { event.preventDefault(); this.blur(); }',
       ],
     ];
+
+    If ($elementtype !== 'detector'){
+      $tables = new Tables;
+      $languages = $tables->getLanguages();
+      if ($languages)
+        $languages = ['all' => $this->t('All Languages')] + $languages;
+      $form['actions_wrapper']['filter_container']['language_filter'] = [
+        '#type' => 'select',
+        '#options' => $languages,
+        '#default_value' => $language_filter,
+        '#ajax' => [
+            'callback' => '::ajaxReloadTable',
+            'wrapper' => 'element-table-wrapper',
+            'event' => 'change',
+        ],
+        '#attributes' => [
+            'class' => ['form-select', 'w-auto', 'mt-2', 'me-1'],
+            'style' => 'margin-bottom:0!important;float:right;'
+            // 'style' => 'float:right;margin-top:10px!important;'
+        ],
+      ];
+    }
 
     $form['actions_wrapper']['filter_container']['status_filter'] = [
         '#type' => 'select',
@@ -255,11 +277,21 @@ class SIRListForm extends FormBase {
       $row_status = strtolower($row['element_hasStatus']);
       $row_language = strtolower($row['element_hasLanguage']);
 
+      if ($elementtype == 'instrument' || $elementtype == 'codebook')
+        $row_label = strtolower($row['element_name']);
+      else if ($elementtype == 'detector' || $elementtype == 'detectorstem' || $elementtype == 'responseoption')
+        $row_label = strtolower($row['element_content']);
+
       if ($status_filter !== 'all' && $row_status !== $status_filter) {
           continue;
       }
 
       if ($language_filter !== 'all' && $row_language !== $language_filter) {
+        continue;
+      }
+
+      // Use strpos to check if the text filter is contained in the label.
+      if ($text_filter !== '' && strpos($row_label, $text_filter) === false) {
         continue;
       }
       //$is_disabled = isset($disabled_rows[$key]);

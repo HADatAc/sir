@@ -168,6 +168,7 @@ class SIRSelectForm extends FormBase {
 
       $status_filter = $form_state->getValue('status_filter') ?? 'all';
       $language_filter = $form_state->getValue('language_filter') ?? 'all';
+      $text_filter = $form_state->getValue('text_filter') ?? '';
 
       $form['actions_wrapper']['buttons_container']['add_element'] = [
         '#type' => 'submit',
@@ -303,6 +304,23 @@ class SIRSelectForm extends FormBase {
         '#attributes' => [
           'class' => ['pt-3', 'me-2', 'fw-bold'],
         ]
+      ];
+
+      $form['actions_wrapper']['filter_container']['text_filter'] = [
+        '#type' => 'textfield',
+        '#default_value' => $text_filter,
+        '#ajax' => [
+            'callback' => '::ajaxReloadTable',
+            'wrapper' => 'element-table-wrapper',
+            'event' => 'change',
+        ],
+        '#attributes' => [
+            'class' => ['form-select', 'w-auto', 'mt-2', 'me-1'],
+            'style' => 'margin-bottom:0!important;float:right;',
+            'placeholder' => 'Type in your search criteria',
+            // Ao pressionar Enter, previne o submit e dispara o evento "change"
+            'onkeydown' => 'if (event.keyCode == 13) { event.preventDefault(); this.blur(); }',
+        ],
       ];
 
       If ($this->element_type !== 'detector'){
@@ -470,9 +488,13 @@ class SIRSelectForm extends FormBase {
    * Build the table view.
    */
   protected function buildTableView(array &$form, FormStateInterface $form_state, $page, $pagesize) {
-    // Recuperar o status filtrado
+    // Retrieve the filtered status
     $status_filter = $form_state->getValue('status_filter') ?? 'all';
     $language_filter = $form_state->getValue('language_filter') ?? 'all';
+    $text_filter = $form_state->getValue('text_filter') ?? '';
+
+    // Convert the text filter to lowercase for case-insensitive comparison
+    $text_filter = strtolower($text_filter);
 
     // Get elements based on status
     $this->setList(ListManagerEmailPage::exec($this->element_type, $this->manager_email, $page, $pagesize));
@@ -499,15 +521,25 @@ class SIRSelectForm extends FormBase {
         $row_status = strtolower($row['element_hasStatus']);
         $row_language = strtolower($row['element_hasLanguage']);
 
+        if ($this->element_type == 'instrument' || $this->element_type == 'codebook')
+          $row_label = strtolower($row['element_name']);
+        else if ($this->element_type == 'detector' || $this->element_type == 'detectorstem' || $this->element_type == 'responseoption')
+          $row_label = strtolower($row['element_content']);
+
         if ($status_filter !== 'all' && $row_status !== $status_filter) {
             continue;
         }
 
         if ($language_filter !== 'all' && $row_language !== $language_filter) {
-          continue;
+            continue;
         }
 
-        // Checkbox for Selection
+        // Use strpos to check if the text filter is contained in the label.
+        if ($text_filter !== '' && strpos($row_label, $text_filter) === false) {
+            continue;
+        }
+
+        // Checkbox for selection
         $checkbox = [
             '#type' => 'checkbox',
             '#title' => $this->t('Select'),
@@ -518,23 +550,20 @@ class SIRSelectForm extends FormBase {
             ],
         ];
 
-        // Create Table Row
+        // Create the table row
         $form['element_table_wrapper']['element_table'][$key]['select'] = $checkbox;
 
-        //Hide Colums
+        // Hide unnecessary columns
         foreach ($row as $field_key => $field_value) {
-            if (
-                $field_key !== 'element_hasStatus' &&
-                $field_key !== 'element_hasLanguage'
-            ) {
-              $form['element_table_wrapper']['element_table'][$key][$field_key] = [
-                  '#markup' => $field_value,
-              ];
+            if ($field_key !== 'element_hasStatus' && $field_key !== 'element_hasLanguage') {
+                $form['element_table_wrapper']['element_table'][$key][$field_key] = [
+                    '#markup' => $field_value,
+                ];
             }
         }
     }
 
-    // Adicionar paginação
+    // Add pagination
     $form['element_table_wrapper']['pager'] = [
         '#theme' => 'list-page',
         '#items' => [
