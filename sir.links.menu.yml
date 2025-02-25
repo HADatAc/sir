@@ -94,6 +94,36 @@ sir.manage_instruments:
     _permission: 'access content'
     _role: 'authenticated'
 
+sir.manage_actuatorstems :
+  title: Manage Actuator Stems
+  description: Manage Actuator Stems
+  route_name: sir.select_element
+  route_parameters:
+    elementtype: 'actuatorstem'
+    page: '1'
+    pagesize: '9'
+  parent: sir.top_level
+  menu_name: main
+  weight: 45
+  requirements:
+    _permission: 'access content'
+    _role: 'authenticated'
+
+sir.manage_actuators :
+  title: Manage Actuator
+  description: Manage Actuator
+  route_name: sir.select_element
+  route_parameters:
+    elementtype: 'actuator'
+    page: '1'
+    pagesize: '9'
+  parent: sir.top_level
+  menu_name: main
+  weight: 46
+  requirements:
+    _permission: 'access content'
+    _role: 'authenticated'
+
 sir.manage_detectorstems :
   title: Manage Detector Stems
   description: Manage Detector Stems
