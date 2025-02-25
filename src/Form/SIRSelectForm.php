@@ -7,6 +7,8 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\rep\ListManagerEmailPage;
 use Drupal\rep\Utils;
+use Drupal\sir\Entity\Actuator;
+use Drupal\sir\Entity\ActuatorStem;
 use Drupal\sir\Entity\AnnotationStem;
 use Drupal\sir\Entity\DetectorStem;
 use Drupal\sir\Entity\ProcessStem;
@@ -188,6 +190,16 @@ class SIRSelectForm extends FormBase {
           ],
         ];
       }
+      if ($this->element_type == 'actuatorstem') {
+        $form['actions_wrapper']['buttons_container']['derive_actuatorstem'] = [
+          '#type' => 'submit',
+          '#value' => $this->t('Derive New ' . $this->single_class_name),
+          '#name' => 'derive_actuatorstem',
+          '#attributes' => [
+            'class' => ['btn', 'btn-primary', 'derive-button'],
+          ],
+        ];
+      }
       if ($this->element_type == 'processstem') {
         $form['actions_wrapper']['buttons_container']['derive_processstem'] = [
           '#type' => 'submit',
@@ -323,7 +335,7 @@ class SIRSelectForm extends FormBase {
         ],
       ];
 
-      If ($this->element_type !== 'detector'){
+      If ($this->element_type !== 'detector' && $this->element_type !== 'actuator'){
         $tables = new Tables;
         $languages = $tables->getLanguages();
         if ($languages)
@@ -381,6 +393,16 @@ class SIRSelectForm extends FormBase {
           ],
         ];
       }
+      if ($this->element_type == 'actuatorstem') {
+        $form['actions_wrapper']['buttons_container']['derive_actuatorstem'] = [
+          '#type' => 'submit',
+          '#value' => $this->t('Derive New ' . $this->single_class_name),
+          '#name' => 'derive_actuatorstem',
+          '#attributes' => [
+            'class' => ['btn', 'btn-primary', 'derive-button', 'mb-3'],
+          ],
+        ];
+      }
     }
 
     // Render output based on view type
@@ -427,6 +449,7 @@ class SIRSelectForm extends FormBase {
   protected function prepareElementNames() {
     $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument');
     $preferred_detector = \Drupal::config('rep.settings')->get('preferred_detector');
+    $preferred_actuator = \Drupal::config('rep.settings')->get('preferred_actuator') ?? 'Actuator';
     $preferred_process = \Drupal::config('rep.settings')->get('preferred_process');
     switch ($this->element_type) {
 
@@ -434,6 +457,18 @@ class SIRSelectForm extends FormBase {
       case "instrument":
         $this->single_class_name = $preferred_instrument;
         $this->plural_class_name = $preferred_instrument . "s";
+        break;
+
+      // ACTUATORSTEM
+      case "actuatorstem":
+        $this->single_class_name = $preferred_actuator . " Stem";
+        $this->plural_class_name = $preferred_actuator . " Stems";
+        break;
+
+      // ACTUATOR
+      case "actuator":
+        $this->single_class_name = $preferred_actuator;
+        $this->plural_class_name = $preferred_actuator . "s";
         break;
 
       // DETECTORSTEM
@@ -523,7 +558,7 @@ class SIRSelectForm extends FormBase {
 
         if ($this->element_type == 'instrument' || $this->element_type == 'codebook')
           $row_label = strtolower($row['element_name']);
-        else if ($this->element_type == 'detector' || $this->element_type == 'detectorstem' || $this->element_type == 'responseoption')
+        else if ($this->element_type == 'detector' || $this->element_type == 'detectorstem' || $this->element_type == 'responseoption' || $this->element_type == 'actuator' || $this->element_type == 'actuatorstem')
           $row_label = strtolower($row['element_content']);
 
         if ($status_filter !== 'all' && $row_status !== $status_filter) {
@@ -944,6 +979,10 @@ class SIRSelectForm extends FormBase {
     switch ($this->element_type) {
       case "instrument":
         return Instrument::generateHeader();
+      case "actuatorstem":
+        return ActuatorStem::generateHeader();
+      case "actuator":
+        return Actuator::generateHeader();
       case "detectorstem":
         return DetectorStem::generateHeader();
       case "detector":
@@ -970,6 +1009,10 @@ class SIRSelectForm extends FormBase {
     switch ($this->element_type) {
       case "instrument":
         return Instrument::generateOutput($this->getList());
+      case "actuatorstem":
+        return ActuatorStem::generateOutput($this->getList());
+      case "actuator":
+        return Actuator::generateOutput($this->getList());
       case "detectorstem":
         return DetectorStem::generateOutput($this->getList());
       case "detector":
@@ -1027,6 +1070,8 @@ class SIRSelectForm extends FormBase {
       // Definir o mapeamento de tipos de elementos para suas respectivas rotas
       $route_map = [
         'instrument' => 'sir.edit_instrument',
+        'actuatorstem' => 'sir.edit_actuatorstem',
+        'actuator' => 'sir.edit_actuator',
         'detectorstem' => 'sir.edit_detectorstem',
         'detector' => 'sir.edit_detector',
         'codebook' => 'sir.edit_codebook',
@@ -1113,6 +1158,16 @@ class SIRSelectForm extends FormBase {
   }
 
   /**
+   * Submit handler for deriving a actuator stem in card view.
+   */
+  public function deriveActuatorStemSubmit(array &$form, FormStateInterface $form_state) {
+    $triggering_element = $form_state->getTriggeringElement();
+    $uri = $triggering_element['#element_uri'];
+
+    $this->performDeriveActuatorStem($form_state);
+  }
+
+  /**
    * Submit handler for deriving a process stem in card view.
    */
   public function deriveProcessStemSubmit(array &$form, FormStateInterface $form_state) {
@@ -1169,6 +1224,10 @@ class SIRSelectForm extends FormBase {
       // // $uri = $triggering_element['#element_uri'];
       // $uri = array_keys($selected_rows)[0];
       // $this->performDeriveDetectorStem($uri, $form_state);
+    } elseif (strpos($button_name, 'derive_actuatorstem_') === 0) {
+      // // $uri = $triggering_element['#element_uri'];
+      // $uri = array_keys($selected_rows)[0];
+      // $this->performDeriveActuatorStem($uri, $form_state);
     } elseif ($button_name === 'add_element') {
       $this->performAdd($form_state);
     } elseif ($button_name === 'edit_element') {
@@ -1235,6 +1294,11 @@ class SIRSelectForm extends FormBase {
       // $url->setRouteParameter('sourcedetectorstemuri', 'DERIVED');
       // $form_state->setRedirectUrl($url);
       $this->performDeriveDetectorStem($form_state);
+    } elseif ($button_name === 'derive_actuatorstem') {
+      // $url = Url::fromRoute('sir.add_actuatorstem');
+      // $url->setRouteParameter('sourceactuatorstemuri', 'DERIVED');
+      // $form_state->setRedirectUrl($url);
+      $this->performDeriveActuatorStem($form_state);
     } elseif ($button_name === 'derive_processstem') {
       if (count($selected_rows) == 1) {
         $uri = array_keys($selected_rows)[0];
@@ -1258,6 +1322,15 @@ class SIRSelectForm extends FormBase {
     if ($this->element_type == 'instrument') {
       Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_instrument');
       $url = Url::fromRoute('sir.add_instrument');
+    } elseif ($this->element_type == 'actuatorstem') {
+      Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_actuatorstem');
+      $url = Url::fromRoute('sir.add_actuatorstem');
+      $url->setRouteParameter('sourceactuatorstemuri', 'EMPTY');
+    } elseif ($this->element_type == 'actuator') {
+      Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_actuator');
+      $url = Url::fromRoute('sir.add_actuator');
+      $url->setRouteParameter('sourceactuatoruri', 'EMPTY');
+      $url->setRouteParameter('containersloturi', 'EMPTY');
     } elseif ($this->element_type == 'detectorstem') {
       Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_detectorstem');
       $url = Url::fromRoute('sir.add_detectorstem');
@@ -1300,6 +1373,10 @@ class SIRSelectForm extends FormBase {
 
     if ($this->element_type == 'instrument') {
       $url = Url::fromRoute('sir.edit_instrument', ['instrumenturi' => base64_encode($uri)]);
+    } elseif ($this->element_type == 'actuatorstem') {
+      $url = Url::fromRoute('sir.edit_actuatorstem', ['actuatorstemuri' => base64_encode($uri)]);
+    } elseif ($this->element_type == 'actuator') {
+      $url = Url::fromRoute('sir.edit_actuator', ['actuatoruri' => base64_encode($uri)]);
     } elseif ($this->element_type == 'detectorstem') {
       $url = Url::fromRoute('sir.edit_detectorstem', ['detectorstemuri' => base64_encode($uri)]);
     } elseif ($this->element_type == 'detector') {
@@ -1334,6 +1411,10 @@ class SIRSelectForm extends FormBase {
       $uri = Utils::plainUri($shortUri);
       if ($this->element_type == 'instrument') {
         $api->instrumentDel($uri);
+      } elseif ($this->element_type == 'actuatorstem') {
+        $api->actuatorStemDel($uri);
+      } elseif ($this->element_type == 'actuator') {
+        $api->actuatorDel($uri);
       } elseif ($this->element_type == 'detectorstem') {
         $api->detectorStemDel($uri);
       } elseif ($this->element_type == 'detector') {
@@ -1513,6 +1594,83 @@ class SIRSelectForm extends FormBase {
         $api->codebookDel($result->uri);
         $api->codebookAdd($codebookJSON);
 
+      } elseif ($this->element_type == 'actuator') {
+        // CENARIO #1: CHECK IF IT HAS wasDerivedFrom property, means it is a derived element
+        if ($result->wasDerivedFrom !== NULL
+            && $this->checkDerivedElements($uri, $this->element_type)) {
+            \Drupal::messenger()->addError($this->t('There is a previous version that has the same content.'), ['@elements' => $this->plural_class_name]);
+            return false;
+
+        // CENARIO #2: CHECK IF THERE ARE ANY OTHER ACTUATOR WITH SAME CONTENT ALREADY IN REP, must have a new end-point for that
+        }
+
+        //MAIN BODY ACTUATOR
+        $actuatorJson = '{'.
+          '"uri":"'.$result->uri.'",'.
+          '"typeUri":"'.$result->typeUri.'",'.
+          '"hascoTypeUri":"'.VSTOI::ACTUATOR.'",'.
+          '"hasActuatorStem":"'.$result->hasActuatorStem.'",'.
+          '"hasCodebook":"'.$result->hasCodebook.'",'.
+          '"hasContent":"'.$result->hasContent.'",'.
+          '"hasSIRManagerEmail":"'.$result->hasSIRManagerEmail.'",'.
+          '"label":"'.$result->label.'",'.
+          '"hasVersion":"'.$result->hasVersion.'",'.
+          '"isAttributeOf":"'.$result->isAttributeOf.'",'.
+          '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.
+          '"hasReviewNote":"'.$result->hasReviewNote.'",'.
+          '"hasEditorEmail":"'.$result->hasEditorEmail.'",'.
+          '"hasWebDocument": "'. $result->hasWebDocument .'",'.
+          '"hasStatus":"'.VSTOI::UNDER_REVIEW.'"'.
+        '}';
+
+        // UPDATE BY DELETING AND CREATING
+        $api->actuatorDel($result->uri);
+        $api->actuatorAdd($actuatorJson);
+
+      } elseif ($this->element_type == 'actuatorstem') {
+        // CENARIO #1: CHECK IF IT HAS wasDerivedFrom property, means it is a derived element
+        if ($result->wasDerivedFrom !== NULL
+            && $this->checkDerivedElements($uri, $this->element_type)) {
+            \Drupal::messenger()->addError($this->t('There is a previous version that has the same content.'), ['@elements' => $this->plural_class_name]);
+            return false;
+
+        // CENARIO #2: CHECK IF THERE ARE ANY OTHER ACTUATOR WITH SAME CONTENT ALREADY IN REP, must have a new end-point for that
+        }
+        elseif ($result->wasDerivedFrom === NULL) {
+          $response = $api->listByKeywordAndLanguage($this->element_type, $result->hasContent, $result->hasLanguage, 99999, 0);
+          $json_string = (string) $response;
+
+          $decoded_response = json_decode($json_string, true);
+
+          if (is_array($decoded_response)) {
+            $count = count($decoded_response['body']);
+            if ($count > 1) {
+              \Drupal::messenger()->addError($this->t('There is already a @element with the same content in the Repository.', ['@element' => $this->single_class_name]));
+              return false;
+            }
+          }
+        }
+
+        $actuatorStemJson = '{"uri":"'.$result->uri.'",'.
+        '"superUri":"'.$result->superUri.'",'.
+        '"label":"'.$result->label.'",'.
+        '"hascoTypeUri":"'.VSTOI::ACTUATOR_STEM.'",'.
+        '"hasStatus":"'.VSTOI::UNDER_REVIEW.'",'.
+        '"hasContent":"'.$result->hasContent.'",'.
+        '"hasLanguage":"'.$result->hasLanguage.'",'.
+        '"hasVersion":"'.$result->hasVersion.'",'.
+        '"comment":"'.$result->comment.'",'.
+        '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.
+        '"wasGeneratedBy":"'.$result->wasGeneratedBy.'",'.
+        '"hasReviewNote":"'.$result->hasReviewNote.'",'.
+        '"hasWebDocument":"'.$result->hasWebDocument.'",'.
+        '"hasEditorEmail":"'.$result->hasEditorEmail.'",'.
+        '"hasSIRManagerEmail":"'.$result->hasSIRManagerEmail.'"}';
+
+        // UPDATE BY DELETING AND CREATING
+        $api = \Drupal::service('rep.api_connector');
+        $api->actuatorStemDel($result->uri);
+        $api->actuatorStemAdd($actuatorStemJson);
       } elseif ($this->element_type == 'detector') {
         // CENARIO #1: CHECK IF IT HAS wasDerivedFrom property, means it is a derived element
         if ($result->wasDerivedFrom !== NULL
@@ -1738,6 +1896,19 @@ class SIRSelectForm extends FormBase {
   }
 
   /**
+   * Perform derive actuator stem action.
+   */
+  protected function performDeriveActuatorStem(FormStateInterface $form_state) {
+    $uid = \Drupal::currentUser()->id();
+    $previousUrl = \Drupal::request()->getRequestUri();
+    Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_actuatorstem');
+    $url = Url::fromRoute('sir.add_actuatorstem');
+    $url->setRouteParameter('sourceactuatorstemuri', 'DERIVED');
+    // $url->setRouteParameter('containersloturi', 'DERIVED');
+    $form_state->setRedirectUrl($url);
+  }
+
+  /**
    * Perform derive process stem action.
    */
   protected function performDeriveProcessStem($uri, FormStateInterface $form_state) {
@@ -1781,6 +1952,28 @@ class SIRSelectForm extends FormBase {
 
     // Check if its equal
     switch ($elementType) {
+      case 'actuatorstem':
+        if (
+            isset($oldResult->hasContent, $result->hasContent,
+                  $oldResult->hasLanguage, $result->hasLanguage) &&
+            $oldResult->hasContent === $result->hasContent &&
+            $oldResult->hasLanguage === $result->hasLanguage
+        ) {
+            return true; // Found an exact equal element → returns TRUE and exit
+        }
+        break;
+      case 'actuator':
+        if (
+          isset($oldResult->hasActuatorStem, $result->hasActuatorStem,
+                $oldResult->hasCodebook, $result->hasCodebook,
+                $oldResult->isAttributeOf, $result->isAttributeOf) &&
+          $oldResult->hasActuatorStem === $result->hasActuatorStem &&
+          $oldResult->hasCodebook === $result->hasCodebook &&
+          $oldResult->isAttributeOf === $result->isAttributeOf
+          ) {
+            return true; // Found an exact equal element → returns TRUE and exit
+          }
+        break;
       case 'detectorstem':
         if (
             isset($oldResult->hasContent, $result->hasContent,

@@ -5,6 +5,8 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\rep\ListKeywordLanguagePage;
+use Drupal\sir\Entity\ActuatorStem;
+use Drupal\sir\Entity\Actuator;
 use Drupal\sir\Entity\AnnotationStem;
 use Drupal\sir\Entity\Annotation;
 use Drupal\sir\Entity\DetectorStem;
@@ -91,6 +93,7 @@ class SIRListForm extends FormBase {
 
     $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument');
     $preferred_detector = \Drupal::config('rep.settings')->get('preferred_detector');
+    $preferred_actuator = \Drupal::config('rep.settings')->get('preferred_actuator');
 
     $status_options = [
       'all' => $this->t('All Status'),
@@ -133,7 +136,7 @@ class SIRListForm extends FormBase {
       ],
     ];
 
-    If ($elementtype !== 'detector'){
+    If ($elementtype !== 'detector' && $elementtype !== 'actuator'){
       $tables = new Tables;
       $languages = $tables->getLanguages();
       if ($languages)
@@ -179,6 +182,20 @@ class SIRListForm extends FormBase {
         $class_name = $preferred_instrument . "s";
         $header = Instrument::generateHeader();
         $output = Instrument::generateOutput($this->getList());
+        break;
+
+      // ACTUATOR STEM
+      case "actuatorstem":
+        $class_name = $preferred_actuator . " Stems";
+        $header = ActuatorStem::generateHeader();
+        $output = ActuatorStem::generateOutput($this->getList());
+        break;
+
+      // ACTUATOR
+      case "actuator":
+        $class_name = $preferred_actuator . "s";
+        $header = Actuator::generateHeader();
+        $output = Actuator::generateOutput($this->getList());
         break;
 
       // DETECTOR STEM
@@ -279,7 +296,7 @@ class SIRListForm extends FormBase {
 
       if ($elementtype == 'instrument' || $elementtype == 'codebook')
         $row_label = strtolower($row['element_name']);
-      else if ($elementtype == 'detector' || $elementtype == 'detectorstem' || $elementtype == 'responseoption')
+      else if ($elementtype == 'detector' || $elementtype == 'detectorstem' || $elementtype == 'responseoption' || $elementtype == 'actuator' || $elementtype == 'actuatorstem')
         $row_label = strtolower($row['element_content']);
 
       if ($status_filter !== 'all' && $row_status !== $status_filter) {
