@@ -21,6 +21,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Drupal\Core\Render\Markup;
 use Drupal\rep\Vocabulary\VSTOI;
 use Drupal\rep\Entity\Tables;
+use Drupal\rep\ListKeywordPage;
 
 class SIRSelectForm extends FormBase {
 
@@ -532,7 +533,12 @@ class SIRSelectForm extends FormBase {
     $text_filter = strtolower($text_filter);
 
     // Get elements based on status
-    $this->setList(ListManagerEmailPage::exec($this->element_type, $this->manager_email, $page, $pagesize));
+    if ($text_filter)
+      $this->setList(ListManagerEmailPage::exec($this->element_type, $this->manager_email, $page, $pagesize));
+    else
+      $this->setList(ListKeywordPage::exec($elementtype, $keyword, $page, $pagesize));
+      //$this->setList(ListManagerEmailPage::exec($this->element_type, $this->manager_email, $page, 9999999999));
+      // URGENT HAVE A API METHOD THAT RETURNS ONLY SEARCHED TEXT
 
     $header = $this->generateHeader();
     $results = $this->generateOutput();
