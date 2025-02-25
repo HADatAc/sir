@@ -536,8 +536,7 @@ class SIRSelectForm extends FormBase {
     if ($text_filter)
       $this->setList(ListManagerEmailPage::exec($this->element_type, $this->manager_email, $page, $pagesize));
     else
-      $this->setList(ListKeywordPage::exec($elementtype, $keyword, $page, $pagesize));
-      //$this->setList(ListManagerEmailPage::exec($this->element_type, $this->manager_email, $page, 9999999999));
+      $this->setList(ListKeywordPage::exec($this->element_type, $text_filter, $page, $pagesize));
       // URGENT HAVE A API METHOD THAT RETURNS ONLY SEARCHED TEXT
 
     $header = $this->generateHeader();
