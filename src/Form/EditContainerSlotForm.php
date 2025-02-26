@@ -122,6 +122,7 @@ class EditContainerSlotForm extends FormBase {
       VSTOI::DETECTOR => $preferred_detector,
       VSTOI::ACTUATOR => $preferred_actuator,
     ];
+
     $form['containerslot_type'] = [
       '#type' => 'select',
       '#title' => $this->t('Type'),
@@ -138,31 +139,39 @@ class EditContainerSlotForm extends FormBase {
       '#default_value' => $content,
       '#autocomplete_route_name' => 'sir.containerslot_detector_autocomplete',
       '#maxlength' => NULL,
+      // Define a visibilidade via #states.
+      '#states' => [
+        'visible' => [
+          ':input[name="containerslot_type"]' => ['value' => VSTOI::DETECTOR],
+        ],
+      ],
     ];
+
     $form['containerslot_actuator'] = [
       '#type' => 'textfield',
       '#title' => $this->t("Actuator"),
       '#default_value' => $content,
-      '#autocomplete_route_name' => 'sir.containerslot_autuator_autocomplete',
+      '#autocomplete_route_name' => 'sir.containerslot_actuator_autocomplete',
       '#maxlength' => NULL,
-    ];
-    //$form['containerslot_detector_uri'] = [
-    //  '#type' => 'textfield',
-    //  '#title' => $this->t("Item Uri"),
-    //  '#default_value' => $this->getContainerSlot()->hasDetector,
-    //  '#disabled' => TRUE,
-    //];
-    $form['new_detector_submit'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('New Item'),
-      '#name' => 'new_detector',
-      '#attributes' => [
-        'class' => ['btn', 'btn-primary', 'add-element-button'],
+      // Exibe este campo quando a opção selecionada for VSTOI::ACTUATOR.
+      '#states' => [
+        'visible' => [
+          ':input[name="containerslot_type"]' => ['value' => VSTOI::ACTUATOR],
+        ],
       ],
     ];
+
+    // $form['new_detector_submit'] = [
+    //   '#type' => 'submit',
+    //   '#value' => $this->t('New Item'),
+    //   '#name' => 'new_detector',
+    //   '#attributes' => [
+    //     'class' => ['btn', 'btn-primary', 'add-element-button'],
+    //   ],
+    // ];
     $form['reset_detector_submit'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Reset Item'),
+      '#value' => $this->t('Reset this Item'),
       '#name' => 'reset_detector',
       '#attributes' => [
         'class' => ['btn', 'btn-primary', 'reset-button'],
@@ -175,7 +184,22 @@ class EditContainerSlotForm extends FormBase {
       '#attributes' => [
         'class' => ['btn', 'btn-primary', 'save-button'],
       ],
+      '#states' => [
+        'enabled' => [
+          [
+            // Condição para quando o tipo for DETECTOR e o campo detector estiver preenchido.
+            ':input[name="containerslot_type"]' => ['value' => VSTOI::DETECTOR],
+            ':input[name="containerslot_detector"]' => ['filled' => TRUE],
+          ],
+          [
+            // Condição para quando o tipo for ACTUATOR e o campo actuator estiver preenchido.
+            ':input[name="containerslot_type"]' => ['value' => VSTOI::ACTUATOR],
+            ':input[name="containerslot_actuator"]' => ['filled' => TRUE],
+          ],
+        ],
+      ],
     ];
+
     $form['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
@@ -239,10 +263,14 @@ class EditContainerSlotForm extends FormBase {
     }
 
     try{
-      // UPDATE DETECTOR
+      // UPDATE DETECTOR or ACTUATOR
       if ($this->getContainerSlotUri() != NULL) {
         $api = \Drupal::service('rep.api_connector');
-        $api->detectorAttach(Utils::uriFromAutocomplete($form_state->getValue('containerslot_detector')),$this->getContainerSlotUri());
+        if ($form_state->containerslot_type === VSTOI::DETECTOR) {
+          $api->detectorAttach(Utils::uriFromAutocomplete($form_state->getValue('containerslot_detector')),$this->getContainerSlotUri());
+        } else {
+          $api->actuatorAttach(Utils::uriFromAutocomplete($form_state->getValue('containerslot_actuator')),$this->getContainerSlotUri());
+        }
       }
 
       \Drupal::messenger()->addMessage(t("ContainerSlot has been updated successfully."));
