@@ -533,10 +533,10 @@ class SIRSelectForm extends FormBase {
     $text_filter = strtolower($text_filter);
 
     // Get elements based on status
-    if ($text_filter)
+    if (strlen($text_filter) === 0 )
       $this->setList(ListManagerEmailPage::exec($this->element_type, $this->manager_email, $page, $pagesize));
     else
-      $this->setList(ListKeywordPage::exec($this->element_type, $text_filter, $page, $pagesize));
+      $this->setList(ListKeywordPage::exec($this->element_type, $text_filter, $page, 99999999));
       // URGENT HAVE A API METHOD THAT RETURNS ONLY SEARCHED TEXT
 
     $header = $this->generateHeader();

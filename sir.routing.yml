@@ -191,7 +191,7 @@ sir.containerslot_detector_autocomplete:
     _permission: 'access content'
 
 sir.containerslot_actuator_autocomplete:
-  path: '/sir/manage/containerslot/autocomplete'
+  path: '/sir/manage/containeractuatorslot/autocomplete'
   defaults:
     _controller: '\Drupal\sir\Controller\JsonApiActuatorController::handleAutocomplete'
     _format: json

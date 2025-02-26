@@ -164,6 +164,8 @@ class ManageSlotElementsForm extends FormBase {
     $uriType = array();
     if ($slotElements != NULL) {
       foreach ($slotElements as $slotElement) {
+
+        // dpm($slotElement);
         if ($slotElement != NULL) {
           $detector = NULL;
           $content = " ";
@@ -179,27 +181,30 @@ class ManageSlotElementsForm extends FormBase {
 
             // PROCESS SLOTS THAT ARE CONTAINER SLOTS
             if ($slotElement->hascoTypeUri == VSTOI::CONTAINER_SLOT) {
-              $type = Utils::namespaceUri(VSTOI::DETECTOR);
-              if ($slotElement->hasDetector != null) {
-                $detector = $api->parseObjectResponse($api->getUri($slotElement->hasDetector),'getUri');
-                if ($detector != NULL) {
-                  if (isset($detector->uri)) {
-                    $detectorUri = t('<b>Detector</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($detector->uri).'">' . $detector->typeLabel . '</a>] ');
-                    //$detectorUri = '<b>URI</b>: [' . Utils::namespaceUri($slotElement->hasDetector) . "] ";
+
+              if ($slotElement->hasComponent != null) {
+
+                $component = $api->parseObjectResponse($api->getUri($slotElement->hasComponent),'getUri');
+                // $type = Utils::namespaceUri(VSTOI::DETECTOR);
+                // Ter em atenção que o componente agora vai ser um atributo que vai conter dentro qual é o tipo do atributo (detector/actuator)
+                if ($component != NULL) {
+                  $type = $component->hascoTypeUri === VSTOI::DETECTOR ? 'Detector':'Actuator';
+                  if (isset($component->uri)) {
+                    $componentUri = t('<b>'.$type.'</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($component->uri).'">' . $component->typeLabel . '</a>] ');
                   }
-                  if (isset($detector->isAttributeOf)) {
-                    $content = '<b>Attribute Of</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode(Utils::uriFromAutocomplete($detector->isAttributeOf)).'">'. Utils::getLabelFromURI($detector->isAttributeOf) . "</a>]";
+                  if (isset($component->isAttributeOf)) {
+                    $content = '<b>Attribute Of</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode(Utils::uriFromAutocomplete($component->isAttributeOf)).'">'. Utils::getLabelFromURI($component->isAttributeOf) . "</a>]";
                   } else {
                     $content = '<b>Attribute Of</b>: [EMPTY]';
                   }
-                  if (isset($detector->codebook->label)) {
-                    $codebook = '<b>CB</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($detector->codebook->uri).'">' . $detector->codebook->label . "</a>]";
+                  if (isset($component->codebook->label)) {
+                    $codebook = '<b>CB</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($component->codebook->uri).'">' . $component->codebook->label . "</a>]";
                   } else {
                     $codebook = '<b>CB</b>: [EMPTY]';
                   }
                 }
               }
-              $element = $detectorUri . " " . $content . " " . $codebook;
+              $element = $componentUri . " " . $content . " " . $codebook;
 
             // PROCESS SLOTS THAT ARE SUBCONTAINERS
             } else if ($slotElement->hascoTypeUri == VSTOI::SUBCONTAINER) {
@@ -380,7 +385,7 @@ class ManageSlotElementsForm extends FormBase {
     //BUTTONS
     $form['add_containerslot'] = [
       '#type' => 'submit',
-      '#value' => $this->t("Add Detector's Slots"),
+      '#value' => $this->t("Add Components's Slots"),
       '#name' => 'add_containerslots',
       '#attributes' => [
         'class' => ['btn', 'btn-primary', 'add-element-button'],

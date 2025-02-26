@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\Utils;
+use Drupal\rep\Vocabulary\VSTOI;
 
 class EditContainerSlotForm extends FormBase {
 
@@ -68,9 +69,8 @@ class EditContainerSlotForm extends FormBase {
 
     $content = "";
     if ($this->getContainerSlot() != NULL) {
-      if (isset($this->getContainerSlot()->detector) &&
-          isset($this->getContainerSlot()->detector)) {
-          $content = $this->getContainerSlot()->detector->label . ' [' . $this->getContainerSlot()->hasDetector . ']';
+      if (isset($this->getContainerSlot()->container)) {
+          $content = $this->getContainerSlot()->container->label . ' [' . $this->getContainerSlot()->container->uri . ']';
         }
     } else {
       \Drupal::messenger()->addMessage(t("Failed to retrieve ContainerSlot."));
@@ -113,13 +113,38 @@ class EditContainerSlotForm extends FormBase {
       '#default_value' => $this->getContainerSlot()->hasPriority,
       '#disabled' => TRUE,
     ];
+
+    $preferred_detector = \Drupal::config('rep.settings')->get('preferred_detector');
+    $preferred_actuator = \Drupal::config('rep.settings')->get('preferred_actuator');
+
+    $typeOptions = [
+      '' => $this->t('Select option please'),
+      VSTOI::DETECTOR => $preferred_detector,
+      VSTOI::ACTUATOR => $preferred_actuator,
+    ];
+    $form['containerslot_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Type'),
+      '#options' => $typeOptions,
+      '#default_value' => $this->getContainerSlot()->component->hascoTypeUri,
+      '#attributes' => [
+        'id' => 'containerslot_type'
+      ]
+    ];
+
     $form['containerslot_detector'] = [
       '#type' => 'textfield',
-      '#title' => $this->t("Item"),
+      '#title' => $this->t("Detector"),
       '#default_value' => $content,
       '#autocomplete_route_name' => 'sir.containerslot_detector_autocomplete',
       '#maxlength' => NULL,
-
+    ];
+    $form['containerslot_actuator'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t("Actuator"),
+      '#default_value' => $content,
+      '#autocomplete_route_name' => 'sir.containerslot_autuator_autocomplete',
+      '#maxlength' => NULL,
     ];
     //$form['containerslot_detector_uri'] = [
     //  '#type' => 'textfield',
