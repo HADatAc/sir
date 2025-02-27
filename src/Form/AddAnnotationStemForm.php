@@ -191,6 +191,9 @@ class AddAnnotationStemForm extends FormBase {
       if(strlen($form_state->getValue('annotationstem_version')) < 1) {
         $form_state->setErrorByName('annotationstem_version', $this->t('Please enter a valid version'));
       }
+      if(strlen($form_state->getValue('annotationstem_description')) < 1) {
+        $form_state->setErrorByName('annotationstem_description', $this->t('Please enter a valid description'));
+      }
     }
   }
 
