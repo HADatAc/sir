@@ -94,7 +94,7 @@ class JsonApiAnnotationController extends ControllerBase{
       $originalText = $annotation->hasContentWithStyle;
 
       // Use a regex to capture up to 5 characters before and after the keyword.
-      if (preg_match('/(.{0,5})(' . preg_quote($keyword, '/') . ')(.{0,5})/iu', $originalText, $matches)) {
+      if (preg_match('/(.{0,10})(' . preg_quote($keyword, '/') . ')(.{0,10})/iu', $originalText, $matches)) {
           $trimmedText = trim($matches[1] . $matches[2] . $matches[3]);
       } else {
           $trimmedText = $originalText; // If no match is found, keep the original text.
@@ -102,7 +102,7 @@ class JsonApiAnnotationController extends ControllerBase{
 
       $results[] = [
           'value' => html_entity_decode($trimmedText) . ' [' . $annotation->uri . ']',
-          'label' => $trimmedText . ' [' . $annotation->uri . ']',
+          'label' => html_entity_decode($trimmedText) . ' [' . $annotation->uri . ']',
       ];
     }
 
