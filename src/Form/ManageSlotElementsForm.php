@@ -173,6 +173,7 @@ class ManageSlotElementsForm extends FormBase {
           $detectorUri = " ";
           $type = " ";
           $element = " ";
+          $componentUri = " ";
           $uri = "uri"; // this variable is used as index, thus it cannot be am empty string
           if (isset($slotElement->uri) && ($slotElement->uri != NULL)) {
             $uri = $slotElement->uri;
