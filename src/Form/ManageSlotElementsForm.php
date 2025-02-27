@@ -167,10 +167,8 @@ class ManageSlotElementsForm extends FormBase {
 
         // dpm($slotElement);
         if ($slotElement != NULL) {
-          $detector = NULL;
           $content = " ";
           $codebook = " ";
-          $detectorUri = " ";
           $type = " ";
           $element = " ";
           $componentUri = " ";
@@ -327,6 +325,9 @@ class ManageSlotElementsForm extends FormBase {
           '#title' => ($isInstrument ? 'PageTopCenter':'TopCenter'),
           '#default_value' => $topcenterLabel,
           '#autocomplete_route_name' => 'sir.annotation_autocomplete',
+          '#autocomplete_route_parameters' => [
+            'parent_type' => ($isInstrument ? 'instrument' : 'subcontainer'),
+          ],
           '#attributes' => [
             'class' => ['form-control', 'floating-label-input', 'mt-4'],
             'placeholder' => ($isInstrument ? 'PageTopCenter':'TopCenter'),
@@ -346,6 +347,9 @@ class ManageSlotElementsForm extends FormBase {
           '#title' => ($isInstrument ? 'PageTopRight':'TopRight'),
           '#default_value' => $toprightLabel,
           '#autocomplete_route_name' => 'sir.annotation_autocomplete',
+          '#autocomplete_route_parameters' => [
+            'parent_type' => ($isInstrument ? 'instrument' : 'subcontainer'),
+          ],
           '#attributes' => [
             'class' => ['form-control', 'floating-label-input', 'mt-4'],
             'placeholder' => ($isInstrument ? 'PageTopRight':'TopRight'),
@@ -371,6 +375,9 @@ class ManageSlotElementsForm extends FormBase {
           '#title' => ($isInstrument ? 'PageLineBelowTop':'LineBelowTop'),
           '#default_value' => $linebelowtopLabel,
           '#autocomplete_route_name' => 'sir.annotation_autocomplete',
+          '#autocomplete_route_parameters' => [
+            'parent_type' => ($isInstrument ? 'instrument' : 'subcontainer'),
+          ],
           '#attributes' => [
             'class' => ['form-control', 'floating-label-input', 'mt-4'],
             'placeholder' => ($isInstrument ? 'PageLineBelowTop':'LineBelowTop'),
@@ -493,6 +500,9 @@ class ManageSlotElementsForm extends FormBase {
           '#title' => ($isInstrument ? 'PageLineBelowTop':'LineBelowTop'),
           '#default_value' => $lineabovebottomLabel,
           '#autocomplete_route_name' => 'sir.annotation_autocomplete',
+          '#autocomplete_route_parameters' => [
+            'parent_type' => ($isInstrument ? 'instrument' : 'subcontainer'),
+          ],
           '#attributes' => [
             'class' => ['form-control', 'floating-label-input', 'mt-4'],
             'placeholder' => ($isInstrument ? 'PageLineBelowTop':'LineBelowTop'),
@@ -518,6 +528,9 @@ class ManageSlotElementsForm extends FormBase {
           '#title' => ($isInstrument ? 'PageBottomLeft':'BottomLeft'),
           '#default_value' => $bottomleftLabel,
           '#autocomplete_route_name' => 'sir.annotation_autocomplete',
+          '#autocomplete_route_parameters' => [
+            'parent_type' => ($isInstrument ? 'instrument' : 'subcontainer'),
+          ],
           '#attributes' => [
             'class' => ['form-control', 'floating-label-input', 'mt-4'],
             'placeholder' => ($isInstrument ? 'PageBottomLeft':'BottomLeft'),
@@ -537,6 +550,9 @@ class ManageSlotElementsForm extends FormBase {
           '#title' => ($isInstrument ? 'PageBottomCenter':'BottomCenter'),
           '#default_value' => $bottomcenterLabel,
           '#autocomplete_route_name' => 'sir.annotation_autocomplete',
+          '#autocomplete_route_parameters' => [
+            'parent_type' => ($isInstrument ? 'instrument' : 'subcontainer'),
+          ],
           '#attributes' => [
             'class' => ['form-control', 'floating-label-input', 'mt-4'],
             'placeholder' => ($isInstrument ? 'PageBottomCenter':'BottomCenter'),
@@ -556,6 +572,9 @@ class ManageSlotElementsForm extends FormBase {
           '#title' => ($isInstrument ? 'PageBottomRight':'BottomRight'),
           '#default_value' => $bottomrightLabel,
           '#autocomplete_route_name' => 'sir.annotation_autocomplete',
+          '#autocomplete_route_parameters' => [
+            'parent_type' => ($isInstrument ? 'instrument' : 'subcontainer'),
+          ],
           '#attributes' => [
             'class' => ['form-control', 'floating-label-input', 'mt-4'],
             'placeholder' => ($isInstrument ? 'PageBottomRight':'BottomRight'),
