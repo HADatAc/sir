@@ -701,3 +701,16 @@ sir.review_actuatorstem:
     _review_access: 'TRUE'
   options:
     no_cache: 'TRUE'
+
+# Instrument
+
+sir.review_instrument:
+  path: 'sir/manage/reviewinstrument/{instrumenturi}'
+  defaults:
+    _form: '\Drupal\sir\Form\Review\ReviewInstrumentForm'
+    _title: 'Review Simulator'
+  requirements:
+    # _permission: 'access reviewer menu'
+    _review_access: 'TRUE'
+  options:
+    no_cache: 'TRUE'

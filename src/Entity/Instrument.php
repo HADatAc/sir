@@ -4,6 +4,7 @@ namespace Drupal\sir\Entity;
 
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Vocabulary\REPGUI;
+use Drupal\rep\Vocabulary\VSTOI;
 use Drupal\rep\Utils;
 
 class Instrument {
@@ -32,7 +33,6 @@ class Instrument {
     $languages = $tables->getLanguages();
 
     $output = array();
-    $disabled_rows = [];
     $isQuestionnaire = false;
     foreach ($list as $element) {
       $isQuestionnaire = Utils::hasQuestionnaireAncestor($element->uri);
@@ -83,13 +83,12 @@ class Instrument {
       $status = ' ';
       $row_key = $element->uri;
       if ($element->hasStatus != NULL) {
-        $status = parse_url($element->hasStatus, PHP_URL_FRAGMENT);
-
-        if (parse_url($element->hasStatus, PHP_URL_FRAGMENT) === 'Under Review') {
-          $status = "Under Review";
-          $disabled_rows[] = $row_key;
+        // GET STATUS
+        if ($element->hasStatus === VSTOI::DRAFT && $element->hasReviewNote !== NULL) {
+          $status = "Draft (Already Reviewed)";
+        } else {
+          $status = Utils::plainStatus($element->hasStatus);
         }
-
       }
       $output[$row_key] = [
         'element_uri' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),
@@ -105,13 +104,7 @@ class Instrument {
       ];
     }
 
-    // Para garantir que disabled_rows seja um array associativo
-    $normalized_disabled_rows = array_fill_keys($disabled_rows, TRUE);
-
-    return [
-      'output'        => $output,
-      'disabled_rows' => $normalized_disabled_rows,
-    ];
+    return $output;
 
   }
 

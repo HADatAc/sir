@@ -58,16 +58,12 @@ class Codebook {
       }
       $status = ' ';
       if ($element->hasStatus != NULL) {
-
         // GET STATUS
         if ($element->hasStatus === VSTOI::DRAFT && $element->hasReviewNote !== NULL) {
           $status = "Draft (Already Reviewed)";
-        } else if($element->hasStatus === VSTOI::UNDER_REVIEW) {
-          $status = "Under Review";
         } else {
-          $status = parse_url($element->hasStatus, PHP_URL_FRAGMENT);
+          $status = Utils::plainStatus($element->hasStatus);
         }
-
       }
       $output[$element->uri] = [
         'element_uri' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),

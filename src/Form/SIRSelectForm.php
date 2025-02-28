@@ -251,17 +251,17 @@ class SIRSelectForm extends FormBase {
       }
 
       if ($this->element_type == 'instrument' /*|| $this->element_type == 'codebook'*/) {
-        // $form['actions_wrapper']['buttons_container']['review_selected_element'] = [
-        //   '#type' => 'submit',
-        //   '#value' => $this->t('Send for Review'),
-        //   '#name' => 'review_recursive_element',
-        //   '#attributes' => [
-        //     'onclick' => 'if(!confirm("Are you sure you want to submit for Review selected entry?")){return false;}',
-        //     'class' => ['btn', 'btn-primary', 'review-element-button'],
-        //     'disabled' => 'disabled',
-        //     'id' => 'review-selected-button',
-        //   ],
-        // ];
+        $form['actions_wrapper']['buttons_container']['review_selected_element'] = [
+          '#type' => 'submit',
+          '#value' => $this->t('Send for Review'),
+          '#name' => 'review_recursive_element',
+          '#attributes' => [
+            'onclick' => 'if(!confirm("Are you sure you want to submit for Review selected entry?")){return false;}',
+            'class' => ['btn', 'btn-primary', 'review-element-button'],
+            'disabled' => 'disabled',
+            'id' => 'review-selected-button',
+          ],
+        ];
       }
 
       if ($this->element_type === 'instrument') {
