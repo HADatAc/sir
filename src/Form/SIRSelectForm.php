@@ -253,7 +253,7 @@ class SIRSelectForm extends FormBase {
       if ($this->element_type == 'instrument' /*|| $this->element_type == 'codebook'*/) {
         $form['actions_wrapper']['buttons_container']['review_selected_element'] = [
           '#type' => 'submit',
-          '#value' => $this->t('Send for Review'),
+          '#value' => $this->t('Send for R-Review'),
           '#name' => 'review_recursive_element',
           '#attributes' => [
             'onclick' => 'if(!confirm("Are you sure you want to submit for Review selected entry?")){return false;}',
@@ -1769,11 +1769,11 @@ class SIRSelectForm extends FormBase {
         $api->detectorStemAdd($detectorStemJson);
       }
 
-      // } elseif ($this->element_type == 'instrument') {
-
       // } elseif ($this->element_type == 'annotationstem') {
-
       // } elseif ($this->element_type == 'processstem') {
+      // } elseif ($this->element_type == 'process') {
+      // } elseif ($this->element_type == 'actuatorstem') {
+      // } elseif ($this->element_type == 'actuator') {
     }
 
 
@@ -1800,7 +1800,7 @@ class SIRSelectForm extends FormBase {
       $result = $obj->body;
 
       //Case elementTypes are Instrument OR Codebook => Recursive Submit
-      if ($this->element_type == 'instrument') {
+      if ($this->element_type === 'instrument') {
 
         // UPDATE BY DELETING AND CREATING
         // dpm($uri);
@@ -1815,7 +1815,7 @@ class SIRSelectForm extends FormBase {
             $total = $obj2->total;
           }
         }
-        // dpm($total);
+        dpm($total);
 
       // } elseif ($this->element_type == 'codebook') {
 

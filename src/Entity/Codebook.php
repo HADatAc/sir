@@ -93,6 +93,7 @@ class Codebook {
       'element_name' => t('Name'),
       'element_language' => t('Language'),
       'element_version' => t('Version'),
+      'element_owner' => t('Owner'),
       'element_status' => t('Status'),
     ];
 

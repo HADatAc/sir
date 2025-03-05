@@ -104,7 +104,7 @@ sir.manage_actuatorstems :
     pagesize: '9'
   parent: sir.top_level
   menu_name: main
-  weight: 45
+  weight: 50
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -119,7 +119,7 @@ sir.manage_actuators :
     pagesize: '9'
   parent: sir.top_level
   menu_name: main
-  weight: 46
+  weight: 60
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -134,7 +134,7 @@ sir.manage_detectorstems :
     pagesize: '9'
   parent: sir.top_level
   menu_name: main
-  weight: 50
+  weight: 70
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -149,7 +149,7 @@ sir.manage_detectors :
     pagesize: '9'
   parent: sir.top_level
   menu_name: main
-  weight: 60
+  weight: 80
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -164,7 +164,7 @@ sir.manage_codebooks :
     pagesize: '9'
   parent: sir.top_level
   menu_name: main
-  weight: 70
+  weight: 90
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -179,7 +179,7 @@ sir.manage_responseoptions :
     pagesize: '9'
   parent: sir.top_level
   menu_name: main
-  weight: 80
+  weight: 100
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -194,7 +194,7 @@ sir.manage_annotationstems :
     pagesize: '9'
   parent: sir.top_level
   menu_name: main
-  weight: 100
+  weight: 110
   requirements:
     _permission: 'access content'
     _role: 'authenticated'

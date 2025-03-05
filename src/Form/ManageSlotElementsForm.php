@@ -187,12 +187,12 @@ class ManageSlotElementsForm extends FormBase {
                 // $type = Utils::namespaceUri(VSTOI::DETECTOR);
                 // Ter em atenção que o componente agora vai ser um atributo que vai conter dentro qual é o tipo do atributo (detector/actuator)
                 if ($component != NULL) {
-                  $type = $component->hascoTypeUri === VSTOI::DETECTOR ? 'Detector':'Actuator';
+                  $type = Utils::namespaceUri($component->hascoTypeUri);
                   if (isset($component->uri)) {
                     $componentUri = t('<b>'.$type.'</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($component->uri).'">' . $component->typeLabel . '</a>] ');
                   }
                   if (isset($component->isAttributeOf)) {
-                    $content = '<b>Attribute Of</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode(Utils::uriFromAutocomplete($component->isAttributeOf)).'">'. Utils::getLabelFromURI($component->isAttributeOf) . "</a>]";
+                    $content = '<b>Attribute Of</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode(Utils::uriFromAutocomplete($component->isAttributeOf)).'">'. Utils::namespaceUri($component->isAttributeOf) . "</a>]";
                   } else {
                     $content = '<b>Attribute Of</b>: [EMPTY]';
                   }

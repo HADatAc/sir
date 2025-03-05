@@ -19,6 +19,8 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Drupal\Core\Render\Markup;
 use Drupal\rep\Vocabulary\VSTOI;
+use Drupal\sir\Entity\Actuator;
+use Drupal\sir\Entity\ActuatorStem;
 
 class SIRReviewForm extends FormBase {
 
@@ -298,7 +300,11 @@ class SIRReviewForm extends FormBase {
   protected function generateHeader() {
     switch ($this->element_type) {
       case "instrument":
-        return Instrument::generateHeader();
+        return Instrument::generateReviewHeader();
+      case "actuatorstem":
+        return ActuatorStem::generateHeader();
+      case "actuator":
+        return Actuator::generateHeader();
       case "detectorstem":
         return DetectorStem::generateReviewHeader();
       case "detector":
@@ -324,11 +330,15 @@ class SIRReviewForm extends FormBase {
   protected function generateOutput() {
     switch ($this->element_type) {
       case "instrument":
-        return Instrument::generateOutput($this->getList());
+        return Instrument::generateReviewOutput($this->getList());
+      case "actuatorstem":
+        return ActuatorStem::generateOutput($this->getList());
+      case "actuator":
+        return Actuator::generateOutput($this->getList());
       case "detectorstem":
         return DetectorStem::generateReviewOutput($this->getList());
       case "detector":
-        return Detector::generatereviewOutput($this->getList());
+        return Detector::generateReviewOutput($this->getList());
       case "codebook":
         return Codebook::generateReviewOutput($this->getList());
       case "responseoption":

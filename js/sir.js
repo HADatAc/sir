@@ -285,6 +285,7 @@
         const deleteButton = document.getElementById('edit-delete-selected-element');
         const editButton = document.getElementById('edit-edit-selected-element');
         const manageCodeBookSlotsButton = document.getElementById('manage-codebookslots-button');
+        const manageStructureButton = document.getElementById('edit-manage-slotelements');
 
         if (reviewButton) {
           reviewButton.disabled = !(draftChecked > 0 && currentChecked === 0 && deprecatedChecked === 0);
@@ -300,6 +301,10 @@
 
         if (manageCodeBookSlotsButton) {
           manageCodeBookSlotsButton.disabled = !(draftChecked > 0 && underReviewChecked === 0);
+        }
+
+        if (manageStructureButton) {
+          manageStructureButton.disabled = !(draftChecked > 0 && underReviewChecked === 0);
         }
       };
 
