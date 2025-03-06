@@ -1805,8 +1805,9 @@ class SIRSelectForm extends FormBase {
         // UPDATE BY DELETING AND CREATING
         // dpm($uri);
         //dpr($responseOptionJSON);
-        $resp = $api->reviewRecursive($uri);
+        $resp = $api->reviewRecursive($uri, VSTOI::UNDER_REVIEW);
         $total = -1;
+        dpm($resp);
         if ($resp != null) {
           $obj = json_decode($resp);
           if ($obj->isSuccessful) {

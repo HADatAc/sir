@@ -273,18 +273,9 @@ class ReviewInstrumentForm extends FormBase {
     ];
 
     $this->setContainer($container);
-    $containerUri = $this->getContainer()->uri; // or wherever you get the URI
-    $slotElementsOutput = Utils::buildSlotElements($containerUri, $api, 'tree');
-    // Use 'tree' for nested <ul>, or 'table' for nested tables (default)
-
-    // If it's a table (Drupal render array), you can assign it directly:
-    $form['instrument_structure']['slotelement_table'] = $slotElementsOutput;
-
-    // If it's a tree (HTML string), you might do something like:
-    // $form['instrument_structure']['slotelement_tree'] = [
-    //   '#type' => 'markup',
-    //   '#markup' => $slotElementsOutput,
-    // ];
+    $containerUri = $this->getContainer()->uri;
+    $slotElementsOutput = UTILS::buildSlotElements($containerUri, $api, 'table'); // or 'table'
+    $form['instrument_structure']['slot_elements'] = $slotElementsOutput;
 
 
     // $slotElements = $api->parseObjectResponse($api->slotElements($this->getContainer()->uri),'slotElements');
