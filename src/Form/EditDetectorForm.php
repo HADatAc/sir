@@ -133,6 +133,8 @@ class EditDetectorForm extends FormBase {
         'disabled' => 'disabled',
       ],
     ];
+    $api = \Drupal::service('rep.api_connector');
+    $attributOf = $api->parseObjectResponse($api->getUri($this->getDetector()->isAttributeOf),'getUri');
     $form['detector_isAttributeOf'] = [
       'top' => [
         '#type' => 'markup',
@@ -142,7 +144,7 @@ class EditDetectorForm extends FormBase {
         '#type' => 'textfield',
         '#title' => $this->t('Attribute Of <small><i>(optional)</i></small>'),
         '#name' => 'detector_isAttributeOf',
-        '#default_value' => $this->getDetector()->isAttributeOf,
+        '#default_value' => $attributOf->label . ' [' . $this->getDetector()->isAttributeOf . ']',
         '#id' => 'detector_isAttributeOf',
         '#parents' => ['detector_isAttributeOf'],
         '#attributes' => [

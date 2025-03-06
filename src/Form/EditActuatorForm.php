@@ -96,7 +96,7 @@ class EditActuatorForm extends FormBase {
           $this->t('Simulation Technique Stem') :
           $this->t('Actuator Stem'),
         '#name' => 'actuator_stem',
-        '#default_value' => Utils::fieldToAutocomplete($this->getActuator()->typeUri, $this->getActuator()->typeLabel),
+        '#default_value' => Utils::fieldToAutocomplete($this->getActuator()->typeUri, $this->getActuator()->actuatorStem->label),
         '#id' => 'actuator_stem',
         '#parents' => ['actuator_stem'],
         '#attributes' => [
@@ -116,7 +116,6 @@ class EditActuatorForm extends FormBase {
         '#type' => 'markup',
         '#markup' => '</div>',
       ],
-      '#disabled' => FALSE
     ];
     $form['actuator_codebook'] = [
       '#type' => 'textfield',
@@ -124,24 +123,28 @@ class EditActuatorForm extends FormBase {
       '#default_value' => $codebookLabel,
       '#autocomplete_route_name' => 'sir.actuator_codebook_autocomplete',
     ];
-    $form['codebook_version'] = [
+    $form['actuator_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
       '#default_value' =>
         ($this->getActuator()->hasStatus === VSTOI::CURRENT || $this->getActuator()->hasStatus === VSTOI::DEPRECATED) ?
         $this->getActuator()->hasVersion + 1 : $this->getActuator()->hasVersion,
-      '#disabled' => TRUE
+      '#attributes' => [
+        'disabled' => 'disabled',
+      ],
     ];
+    $api = \Drupal::service('rep.api_connector');
+    $attributOf = $api->parseObjectResponse($api->getUri($this->getActuator()->isAttributeOf),'getUri');
     $form['actuator_isAttributeOf'] = [
       'top' => [
         '#type' => 'markup',
-        '#markup' => '<div class="pt-3 col border border-white">',
+        '#markup' => '<div class="pt-0 col border border-white">',
       ],
       'main' => [
         '#type' => 'textfield',
         '#title' => $this->t('Attribute Of <small><i>(optional)</i></small>'),
         '#name' => 'actuator_isAttributeOf',
-        '#default_value' => $this->getActuator()->isAttributeOf,
+        '#default_value' => $attributOf->label . ' [' . $this->getActuator()->isAttributeOf . ']',
         '#id' => 'actuator_isAttributeOf',
         '#parents' => ['actuator_isAttributeOf'],
         '#attributes' => [
@@ -150,10 +153,10 @@ class EditActuatorForm extends FormBase {
           'data-dialog-options' => json_encode(['width' => 800]),
           'data-url' => Url::fromRoute('rep.tree_form', [
             'mode' => 'modal',
-            'elementtype' => 'actuatorattribute',
+            'elementtype' => 'detectorattribute',
           ], ['query' => ['field_id' => 'actuator_isAttributeOf']])->toString(),
           'data-field-id' => 'actuator_isAttributeOf',
-          'data-elementtype' => 'actuatorattribute',
+          'data-elementtype' => 'detectorattribute',
           'autocomplete' => 'off',
         ],
       ],
@@ -161,7 +164,6 @@ class EditActuatorForm extends FormBase {
         '#type' => 'markup',
         '#markup' => '</div>',
       ],
-      '#disabled' => FALSE
     ];
     $form['actuator_webdocument'] = [
       '#type' => 'textfield',
@@ -171,6 +173,24 @@ class EditActuatorForm extends FormBase {
         'placeholder' => 'http://',
       ]
     ];
+    if ($this->getActuator()->hasReviewNote !== NULL && $this->getActuator()->hasSatus !== null) {
+      $form['actuator_hasreviewnote'] = [
+        '#type' => 'textarea',
+        '#title' => $this->t('Review Notes'),
+        '#default_value' => $this->getActuator()->hasReviewNote,
+        '#attributes' => [
+          'disabled' => 'disabled',
+        ]
+      ];
+      $form['actuator_haseditoremail'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Reviewer Email'),
+        '#default_value' => $this->getActuator()->hasEditorEmail,
+        '#attributes' => [
+          'disabled' => 'disabled',
+        ],
+      ];
+    }
     $form['update_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Update'),
@@ -227,8 +247,8 @@ class EditActuatorForm extends FormBase {
       $uid = \Drupal::currentUser()->id();
       $useremail = \Drupal::currentUser()->getEmail();
 
-      // GET THE ACTUATOR STEM URI
-      $rawresponse = $api->getUri($form_state->getValue('actuator_stem'));
+      // GET THE DETECTOR STEM URI
+      $rawresponse = $api->getUri(Utils::uriFromAutocomplete($form_state->getValue('actuator_stem')));
       $obj = json_decode($rawresponse);
       $result = $obj->body;
 
@@ -249,19 +269,16 @@ class EditActuatorForm extends FormBase {
         $label = $result->label . '  -- CB:EMPTY';
       }
 
-      // $hasStem = '';
-      // if ($form_state->getValue('actuator_stem') != NULL && $form_state->getValue('actuator_stem') != '') {
-      //   $hasStem = Utils::uriFromAutocomplete($form_state->getValue('actuator_stem'));
-      // }
-
       $hasCodebook = '';
       if ($form_state->getValue('actuator_codebook') != NULL && $form_state->getValue('actuator_codebook') != '') {
         $hasCodebook = Utils::uriFromAutocomplete($form_state->getValue('actuator_codebook'));
       }
 
-      // dpm(Utils::uriFromAutocomplete($form_state->getValue('actuator_isAttributeOf')));
+      // CHECK if Status is CURRENT OR DEPRECATED FOR NEW CREATION
+      if ($this->getActuator()->hasStatus === VSTOI::CURRENT || $this->getActuator()->hasStatus === VSTOI::DEPRECATED) {
 
-      $actuatorJson = '{"uri":"'.$this->getActuator()->uri.'",'.
+        $newActuatorUri = Utils::uriGen('actuator');
+        $actuatorJson = '{"uri":"'.$newActuatorUri.'",'.
         '"typeUri":"'.Utils::uriFromAutocomplete($form_state->getValue('actuator_stem')).'",'.
         '"hascoTypeUri":"'.VSTOI::ACTUATOR.'",'.
         '"hasActuatorStem":"'.Utils::uriFromAutocomplete($form_state->getValue('actuator_stem')).'",'.
@@ -269,16 +286,42 @@ class EditActuatorForm extends FormBase {
         '"hasContent":"'.$label.'",'.
         '"hasSIRManagerEmail":"'.$useremail.'",'.
         '"label":"'.$label.'",'.
-        '"hasVersion":"1",'.
-        '"isAttributeOf":"'.( Utils::uriFromAutocomplete($form_state->getValue('actuator_isAttributeOf')) !== null ? Utils::uriFromAutocomplete($form_state->getValue('actuator_isAttributeOf')) : $form_state->getValue('actuator_isAttributeOf') ).'",'.
         '"hasWebDocument":"'.$form_state->getValue('actuator_webdocument').'",'.
+        '"hasVersion":"'.$form_state->getValue('actuator_version').'",'.
+        '"isAttributeOf":"'.$form_state->getValue('actuator_isAttributeOf').'",'.
+        '"wasDerivedFrom":"'.$this->getActuator()->uri.'",'.
+        '"hasReviewNote":"'.($this->getActuator()->hasSatus !== null ? $this->getActuator()->hasReviewNote : '').'",'.
+        '"hasEditorEmail":"'.($this->getActuator()->hasSatus !== null ? $this->getActuator()->hasEditorEmail : '').'",'.
         '"hasStatus":"'.VSTOI::DRAFT.'"}';
 
-      // UPDATE BY DELETING AND CREATING
-      $api = \Drupal::service('rep.api_connector');
-      $api->actuatorDel($this->getActuatorUri());
-      $api->actuatorAdd($actuatorJson);
-      \Drupal::messenger()->addMessage(t("Actuator has been updated successfully."));
+        $api->elementAdd('actuator',$actuatorJson);
+        \Drupal::messenger()->addMessage(t("New Version actuator has been created successfully."));
+
+      } else {
+
+        $actuatorJson = '{"uri":"'.$this->getActuator()->uri.'",'.
+          '"typeUri":"'.Utils::uriFromAutocomplete($form_state->getValue('actuator_stem')).'",'.
+          '"hascoTypeUri":"'.VSTOI::ACTUATOR.'",'.
+          '"hasActuatorStem":"'.Utils::uriFromAutocomplete($form_state->getValue('actuator_stem')).'",'.
+          '"hasCodebook":"'.$hasCodebook.'",'.
+          '"hasContent":"'.$label.'",'.
+          '"hasSIRManagerEmail":"'.$useremail.'",'.
+          '"label":"'.$label.'",'.
+          '"hasWebDocument":"'.$form_state->getValue('actuator_webdocument').'",'.
+          '"hasVersion":"'.$form_state->getValue('actuator_version').'",'.
+          '"isAttributeOf":"'.$form_state->getValue('actuator_isAttributeOf').'",'.
+          '"wasDerivedFrom":"'.$this->getActuator()->wasDerivedFrom.'",'.
+          '"hasReviewNote":"'.$this->getActuator()->hasReviewNote.'",'.
+          '"hasEditorEmail":"'.$this->getActuator()->hasEditorEmail.'",'.
+          '"hasStatus":"'.VSTOI::DRAFT.'"}';
+
+        // UPDATE BY DELETING AND CREATING
+        $api = \Drupal::service('rep.api_connector');
+        $api->elementDel('actuator',$this->getActuatorUri());
+        $api->elementAdd('actuator',$actuatorJson);
+        \Drupal::messenger()->addMessage(t("Actuator has been updated successfully."));
+      }
+
       self::backUrl();
       return;
 

@@ -273,123 +273,111 @@ class ReviewInstrumentForm extends FormBase {
     ];
 
     $this->setContainer($container);
-    $slotElements = $api->parseObjectResponse($api->slotElements($this->getContainer()->uri),'slotElements');
-    $root_url = \Drupal::request()->getBaseUrl();
-    $output = array();
-    $uriType = array();
-    if ($slotElements != NULL) {
-      foreach ($slotElements as $slotElement) {
+    $containerUri = $this->getContainer()->uri; // or wherever you get the URI
+    $slotElementsOutput = Utils::buildSlotElements($containerUri, $api, 'tree');
+    // Use 'tree' for nested <ul>, or 'table' for nested tables (default)
 
-        // dpm($slotElement);
-        if ($slotElement != NULL) {
-          $content = " ";
-          $codebook = " ";
-          $type = " ";
-          $element = " ";
-          $componentUri = " ";
-          $uri = "uri"; // this variable is used as index, thus it cannot be am empty string
-          if (isset($slotElement->uri) && ($slotElement->uri != NULL)) {
-            $uri = $slotElement->uri;
-          }
-          if (isset($slotElement->hascoTypeUri)) {
+    // If it's a table (Drupal render array), you can assign it directly:
+    $form['instrument_structure']['slotelement_table'] = $slotElementsOutput;
 
-            // PROCESS SLOTS THAT ARE CONTAINER SLOTS
-            if ($slotElement->hascoTypeUri == VSTOI::CONTAINER_SLOT) {
-
-              if ($slotElement->hasComponent != null) {
-
-                $component = $api->parseObjectResponse($api->getUri($slotElement->hasComponent),'getUri');
-                // $type = Utils::namespaceUri(VSTOI::DETECTOR);
-                // Ter em atenção que o componente agora vai ser um atributo que vai conter dentro qual é o tipo do atributo (detector/actuator)
-                if ($component != NULL) {
-                  $type = Utils::namespaceUri($component->hascoTypeUri);
-                  if (isset($component->uri)) {
-                    $componentUri = t('<b>'.$type.'</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($component->uri).'">' . $component->typeLabel . '</a>('.Utils::plainStatus($component->hasStatus).')]');
-                  }
-                  if (isset($component->isAttributeOf)) {
-                    $attributOfStatus = $api->parseObjectResponse($api->getUri(Utils::uriFromAutocomplete($component->isAttributeOf)),'getUri');
-                    $content = '<b>Attribute Of</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode(Utils::uriFromAutocomplete($component->isAttributeOf)).'">'. Utils::namespaceUri($component->isAttributeOf) . "</a>(".(Utils::plainStatus($attributOfStatus->hasStatus)??"Current").")]";
-                  } else {
-                    $content = '<b>Attribute Of</b>: [EMPTY]';
-                  }
-                  if (isset($component->codebook->label)) {
-                    $codebook = '<b>CB</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($component->codebook->uri).'">' . $component->codebook->label . "</a>(".Utils::plainStatus($component->codebook->hasStatus).")]";
-                  } else {
-                    $codebook = '<b>CB</b>: [EMPTY]';
-                  }
-                }
-              }
-              $element = $componentUri . " " . $content . " " . $codebook;
-
-            // PROCESS SLOTS THAT ARE SUBCONTAINERS
-            } else if ($slotElement->hascoTypeUri == VSTOI::SUBCONTAINER) {
-              $type = Utils::namespaceUri($slotElement->hascoTypeUri);
-              $name = " ";
-              if (isset($slotElement->label)) {
-                $name = '<b>Name</b>: ' . $slotElement->label;
-              }
-              $element = $name;
-            } else {
-              $type = "(UNKNOWN)";
-            }
-          }
-        }
-        $priority = " ";
-        if (isset($slotElement->hasPriority)) {
-          $priority = $slotElement->hasPriority;
-        }
-        $label = " ";
-        if (isset($slotElement->label)) {
-          $label = t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($slotElement->uri).'">' . $slotElement->label . '</a>');
-        }
-        $output[$uri] = [
-          // 'containerslot_up' => 'Up',
-          // 'containerslot_down' => 'Down',
-          'containerslot_type' => $type,
-          'containerslot_id' => $label,
-          'containerslot_priority' => $priority,
-          'containerslot_element' => t($element),
-        ];
-        if (isset($slotElement->hascoTypeUri)) {
-          $uriType[$uri] = ['type' => $slotElement->hascoTypeUri,];
-        }
-      }
-    }
-
-    $form['instrument_structure']['slotelement_table'] = [
-      '#type' => 'table',
-      '#header' => $header,
-      '#rows' => $output,
-      '#empty' => t('No response options found'),
-      '#js_select' => FALSE,   // Remove "select all"
-    ];
-
-    // // **************
-    // // DETECTOR AREA
-    // // **************
-    // $form['instrument_detector'] = [
-    //   '#type' => 'details',
-    //   '#title' => $this->t('Detectors'),
-    //   '#group' => 'information',
+    // If it's a tree (HTML string), you might do something like:
+    // $form['instrument_structure']['slotelement_tree'] = [
+    //   '#type' => 'markup',
+    //   '#markup' => $slotElementsOutput,
     // ];
 
-    // // **************
-    // // ACTUATOR AREA
-    // // **************
-    // $form['instrument_actuator'] = [
-    //   '#type' => 'details',
-    //   '#title' => $this->t('Actuators'),
-    //   '#group' => 'information',
+
+    // $slotElements = $api->parseObjectResponse($api->slotElements($this->getContainer()->uri),'slotElements');
+    // $root_url = \Drupal::request()->getBaseUrl();
+    // $output = array();
+    // $uriType = array();
+    // if ($slotElements != NULL) {
+    //   foreach ($slotElements as $slotElement) {
+
+    //     // dpm($slotElement);
+    //     if ($slotElement != NULL) {
+    //       $content = " ";
+    //       $codebook = " ";
+    //       $type = " ";
+    //       $element = " ";
+    //       $componentUri = " ";
+    //       $uri = "uri"; // this variable is used as index, thus it cannot be am empty string
+    //       if (isset($slotElement->uri) && ($slotElement->uri != NULL)) {
+    //         $uri = $slotElement->uri;
+    //       }
+    //       if (isset($slotElement->hascoTypeUri)) {
+
+    //         // PROCESS SLOTS THAT ARE CONTAINER SLOTS
+    //         if ($slotElement->hascoTypeUri == VSTOI::CONTAINER_SLOT) {
+
+    //           if ($slotElement->hasComponent != null) {
+
+    //             $component = $api->parseObjectResponse($api->getUri($slotElement->hasComponent),'getUri');
+    //             // $type = Utils::namespaceUri(VSTOI::DETECTOR);
+    //             // Ter em atenção que o componente agora vai ser um atributo que vai conter dentro qual é o tipo do atributo (detector/actuator)
+    //             if ($component != NULL) {
+    //               $type = Utils::namespaceUri($component->hascoTypeUri);
+    //               if (isset($component->uri)) {
+    //                 $componentUri = t('<b>'.$type.'</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($component->uri).'">' . $component->typeLabel . '</a>('.Utils::plainStatus($component->hasStatus).')]');
+    //               }
+    //               if (isset($component->isAttributeOf)) {
+    //                 $attributOfStatus = $api->parseObjectResponse($api->getUri(Utils::uriFromAutocomplete($component->isAttributeOf)),'getUri');
+    //                 $content = '<b>Attribute Of</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode(Utils::uriFromAutocomplete($component->isAttributeOf)).'">'. Utils::namespaceUri($component->isAttributeOf) . "</a>(".(Utils::plainStatus($attributOfStatus->hasStatus)??"Current").")]";
+    //               } else {
+    //                 $content = '<b>Attribute Of</b>: [EMPTY]';
+    //               }
+    //               if (isset($component->codebook->label)) {
+    //                 $codebook = '<b>CB</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($component->codebook->uri).'">' . $component->codebook->label . "</a>(".Utils::plainStatus($component->codebook->hasStatus).")]";
+    //               } else {
+    //                 $codebook = '<b>CB</b>: [EMPTY]';
+    //               }
+    //             }
+    //           }
+    //           $element = $componentUri . " " . $content . " " . $codebook;
+
+    //         // PROCESS SLOTS THAT ARE SUBCONTAINERS
+    //         } else if ($slotElement->hascoTypeUri == VSTOI::SUBCONTAINER) {
+    //           $type = Utils::namespaceUri($slotElement->hascoTypeUri);
+    //           $name = " ";
+    //           if (isset($slotElement->label)) {
+    //             $name = '<b>Name</b>: ' . $slotElement->label;
+    //           }
+    //           $element = $name;
+    //         } else {
+    //           $type = "(UNKNOWN)";
+    //         }
+    //       }
+    //     }
+    //     $priority = " ";
+    //     if (isset($slotElement->hasPriority)) {
+    //       $priority = $slotElement->hasPriority;
+    //     }
+    //     $label = " ";
+    //     if (isset($slotElement->label)) {
+    //       $label = t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($slotElement->uri).'">' . $slotElement->label . '</a>');
+    //     }
+    //     $output[$uri] = [
+    //       // 'containerslot_up' => 'Up',
+    //       // 'containerslot_down' => 'Down',
+    //       'containerslot_type' => $type,
+    //       'containerslot_id' => $label,
+    //       'containerslot_priority' => $priority,
+    //       'containerslot_element' => t($element),
+    //     ];
+    //     if (isset($slotElement->hascoTypeUri)) {
+    //       $uriType[$uri] = ['type' => $slotElement->hascoTypeUri,];
+    //     }
+    //   }
+    // }
+
+    // $form['instrument_structure']['slotelement_table'] = [
+    //   '#type' => 'table',
+    //   '#header' => $header,
+    //   '#rows' => $output,
+    //   '#empty' => t('No response options found'),
+    //   '#js_select' => FALSE,   // Remove "select all"
     // ];
 
-    // // ******************
-    // // SUB-CONTAINER AREA
-    // // ******************
-    // $form['instrument_subcontainers'] = [
-    //   '#type' => 'details',
-    //   '#title' => $this->t('Sub-Container'),
-    //   '#group' => 'information',
-    // ];
 
 
     // **************

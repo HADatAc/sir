@@ -82,7 +82,7 @@ class AddActuatorForm extends FormBase {
     // ESTABLISH API SERVICE
     $api = \Drupal::service('rep.api_connector');
 
-    // HANDLE SOURCE ACTUATORR,  IF ANY
+    // HANDLE SOURCE DETECTOR,  IF ANY
     $sourceuri=$sourceactuatoruri;
     if ($sourceuri === NULL || $sourceuri === 'EMPTY') {
       $this->setSourceActuator(NULL);
@@ -199,10 +199,10 @@ class AddActuatorForm extends FormBase {
           'data-dialog-options' => json_encode(['width' => 800]),
           'data-url' => Url::fromRoute('rep.tree_form', [
             'mode' => 'modal',
-            'elementtype' => 'actuatorattribute',
+            'elementtype' => 'detectorattribute',
           ], ['query' => ['field_id' => 'actuator_isAttributeOf']])->toString(),
           'data-field-id' => 'actuator_isAttributeOf',
-          'data-elementtype' => 'actuatorattribute',
+          'data-elementtype' => 'detectorattribute',
           'autocomplete' => 'off',
         ],
       ],
@@ -290,7 +290,7 @@ class AddActuatorForm extends FormBase {
 
       $useremail = \Drupal::currentUser()->getEmail();
 
-      // GET THE ACTUATOR STEM URI
+      // GET THE DETECTOR STEM URI
       $rawresponse = $api->getUri(Utils::uriFromAutocomplete($form_state->getValue('actuator_stem')));
       $obj = json_decode($rawresponse);
       $result = $obj->body;
@@ -312,7 +312,7 @@ class AddActuatorForm extends FormBase {
         $label = $result->label . '  -- CB:EMPTY';
       }
 
-      // CREATE A NEW ACTUATOR
+      // CREATE A NEW DETECTOR
       $newActuatorUri = Utils::uriGen('actuator');
       $actuatorJson = '{"uri":"'.$newActuatorUri.'",'.
         '"typeUri":"'.Utils::uriFromAutocomplete($form_state->getValue('actuator_stem')).'",'.
@@ -327,9 +327,9 @@ class AddActuatorForm extends FormBase {
         '"hasWebDocument":"'.$form_state->getValue('actuator_webdocument').'",'.
         '"hasStatus":"'.VSTOI::DRAFT.'"}';
 
-      $api->actuatorAdd($actuatorJson);
+      $api->elementAdd('actuator',$actuatorJson);
 
-      // IF IN THE CONTEXT OF AN EXISTING CONTAINER_SLOT, ATTACH THE NEWLY CREATED ACTUATOR TO THE CONTAINER_SLOT
+      // IF IN THE CONTEXT OF AN EXISTING CONTAINER_SLOT, ATTACH THE NEWLY CREATED DETECTOR TO THE CONTAINER_SLOT
       if ($this->getContainerSlot() != NULL) {
         $api->actuatorAttach($newActuatorUri,$this->getContainerSlotUri());
         \Drupal::messenger()->addMessage(t("Actuator [" . $newActuatorUri ."] has been added and attached to intrument [" . $this->getContainerSlot()->belongsTo . "] successfully."));
