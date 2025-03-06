@@ -1289,7 +1289,8 @@ class AddProcessForm extends FormBase {
 
     // Call to get Detectors
     $api = \Drupal::service('rep.api_connector');
-    $response = $api->detectorListFromInstrument($instrumentUri);
+    // $response = $api->detectorListFromInstrument($instrumentUri);
+    $response = $api->componentListFromInstrument($instrumentUri);
 
     // Decode JSON reply
     $data = json_decode($response, true);
