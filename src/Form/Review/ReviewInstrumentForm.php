@@ -447,6 +447,7 @@ class ReviewInstrumentForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    $api = \Drupal::service('rep.api_connector');
     $submitted_values = $form_state->cleanValues()->getValues();
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
@@ -456,34 +457,42 @@ class ReviewInstrumentForm extends FormBase {
       return;
     }
 
+    if ($button_name === 'review_reject' && strlen($form_state->getValue('detector_hasreviewnote')) === 0) {
+      \Drupal::messenger()->addWarning(t("To reject you must type a Review Note!"));
+      return false;
+    }
+
+
+
+    // $resp = $api->reviewRecursive($uri, VSTOI::UNDER_REVIEW);
+
     try{
-      $uid = \Drupal::currentUser()->id();
+
       $useremail = \Drupal::currentUser()->getEmail();
 
-      $instrumentJson = '{"uri":"'.$this->getInstrumentUri().'",'.
-        '"superUri":"'.Utils::uriFromAutocomplete($form_state->getValue('instrument_type')).'",'.
-        '"hascoTypeUri":"'.VSTOI::INSTRUMENT.'",'.
-        '"hasStatus":"'.$this->getInstrument()->hasStatus.'",'.
-        '"label":"'.$form_state->getValue('instrument_name').'",'.
-        '"hasShortName":"'.$form_state->getValue('instrument_abbreviation').'",'.
-        '"hasInformant":"'.$form_state->getValue('instrument_informant').'",'.
-        '"hasLanguage":"'.$form_state->getValue('instrument_language').'",'.
-        '"hasVersion":"'.$form_state->getValue('instrument_version').'",'.
-        '"hasWebDocument":"'.$form_state->getValue('instrument_webdocument').'",'.
-        '"comment":"'.$form_state->getValue('instrument_description').'",'.
-        '"hasSIRManagerEmail":"'.$useremail.'"}';
+      //APROVE
+      if ($button_name !== 'review_reject') {
 
-      //dpm($instrumentJson);
-      //return false;
+        // Recursive APROVE os Instrument and Elements
+        $api->reviewRecursive($this->getInstrumentUri(), VSTOI::CURRENT);
 
-      // UPDATE BY DELETING AND CREATING
-      $api = \Drupal::service('rep.api_connector');
-      $api->instrumentDel($this->getInstrumentUri());
-      $api->instrumentAdd($instrumentJson);
+        \Drupal::messenger()->addMessage(t("Instrument has been APPROVED successfully."));
+        self::backUrl();
+        return;
 
-      \Drupal::messenger()->addMessage(t("Instrument has been updated successfully."));
-      self::backUrl();
-      return;
+      // REJECT
+      } else {
+
+        // Recursive REJECT os Instrument and Elements
+        $api->reviewRecursive($this->getInstrumentUri(), VSTOI::DRAFT);
+
+        // BUT NOW WE MUST ADD REVIEW NOTES TO INSTRUMENT
+
+        \Drupal::messenger()->addWarning(t("Instrument has been REJECTED."));
+          self::backUrl();
+          return;
+
+      }
 
     }catch(\Exception $e){
       \Drupal::messenger()->addError(t("An error occurred while updating the Instrument: ".$e->getMessage()));

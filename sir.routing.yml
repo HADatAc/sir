@@ -714,3 +714,16 @@ sir.review_instrument:
     _review_access: 'TRUE'
   options:
     no_cache: 'TRUE'
+
+# INS EDITOR
+
+sir.generate_ins:
+  path: 'sir/manage/generateins'
+  defaults:
+    _form: '\Drupal\sir\Form\Generate\GenerateINSForm'
+    _title: 'Generate INS File'
+  requirements:
+    # _permission: 'access reviewer menu'
+    _review_access: 'TRUE'
+  options:
+    no_cache: 'TRUE'

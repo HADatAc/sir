@@ -265,15 +265,21 @@ class SIRSelectForm extends FormBase {
       }
 
       if ($this->element_type === 'instrument') {
-        // $form['actions_wrapper']['buttons_container']['generate_ins_select_element'] = [
-        //   '#type' => 'submit',
-        //   '#value' => $this->t('Generate INS'),
-        //   '#name' => 'generate_ins_element',
-        //   '#attributes' => [
-        //     'onclick' => 'if(!confirm("Are you sure you want to generate an INS file?")){return false;}',
-        //     'class' => ['btn', 'btn-primary', 'generate-ins-element-button'],
-        //   ],
-        // ];
+        // Check if the current user has the "Content editor" role.
+        // Note: Role machine names are case-sensitive. Adjust the string if your role machine name is different.
+        $has_content_editor_role = in_array('content_editor', \Drupal::currentUser()->getRoles());
+        $form['actions_wrapper']['buttons_container']['generate_ins_select_element'] = [
+          '#type' => 'submit',
+          '#value' => $this->t('Generate INS'),
+          '#name' => 'generate_ins_element',
+          '#attributes' => [
+            // 'onclick' => 'if(!confirm("Are you sure you want to generate an INS file?")){return false;}',
+            'class' => ['btn', 'btn-primary', 'generate-ins-element-button'],
+          ],
+          // Render the button only if the user has the "Content editor" role.
+          '#access' => $has_content_editor_role,
+        ];
+
         $form['actions_wrapper']['buttons_container']['manage_slotelements'] = [
           '#type' => 'submit',
           '#value' => $this->t('Manage Structure of Selected'),
@@ -1289,7 +1295,12 @@ class SIRSelectForm extends FormBase {
       // }
     } elseif ($button_name === 'generate_ins_element') {
 
-      \Drupal::messenger()->addWarning($this->t('Under Development'));
+      $uid = \Drupal::currentUser()->id();
+      $previousUrl = \Drupal::request()->getRequestUri();
+      Utils::trackingStoreUrls($uid, $previousUrl, 'sir.generate_ins');
+      $url = Url::fromRoute('sir.generate_ins');
+      $form_state->setRedirectUrl($url);
+      // \Drupal::messenger()->addWarning($this->t('Under Development'));
 
     } elseif ($button_name === 'manage_slotelements') {
       if (count($selected_rows) == 1) {

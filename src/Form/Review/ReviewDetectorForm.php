@@ -295,8 +295,6 @@ class ReviewDetectorForm extends FormBase {
       return false;
     }
 
-    $api = \Drupal::service('rep.api_connector');
-
     try{
 
       $useremail = \Drupal::currentUser()->getEmail();
