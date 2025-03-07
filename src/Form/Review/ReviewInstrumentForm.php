@@ -488,6 +488,38 @@ class ReviewInstrumentForm extends FormBase {
 
         // BUT NOW WE MUST ADD REVIEW NOTES TO INSTRUMENT
 
+        // ***************************
+        // MUST BE TESTED !!!!!
+        // ***************************
+
+
+        $instrumentJson = '{"uri":"'.$this->getInstrumentUri().'",'.
+        '"superUri":"'.$this->getInstrument()->superUri.'",'.
+        '"hascoTypeUri":"'.VSTOI::INSTRUMENT.'",'.
+        '"hasStatus":"'.VSTOI::DRAFT.'",'.
+        '"label":"'.$this->getInstrument()->label.'",'.
+        '"hasShortName":"'.$this->getInstrument()->hasShortName.'",'.
+        '"hasInformant":"'.$this->getInstrument()->hasInformant.'",'.
+        '"hasLanguage":"'.$this->getInstrument()->hasLanguage.'",'.
+        '"hasVersion":"'.$this->getInstrument()->hasVersion.'",'.
+        '"hasWebDocument":"'.$this->getInstrument()->hasWebDocument.'",'.
+        '"comment":"'.$this->getInstrument()->comment.'",'.
+
+        '"hasFirst":"'.$this->getInstrument()->hasFirst.'",'.
+        '"belongsTo":"'.$this->getInstrument()->belongsTo.'",'.
+        '"hasNext":"'.$this->getInstrument()->hasNext.'",'.
+        '"hasPrevious":"'.$this->getInstrument()->hasPrevious.'",'.
+        '"hasPriority":"'.$this->getInstrument()->hasPriority.'",'.
+        '"annotations":"'.$this->getInstrument()->annotations.'",'.
+
+        '"hasReviewNote":"'.$form_state->getValue('instrument_hasreviewnote').'",'.
+        '"hasEditorEmail":"'.$useremail.'",'.
+        '"hasSIRManagerEmail":"'.$this->getInstrument()->hasSIRManagerEmail.'"}';
+
+      $api->instrumentAdd($instrumentJson);
+
+
+
         \Drupal::messenger()->addWarning(t("Instrument has been REJECTED."));
           self::backUrl();
           return;
