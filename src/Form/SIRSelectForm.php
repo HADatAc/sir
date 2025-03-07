@@ -1264,18 +1264,29 @@ class SIRSelectForm extends FormBase {
       }
     } elseif ($button_name === 'review_recursive_element') {
       // HAS ELEMENTS
-      if (count($selected_rows) == 1) {
-        $uri = array_keys($selected_rows)[0];
-        $selected_rows = array_filter($form_state->getValue('element_table'));
-        if (!empty($selected_rows)) {
+      if ($form_state->getValue('element_table') !== "") {
+        if (count($selected_rows) > 0) {
           $selected_uris = array_keys($selected_rows);
           $this->performReviewRecursive($selected_uris, $form_state);
         } else {
-          \Drupal::messenger()->addWarning($this->t('Please select item(s) to submit for recursive review.'));
+          \Drupal::messenger()->addWarning($this->t('Please select item(s) to submit for review.'));
         }
       } else {
-        \Drupal::messenger()->addWarning($this->t('Please select item(s) to submit for recursive review.'));
+        \Drupal::messenger()->addWarning($this->t('Please select item(s) to submit for review.'));
       }
+      // // HAS ELEMENTS
+      // if (count($selected_rows) == 1) {
+      //   $uri = array_keys($selected_rows)[0];
+      //   $selected_rows = array_filter($form_state->getValue('element_table'));
+      //   if (!empty($selected_rows)) {
+      //     $selected_uris = array_keys($selected_rows);
+      //     $this->performReviewRecursive($selected_uris, $form_state);
+      //   } else {
+      //     \Drupal::messenger()->addWarning($this->t('Please select item(s) to submit for recursive review.'));
+      //   }
+      // } else {
+      //   \Drupal::messenger()->addWarning($this->t('Please select item(s) to submit for recursive review.'));
+      // }
     } elseif ($button_name === 'generate_ins_element') {
 
       \Drupal::messenger()->addWarning($this->t('Under Development'));
@@ -1807,7 +1818,7 @@ class SIRSelectForm extends FormBase {
         //dpr($responseOptionJSON);
         $resp = $api->reviewRecursive($uri, VSTOI::UNDER_REVIEW);
         $total = -1;
-        dpm($resp);
+        // dpm($resp);
         if ($resp != null) {
           $obj = json_decode($resp);
           if ($obj->isSuccessful) {
@@ -1816,7 +1827,7 @@ class SIRSelectForm extends FormBase {
             $total = $obj2->total;
           }
         }
-        dpm($total);
+        // dpm($total);
 
       // } elseif ($this->element_type == 'codebook') {
 
