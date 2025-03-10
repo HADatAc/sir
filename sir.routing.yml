@@ -590,7 +590,7 @@ sir.select_review_element:
     _form: '\Drupal\sir\Form\Review\SIRReviewForm'
   requirements:
     # _permission: 'access reviewer menu'
-    _review_access: 'TRUE'
+    _role: 'content_editor'
   options:
     no_cache: 'TRUE'
 
@@ -603,7 +603,7 @@ sir.review_response_option:
     _title: 'Review Response Option'
   requirements:
     # _permission: 'access reviewer menu'
-    _review_access: 'TRUE'
+    _role: 'content_editor'
   options:
     no_cache: 'TRUE'
 
@@ -616,7 +616,7 @@ sir.review_codebook:
     _title: 'Review Codebook'
   requirements:
     # _permission: 'access reviewer menu'
-    _review_access: 'TRUE'
+    _role: 'content_editor'
   options:
     no_cache: 'TRUE'
 
@@ -629,7 +629,7 @@ sir.review_detector:
     _title: 'Review Detector'
   requirements:
     # _permission: 'access reviewer menu'
-    _review_access: 'TRUE'
+    _role: 'content_editor'
   options:
     no_cache: 'TRUE'
 
@@ -642,7 +642,7 @@ sir.review_detectorstem:
     _title: 'Review Detector Stem'
   requirements:
     # _permission: 'access reviewer menu'
-    _review_access: 'TRUE'
+    _role: 'content_editor'
   options:
     no_cache: 'TRUE'
 
@@ -655,7 +655,7 @@ sir.review_process:
     _title: 'Review Process'
   requirements:
     # _permission: 'access reviewer menu'
-    _review_access: 'TRUE'
+    _role: 'content_editor'
   options:
     no_cache: 'TRUE'
 
@@ -685,7 +685,7 @@ sir.review_actuator:
     _title: 'Review Actuator'
   requirements:
     # _permission: 'access reviewer menu'
-    _review_access: 'TRUE'
+    _role: 'content_editor'
   options:
     no_cache: 'TRUE'
 
@@ -698,7 +698,7 @@ sir.review_actuatorstem:
     _title: 'Review Actuator Stem'
   requirements:
     # _permission: 'access reviewer menu'
-    _review_access: 'TRUE'
+    _role: 'content_editor'
   options:
     no_cache: 'TRUE'
 
@@ -711,7 +711,7 @@ sir.review_instrument:
     _title: 'Review Simulator'
   requirements:
     # _permission: 'access reviewer menu'
-    _review_access: 'TRUE'
+    _role: 'content_editor'
   options:
     no_cache: 'TRUE'
 
@@ -723,7 +723,6 @@ sir.generate_ins:
     _form: '\Drupal\sir\Form\Generate\GenerateINSForm'
     _title: 'Generate INS File'
   requirements:
-    # _permission: 'access reviewer menu'
-    _review_access: 'TRUE'
+    _role: 'content_editor'
   options:
     no_cache: 'TRUE'

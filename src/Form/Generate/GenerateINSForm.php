@@ -268,6 +268,8 @@ class GenerateInsForm extends FormBase {
         return;
     }
 
+    dpm($response);
+
     // Stream the file content directly without saving to disk.
     $response = new Response();
     // Set the content type for XLSX files.

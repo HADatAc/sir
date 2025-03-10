@@ -176,6 +176,7 @@ class SIRReviewForm extends FormBase {
   protected function prepareElementNames() {
     $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument');
     $preferred_detector = \Drupal::config('rep.settings')->get('preferred_detector');
+    $preferred_actuator = \Drupal::config('rep.settings')->get('preferred_actuator');
 
     switch ($this->element_type) {
 
@@ -183,6 +184,18 @@ class SIRReviewForm extends FormBase {
       case "instrument":
         $this->single_class_name = $preferred_instrument;
         $this->plural_class_name = $preferred_instrument . "s";
+        break;
+
+      // ACTUATORSTEM
+      case "actuatorstem":
+        $this->single_class_name = $preferred_actuator . " Stem";
+        $this->plural_class_name = $preferred_actuator . " Stems";
+        break;
+
+      // ACTUATOR
+      case "actuator":
+        $this->single_class_name = $preferred_actuator;
+        $this->plural_class_name = $preferred_actuator . "s";
         break;
 
       // DETECTORSTEM
@@ -332,9 +345,9 @@ class SIRReviewForm extends FormBase {
       case "instrument":
         return Instrument::generateReviewOutput($this->getList());
       case "actuatorstem":
-        return ActuatorStem::generateOutput($this->getList());
+        return ActuatorStem::generateReviewOutput($this->getList());
       case "actuator":
-        return Actuator::generateOutput($this->getList());
+        return Actuator::generateReviewOutput($this->getList());
       case "detectorstem":
         return DetectorStem::generateReviewOutput($this->getList());
       case "detector":
