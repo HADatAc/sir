@@ -10,6 +10,7 @@ use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\VSTOI;
 use Symfony\Component\HttpFoundation\Response;
 
+
 /**
  * Provides a form for generating INS (GRAXIOM project).
  */
@@ -268,18 +269,29 @@ class GenerateInsForm extends FormBase {
         return;
     }
 
-    dpm($response);
-
-    // Stream the file content directly without saving to disk.
-    $response = new Response();
-    // Set the content type for XLSX files.
-    $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    // Set headers to force download with the specified filename.
-    $response->headers->set('Content-Disposition', 'attachment; filename="' . $filename . '"');
-    // Set the file content (the API result).
-    $response->setContent($result);
+    \Drupal::messenger()->addMessage($this->t('INS File Successfully generated'));
+    // Provide the required route parameters.
+    $parameters = [
+      'elementtype' => 'ins',
+      'mode' => 'table',
+      'page' => '1',
+      'pagesize' => '10',
+      'studyuri' => 'none',
+    ];
+    $url = Url::fromRoute('rep.select_mt_element', $parameters);
+    $response = new RedirectResponse($url->toString());
     $response->send();
-    exit();
+
+    // // Stream the file content directly without saving to disk.
+    // $response = new Response();
+    // // Set the content type for XLSX files.
+    // $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    // // Set headers to force download with the specified filename.
+    // $response->headers->set('Content-Disposition', 'attachment; filename="' . $filename . '"');
+    // // Set the file content (the API result).
+    // $response->setContent($result);
+    // $response->send();
+    // exit();
   }
 
   /**
