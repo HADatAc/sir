@@ -267,18 +267,21 @@ class SIRSelectForm extends FormBase {
       if ($this->element_type === 'instrument') {
         // Check if the current user has the "Content editor" role.
         // Note: Role machine names are case-sensitive. Adjust the string if your role machine name is different.
-        $has_content_editor_role = in_array('content_editor', \Drupal::currentUser()->getRoles());
-        $form['actions_wrapper']['buttons_container']['generate_ins_select_element'] = [
-          '#type' => 'submit',
-          '#value' => $this->t('Generate INS'),
-          '#name' => 'generate_ins_element',
-          '#attributes' => [
-            // 'onclick' => 'if(!confirm("Are you sure you want to generate an INS file?")){return false;}',
-            'class' => ['btn', 'btn-primary', 'generate-ins-element-button'],
-          ],
-          // Render the button only if the user has the "Content editor" role.
-          '#access' => $has_content_editor_role,
-        ];
+
+        // ************** MOVED TO EDITOR MENU *******************
+
+        // $has_content_editor_role = in_array('content_editor', \Drupal::currentUser()->getRoles());
+        // $form['actions_wrapper']['buttons_container']['generate_ins_select_element'] = [
+        //   '#type' => 'submit',
+        //   '#value' => $this->t('Generate INS'),
+        //   '#name' => 'generate_ins_element',
+        //   '#attributes' => [
+        //     // 'onclick' => 'if(!confirm("Are you sure you want to generate an INS file?")){return false;}',
+        //     'class' => ['btn', 'btn-primary', 'generate-ins-element-button'],
+        //   ],
+        //   // Render the button only if the user has the "Content editor" role.
+        //   '#access' => $has_content_editor_role,
+        // ];
 
         $form['actions_wrapper']['buttons_container']['manage_slotelements'] = [
           '#type' => 'submit',
