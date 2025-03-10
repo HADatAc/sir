@@ -8,6 +8,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\Core\Url;
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\VSTOI;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Provides a form for generating INS (GRAXIOM project).
@@ -236,34 +237,47 @@ class GenerateInsForm extends FormBase {
     // Retrieve the common filename from additional_fields.
     $filename = $form_state->getValue(['additional_fields', 'filename']);
 
-    // Get the API service. Adjust the service name if needed.
+    // Get the API service.
     $api_service = \Drupal::service('rep.api_connector');
+
+    // Initialize result variable.
+    $result = NULL;
 
     switch ($selected) {
       case 'instrument':
-        // The instrument textfield is at additional_fields['instrument']['main'].
+        // For "INS per Instrument", get the instrument value.
         $instrument = $form_state->getValue(['additional_fields', 'instrument', 'main']);
         $result = $api_service->generateINSPerInstrument($instrument, $filename);
-        \Drupal::messenger()->addStatus($this->t('INS per Instrument generated. API response: @result', ['@result' => $result]));
         break;
 
       case 'status':
+        // For "INS by Status", get the status.
         $status = $form_state->getValue(['additional_fields', 'status']);
         $result = $api_service->generateINSPerStatus($status, $filename);
-        \Drupal::messenger()->addStatus($this->t('INS by Status generated. API response: @result', ['@result' => $result]));
         break;
 
       case 'user_status':
+        // For "INS by User and by Status", get both status and user email.
         $status = $form_state->getValue(['additional_fields', 'status']);
         $user_email = $form_state->getValue(['additional_fields', 'user_email']);
         $result = $api_service->generateINSPerUserStatus($user_email, $status, $filename);
-        \Drupal::messenger()->addStatus($this->t('INS by User and by Status generated. API response: @result', ['@result' => $result]));
         break;
 
       default:
         \Drupal::messenger()->addWarning($this->t('No option was selected.'));
-        break;
+        return;
     }
+
+    // Stream the file content directly without saving to disk.
+    $response = new Response();
+    // Set the content type for XLSX files.
+    $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    // Set headers to force download with the specified filename.
+    $response->headers->set('Content-Disposition', 'attachment; filename="' . $filename . '"');
+    // Set the file content (the API result).
+    $response->setContent($result);
+    $response->send();
+    exit();
   }
 
   /**
