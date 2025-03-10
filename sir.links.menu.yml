@@ -25,29 +25,29 @@ sir.divider1:
   weight: 9
   route_name: '<none>'
 
-sir.manage_ins_files:
-  title: Manage INS Templates
-  description: Manage INS Templates
-  route_name: rep.select_mt_element
-  route_parameters:
-    elementtype: 'ins'
-    mode: 'table'
-    page: '1'
-    pagesize: '9'
-    studyuri: 'none'
-  parent: sir.top_level
-  menu_name: main
-  weight: 10
-  requirements:
-    _permission: 'access content'
-    _role: 'authenticated'
+# sir.manage_ins_files:
+#   title: Manage INS Templates
+#   description: Manage INS Templates
+#   route_name: rep.select_mt_element
+#   route_parameters:
+#     elementtype: 'ins'
+#     mode: 'table'
+#     page: '1'
+#     pagesize: '9'
+#     studyuri: 'none'
+#   parent: sir.top_level
+#   menu_name: main
+#   weight: 10
+#   requirements:
+#     _permission: 'access content'
+#     _role: 'authenticated'
 
-sir.divider2:
-  title: '_________________________________'
-  parent: sir.top_level
-  menu_name: main
-  weight: 19
-  route_name: '<none>'
+# sir.divider2:
+#   title: '_________________________________'
+#   parent: sir.top_level
+#   menu_name: main
+#   weight: 19
+#   route_name: '<none>'
 
 sir.manage_processstems :
   title: Manage Process Stems
