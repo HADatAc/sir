@@ -189,15 +189,19 @@ class ManageSlotElementsForm extends FormBase {
                 if ($component != NULL) {
                   $type = Utils::namespaceUri($component->hascoTypeUri);
                   if (isset($component->uri)) {
-                    $componentUri = t('<b>'.$type.'</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($component->uri).'">' . $component->typeLabel . '</a>] ');
+                    // $componentUri = t('<b>'.$type.'</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($component->uri).'">' . $component->typeLabel . '</a>] ');
+                    $componentUri = t('<b>'.$type.'</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($component->uri).'">' . $component->typeLabel . '</a> ('.Utils::plainStatus($component->hasStatus).')]');
                   }
                   if (isset($component->isAttributeOf)) {
-                    $content = '<b>Attribute Of</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode(Utils::uriFromAutocomplete($component->isAttributeOf)).'">'. Utils::namespaceUri($component->isAttributeOf) . "</a>]";
+                    // $content = '<b>Attribute Of</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode(Utils::uriFromAutocomplete($component->isAttributeOf)).'">'. Utils::namespaceUri($component->isAttributeOf) . "</a>]";
+                    $attributOfStatus = $api->parseObjectResponse($api->getUri($component->isAttributeOf),'getUri');
+                    $content = '<b>Attribute Of</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode(Utils::uriFromAutocomplete($component->isAttributeOf)).'">'. Utils::namespaceUri($component->isAttributeOf) . "</a> (".(Utils::plainStatus($attributOfStatus->hasStatus)??"Current").")]";
                   } else {
                     $content = '<b>Attribute Of</b>: [EMPTY]';
                   }
                   if (isset($component->codebook->label)) {
-                    $codebook = '<b>CB</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($component->codebook->uri).'">' . $component->codebook->label . "</a>]";
+                    // $codebook = '<b>CB</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($component->codebook->uri).'">' . $component->codebook->label . "</a>]";
+                    $codebook = '<b>CB</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($component->codebook->uri).'">' . $component->codebook->label . "</a> (".Utils::plainStatus($component->codebook->hasStatus).")]";
                   } else {
                     $codebook = '<b>CB</b>: [EMPTY]';
                   }

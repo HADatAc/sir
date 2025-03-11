@@ -354,13 +354,11 @@ class ReviewInstrumentForm extends FormBase {
     }
 
     if ($button_name === 'review_reject' && strlen($form_state->getValue('instrument_hasreviewnote')) === 0) {
-      \Drupal::messenger()->addWarning(t("To reject you must type a Review Note!"));
+      \Drupal::messenger()->addError(t("To reject you must type a Review Note!"));
       return false;
     }
 
-    try{
-
-      $useremail = \Drupal::currentUser()->getEmail();
+    try {
 
       //APROVE
       if ($button_name !== 'review_reject') {
@@ -374,6 +372,8 @@ class ReviewInstrumentForm extends FormBase {
 
       // REJECT
       } else {
+
+        $useremail = \Drupal::currentUser()->getEmail();
 
         // Recursive REJECT os Instrument and Elements
         $api->reviewRecursive($this->getInstrumentUri(), VSTOI::DRAFT);
@@ -408,7 +408,7 @@ class ReviewInstrumentForm extends FormBase {
         $api->elementDel('instrument', $this->getInstrumentUri());
         $api->elementAdd('instrument', $instrumentJson);
 
-        \Drupal::messenger()->addWarning(t("Instrument has been REJECTED."));
+        \Drupal::messenger()->addError(t("Instrument has been REJECTED."));
           self::backUrl();
           return;
 

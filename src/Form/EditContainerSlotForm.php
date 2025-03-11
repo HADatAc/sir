@@ -67,18 +67,6 @@ class EditContainerSlotForm extends FormBase {
     $api = \Drupal::service('rep.api_connector');
     $this->setContainerSlot($api->parseObjectResponse($api->getUri($this->getContainerSlotUri()),'getUri'));
 
-    $content = "";
-    if ($this->getContainerSlot() != NULL) {
-      if (isset($this->getContainerSlot()->container)) {
-          $content = $this->getContainerSlot()->container->label . ' [' . $this->getContainerSlot()->container->uri . ']';
-        }
-    } else {
-      \Drupal::messenger()->addMessage(t("Failed to retrieve ContainerSlot."));
-      $url = Url::fromRoute('sir.manage_slotelements');
-      $url->setRouteParameter('containeruri', base64_encode($this->getContainerSlot()->belongsTo));
-      $form_state->setRedirectUrl($url);
-    }
-
     // BUILD FORM
     $path = "";
     $length = count($this->getBreadcrumbs());
@@ -90,6 +78,7 @@ class EditContainerSlotForm extends FormBase {
     }
 
     // dpm($this->getContainerSlot());
+    // dpm($this->getContainerSlot()->component->detectorStem->label . ' [' . $this->getContainerSlot()->component->detectorStem->uri . ']');
 
     $form['scope'] = [
       '#type' => 'item',
@@ -130,13 +119,13 @@ class EditContainerSlotForm extends FormBase {
       '#default_value' => $this->getContainerSlot()->component->hascoTypeUri,
       '#attributes' => [
         'id' => 'containerslot_type'
-      ]
+      ],
     ];
 
     $form['containerslot_detector'] = [
       '#type' => 'textfield',
       '#title' => $this->t("Detector"),
-      '#default_value' => $this->getContainerSlot()->component->hascoTypeUri == VSTOI::DETECTOR ? $content : '',
+      '#default_value' => $this->getContainerSlot()->component->hascoTypeUri === VSTOI::DETECTOR ? UTILS::fieldToAutocomplete($this->getContainerSlot()->component->uri, $this->getContainerSlot()->component->label) : '',
       '#autocomplete_route_name' => 'sir.containerslot_detector_autocomplete',
       '#maxlength' => NULL,
       // Define a visibilidade via #states.
@@ -150,7 +139,7 @@ class EditContainerSlotForm extends FormBase {
     $form['containerslot_actuator'] = [
       '#type' => 'textfield',
       '#title' => $this->t("Actuator"),
-      '#default_value' => $this->getContainerSlot()->component->hascoTypeUri == VSTOI::ACTUATOR ? $content : '',
+      '#default_value' => $this->getContainerSlot()->component->hascoTypeUri === VSTOI::ACTUATOR ? UTILS::fieldToAutocomplete($this->getContainerSlot()->component->uri, $this->getContainerSlot()->component->label) : '',
       '#autocomplete_route_name' => 'sir.containerslot_actuator_autocomplete',
       '#maxlength' => NULL,
       // Exibe este campo quando a opção selecionada for VSTOI::ACTUATOR.
