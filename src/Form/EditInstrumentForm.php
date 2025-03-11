@@ -156,6 +156,24 @@ class EditInstrumentForm extends FormBase {
         'placeholder' => 'http://',
       ]
     ];
+    if ($this->getInstrument()->hasReviewNote !== NULL && $this->getInstrument()->hasSatus !== null) {
+      $form['instrument_hasreviewnote'] = [
+        '#type' => 'textarea',
+        '#title' => $this->t('Review Notes'),
+        '#default_value' => $this->getInstrument()->hasReviewNote,
+        '#attributes' => [
+          'disabled' => 'disabled',
+        ]
+      ];
+      $form['instrument_haseditoremail'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Reviewer Email'),
+        '#default_value' => $this->getInstrument()->hasEditorEmail,
+        '#attributes' => [
+          'disabled' => 'disabled',
+        ],
+      ];
+    }
     $form['update_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Update'),
@@ -261,8 +279,8 @@ class EditInstrumentForm extends FormBase {
         '"belongsTo":"'.$this->getInstrument()->belongsTo.'",'.
         '"hasNext":"'.$this->getInstrument()->hasNext.'",'.
         '"hasPrevious":"'.$this->getInstrument()->hasPrevious.'",'.
-        // '"hasPriority":"'.$this->getInstrument()->hasPriority.'",'.
-        '"annotations":"'.$this->getInstrument()->annotations.'",'.
+        '"hasPriority":"'.$this->getInstrument()->hasPriority.'",'.
+        // '"annotations":"' . ($this->getInstrument()->annotations ?? null).'",'.
 
         '"hasReviewNote":"'.$this->getInstrument()->hasReviewNote.'",'.
         '"hasEditorEmail":"'.$this->getInstrument()->hasEditorEmail.'",'.

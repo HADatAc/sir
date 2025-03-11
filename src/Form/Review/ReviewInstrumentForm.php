@@ -222,7 +222,7 @@ class ReviewInstrumentForm extends FormBase {
     if (strlen($this->getInstrument()->hasWebDocument) > 0)
       $form['instrument_information']['instrument_webdocument_wrapper']['instrument_webdocument_wrapper_button'] = [
         '#type' => 'markup',
-        '#markup' => '<a href="' . $this->getInstrument()->hasWebDocument . '" target="_blank" class="btn btn-success text-nowrap" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Visit Web Document') . '</a>',
+        '#markup' => '<a href="' . $this->getInstrument()->hasWebDocument . '" target="_blank" class="btn btn-primary text-nowrap" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Visit Web Document') . '</a>',
       ];
 
     $form['instrument_information']['instrument_hasSIRManagerEmail'] = [
@@ -239,14 +239,6 @@ class ReviewInstrumentForm extends FormBase {
       '#type' => 'details',
       '#title' => $this->t('Container'),
       '#group' => 'information',
-    ];
-
-    # BUILD HEADER
-    $header = [
-      'containerslot_type' => t('Type'),
-      'containerslot_id' => t('ID'),
-      'containerslot_priority' => t('Priority'),
-      'containerslot_element' => t("Element"),
     ];
 
     # POPULATE DATA
@@ -276,100 +268,6 @@ class ReviewInstrumentForm extends FormBase {
     $containerUri = $this->getContainer()->uri;
     $slotElementsOutput = UTILS::buildSlotElements($containerUri, $api, 'table'); // or 'table'
     $form['instrument_structure']['slot_elements'] = $slotElementsOutput;
-
-
-    // $slotElements = $api->parseObjectResponse($api->slotElements($this->getContainer()->uri),'slotElements');
-    // $root_url = \Drupal::request()->getBaseUrl();
-    // $output = array();
-    // $uriType = array();
-    // if ($slotElements != NULL) {
-    //   foreach ($slotElements as $slotElement) {
-
-    //     // dpm($slotElement);
-    //     if ($slotElement != NULL) {
-    //       $content = " ";
-    //       $codebook = " ";
-    //       $type = " ";
-    //       $element = " ";
-    //       $componentUri = " ";
-    //       $uri = "uri"; // this variable is used as index, thus it cannot be am empty string
-    //       if (isset($slotElement->uri) && ($slotElement->uri != NULL)) {
-    //         $uri = $slotElement->uri;
-    //       }
-    //       if (isset($slotElement->hascoTypeUri)) {
-
-    //         // PROCESS SLOTS THAT ARE CONTAINER SLOTS
-    //         if ($slotElement->hascoTypeUri == VSTOI::CONTAINER_SLOT) {
-
-    //           if ($slotElement->hasComponent != null) {
-
-    //             $component = $api->parseObjectResponse($api->getUri($slotElement->hasComponent),'getUri');
-    //             // $type = Utils::namespaceUri(VSTOI::DETECTOR);
-    //             // Ter em atenção que o componente agora vai ser um atributo que vai conter dentro qual é o tipo do atributo (detector/actuator)
-    //             if ($component != NULL) {
-    //               $type = Utils::namespaceUri($component->hascoTypeUri);
-    //               if (isset($component->uri)) {
-    //                 $componentUri = t('<b>'.$type.'</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($component->uri).'">' . $component->typeLabel . '</a>('.Utils::plainStatus($component->hasStatus).')]');
-    //               }
-    //               if (isset($component->isAttributeOf)) {
-    //                 $attributOfStatus = $api->parseObjectResponse($api->getUri(Utils::uriFromAutocomplete($component->isAttributeOf)),'getUri');
-    //                 $content = '<b>Attribute Of</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode(Utils::uriFromAutocomplete($component->isAttributeOf)).'">'. Utils::namespaceUri($component->isAttributeOf) . "</a>(".(Utils::plainStatus($attributOfStatus->hasStatus)??"Current").")]";
-    //               } else {
-    //                 $content = '<b>Attribute Of</b>: [EMPTY]';
-    //               }
-    //               if (isset($component->codebook->label)) {
-    //                 $codebook = '<b>CB</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($component->codebook->uri).'">' . $component->codebook->label . "</a>(".Utils::plainStatus($component->codebook->hasStatus).")]";
-    //               } else {
-    //                 $codebook = '<b>CB</b>: [EMPTY]';
-    //               }
-    //             }
-    //           }
-    //           $element = $componentUri . " " . $content . " " . $codebook;
-
-    //         // PROCESS SLOTS THAT ARE SUBCONTAINERS
-    //         } else if ($slotElement->hascoTypeUri == VSTOI::SUBCONTAINER) {
-    //           $type = Utils::namespaceUri($slotElement->hascoTypeUri);
-    //           $name = " ";
-    //           if (isset($slotElement->label)) {
-    //             $name = '<b>Name</b>: ' . $slotElement->label;
-    //           }
-    //           $element = $name;
-    //         } else {
-    //           $type = "(UNKNOWN)";
-    //         }
-    //       }
-    //     }
-    //     $priority = " ";
-    //     if (isset($slotElement->hasPriority)) {
-    //       $priority = $slotElement->hasPriority;
-    //     }
-    //     $label = " ";
-    //     if (isset($slotElement->label)) {
-    //       $label = t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($slotElement->uri).'">' . $slotElement->label . '</a>');
-    //     }
-    //     $output[$uri] = [
-    //       // 'containerslot_up' => 'Up',
-    //       // 'containerslot_down' => 'Down',
-    //       'containerslot_type' => $type,
-    //       'containerslot_id' => $label,
-    //       'containerslot_priority' => $priority,
-    //       'containerslot_element' => t($element),
-    //     ];
-    //     if (isset($slotElement->hascoTypeUri)) {
-    //       $uriType[$uri] = ['type' => $slotElement->hascoTypeUri,];
-    //     }
-    //   }
-    // }
-
-    // $form['instrument_structure']['slotelement_table'] = [
-    //   '#type' => 'table',
-    //   '#header' => $header,
-    //   '#rows' => $output,
-    //   '#empty' => t('No response options found'),
-    //   '#js_select' => FALSE,   // Remove "select all"
-    // ];
-
-
 
     // **************
     // REVIEWER AREA
@@ -417,8 +315,6 @@ class ReviewInstrumentForm extends FormBase {
         'class' => ['btn', 'btn-primary', 'back-button'],
       ],
     ];
-
-
     return $form;
   }
 
@@ -457,14 +353,10 @@ class ReviewInstrumentForm extends FormBase {
       return;
     }
 
-    if ($button_name === 'review_reject' && strlen($form_state->getValue('detector_hasreviewnote')) === 0) {
+    if ($button_name === 'review_reject' && strlen($form_state->getValue('instrument_hasreviewnote')) === 0) {
       \Drupal::messenger()->addWarning(t("To reject you must type a Review Note!"));
       return false;
     }
-
-
-
-    // $resp = $api->reviewRecursive($uri, VSTOI::UNDER_REVIEW);
 
     try{
 
@@ -487,12 +379,6 @@ class ReviewInstrumentForm extends FormBase {
         $api->reviewRecursive($this->getInstrumentUri(), VSTOI::DRAFT);
 
         // BUT NOW WE MUST ADD REVIEW NOTES TO INSTRUMENT
-
-        // ***************************
-        // MUST BE TESTED !!!!!
-        // ***************************
-
-
         $instrumentJson = '{"uri":"'.$this->getInstrumentUri().'",'.
         '"superUri":"'.$this->getInstrument()->superUri.'",'.
         '"hascoTypeUri":"'.VSTOI::INSTRUMENT.'",'.
@@ -504,22 +390,23 @@ class ReviewInstrumentForm extends FormBase {
         '"hasVersion":"'.$this->getInstrument()->hasVersion.'",'.
         '"hasWebDocument":"'.$this->getInstrument()->hasWebDocument.'",'.
         '"comment":"'.$this->getInstrument()->comment.'",'.
+        '"hasReviewNote":"'.$form_state->getValue('instrument_hasreviewnote').'",'.
+        '"hasEditorEmail":"'.$useremail.'",'.
 
         '"hasFirst":"'.$this->getInstrument()->hasFirst.'",'.
         '"belongsTo":"'.$this->getInstrument()->belongsTo.'",'.
         '"hasNext":"'.$this->getInstrument()->hasNext.'",'.
         '"hasPrevious":"'.$this->getInstrument()->hasPrevious.'",'.
         '"hasPriority":"'.$this->getInstrument()->hasPriority.'",'.
-        '"annotations":"'.$this->getInstrument()->annotations.'",'.
+        // '"annotations":"' . ($this->getInstrument()->annotations ?? null).'",'.
 
-        '"hasReviewNote":"'.$form_state->getValue('instrument_hasreviewnote').'",'.
-        '"hasEditorEmail":"'.$useremail.'",'.
         '"hasSIRManagerEmail":"'.$this->getInstrument()->hasSIRManagerEmail.'"}';
 
+        // dpm($instrumentJson);return false;
 
         // Must Delete OLD Instrument and Create NEW Instrument
-        $api->instrumentDelete($this->getInstrumentUri());
-        $api->instrumentAdd($instrumentJson);
+        $api->elementDel('instrument', $this->getInstrumentUri());
+        $api->elementAdd('instrument', $instrumentJson);
 
         \Drupal::messenger()->addWarning(t("Instrument has been REJECTED."));
           self::backUrl();
