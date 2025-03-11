@@ -33,3 +33,11 @@ sir_manageSlotsElementsForm:
   dependencies:
     - core/jquery
     - core/drupal
+
+sir_processstem:
+  version: 1.x
+  js:
+    js/sir_processstem.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal

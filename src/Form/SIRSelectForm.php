@@ -204,7 +204,7 @@ class SIRSelectForm extends FormBase {
       if ($this->element_type == 'processstem') {
         $form['actions_wrapper']['buttons_container']['derive_processstem'] = [
           '#type' => 'submit',
-          '#value' => $this->t('Derive New ' . $this->single_class_name . ' from Selected'),
+          '#value' => $this->t('Derive New ' . $this->single_class_name),
           '#name' => 'derive_processstem',
           '#attributes' => [
             'class' => ['btn', 'btn-primary', 'derive-button'],
@@ -1330,12 +1330,16 @@ class SIRSelectForm extends FormBase {
       // $form_state->setRedirectUrl($url);
       $this->performDeriveActuatorStem($form_state);
     } elseif ($button_name === 'derive_processstem') {
-      if (count($selected_rows) == 1) {
-        $uri = array_keys($selected_rows)[0];
-        $this->performDeriveProcessStem($uri, $form_state);
-      } else {
-        \Drupal::messenger()->addWarning($this->t('Please select exactly one item stem to derive.'));
-      }
+      // if (count($selected_rows) == 1) {
+      //   $uri = array_keys($selected_rows)[0];
+      //   $this->performDeriveProcessStem($uri, $form_state);
+      // } else {
+      //   \Drupal::messenger()->addWarning($this->t('Please select exactly one item stem to derive.'));
+      // }
+      // $url = Url::fromRoute('sir.add_actuatorstem');
+      // $url->setRouteParameter('sourceactuatorstemuri', 'DERIVED');
+      // $form_state->setRedirectUrl($url);
+      $this->performDeriveProcessStem($form_state);
     } elseif ($button_name === 'back') {
       $url = Url::fromRoute('sir.search');
       $form_state->setRedirectUrl($url);
@@ -1942,12 +1946,13 @@ class SIRSelectForm extends FormBase {
   /**
    * Perform derive process stem action.
    */
-  protected function performDeriveProcessStem($uri, FormStateInterface $form_state) {
+  protected function performDeriveProcessStem(FormStateInterface $form_state) {
     $uid = \Drupal::currentUser()->id();
     $previousUrl = \Drupal::request()->getRequestUri();
     Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_processstem');
     $url = Url::fromRoute('sir.add_processstem');
-    $url->setRouteParameter('sourceprocessstemuri', base64_encode($uri));
+    $url->setRouteParameter('sourceprocessstemuri', 'DERIVED');
+    // $url->setRouteParameter('containersloturi', 'DERIVED');
     $form_state->setRedirectUrl($url);
   }
 
