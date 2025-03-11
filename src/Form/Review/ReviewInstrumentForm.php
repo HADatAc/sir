@@ -153,7 +153,7 @@ class ReviewInstrumentForm extends FormBase {
     // Botão para abrir nova janela
     $form['instrument_information']['instrument_parent_wrapper']['instrument_parent_wrapper_button'] = [
       '#type' => 'markup',
-      '#markup' => '<a href="' . $url . '" target="_blank" class="btn btn-success text-nowrap" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
+      '#markup' => '<a href="' . $url . '" target="_blank" class="btn btn-primary text-nowrap" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
     ];
 
     $form['instrument_information']['instrument_name'] = [
@@ -516,9 +516,10 @@ class ReviewInstrumentForm extends FormBase {
         '"hasEditorEmail":"'.$useremail.'",'.
         '"hasSIRManagerEmail":"'.$this->getInstrument()->hasSIRManagerEmail.'"}';
 
-      $api->instrumentAdd($instrumentJson);
 
-
+        // Must Delete OLD Instrument and Create NEW Instrument
+        $api->instrumentDelete($this->getInstrumentUri());
+        $api->instrumentAdd($instrumentJson);
 
         \Drupal::messenger()->addWarning(t("Instrument has been REJECTED."));
           self::backUrl();

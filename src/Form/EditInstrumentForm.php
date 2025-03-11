@@ -210,6 +210,8 @@ class EditInstrumentForm extends FormBase {
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
 
+    $api = \Drupal::service('rep.api_connector');
+
     if ($button_name === 'back') {
       self::backUrl();
       return;
@@ -219,10 +221,14 @@ class EditInstrumentForm extends FormBase {
       $uid = \Drupal::currentUser()->id();
       $useremail = \Drupal::currentUser()->getEmail();
 
-      $instrumentJson = '{"uri":"'.$this->getInstrumentUri().'",'.
+
+      // CHECK if Status is CURRENT OR DEPRECATED FOR NEW CREATION
+      if ($this->getInstrument()->hasStatus === VSTOI::CURRENT || $this->getInstrument()->hasStatus === VSTOI::DEPRECATED) {
+
+        $instrumentJson = '{"uri":"'.Utils::uriGen('instrument').'",'.
         '"superUri":"'.Utils::uriFromAutocomplete($form_state->getValue('instrument_type')).'",'.
         '"hascoTypeUri":"'.VSTOI::INSTRUMENT.'",'.
-        '"hasStatus":"'.$this->getInstrument()->hasStatus.'",'.
+        '"hasStatus":"'.VSTOI::DRAFT.'",'.
         '"label":"'.$form_state->getValue('instrument_name').'",'.
         '"hasShortName":"'.$form_state->getValue('instrument_abbreviation').'",'.
         '"hasInformant":"'.$form_state->getValue('instrument_informant').'",'.
@@ -232,15 +238,45 @@ class EditInstrumentForm extends FormBase {
         '"comment":"'.$form_state->getValue('instrument_description').'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
 
-      //dpm($instrumentJson);
-      //return false;
+        // ADD NEW INSTRUMENT VERSION
+        $api->elementAdd('instrument', $instrumentJson);
+        \Drupal::messenger()->addMessage(t("New Version instrument has been created successfully."));
+      } else {
 
-      // UPDATE BY DELETING AND CREATING
-      $api = \Drupal::service('rep.api_connector');
-      $api->instrumentDel($this->getInstrumentUri());
-      $api->instrumentAdd($instrumentJson);
+        // MUST PAY ATENTION TO CONTANINER ANS NEXT/PREVIOUS/ETC...
 
-      \Drupal::messenger()->addMessage(t("Instrument has been updated successfully."));
+        $instrumentJson = '{"uri":"'.$this->getInstrumentUri().'",'.
+        '"superUri":"'.Utils::uriFromAutocomplete($form_state->getValue('instrument_type')).'",'.
+        '"hascoTypeUri":"'.VSTOI::INSTRUMENT.'",'.
+        '"hasStatus":"'.VSTOI::DRAFT.'",'.
+        '"label":"'.$form_state->getValue('instrument_name').'",'.
+        '"hasShortName":"'.$form_state->getValue('instrument_abbreviation').'",'.
+        '"hasInformant":"'.$form_state->getValue('instrument_informant').'",'.
+        '"hasLanguage":"'.$form_state->getValue('instrument_language').'",'.
+        '"hasVersion":"'.$form_state->getValue('instrument_version').'",'.
+        '"hasWebDocument":"'.$form_state->getValue('instrument_webdocument').'",'.
+        '"comment":"'.$form_state->getValue('instrument_description').'",'.
+
+        '"hasFirst":"'.$this->getInstrument()->hasFirst.'",'.
+        '"belongsTo":"'.$this->getInstrument()->belongsTo.'",'.
+        '"hasNext":"'.$this->getInstrument()->hasNext.'",'.
+        '"hasPrevious":"'.$this->getInstrument()->hasPrevious.'",'.
+        // '"hasPriority":"'.$this->getInstrument()->hasPriority.'",'.
+        '"annotations":"'.$this->getInstrument()->annotations.'",'.
+
+        '"hasReviewNote":"'.$this->getInstrument()->hasReviewNote.'",'.
+        '"hasEditorEmail":"'.$this->getInstrument()->hasEditorEmail.'",'.
+        '"hasSIRManagerEmail":"'.$useremail.'"}';
+
+        // dpm($instrumentJson);
+        // return false;
+
+        // UPDATE BY DELETING AND CREATING CURRENT INSTRUMENT
+        $api->elementDel('instrument', $this->getInstrumentUri());
+        $api->elementAdd('instrument', $instrumentJson);
+        \Drupal::messenger()->addMessage(t("instrument has been updated successfully."));
+      }
+
       self::backUrl();
       return;
 
