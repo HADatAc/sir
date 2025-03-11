@@ -402,11 +402,13 @@ class ReviewInstrumentForm extends FormBase {
 
         '"hasSIRManagerEmail":"'.$this->getInstrument()->hasSIRManagerEmail.'"}';
 
-        // dpm($instrumentJson);return false;
-
         // Must Delete OLD Instrument and Create NEW Instrument
         $api->elementDel('instrument', $this->getInstrumentUri());
         $api->elementAdd('instrument', $instrumentJson);
+
+        // Recursive REJECT Instrument Elements recursivelly
+        // Instrument must be made diferently because review note field
+        $api->reviewRecursive($this->getInstrumentUri(), VSTOI::DRAFT);
 
         \Drupal::messenger()->addError(t("Instrument has been REJECTED."));
           self::backUrl();
