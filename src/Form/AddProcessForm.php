@@ -1317,6 +1317,9 @@ class AddProcessForm extends FormBase {
   }
 
   protected function buildDetectorTable(array $detectors, $container_id, $arraySelected = []) {
+
+    $root_url = \Drupal::request()->getBaseUrl();
+
     $header = [
       $this->t("#"),
       $this->t('Name'),
@@ -1359,8 +1362,8 @@ class AddProcessForm extends FormBase {
       $rows[] = [
         'data' => [
           $checkbox_rendered,
-          $detector['name'],
-          $detector['uri'],
+          t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($detector['uri']).'">' . $detector['name'] . '</a>'),
+          t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($detector['uri']).'">' . UTILS::namespaceUri($detector['uri']) . '</a>'),
           $detector['status'],
         ],
       ];

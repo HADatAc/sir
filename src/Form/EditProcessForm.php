@@ -82,7 +82,7 @@ class EditProcessForm extends FormBase {
     } else {
 
       $basic = \Drupal::state()->get('my_form_basic');
-      $instruments = \Drupal::state()->get('my_form_instruments') ?? [];
+      $instruments = \Drupal::state()->get('my_form_instruments') ?? $this->populateInstruments();
       //$codes = \Drupal::state()->get('my_form_codes') ?? [];
 
     }
@@ -530,7 +530,7 @@ class EditProcessForm extends FormBase {
             }
         }
 
-        $detectors_component = $this->buildDetectorTable($this->getDetectors($intURI), 'instrument_detectors_' . $delta, $detectorsList);
+        $detectors_component = $this->buildDetectorTable($this->getComponents($intURI), 'instrument_detectors_' . $delta, $detectorsList);
 
       }
 
@@ -669,13 +669,13 @@ class EditProcessForm extends FormBase {
     }
 
     // Get detectors from API
-    $detectors = $this->getDetectors($instrument_uri);
+    $components = $this->getComponents($instrument_uri);
 
     // Add detectors to instrument
     self::updateInstruments($form_state);
 
     // Render detectors
-    $detectorTable = $this->buildDetectorTable($detectors, $container_id);
+    $detectorTable = $this->buildDetectorTable($components, $container_id);
 
     // Replace the existing detector container with the updated table
     $response->addCommand(new ReplaceCommand('#' . $container_id, $detectorTable));
@@ -724,7 +724,6 @@ class EditProcessForm extends FormBase {
             $detectors = isset($instrument->detectors) && is_array($instrument->detectors)
                 ? array_map(fn($detector) => $detector->uri, $instrument->detectors)
                 : [];
-
 
             $instrumentData[] = [
                 'instrument' => UTILS::fieldToAutocomplete($instrumentUri,$instrumentLabel),
@@ -1234,11 +1233,11 @@ class EditProcessForm extends FormBase {
     return;
   }
 
-  public function getDetectors($instrumentUri) {
-
+  public function getComponents($instrumentUri) {
+    $root_url = \Drupal::request()->getBaseUrl();
     // Call to get Detectors
     $api = \Drupal::service('rep.api_connector');
-    $response = $api->detectorListFromInstrument($instrumentUri);
+    $response = $api->componentListFromInstrument($instrumentUri);
 
     // Decode JSON reply
     $data = json_decode($response, true);
@@ -1250,21 +1249,24 @@ class EditProcessForm extends FormBase {
     $urls = json_decode($data['body'], true);
 
     // Process detectors
-    $detectors = [];
+    $components = [];
     foreach ($urls as $url) {
-      $detectorData = $api->getUri($url);
-      $obj = json_decode($detectorData);
-      $detectors[] = [
+      $componentData = $api->getUri($url);
+      $obj = json_decode($componentData);
+      $components[] = [
         'name' => isset($obj->body->label) ? $obj->body->label : '',
         'uri' => isset($obj->body->uri) ? $obj->body->uri : '',
         'status' => isset($obj->body->hasStatus) ? Utils::plainStatus($obj->body->hasStatus) : '',
         'hasStatus' => isset($obj->body->hasStatus) ? $obj->body->hasStatus : null,
       ];
     }
-    return $detectors;
+    return $components;
   }
 
   protected function buildDetectorTable(array $detectors, $container_id, $arraySelected = []) {
+
+    $root_url = \Drupal::request()->getBaseUrl();
+
     $header = [
       $this->t("#"),
       $this->t('Name'),
@@ -1277,6 +1279,7 @@ class EditProcessForm extends FormBase {
 
     $rows = [];
     foreach ($detectors as $detector) {
+
       // Build an inline template render array for the checkbox.
       $checkbox = [
         '#type' => 'checkbox',
@@ -1307,8 +1310,8 @@ class EditProcessForm extends FormBase {
       $rows[] = [
         'data' => [
           $checkbox_rendered,
-          $detector['name'],
-          $detector['uri'],
+          t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($detector['uri']).'">' . $detector['name'] . '</a>'),
+          t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($detector['uri']).'">' . UTILS::namespaceUri($detector['uri']) . '</a>'),
           $detector['status'],
         ],
       ];
