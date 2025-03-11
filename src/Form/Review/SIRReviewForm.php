@@ -359,7 +359,7 @@ class SIRReviewForm extends FormBase {
       case "annotationstem":
         return AnnotationStem::generateOutput($this->getList());
       case "processstem":
-        return ProcessStem::generateOutput($this->getList());
+        return ProcessStem::generateReviewOutput($this->getList());
       case "process":
         return Process::generateOutput($this->getList());
       default:

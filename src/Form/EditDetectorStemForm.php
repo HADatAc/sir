@@ -186,7 +186,7 @@ class EditDetectorStemForm extends FormBase {
 
       $form['detectorstem_df_wrapper']['detectorstem_wasderivedfrom_button'] = [
         '#type' => 'markup',
-        '#markup' => '<a href="' . $url . '" target="_blank" class="btn btn-success text-nowrap mt-2" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
+        '#markup' => '<a href="' . $url . '" target="_blank" class="btn btn-primary text-nowrap mt-2" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
       ];
     }
     $form['detectorstem_was_generated_by'] = [

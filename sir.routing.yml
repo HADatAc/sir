@@ -676,6 +676,19 @@ sir.load_detectors:
     _permission: 'access content'
   methods: [GET, POST]
 
+# Process Stem
+
+sir.review_processstem:
+  path: 'sir/manage/reviewprocessstem/{processstemuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\Review\ReviewProcessStemForm'
+    _title: 'Review Process Stem'
+  requirements:
+    # _permission: 'access reviewer menu'
+    _role: 'content_editor'
+  options:
+    no_cache: 'TRUE'
+
 # Actuator
 
 sir.review_actuator:

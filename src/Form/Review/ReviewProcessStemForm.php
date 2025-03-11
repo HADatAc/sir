@@ -12,57 +12,57 @@ use Drupal\rep\Constant;
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\VSTOI;
 
-class ReviewDetectorStemForm extends FormBase {
+class ReviewProcessStemForm extends FormBase {
 
-  protected $detectorStemUri;
+  protected $processStemUri;
 
-  protected $detectorStem;
+  protected $processStem;
 
-  protected $sourceDetectorStem;
+  protected $sourceProcessStem;
 
-  public function getDetectorStemUri() {
-    return $this->detectorStemUri;
+  public function getProcessStemUri() {
+    return $this->processStemUri;
   }
 
-  public function setDetectorStemUri($uri) {
-    return $this->detectorStemUri = $uri;
+  public function setProcessStemUri($uri) {
+    return $this->processStemUri = $uri;
   }
 
-  public function getDetectorStem() {
-    return $this->detectorStem;
+  public function getProcessStem() {
+    return $this->processStem;
   }
 
-  public function setDetectorStem($obj) {
-    return $this->detectorStem = $obj;
+  public function setProcessStem($obj) {
+    return $this->processStem = $obj;
   }
 
-  public function getSourceDetectorStem() {
-    return $this->sourceDetectorStem;
+  public function getSourceProcessStem() {
+    return $this->sourceProcessStem;
   }
 
-  public function setSourceDetectorStem($obj) {
-    return $this->sourceDetectorStem = $obj;
+  public function setSourceProcessStem($obj) {
+    return $this->sourceProcessStem = $obj;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'review_detectorstem_form';
+    return 'review_processstem_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $detectorstemuri = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, $processstemuri = NULL) {
 
     // MODAL
     $form['#attached']['library'][] = 'rep/rep_modal';
     $form['#attached']['library'][] = 'core/drupal.dialog';
 
-    $uri=$detectorstemuri;
+    $uri=$processstemuri;
     $uri_decode=base64_decode($uri);
-    $this->setDetectorStemUri($uri_decode);
+    $this->setProcessStemUri($uri_decode);
 
     $tables = new Tables;
     $languages = $tables->getLanguages();
@@ -70,24 +70,24 @@ class ReviewDetectorStemForm extends FormBase {
 
     $sourceContent = '';
     $wasGeneratedBy = Constant::DEFAULT_WAS_GENERATED_BY;
-    $this->setDetectorStem($this->retrieveDetectorStem($this->getDetectorStemUri()));
-    if ($this->getDetectorStem() == NULL) {
-      \Drupal::messenger()->addError(t("Failed to retrieve Detector Stem."));
+    $this->setProcessStem($this->retrieveProcessStem($this->getProcessStemUri()));
+    if ($this->getProcessStem() == NULL) {
+      \Drupal::messenger()->addError(t("Failed to retrieve Process Stem."));
       self::backUrl();
       return;
     } else {
-      $wasGeneratedBy = $this->getDetectorStem()->wasGeneratedBy;
-      if ($this->getDetectorStem()->wasDerivedFrom != NULL) {
-        $this->setSourceDetectorStem($this->retrieveDetectorStem($this->getDetectorStem()->wasDerivedFrom));
-        if ($this->getSourceDetectorStem() != NULL && $this->getSourceDetectorStem()->hasContent != NULL) {
-          $sourceContent = Utils::fieldToAutocomplete($this->getSourceDetectorStem()->uri,$this->getSourceDetectorStem()->hasContent);
+      $wasGeneratedBy = $this->getProcessStem()->wasGeneratedBy;
+      if ($this->getProcessStem()->wasDerivedFrom != NULL) {
+        $this->setSourceProcessStem($this->retrieveProcessStem($this->getProcessStem()->wasDerivedFrom));
+        if ($this->getSourceProcessStem() != NULL && $this->getSourceProcessStem()->hasContent != NULL) {
+          $sourceContent = Utils::fieldToAutocomplete($this->getSourceProcessStem()->uri,$this->getSourceProcessStem()->hasContent);
         }
       }
     }
 
-    //dpm($this->getDetector());
-    if ($this->getDetectorStem()->superUri) {
-      $form['detectorstem_type'] = [
+    //dpm($this->getProcess());
+    if ($this->getProcessStem()->superUri) {
+      $form['processstem_type'] = [
         'top' => [
           '#type' => 'markup',
           '#markup' => '<div class="pt-3 col border border-white">',
@@ -95,22 +95,22 @@ class ReviewDetectorStemForm extends FormBase {
         'main' => [
           '#type' => 'textfield',
           '#title' => $this->t('Type'),
-          '#name' => 'detectorstem_type',
-          '#default_value' => $this->getDetectorStem()->superUri ? Utils::fieldToAutocomplete($this->getDetectorStem()->superUri, $this->getDetectorStem()->superClassLabel) : '',
+          '#name' => 'processstem_type',
+          '#default_value' => $this->getProcessStem()->superUri ? Utils::fieldToAutocomplete($this->getProcessStem()->superUri, $this->getProcessStem()->superClassLabel) : '',
           '#disabled' => TRUE,
-          '#id' => 'detectorstem_type',
-          '#parents' => ['detectorstem_type'],
+          '#id' => 'processstem_type',
+          '#parents' => ['processstem_type'],
           '#attributes' => [
             'class' => ['open-tree-modal'],
             'data-dialog-type' => 'modal',
             'data-dialog-options' => json_encode(['width' => 800]),
             'data-url' => Url::fromRoute('rep.tree_form', [
               'mode' => 'modal',
-              'elementtype' => 'detectorstem',
-            ], ['query' => ['field_id' => 'detectorstem_type']])->toString(),
-            'data-field-id' => 'detectorstem_type',
-            'data-elementtype' => 'detectorstem',
-            'data-search-value' => $this->getDetectorStem()->superUri ?? '',
+              'elementtype' => 'processstem',
+            ], ['query' => ['field_id' => 'processstem_type']])->toString(),
+            'data-field-id' => 'processstem_type',
+            'data-elementtype' => 'processstem',
+            'data-search-value' => $this->getProcessStem()->superUri ?? '',
           ],
         ],
         'bottom' => [
@@ -119,53 +119,53 @@ class ReviewDetectorStemForm extends FormBase {
         ],
       ];
     }
-    $form['detectorstem_content'] = [
+    $form['processstem_content'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name'),
-      '#default_value' => $this->getDetectorStem()->hasContent,
+      '#default_value' => $this->getProcessStem()->hasContent,
       '#disabled' => TRUE,
     ];
-    $form['detectorstem_language'] = [
+    $form['processstem_language'] = [
       '#type' => 'select',
       '#title' => $this->t('Language'),
       '#options' => $languages,
-      '#default_value' => $this->getDetectorStem()->hasLanguage,
+      '#default_value' => $this->getProcessStem()->hasLanguage,
       '#disabled' => TRUE,
     ];
-    $form['detectorstem_version'] = [
+    $form['processstem_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
-      '#default_value' => $this->getDetectorStem()->hasVersion,
+      '#default_value' => $this->getProcessStem()->hasVersion,
       '#default_value' =>
-        ($this->getDetectorStem()->hasStatus === VSTOI::CURRENT || $this->getDetectorStem()->hasStatus === VSTOI::DEPRECATED) ?
-        $this->getDetectorStem()->hasVersion + 1 : $this->getDetectorStem()->hasVersion,
+        ($this->getProcessStem()->hasStatus === VSTOI::CURRENT || $this->getProcessStem()->hasStatus === VSTOI::DEPRECATED) ?
+        $this->getProcessStem()->hasVersion + 1 : $this->getProcessStem()->hasVersion,
       '#attributes' => [
         'disabled' => 'disabled',
       ],
     ];
-    $form['detectorstem_description'] = [
+    $form['processstem_description'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
-      '#default_value' => $this->getDetectorStem()->comment,
+      '#default_value' => $this->getProcessStem()->comment,
       '#disabled' => TRUE,
     ];
-    $form['detectorstem_webdocument'] = [
+    $form['processstem_webdocument'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Web Document'),
-      '#default_value' => $this->getDetectorStem()->hasWebDocument,
+      '#default_value' => $this->getProcessStem()->hasWebDocument,
       '#attributes' => [
         'placeholder' => 'http://',
       ],
       '#disabled' => TRUE,
     ];
-    if ($this->getDetectorStem()->wasDerivedFrom !== NULL) {
+    if ($this->getProcessStem()->wasDerivedFrom !== NULL) {
       $api = \Drupal::service('rep.api_connector');
-      $rawresponse = $api->getUri($this->getDetectorStem()->wasDerivedFrom);
+      $rawresponse = $api->getUri($this->getProcessStem()->wasDerivedFrom);
       $obj = json_decode($rawresponse);
       if ($obj->isSuccessful) {
         $result = $obj->body;
 
-        $form['detectorstem__df_wrapper'] = [
+        $form['processstem__df_wrapper'] = [
           '#type' => 'container',
           '#attributes' => [
             'class' => ['d-flex', 'align-items-center', 'w-100'], // Flex container para alinhamento correto
@@ -173,10 +173,10 @@ class ReviewDetectorStemForm extends FormBase {
           ],
         ];
 
-        $form['detectorstem__df_wrapper']['detectorstem__wasderivedfrom'] = [
+        $form['processstem__df_wrapper']['processstem__wasderivedfrom'] = [
           '#type' => 'textfield',
           '#title' => $this->t('Derived From'),
-          '#default_value' => Utils::fieldToAutocomplete($this->getDetectorStem()->wasDerivedFrom, $result->label),
+          '#default_value' => Utils::fieldToAutocomplete($this->getProcessStem()->wasDerivedFrom, $result->label),
           '#attributes' => [
             'class' => ['flex-grow-1'],
             'style' => "width: 100%; min-width: 1045px;",
@@ -184,18 +184,18 @@ class ReviewDetectorStemForm extends FormBase {
           ],
         ];
 
-        $elementUri = Utils::namespaceUri($this->getDetectorStem()->wasDerivedFrom);
+        $elementUri = Utils::namespaceUri($this->getProcessStem()->wasDerivedFrom);
         $elementUriEncoded = base64_encode($elementUri);
         $url = Url::fromRoute('rep.describe_element', ['elementuri' => $elementUriEncoded], ['absolute' => TRUE])->toString();
 
-        $form['detectorstem__df_wrapper']['detectorstem__wasderivedfrom_button'] = [
+        $form['processstem__df_wrapper']['processstem__wasderivedfrom_button'] = [
           '#type' => 'markup',
           '#markup' => '<a href="' . $url . '" target="_blank" class="btn btn-primary text-nowrap mt-2" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
         ];
       }
     }
 
-    $form['detectorstem_was_generated_by'] = [
+    $form['processstem_was_generated_by'] = [
       '#type' => 'select',
       '#title' => $this->t('Was Derived By'),
       '#options' => $derivations,
@@ -203,20 +203,20 @@ class ReviewDetectorStemForm extends FormBase {
       '#disabled' => TRUE,
     ];
 
-    $form['detectorstem_owner'] = [
+    $form['processstem_owner'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Owner'),
-      '#default_value' => $this->getDetectorStem()->hasSIRManagerEmail,
+      '#default_value' => $this->getProcessStem()->hasSIRManagerEmail,
       '#attributes' => [
         'disabled' => 'disabled',
       ],
     ];
-    $form['detectorstem_hasreviewnote'] = [
+    $form['processstem_hasreviewnote'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Review Notes'),
-      '#default_value' => $this->getDetectorStem()->hasReviewNote,
+      '#default_value' => $this->getProcessStem()->hasReviewNote,
     ];
-    $form['detectorstem_haseditoremail'] = [
+    $form['processstem_haseditoremail'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Reviewer Email'),
       '#default_value' => \Drupal::currentUser()->getEmail(),
@@ -268,8 +268,8 @@ class ReviewDetectorStemForm extends FormBase {
 
     // if ($button_name != 'back') {
     //   if ($button_name === 'review_reject') {
-    //     if(strlen($form_state->getValue('detector_hasreviewnote')) < 1) {
-    //       $form_state->setErrorByName('detector_hasreviewnote', $this->t('You must enter a Reject Note'));
+    //     if(strlen($form_state->getValue('process_hasreviewnote')) < 1) {
+    //       $form_state->setErrorByName('process_hasreviewnote', $this->t('You must enter a Reject Note'));
     //     }
     //   }
     // }
@@ -288,7 +288,7 @@ class ReviewDetectorStemForm extends FormBase {
       return;
     }
 
-    if ($button_name === 'review_reject' && strlen($form_state->getValue('detectorstem_hasreviewnote')) === 0) {
+    if ($button_name === 'review_reject' && strlen($form_state->getValue('processstem_hasreviewnote')) === 0) {
       \Drupal::messenger()->addWarning(t("To reject you must type a Review Note!"));
       return false;
     }
@@ -298,42 +298,42 @@ class ReviewDetectorStemForm extends FormBase {
     try{
 
       $useremail = \Drupal::currentUser()->getEmail();
-      $result = $this->getDetectorStem();
+      $result = $this->getProcessStem();
 
       //APROVE
       if ($button_name !== 'review_reject') {
 
-        $detectorStemJson = '{"uri":"'.$this->getDetectorStem()->uri.'",'.
-          '"superUri":"'.$this->getDetectorStem()->superUri.'",'.
-          '"label":"'.$this->getDetectorStem()->label.'",'.
-          '"hascoTypeUri":"'.VSTOI::DETECTOR_STEM.'",'.
+        $processStemJson = '{"uri":"'.$this->getProcessStem()->uri.'",'.
+          '"superUri":"'.$this->getProcessStem()->superUri.'",'.
+          '"label":"'.$this->getProcessStem()->label.'",'.
+          '"hascoTypeUri":"'.VSTOI::PROCESS_STEM.'",'.
           '"hasStatus":"'.VSTOI::CURRENT.'",'.
-          '"hasContent":"'.$this->getDetectorStem()->hasContent.'",'.
-          '"hasLanguage":"'.$this->getDetectorStem()->hasLanguage.'",'.
-          '"hasVersion":"'.$this->getDetectorStem()->hasVersion.'",'.
-          '"comment":"'.$this->getDetectorStem()->comment.'",'.
-          '"wasDerivedFrom":"'.$this->getDetectorStem()->wasDerivedFrom.'",'.
-          '"wasGeneratedBy":"'.$this->getDetectorStem()->wasGeneratedBy.'",'.
-          '"hasReviewNote":"'.$form_state->getValue('detectorstem_hasreviewnote').'",'.
-          '"hasWebDocument":"'.$form_state->getValue('detectorstem_webdocument').'",'.
+          '"hasContent":"'.$this->getProcessStem()->hasContent.'",'.
+          '"hasLanguage":"'.$this->getProcessStem()->hasLanguage.'",'.
+          '"hasVersion":"'.$this->getProcessStem()->hasVersion.'",'.
+          '"comment":"'.$this->getProcessStem()->comment.'",'.
+          '"wasDerivedFrom":"'.$this->getProcessStem()->wasDerivedFrom.'",'.
+          '"wasGeneratedBy":"'.$this->getProcessStem()->wasGeneratedBy.'",'.
+          '"hasReviewNote":"'.$form_state->getValue('processstem_hasreviewnote').'",'.
+          '"hasWebDocument":"'.$form_state->getValue('processstem_webdocument').'",'.
           '"hasEditorEmail":"'.$useremail.'",'.
-          '"hasSIRManagerEmail":"'.$this->getDetectorStem()->hasSIRManagerEmail.'"}';
+          '"hasSIRManagerEmail":"'.$this->getProcessStem()->hasSIRManagerEmail.'"}';
 
         // UPDATE BY DELETING AND CREATING
-        $api->detectorStemDel($this->getDetectorStemUri());
-        $api->detectorStemAdd($detectorStemJson);
+        $api->processStemDel($this->getProcessStemUri());
+        $api->processStemAdd($processStemJson);
 
         // IF ITS A DERIVATION APROVAL PARENT MUST BECOME DEPRECATED, but in this case version must be also greater than 1, because
-        // Detector Stems can start to be like a derivation element by itself
+        // Process Stems can start to be like a derivation element by itself
         if (($result->wasDerivedFrom !== null && $result->wasDerivedFrom !== '') && $result->hasVersion > 1) {
           $rawresponse = $api->getUri($result->wasDerivedFrom);
           $obj = json_decode($rawresponse);
           $resultParent = $obj->body;
 
-          $parentDetectorStemJson = '{"uri":"'.$resultParent->uri.'",'.
+          $parentProcessStemJson = '{"uri":"'.$resultParent->uri.'",'.
           (!empty($resultParent->superUri) ? '"superUri":"'.$resultParent->superUri.'",' : '').
           '"label":"'.$resultParent->label.'",'.
-          '"hascoTypeUri":"'.VSTOI::DETECTOR_STEM.'",'.
+          '"hascoTypeUri":"'.VSTOI::PROCESS_STEM.'",'.
           '"hasStatus":"'.VSTOI::DEPRECATED.'",'.
           '"hasContent":"'.$resultParent->hasContent.'",'.
           '"hasLanguage":"'.$resultParent->hasLanguage.'",'.
@@ -347,48 +347,48 @@ class ReviewDetectorStemForm extends FormBase {
           '"hasSIRManagerEmail":"'.$resultParent->hasSIRManagerEmail.'"}';
 
           // UPDATE BY DELETING AND CREATING
-          $api->detectorStemDel($resultParent->uri);
-          $api->detectorStemAdd($parentDetectorStemJson);
+          $api->processStemDel($resultParent->uri);
+          $api->processStemAdd($parentProcessStemJson);
         }
 
-        \Drupal::messenger()->addMessage(t("Detector Stem has been updated successfully."));
+        \Drupal::messenger()->addMessage(t("Process Stem has been updated successfully."));
       // REJECT
       } else {
 
-        $detectorStemJson = '{"uri":"'.$this->getDetectorStem()->uri.'",'.
-          '"superUri":"'.$this->getDetectorStem()->superUri.'",'.
-          '"label":"'.$this->getDetectorStem()->label.'",'.
-          '"hascoTypeUri":"'.VSTOI::DETECTOR_STEM.'",'.
+        $processStemJson = '{"uri":"'.$this->getProcessStem()->uri.'",'.
+          '"superUri":"'.$this->getProcessStem()->superUri.'",'.
+          '"label":"'.$this->getProcessStem()->label.'",'.
+          '"hascoTypeUri":"'.VSTOI::PROCESS_STEM.'",'.
           '"hasStatus":"'.VSTOI::DRAFT.'",'.
-          '"hasContent":"'.$this->getDetectorStem()->hasContent.'",'.
-          '"hasLanguage":"'.$this->getDetectorStem()->hasLanguage.'",'.
-          '"hasVersion":"'.$this->getDetectorStem()->hasVersion.'",'.
-          '"comment":"'.$this->getDetectorStem()->comment.'",'.
-          '"wasDerivedFrom":"'.$this->getDetectorStem()->wasDerivedFrom.'",'.
-          '"wasGeneratedBy":"'.$this->getDetectorStem()->wasGeneratedBy.'",'.
-          '"hasReviewNote":"'.$form_state->getValue('detectorstem_hasreviewnote').'",'.
-          '"hasWebDocument":"'.$form_state->getValue('detectorstem_webdocument').'",'.
+          '"hasContent":"'.$this->getProcessStem()->hasContent.'",'.
+          '"hasLanguage":"'.$this->getProcessStem()->hasLanguage.'",'.
+          '"hasVersion":"'.$this->getProcessStem()->hasVersion.'",'.
+          '"comment":"'.$this->getProcessStem()->comment.'",'.
+          '"wasDerivedFrom":"'.$this->getProcessStem()->wasDerivedFrom.'",'.
+          '"wasGeneratedBy":"'.$this->getProcessStem()->wasGeneratedBy.'",'.
+          '"hasReviewNote":"'.$form_state->getValue('processstem_hasreviewnote').'",'.
+          '"hasWebDocument":"'.$form_state->getValue('processstem_webdocument').'",'.
           '"hasEditorEmail":"'.$useremail.'",'.
-          '"hasSIRManagerEmail":"'.$this->getDetectorStem()->hasSIRManagerEmail.'"}';
+          '"hasSIRManagerEmail":"'.$this->getProcessStem()->hasSIRManagerEmail.'"}';
 
         // UPDATE BY DELETING AND CREATING
-        $api->detectorStemDel($this->getDetectorStemUri());
-        $api->detectorStemAdd($detectorStemJson);
+        $api->processStemDel($this->getProcessStemUri());
+        $api->processStemAdd($processStemJson);
       }
 
       self::backUrl();
       return;
 
     }catch(\Exception $e){
-      \Drupal::messenger()->addError(t("An error occurred while updating the Detector Stem: ".$e->getMessage()));
+      \Drupal::messenger()->addError(t("An error occurred while updating the Process Stem: ".$e->getMessage()));
       self::backUrl();
       return;
     }
   }
 
-  public function retrieveDetectorStem($detectorStemUri) {
+  public function retrieveProcessStem($processStemUri) {
     $api = \Drupal::service('rep.api_connector');
-    $rawresponse = $api->getUri($detectorStemUri);
+    $rawresponse = $api->getUri($processStemUri);
     $obj = json_decode($rawresponse);
     if ($obj->isSuccessful) {
       return $obj->body;

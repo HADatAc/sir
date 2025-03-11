@@ -186,7 +186,7 @@ class EditProcessStemForm extends FormBase {
 
       $form['processstem_df_wrapper']['processstem_wasderivedfrom_button'] = [
         '#type' => 'markup',
-        '#markup' => '<a href="' . $url . '" target="_blank" class="btn btn-success text-nowrap mt-2" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
+        '#markup' => '<a href="' . $url . '" target="_blank" class="btn btn-primary text-nowrap mt-2" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
       ];
     }
     $form['processstem_was_generated_by'] = [
