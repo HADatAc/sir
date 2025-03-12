@@ -17,6 +17,8 @@ class EditInstrumentForm extends FormBase {
 
   protected $instrument;
 
+  protected $container;
+
   public function getInstrumentUri() {
     return $this->instrumentUri;
   }
@@ -31,6 +33,14 @@ class EditInstrumentForm extends FormBase {
 
   public function setInstrument($instrument) {
     return $this->instrument = $instrument;
+  }
+
+  public function getContainer() {
+    return $this->container;
+  }
+
+  public function setContainer($container) {
+    return $this->container = $container;
   }
 
   /**
@@ -79,10 +89,32 @@ class EditInstrumentForm extends FormBase {
       $hasLanguage = $this->getInstrument()->hasLanguage;
     }
 
-    $form['instrument_type'] = [
+    $form['information'] = [
+      '#type' => 'vertical_tabs',
+      '#default_tab' => 'edit-publication',
+    ];
+
+    // INSTRUMENT RELATED
+
+    $form['instrument_information'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Simulator Form'),
+      '#group' => 'information',
+    ];
+
+    // Campo de texto desativado que ocupa todo o espaço disponível
+    $form['instrument_information']['instrument_parent_wrapper'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['align-items-center', 'gap-2', 'mt-2'], // Flexbox para alinhar na mesma linha
+        'style' => 'max-width: 1280px;margin-bottom:0!important;',
+      ],
+    ];
+
+    $form['instrument_information']['instrument_parent_wrapper']['instrument_type'] = [
       'top' => [
         '#type' => 'markup',
-        '#markup' => '<div class="pt-3 col border border-white">',
+        '#markup' => '<div class="pt-0 col border border-white">',
       ],
       'main' => [
         '#type' => 'textfield',
@@ -111,29 +143,29 @@ class EditInstrumentForm extends FormBase {
       ],
     ];
 
-    $form['instrument_name'] = [
+    $form['instrument_information']['instrument_parent_wrapper']['instrument_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name'),
       '#default_value' => $this->getInstrument()->label,
     ];
-    $form['instrument_abbreviation'] = [
+    $form['instrument_information']['instrument_parent_wrapper']['instrument_abbreviation'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Abbreviation'),
       '#default_value' => $this->getInstrument()->hasShortName,
     ];
-    $form['instrument_informant'] = [
+    $form['instrument_information']['instrument_parent_wrapper']['instrument_informant'] = [
       '#type' => 'select',
       '#title' => $this->t('Informant'),
       '#options' => $informants,
       '#default_value' => $hasInformant,
     ];
-    $form['instrument_language'] = [
+    $form['instrument_information']['instrument_parent_wrapper']['instrument_language'] = [
       '#type' => 'select',
       '#title' => $this->t('Language'),
       '#options' => $languages,
       '#default_value' => $hasLanguage,
     ];
-    $form['instrument_version'] = [
+    $form['instrument_information']['instrument_parent_wrapper']['instrument_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
       '#default_value' =>
@@ -143,12 +175,12 @@ class EditInstrumentForm extends FormBase {
         'disabled' => 'disabled',
       ],
     ];
-    $form['instrument_description'] = [
+    $form['instrument_information']['instrument_parent_wrapper']['instrument_description'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
       '#default_value' => $this->getInstrument()->comment,
     ];
-    $form['instrument_webdocument'] = [
+    $form['instrument_information']['instrument_parent_wrapper']['instrument_webdocument'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Web Document'),
       '#default_value' => $this->getInstrument()->hasWebDocument,
@@ -156,6 +188,48 @@ class EditInstrumentForm extends FormBase {
         'placeholder' => 'http://',
       ]
     ];
+
+    // **************
+    // CONTAINER AREA
+    // **************
+    $form['instrument_structure'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Container Elements'),
+      '#group' => 'information',
+    ];
+
+    # POPULATE DATA
+    $uri=$this->getInstrument()->uri;
+    $api = \Drupal::service('rep.api_connector');
+    $container = $api->parseObjectResponse($api->getUri($uri),'getUri');
+    if ($container == NULL) {
+
+      // Give message to the user saying that there is no structure for current Simulator
+      $form['instrument_structure']['no_structure_warning'] = [
+        '#type' => 'item',
+        '#value' => t('This Simulator has no Structure bellow!')
+      ];
+
+      return;
+    }
+
+    $form['instrument_structure']['scope'] = [
+      '#type' => 'item',
+      '#title' => t('<h4>Slots Elements of Container <font color="DarkGreen">' . $this->getInstrument()->label . '</font>, maintained by <font color="DarkGreen">' . $this->getInstrument()->hasSIRManagerEmail . '</font></h4>'),
+      '#wrapper_attributes' => [
+        'class' => 'mt-3'
+      ],
+    ];
+
+    $this->setContainer($container);
+    $containerUri = $this->getContainer()->uri;
+    $slotElementsOutput = UTILS::buildSlotElements($containerUri, $api, 'table'); // or 'table'
+    $form['instrument_structure']['slot_elements'] = $slotElementsOutput;
+
+
+    // **************
+    // REVIEWER AREA
+    // **************
     if ($this->getInstrument()->hasReviewNote !== NULL && $this->getInstrument()->hasSatus !== null) {
       $form['instrument_hasreviewnote'] = [
         '#type' => 'textarea',

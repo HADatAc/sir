@@ -101,6 +101,9 @@ class ReviewInstrumentForm extends FormBase {
       '#type' => 'details',
       '#title' => $this->t('Simulator Form'),
       '#group' => 'information',
+      '#wrapper_attributes' => [
+        'style' => 'max-width: 1280px;margin-bottom:15px!important;',
+      ]
     ];
 
     // Campo de texto desativado que ocupa todo o espaço disponível
@@ -237,7 +240,7 @@ class ReviewInstrumentForm extends FormBase {
     // **************
     $form['instrument_structure'] = [
       '#type' => 'details',
-      '#title' => $this->t('Container'),
+      '#title' => $this->t('Container Elements'),
       '#group' => 'information',
     ];
 
