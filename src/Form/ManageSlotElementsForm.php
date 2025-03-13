@@ -165,14 +165,18 @@ class ManageSlotElementsForm extends FormBase {
     if ($slotElements != NULL) {
       foreach ($slotElements as $slotElement) {
 
-        // dpm($slotElement);
-        if ($slotElement != NULL) {
+        if ($slotElement === null) {
+          continue;
+        }
+
+        if ($slotElement !== null) {
           $content = " ";
           $codebook = " ";
           $type = " ";
           $element = " ";
           $componentUri = " ";
           $uri = "uri"; // this variable is used as index, thus it cannot be am empty string
+
           if (isset($slotElement->uri) && ($slotElement->uri != NULL)) {
             $uri = $slotElement->uri;
           }
@@ -460,7 +464,7 @@ class ManageSlotElementsForm extends FormBase {
       '#type' => 'tableselect',
       '#header' => $header,
       '#options' => $output,
-      '#empty' => t('No response options found'),
+      '#empty' => t('No elements found'),
     ];
 
     //SHOW BOTTOM PAGE/SECTION STRUCTURE
