@@ -247,7 +247,7 @@ class GenerateInsForm extends FormBase {
     switch ($selected) {
       case 'instrument':
         // For "INS per Instrument", get the instrument value.
-        $instrument = $form_state->getValue(['additional_fields', 'instrument', 'main']);
+        $instrument = utils::uriFromAutocomplete($form_state->getValue(['additional_fields', 'instrument', 'main']));
         $result = $api_service->generateINSPerInstrument($instrument, $filename);
         break;
 

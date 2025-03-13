@@ -129,7 +129,7 @@ class SIRListForm extends FormBase {
       ],
       '#attributes' => [
           'class' => ['form-select', 'w-auto', 'mt-2', 'me-1'],
-          'style' => 'margin-bottom:0!important;float:right;',
+          'style' => 'max-width:230px;margin-bottom:0!important;float:right;',
           'placeholder' => 'Type in your search criteria',
           // Ao pressionar Enter, previne o submit e dispara o evento "change"
           'onkeydown' => 'if (event.keyCode == 13) { event.preventDefault(); this.blur(); }',
