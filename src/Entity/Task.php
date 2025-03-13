@@ -7,7 +7,7 @@ use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\REPGUI;
 use Drupal\rep\Vocabulary\VSTOI;
 
-class Process {
+class Task {
 
   public static function generateHeader() {
 
@@ -17,6 +17,8 @@ class Process {
       'element_name' => t('Name'),
       'element_language' => t('Language'),
       'element_version' => t('Version'),
+      'element_tot_instruments' => t('# Instruments'),
+      'element_tot_detectors' => t('# Detectors'),
       'element_status' => t('Status'),
     ];
 
@@ -72,6 +74,18 @@ class Process {
           $status = parse_url($element->hasStatus, PHP_URL_FRAGMENT);
         }
       }
+      $totInst = count($element->hasRequiredInstrumentationUris);
+      $totDet = 0;
+
+      if (isset($element->requiredInstrumentation) && is_array($element->requiredInstrumentation)) {
+          foreach ($element->requiredInstrumentation as $instrument) {
+              if (isset($instrument->hasRequiredDetector) && is_array($instrument->hasRequiredDetector)) {
+                  $totDet += count($instrument->hasRequiredDetector);
+              } elseif (isset($instrument->detectors) && is_array($instrument->detectors)) {
+                  $totDet += count($instrument->detectors);
+              }
+          }
+      }
 
       $output[$element->uri] = [
         'element_uri' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),
@@ -79,6 +93,8 @@ class Process {
         'element_name' => $label,
         'element_language' => $lang,
         'element_version' => $version,
+        'element_tot_instruments' => $totInst,
+        'element_tot_detectors' => $totDet,
         'element_status' => $status,
         'element_hasStatus' => parse_url($element->hasStatus, PHP_URL_FRAGMENT),
         'element_hasLanguage' => $element->hasLanguage,

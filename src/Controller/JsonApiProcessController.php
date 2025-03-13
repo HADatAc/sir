@@ -120,4 +120,29 @@ class JsonApiProcessController extends ControllerBase{
     return $form['process_instruments']['wrapper']["instrument_$i"]['instrument_detector_wrapper_'.$i];
   }
 
+  /**
+   * @return JsonResponse
+   */
+  public function handleTasksAutocomplete(Request $request) {
+    $results = [];
+    $input = $request->query->get('q');
+    if (!$input) {
+      return new JsonResponse($results);
+    }
+    $keyword = Xss::filter($input);
+    $api = \Drupal::service('rep.api_connector');
+    $task_list = $api->listByKeyword('task',$keyword,10,0);
+    $obj = json_decode($task_list);
+    $tasks = [];
+    if ($obj->isSuccessful) {
+      $processes = $obj->body;
+    }
+    foreach ($tasks as $task) {
+      $results[] = [
+        'value' => $task->label . ' [' . $task->uri . ']',
+        'label' => $task->label,
+      ];
+    }
+    return new JsonResponse($results);
+  }
 }
