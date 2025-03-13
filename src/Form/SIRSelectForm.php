@@ -1457,33 +1457,41 @@ class SIRSelectForm extends FormBase {
    * Perform the delete action.
    */
   protected function performDelete(array $uris, FormStateInterface $form_state) {
-    $api = \Drupal::service('rep.api_connector');
 
+    $api = \Drupal::service('rep.api_connector');
     foreach ($uris as $shortUri) {
       $uri = Utils::plainUri($shortUri);
-      if ($this->element_type == 'instrument') {
-        $api->instrumentDel($uri);
-      } elseif ($this->element_type == 'actuatorstem') {
-        $api->actuatorStemDel($uri);
-      } elseif ($this->element_type == 'actuator') {
-        $api->actuatorDel($uri);
-      } elseif ($this->element_type == 'detectorstem') {
-        $api->detectorStemDel($uri);
-      } elseif ($this->element_type == 'detector') {
-        $api->detectorDel($uri);
-      } elseif ($this->element_type == 'codebook') {
-        $api->codebookDel($uri);
-      } elseif ($this->element_type == 'responseoption') {
-        $api->responseOptionDel($uri);
-      } elseif ($this->element_type == 'annotationstem') {
-        $api->annotationStemDel($uri);
-      } elseif ($this->element_type == 'processstem') {
-        $api->processStemDel($uri);
-      } elseif ($this->element_type == 'process') {
-        $api->processDel($uri);
+      $resp = $api->elementDel($this->element_type, $uri);
+      $msg = json_decode($resp->getContents());
+      if ($msg && $msg->isSuccessful) {
+        \Drupal::messenger()->addMessage($this->t('Selected @elements have been deleted successfully.', ['@elements' => $this->plural_class_name]));
+      } else {
+        \Drupal::messenger()->addError($this->t('Failed to delete @elements, @resp.', ['@elements' => $this->plural_class_name, '@resp' => $resp]));
       }
+
+      // if ($this->element_type == 'instrument') {
+      //   $resp = $api->instrumentDel($uri);
+      // } elseif ($this->element_type == 'actuatorstem') {
+      //   $resp =$api->actuatorStemDel($uri);
+      // } elseif ($this->element_type == 'actuator') {
+      //   $resp =$api->actuatorDel($uri);
+      // } elseif ($this->element_type == 'detectorstem') {
+      //   $resp =$api->detectorStemDel($uri);
+      // } elseif ($this->element_type == 'detector') {
+      //   $resp =$api->detectorDel($uri);
+      // } elseif ($this->element_type == 'codebook') {
+      //   $resp =$api->codebookDel($uri);
+      // } elseif ($this->element_type == 'responseoption') {
+      //   $resp =$api->responseOptionDel($uri);
+      // } elseif ($this->element_type == 'annotationstem') {
+      //   $resp =$api->annotationStemDel($uri);
+      // } elseif ($this->element_type == 'processstem') {
+      //   $resp =$api->processStemDel($uri);
+      // } elseif ($this->element_type == 'process') {
+      //   $resp =$api->processDel($uri);
+      // }
     }
-    \Drupal::messenger()->addMessage($this->t('Selected @elements have been deleted successfully.', ['@elements' => $this->plural_class_name]));
+
     $form_state->setRebuild();
   }
 
