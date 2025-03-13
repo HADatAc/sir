@@ -22,6 +22,7 @@ use Drupal\Core\Render\Markup;
 use Drupal\rep\Vocabulary\VSTOI;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\ListKeywordPage;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class SIRSelectForm extends FormBase {
 
@@ -75,6 +76,15 @@ class SIRSelectForm extends FormBase {
 
     // GET TOTAL NUMBER OF ELEMENTS
     $this->element_type = $elementtype;
+
+    // PREVENT THE ACCESS TO COMON USERS
+    $has_content_editor_role = in_array('content_editor', \Drupal::currentUser()->getRoles());
+    if ($this->element_type == 'task' && !$has_content_editor_role) {
+      \Drupal::messenger()->addError($this->t('Insuficient Permissions to access that area.'));
+      $url = Url::fromRoute('rep.home')->toString();
+      return new RedirectResponse($url);
+    }
+
     if ($this->element_type != NULL) {
       $this->setListSize(ListManagerEmailPage::total($this->element_type, $this->manager_email));
     }
@@ -231,6 +241,7 @@ class SIRSelectForm extends FormBase {
       if ($this->element_type !== 'instrument'
         &&
           ( // TO DELETE HAS BEEING DONE
+            $this->element_type !== 'task' &&
             $this->element_type !== 'process' &&
             $this->element_type !== 'annotationstem'
           )
@@ -520,6 +531,12 @@ class SIRSelectForm extends FormBase {
       case "process":
         $this->single_class_name = $preferred_process;
         $this->plural_class_name =  $preferred_process . "s";
+        break;
+
+      // TASK
+      case "task":
+        $this->single_class_name = "Task";
+        $this->plural_class_name =  "Task's";
         break;
 
       default:
