@@ -378,10 +378,7 @@ class ReviewInstrumentForm extends FormBase {
 
         $useremail = \Drupal::currentUser()->getEmail();
 
-        // Recursive REJECT os Instrument and Elements
-        $api->reviewRecursive($this->getInstrumentUri(), VSTOI::DRAFT);
-
-        // BUT NOW WE MUST ADD REVIEW NOTES TO INSTRUMENT
+        // WE MUST ADD REVIEW NOTES TO INSTRUMENT
         $instrumentJson = '{"uri":"'.$this->getInstrumentUri().'",'.
         '"superUri":"'.$this->getInstrument()->superUri.'",'.
         '"hascoTypeUri":"'.VSTOI::INSTRUMENT.'",'.
@@ -408,6 +405,8 @@ class ReviewInstrumentForm extends FormBase {
         // Must Delete OLD Instrument and Create NEW Instrument
         $api->elementDel('instrument', $this->getInstrumentUri());
         $api->elementAdd('instrument', $instrumentJson);
+
+        // dpm($instrumentJson);
 
         // Recursive REJECT Instrument Elements recursivelly
         // Instrument must be made diferently because review note field

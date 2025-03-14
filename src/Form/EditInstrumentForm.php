@@ -230,7 +230,7 @@ class EditInstrumentForm extends FormBase {
     // **************
     // REVIEWER AREA
     // **************
-    if ($this->getInstrument()->hasReviewNote !== NULL && $this->getInstrument()->hasSatus !== null) {
+    if ($this->getInstrument()->hasReviewNote) {
       $form['instrument_hasreviewnote'] = [
         '#type' => 'textarea',
         '#title' => $this->t('Review Notes'),
