@@ -1563,9 +1563,18 @@ class SIRSelectForm extends FormBase {
         $finalObject = json_encode($clonedObject, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         // UPDATE BY DELETING AND CREATING
-        $api = \Drupal::service('rep.api_connector');
-        $api->responseOptionDel($uri);
-        $api->responseOptionAdd($finalObject);
+        $resp = $api->responseOptionDel($uri);
+        $msg = json_decode($resp->getContents());
+        if ($msg && !$msg->isSuccessful) {
+          \Drupal::messenger()->addError($this->t('Failed to delete @elements, @resp.', ['@elements' => $this->plural_class_name, '@resp' => $resp]));
+        }
+        $resp = $api->responseOptionAdd($finalObject);
+        $msg = json_decode($resp->getContents());
+        if ($msg && $msg->isSuccessful) {
+          \Drupal::messenger()->addMessage($this->t('Selected @elements have been submited for review successfully.', ['@elements' => $this->plural_class_name]));
+        } else {
+          \Drupal::messenger()->addError($this->t('Failed to submit @elements for review, @resp.', ['@elements' => $this->plural_class_name, '@resp' => $resp]));
+        }
 
       } elseif ($this->element_type == 'codebook') {
         // CENARIO #1: CHECK IF IT HAS wasDerivedFrom property, means it is a derived element
@@ -1869,15 +1878,9 @@ class SIRSelectForm extends FormBase {
       }
 
       // } elseif ($this->element_type == 'annotationstem') {
-      // } elseif ($this->element_type == 'processstem') {
       // } elseif ($this->element_type == 'process') {
-      // } elseif ($this->element_type == 'actuatorstem') {
-      // } elseif ($this->element_type == 'actuator') {
     }
 
-
-    \Drupal::messenger()->addMessage($this->t('Selected @elements have been submited for review successfully.', ['@elements' => $this->plural_class_name]));
-    //$form_state->setRebuild();
     $form_state->setRedirect('<current>');
   }
 
