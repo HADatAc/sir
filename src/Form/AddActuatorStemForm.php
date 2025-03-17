@@ -81,8 +81,10 @@ class AddActuatorStemForm extends FormBase {
     if ($sourceuri === 'DERIVED') unset($derivations[Constant::WGB_ORIGINAL]);
 
     //SELECT ONE
-    $languages = ['' => $this->t('Select language please')] + $languages;
-    $derivations = ['' => $this->t('Select derivation please')] + $derivations;
+    if ($languages)
+      $languages = ['' => $this->t('Select language please')] + $languages;
+    if ($derivations)
+      $derivations = ['' => $this->t('Select derivation please')] + $derivations;
 
     $sourceContent = '';
     if ($this->getSourceActuatorStem() != NULL) {

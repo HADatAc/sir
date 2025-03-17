@@ -35,8 +35,10 @@ class AddProcessForm extends FormBase {
     $informants = $tables->getInformants();
 
     //SELECT ONE
-    $languages = ['' => $this->t('Select language please')] + $languages;
-    $informants = ['' => $this->t('Select Informant please')] + $informants;
+    if ($languages)
+      $languages = ['' => $this->t('Select language please')] + $languages;
+    if ($informants)
+      $informants = ['' => $this->t('Select Informant please')] + $informants;
 
     $form['process_processstem'] = [
       'top' => [
