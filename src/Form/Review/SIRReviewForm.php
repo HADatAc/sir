@@ -19,6 +19,8 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Drupal\Core\Render\Markup;
 use Drupal\rep\Vocabulary\VSTOI;
+use Drupal\sir\Entity\Actuator;
+use Drupal\sir\Entity\ActuatorStem;
 
 class SIRReviewForm extends FormBase {
 
@@ -174,6 +176,7 @@ class SIRReviewForm extends FormBase {
   protected function prepareElementNames() {
     $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument');
     $preferred_detector = \Drupal::config('rep.settings')->get('preferred_detector');
+    $preferred_actuator = \Drupal::config('rep.settings')->get('preferred_actuator');
 
     switch ($this->element_type) {
 
@@ -181,6 +184,18 @@ class SIRReviewForm extends FormBase {
       case "instrument":
         $this->single_class_name = $preferred_instrument;
         $this->plural_class_name = $preferred_instrument . "s";
+        break;
+
+      // ACTUATORSTEM
+      case "actuatorstem":
+        $this->single_class_name = $preferred_actuator . " Stem";
+        $this->plural_class_name = $preferred_actuator . " Stems";
+        break;
+
+      // ACTUATOR
+      case "actuator":
+        $this->single_class_name = $preferred_actuator;
+        $this->plural_class_name = $preferred_actuator . "s";
         break;
 
       // DETECTORSTEM
@@ -298,11 +313,15 @@ class SIRReviewForm extends FormBase {
   protected function generateHeader() {
     switch ($this->element_type) {
       case "instrument":
-        return Instrument::generateHeader();
+        return Instrument::generateReviewHeader();
+      case "actuatorstem":
+        return ActuatorStem::generateHeader();
+      case "actuator":
+        return Actuator::generateHeader();
       case "detectorstem":
-        return DetectorStem::generateHeader();
+        return DetectorStem::generateReviewHeader();
       case "detector":
-        return Detector::generateHeader();
+        return Detector::generateReviewHeader();
       case "codebook":
         return Codebook::generateReviewHeader();
       case "responseoption":
@@ -324,11 +343,15 @@ class SIRReviewForm extends FormBase {
   protected function generateOutput() {
     switch ($this->element_type) {
       case "instrument":
-        return Instrument::generateOutput($this->getList());
+        return Instrument::generateReviewOutput($this->getList());
+      case "actuatorstem":
+        return ActuatorStem::generateReviewOutput($this->getList());
+      case "actuator":
+        return Actuator::generateReviewOutput($this->getList());
       case "detectorstem":
-        return DetectorStem::generateOutput($this->getList());
+        return DetectorStem::generateReviewOutput($this->getList());
       case "detector":
-        return Detector::generateOutput($this->getList());
+        return Detector::generateReviewOutput($this->getList());
       case "codebook":
         return Codebook::generateReviewOutput($this->getList());
       case "responseoption":
@@ -336,7 +359,7 @@ class SIRReviewForm extends FormBase {
       case "annotationstem":
         return AnnotationStem::generateOutput($this->getList());
       case "processstem":
-        return ProcessStem::generateOutput($this->getList());
+        return ProcessStem::generateReviewOutput($this->getList());
       case "process":
         return Process::generateOutput($this->getList());
       default:

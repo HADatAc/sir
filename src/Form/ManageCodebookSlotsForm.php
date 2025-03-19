@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\Utils;
+use Drupal\rep\Vocabulary\REPGUI;
 
 class ManageCodebookSlotsForm extends FormBase {
 
@@ -75,8 +76,10 @@ class ManageCodebookSlotsForm extends FormBase {
     ];
 
     # POPULATE DATA
-
+    $root_url = \Drupal::request()->getBaseUrl();
     $output = array();
+    // dpm($slots);
+
     foreach ($slots as $slot) {
       $content = "";
       if ($slot->hasResponseOption != null) {
@@ -91,13 +94,13 @@ class ManageCodebookSlotsForm extends FormBase {
       }
       $responseOptionUriStr = "";
       if ($slot->hasResponseOption != NULL && $slot->hasResponseOption != '') {
-        $responseOptionUriStr = Utils::namespaceUri($slot->hasResponseOption);
+        $responseOptionUriStr = t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($slot->hasResponseOption).'">' . Utils::namespaceUri($slot->hasResponseOption) . '</a>');
       }
       $output[$slot->uri] = [
         'slot_priority' => $slot->hasPriority,
         'slot_content' => $content,
         'slot_response_option' => $responseOptionUriStr,
-        'slot_response_status' => Utils::plainStatus($responseoption->hasStatus),
+        'slot_response_status' => Utils::plainStatus($responseoption->hasStatus) ?? '',
       ];
     }
 
@@ -125,6 +128,7 @@ class ManageCodebookSlotsForm extends FormBase {
       '#name' => 'delete_slots',
       '#attributes' => [
         'class' => ['btn', 'btn-primary', 'delete-element-button'],
+        'onclick' => 'if(!confirm("Really Delete?")){return false;}',
       ],
     ];
     $form['slot_table'] = [

@@ -35,8 +35,8 @@ class JsonApiAnnotationStemController extends ControllerBase{
     //dpm($stems);
     foreach ($stems as $stem) {
       $results[] = [
-        'value' => Utils::trimAutoCompleteString($stem->hasContent,$stem->uri),
-        'label' => $stem->hasContent,
+        'value' => $stem->comment . ' [' . $stem->uri . ']',
+        'label' => $stem->comment . ' [' . $stem->uri . ']',
       ];
     }
     return new JsonResponse($results);

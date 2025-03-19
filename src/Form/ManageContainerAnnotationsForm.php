@@ -83,8 +83,8 @@ class ManageContainerAnnotationsForm extends FormBase {
       $this->topleftOriginal = $this->retrieveAnnotation(VSTOI::PAGE_TOP_LEFT);
       $this->topcenterOriginal = $this->retrieveAnnotation(VSTOI::PAGE_TOP_CENTER);
       $this->toprightOriginal = $this->retrieveAnnotation(VSTOI::PAGE_TOP_RIGHT);
-      $this->linebelowtopOriginal = $this->retrieveAnnotation(VSTOI::PAGE_LINE_BELOW_TOP);
-      $this->lineabovebottomOriginal = $this->retrieveAnnotation(VSTOI::PAGE_LINE_ABOVE_BOTTOM);
+      $this->lineBelowTopOrigonal = $this->retrieveAnnotation(VSTOI::PAGE_LINE_BELOW_TOP);
+      $this->lineAboveBottomOriginal = $this->retrieveAnnotation(VSTOI::PAGE_LINE_ABOVE_BOTTOM);
       $this->bottomleftOriginal = $this->retrieveAnnotation(VSTOI::PAGE_BOTTOM_LEFT);
       $this->bottomcenterOriginal = $this->retrieveAnnotation(VSTOI::PAGE_BOTTOM_CENTER);
       $this->bottomrightOriginal = $this->retrieveAnnotation(VSTOI::PAGE_BOTTOM_RIGHT);
@@ -92,8 +92,8 @@ class ManageContainerAnnotationsForm extends FormBase {
       $this->topleftOriginal = $this->retrieveAnnotation(VSTOI::TOP_LEFT);
       $this->topcenterOriginal = $this->retrieveAnnotation(VSTOI::TOP_CENTER);
       $this->toprightOriginal = $this->retrieveAnnotation(VSTOI::TOP_RIGHT);
-      $this->linebelowtopOriginal = $this->retrieveAnnotation(VSTOI::LINE_BELOW_TOP);
-      $this->lineabovebottomOriginal = $this->retrieveAnnotation(VSTOI::LINE_ABOVE_BOTTOM);
+      $this->lineBelowTopOrigonal = $this->retrieveAnnotation(VSTOI::LINE_BELOW_TOP);
+      $this->lineAboveBottomOriginal = $this->retrieveAnnotation(VSTOI::LINE_ABOVE_BOTTOM);
       $this->bottomleftOriginal = $this->retrieveAnnotation(VSTOI::BOTTOM_LEFT);
       $this->bottomcenterOriginal = $this->retrieveAnnotation(VSTOI::BOTTOM_CENTER);
       $this->bottomrightOriginal = $this->retrieveAnnotation(VSTOI::BOTTOM_RIGHT);
@@ -105,8 +105,8 @@ class ManageContainerAnnotationsForm extends FormBase {
     $topleftLabel = $this->labelPreparation($this->topleftOriginal);
     $topcenterLabel = $this->labelPreparation($this->topcenterOriginal);
     $toprightLabel = $this->labelPreparation($this->toprightOriginal);
-    $linebelowtopLabel = $this->labelPreparation($this->linebelowtopOriginal);
-    $lineabovebottomLabel = $this->labelPreparation($this->lineabovebottomOriginal);
+    $linebelowtopLabel = $this->labelPreparation($this->lineBelowTopOrigonal);
+    $lineabovebottomLabel = $this->labelPreparation($this->lineAboveBottomOriginal);
     $bottomleftLabel = $this->labelPreparation($this->bottomleftOriginal);
     $bottomcenterLabel = $this->labelPreparation($this->bottomcenterOriginal);
     $bottomrightLabel = $this->labelPreparation($this->bottomrightOriginal);
@@ -140,25 +140,25 @@ class ManageContainerAnnotationsForm extends FormBase {
         '#type' => 'textfield',
         '#title' => $this->t('PageTopLeft'),
         '#default_value' => $topleftLabel,
-        '#autocomplete_route_name' => 'sir.annotation_stem_autocomplete',
+        '#autocomplete_route_name' => 'sir.annotation_autocomplete',
       ];
       $form['annotation_topcenter'] = [
         '#type' => 'textfield',
         '#title' => $this->t('PageTopCenter'),
         '#default_value' => $topcenterLabel,
-        '#autocomplete_route_name' => 'sir.annotation_stem_autocomplete',
+        '#autocomplete_route_name' => 'sir.annotation_autocomplete',
       ];
       $form['annotation_topright'] = [
         '#type' => 'textfield',
         '#title' => $this->t('PageTopRight'),
         '#default_value' => $toprightLabel,
-        '#autocomplete_route_name' => 'sir.annotation_stem_autocomplete',
+        '#autocomplete_route_name' => 'sir.annotation_autocomplete',
       ];
       $form['annotation_linebelowtop'] = [
         '#type' => 'textfield',
         '#title' => $this->t('PageLineBelowTop'),
         '#default_value' => $linebelowtopLabel,
-        '#autocomplete_route_name' => 'sir.annotation_stem_autocomplete',
+        '#autocomplete_route_name' => 'sir.annotation_autocomplete',
       ];
       $form['footer'] = [
         '#type' => 'item',
@@ -168,50 +168,50 @@ class ManageContainerAnnotationsForm extends FormBase {
         '#type' => 'textfield',
         '#title' => $this->t('PageLineAboveBottom'),
         '#default_value' => $lineabovebottomLabel,
-        '#autocomplete_route_name' => 'sir.annotation_stem_autocomplete',
+        '#autocomplete_route_name' => 'sir.annotation_autocomplete',
       ];
       $form['annotation_bottomleft'] = [
         '#type' => 'textfield',
         '#title' => $this->t('PageBottomLeft'),
         '#default_value' => $bottomleftLabel,
-        '#autocomplete_route_name' => 'sir.annotation_stem_autocomplete',
+        '#autocomplete_route_name' => 'sir.annotation_autocomplete',
       ];
       $form['annotation_bottomcenter'] = [
         '#type' => 'textfield',
         '#title' => $this->t('PageBottomCenter'),
         '#default_value' => $bottomcenterLabel,
-        '#autocomplete_route_name' => 'sir.annotation_stem_autocomplete',
+        '#autocomplete_route_name' => 'sir.annotation_autocomplete',
       ];
       $form['annotation_bottomright'] = [
         '#type' => 'textfield',
         '#title' => $this->t('PageBottomRight'),
         '#default_value' => $bottomrightLabel,
-        '#autocomplete_route_name' => 'sir.annotation_stem_autocomplete',
+        '#autocomplete_route_name' => 'sir.annotation_autocomplete',
       ];
     } else {
       $form['annotation_topleft'] = [
         '#type' => 'textfield',
         '#title' => $this->t('TopLeft'),
         '#default_value' => $topleftLabel,
-        '#autocomplete_route_name' => 'sir.annotation_stem_autocomplete',
+        '#autocomplete_route_name' => 'sir.annotation_autocomplete',
       ];
       $form['annotation_topcenter'] = [
         '#type' => 'textfield',
         '#title' => $this->t('TopCenter'),
         '#default_value' => $topcenterLabel,
-        '#autocomplete_route_name' => 'sir.annotation_stem_autocomplete',
+        '#autocomplete_route_name' => 'sir.annotation_autocomplete',
       ];
       $form['annotation_topright'] = [
         '#type' => 'textfield',
         '#title' => $this->t('TopRight'),
         '#default_value' => $toprightLabel,
-        '#autocomplete_route_name' => 'sir.annotation_stem_autocomplete',
+        '#autocomplete_route_name' => 'sir.annotation_autocomplete',
       ];
       $form['annotation_linebelowtop'] = [
         '#type' => 'textfield',
         '#title' => $this->t('LineBelowTop'),
         '#default_value' => $linebelowtopLabel,
-        '#autocomplete_route_name' => 'sir.annotation_stem_autocomplete',
+        '#autocomplete_route_name' => 'sir.annotation_autocomplete',
       ];
       $form['footer'] = [
         '#type' => 'item',
@@ -221,25 +221,25 @@ class ManageContainerAnnotationsForm extends FormBase {
         '#type' => 'textfield',
         '#title' => $this->t('LineAboveBottom'),
         '#default_value' => $lineabovebottomLabel,
-        '#autocomplete_route_name' => 'sir.annotation_stem_autocomplete',
+        '#autocomplete_route_name' => 'sir.annotation_autocomplete',
       ];
       $form['annotation_bottomleft'] = [
         '#type' => 'textfield',
         '#title' => $this->t('BottomLeft'),
         '#default_value' => $bottomleftLabel,
-        '#autocomplete_route_name' => 'sir.annotation_stem_autocomplete',
+        '#autocomplete_route_name' => 'sir.annotation_autocomplete',
       ];
       $form['annotation_bottomcenter'] = [
         '#type' => 'textfield',
         '#title' => $this->t('BottomCenter'),
         '#default_value' => $bottomcenterLabel,
-        '#autocomplete_route_name' => 'sir.annotation_stem_autocomplete',
+        '#autocomplete_route_name' => 'sir.annotation_autocomplete',
       ];
       $form['annotation_bottomright'] = [
         '#type' => 'textfield',
         '#title' => $this->t('BottomRight'),
         '#default_value' => $bottomrightLabel,
-        '#autocomplete_route_name' => 'sir.annotation_stem_autocomplete',
+        '#autocomplete_route_name' => 'sir.annotation_autocomplete',
       ];
     }
     $form['submit'] = [
@@ -294,7 +294,7 @@ class ManageContainerAnnotationsForm extends FormBase {
         $annotation->annotationStem->hasContent == "") {
       return "";
     }
-    
+
     return Utils::trimAutoCompleteString($annotation->annotationStem->hasContent,$annotation->annotationStem->uri);
   }
 
@@ -327,6 +327,8 @@ class ManageContainerAnnotationsForm extends FormBase {
     if ($button_name === 'save') {
 
       $msg = "";
+
+      dpm($form_state->getValue('annotation_topleft'));
 
       // SAVE CONTAINER'S ANNOTATIONS
       if ($this->getContainer()->hascoTypeUri == VSTOI::INSTRUMENT) {

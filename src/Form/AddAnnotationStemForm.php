@@ -191,6 +191,9 @@ class AddAnnotationStemForm extends FormBase {
       if(strlen($form_state->getValue('annotationstem_version')) < 1) {
         $form_state->setErrorByName('annotationstem_version', $this->t('Please enter a valid version'));
       }
+      if(strlen($form_state->getValue('annotationstem_description')) < 1) {
+        $form_state->setErrorByName('annotationstem_description', $this->t('Please enter a valid description'));
+      }
     }
   }
 
@@ -225,7 +228,7 @@ class AddAnnotationStemForm extends FormBase {
         '"typeUri":"'.VSTOI::ANNOTATION_STEM.'",'.
         '"hascoTypeUri":"'.VSTOI::ANNOTATION_STEM.'",'.
         '"hasStatus":"'.VSTOI::DRAFT.'",'.
-        '"hasContent":"'.$form_state->getValue('annotationstem_content').'",'.
+        '"hasContent":"'.htmlentities($form_state->getValue('annotationstem_content')).'",'.
         '"hasLanguage":"'.$form_state->getValue('annotationstem_language').'",'.
         '"hasVersion":"'.$form_state->getValue('annotationstem_version').'",'.
         '"comment":"'.$form_state->getValue('annotationstem_description').'",'.

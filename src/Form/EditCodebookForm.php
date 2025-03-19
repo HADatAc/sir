@@ -62,39 +62,6 @@ class EditCodebookForm extends FormBase {
       self::backUrl();
       return;
     }
-
-    // $form['codebook_type'] = [
-    //   'top' => [
-    //     '#type' => 'markup',
-    //     '#markup' => '<div class="pt-3 col border border-white">',
-    //   ],
-    //   'main' => [
-    //     '#type' => 'textfield',
-    //     '#title' => $this->t('Parent Type'),
-    //     '#name' => 'codebook_type',
-    //     '#default_value' => $this->getCodebook()->typeUri ? UTILS::namespaceUri($this->getCodebook()->typeUri) : '',
-    //     '#id' => 'codebook_type',
-    //     '#parents' => ['codebook_type'],
-    //     '#disabled' => TRUE,
-    //     '#attributes' => [
-    //       'class' => ['open-tree-modal'],
-    //       'data-dialog-type' => 'modal',
-    //       'data-dialog-options' => json_encode(['width' => 800]),
-    //       'data-url' => Url::fromRoute('rep.tree_form', [
-    //         'mode' => 'modal',
-    //         'elementtype' => 'codebook',
-    //       ], ['query' => ['field_id' => 'codebook_type']])->toString(),
-    //       'data-field-id' => 'codebook_type',
-    //       'data-elementtype' => 'codebook',
-    //       'autocomplete' => 'off',
-    //       'data-search-value' => $this->getCodebook()->typeUri ?? '',
-    //     ],
-    //   ],
-    //   'bottom' => [
-    //     '#type' => 'markup',
-    //     '#markup' => '</div>',
-    //   ],
-    // ];
     $form['codebook_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name'),
@@ -129,6 +96,24 @@ class EditCodebookForm extends FormBase {
         'placeholder' => 'http://',
       ]
     ];
+    if ($this->getCodebook()->hasReviewNote !== NULL && $this->getCodebook()->hasSatus !== null) {
+      $form['responseoption_hasreviewnote'] = [
+        '#type' => 'textarea',
+        '#title' => $this->t('Review Notes'),
+        '#default_value' => $this->getCodebook()->hasReviewNote,
+        '#attributes' => [
+          'disabled' => 'disabled',
+        ]
+      ];
+      $form['responseoption_haseditoremail'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Reviewer Email'),
+        '#default_value' => $this->getCodebook()->hasEditorEmail,
+        '#attributes' => [
+          'disabled' => 'disabled',
+        ],
+      ];
+    }
     $form['update_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Update'),
@@ -185,24 +170,78 @@ class EditCodebookForm extends FormBase {
 
     try{
       $useremail = \Drupal::currentUser()->getEmail();
-
-      $codebookJson = '{"uri":"'. $this->getCodebook()->uri .'",'.
-        '"typeUri":"'.VSTOI::CODEBOOK.'",'.
-        '"hascoTypeUri":"'.VSTOI::CODEBOOK.'",'.
-        '"hasStatus":"'.$this->getCodebook()->hasStatus.'",'.
-        '"label":"'.$form_state->getValue('codebook_name').'",'.
-        '"hasLanguage":"'.$form_state->getValue('codebook_language').'",'.
-        '"hasVersion":"'.$form_state->getValue('codebook_version').'",'.
-        '"comment":"'.$form_state->getValue('codebook_description').'",'.
-        '"hasWebDocument":"'.$form_state->getValue('codebook_webdocument').'",'.
-        '"hasSIRManagerEmail":"'.$useremail.'"}';
-
-      // UPDATE BY DELETING AND CREATING
       $api = \Drupal::service('rep.api_connector');
-      $api->codebookDel($this->getCodebook()->uri);
-      $api->codebookAdd($codebookJson);
 
-      \Drupal::messenger()->addMessage(t("Codebook has been updated successfully."));
+      // CHECK if Status is CURRENT OR DEPRECATED FOR NEW CREATION
+      if ($this->getCodebook()->hasStatus === VSTOI::CURRENT || $this->getCodebook()->hasStatus === VSTOI::DEPRECATED) {
+
+        $newCodeBookUri = Utils::uriGen('codebook');
+        $codebookJson = '{"uri":"'. $newCodeBookUri .'",'.
+          '"typeUri":"'.VSTOI::CODEBOOK.'",'.
+          '"hascoTypeUri":"'.VSTOI::CODEBOOK.'",'.
+          '"hasStatus":"'.VSTOI::DRAFT.'",'.
+          '"label":"'.$form_state->getValue('codebook_name').'",'.
+          '"hasLanguage":"'.$form_state->getValue('codebook_language').'",'.
+          '"hasVersion":"'.$form_state->getValue('codebook_version').'",'.
+          '"comment":"'.$form_state->getValue('codebook_description').'",'.
+          '"hasWebDocument":"'.$form_state->getValue('codebook_webdocument').'",'.
+          '"hasReviewNote":"'.($this->getCodebook()->hasSatus !== null ? $this->getCodebook()->hasReviewNote : '').'",'.
+          '"hasEditorEmail":"'.($this->getCodebook()->hasSatus !== null ? $this->getCodebook()->hasEditorEmail : '').'",'.
+          '"wasDerivedFrom":"'.$this->getCodebook()->uri.'",'.
+          '"hasSIRManagerEmail":"'.$useremail.'"}';
+
+        $api->codebookAdd($codebookJson);
+
+        // ADD SLOTS AND RO TO V++ CODEBOOK
+        if (!empty($this->getCodebook()->codebookSlots)){
+
+          //MUST CREATE SAME NUMBER SLOTS ON CLONE
+          $api->codebookSlotAdd($newCodeBookUri,count($this->getCodebook()->codebookSlots));
+
+          //LOOP TO ASSIGN RO TO CB
+          $slot_list = $api->codebookSlotList($newCodeBookUri);
+          $obj = json_decode($slot_list);
+          $slots = [];
+          if ($obj->isSuccessful) {
+            $slots = $obj->body;
+            //dpm($slots);
+          }
+          $count = 1;
+          foreach ($slots as $slot) {
+            //GET RO->URI AND ATTACH TO SLOT
+            if ($this->getCodebook()->codebookSlots[$count-1]->hasPriority === $slot->hasPriority) {
+              $roURI = $this->getCodebook()->codebookSlots[$count-1]->responseOption->uri;
+            }
+            $api->responseOptionAttach($roURI,$slot->uri);
+            $count++;
+          }
+        }
+
+        \Drupal::messenger()->addMessage(t("New Version CodeBook has been created successfully."));
+
+      } else {
+
+        $codebookJson = '{"uri":"'. $this->getCodebook()->uri .'",'.
+          '"typeUri":"'.VSTOI::CODEBOOK.'",'.
+          '"hascoTypeUri":"'.VSTOI::CODEBOOK.'",'.
+          '"hasStatus":"'.VSTOI::DRAFT.'",'.
+          '"label":"'.$form_state->getValue('codebook_name').'",'.
+          '"hasLanguage":"'.$form_state->getValue('codebook_language').'",'.
+          '"hasVersion":"'.$form_state->getValue('codebook_version').'",'.
+          '"comment":"'.$form_state->getValue('codebook_description').'",'.
+          '"hasWebDocument":"'.$form_state->getValue('codebook_webdocument').'",'.
+          '"hasReviewNote":"'.$this->getCodebook()->hasReviewNote.'",'.
+          '"hasEditorEmail":"'.$this->getCodebook()->hasEditorEmail.'",'.
+          '"wasDerivedFrom":"'.$this->getCodebook()->wasDerivedFrom.'",'.
+          '"hasSIRManagerEmail":"'.$useremail.'"}';
+
+          // UPDATE BY DELETING AND CREATING
+          $api->codebookDel($this->getCodebook()->uri);
+          $api->codebookAdd($codebookJson);
+
+          \Drupal::messenger()->addMessage(t("Codebook has been updated successfully."));
+      }
+
       self::backUrl();
       return;
 

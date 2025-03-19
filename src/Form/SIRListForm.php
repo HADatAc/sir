@@ -5,6 +5,8 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\rep\ListKeywordLanguagePage;
+use Drupal\sir\Entity\ActuatorStem;
+use Drupal\sir\Entity\Actuator;
 use Drupal\sir\Entity\AnnotationStem;
 use Drupal\sir\Entity\Annotation;
 use Drupal\sir\Entity\DetectorStem;
@@ -14,6 +16,8 @@ use Drupal\sir\Entity\Instrument;
 use Drupal\sir\Entity\ResponseOption;
 use Drupal\sir\Entity\ProcessStem;
 use Drupal\sir\Entity\Process;
+use Drupal\rep\Entity\Tables;
+
 class SIRListForm extends FormBase {
 
   /**
@@ -77,11 +81,98 @@ class SIRListForm extends FormBase {
       $previous_page_link = '';
     }
 
+    // Gets Filter Values
+    $status_filter = $form_state->getValue('status_filter') ?? 'all';
+    $language_filter = $form_state->getValue('language_filter') ?? 'all';
+    $text_filter = $form_state->getValue('text_filter') ?? '';
+    // Convert the text filter to lowercase for case-insensitive comparison
+    $text_filter = strtolower($text_filter);
+
     // RETRIEVE ELEMENTS
     $this->setList(ListKeywordLanguagePage::exec($elementtype, $keyword, $language, $page, $pagesize));
 
     $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument');
     $preferred_detector = \Drupal::config('rep.settings')->get('preferred_detector');
+    $preferred_actuator = \Drupal::config('rep.settings')->get('preferred_actuator');
+
+    $status_options = [
+      'all' => $this->t('All Status'),
+      'draft' => $this->t('Draft'),
+      'underreview' => $this->t('Under Review'),
+      'current' => $this->t('Current'),
+      'deprecated' => $this->t('Deprecated'),
+    ];
+
+    $form['actions_wrapper']['filter_container'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['d-flex', 'ms-auto', 'mb-0'],
+        'style' => 'margin-bottom:0!important;'
+      ],
+    ];
+
+    $form['actions_wrapper']['filter_container']['filter_label'] = [
+      '#type' => 'label',
+      '#title' => $this->t('Filter(s): '),
+      '#attributes' => [
+        'class' => ['pt-3', 'me-2', 'fw-bold'],
+      ]
+    ];
+
+    $form['actions_wrapper']['filter_container']['text_filter'] = [
+      '#type' => 'textfield',
+      '#default_value' => $text_filter,
+      '#ajax' => [
+          'callback' => '::ajaxReloadTable',
+          'wrapper' => 'element-table-wrapper',
+          'event' => 'change',
+      ],
+      '#attributes' => [
+          'class' => ['form-select', 'w-auto', 'mt-2', 'me-1'],
+          'style' => 'max-width:230px;margin-bottom:0!important;float:right;',
+          'placeholder' => 'Type in your search criteria',
+          // Ao pressionar Enter, previne o submit e dispara o evento "change"
+          'onkeydown' => 'if (event.keyCode == 13) { event.preventDefault(); this.blur(); }',
+      ],
+    ];
+
+    If ($elementtype !== 'detector' && $elementtype !== 'actuator'){
+      $tables = new Tables;
+      $languages = $tables->getLanguages();
+      if ($languages)
+        $languages = ['all' => $this->t('All Languages')] + $languages;
+      $form['actions_wrapper']['filter_container']['language_filter'] = [
+        '#type' => 'select',
+        '#options' => $languages,
+        '#default_value' => $language_filter,
+        '#ajax' => [
+            'callback' => '::ajaxReloadTable',
+            'wrapper' => 'element-table-wrapper',
+            'event' => 'change',
+        ],
+        '#attributes' => [
+            'class' => ['form-select', 'w-auto', 'mt-2', 'me-1'],
+            'style' => 'margin-bottom:0!important;float:right;'
+            // 'style' => 'float:right;margin-top:10px!important;'
+        ],
+      ];
+    }
+
+    $form['actions_wrapper']['filter_container']['status_filter'] = [
+        '#type' => 'select',
+        '#options' => $status_options,
+        '#default_value' => $status_filter,
+        '#ajax' => [
+            'callback' => '::ajaxReloadTable',
+            'wrapper' => 'element-table-wrapper',
+            'event' => 'change',
+        ],
+        '#attributes' => [
+            'class' => ['form-select', 'w-auto', 'mt-2'],
+            'style' => 'margin-bottom:0!important;float:right;'
+            // 'style' => 'float:right;margin-top:10px!important;'
+        ],
+    ];
 
     $class_name = "";
     switch ($elementtype) {
@@ -91,6 +182,20 @@ class SIRListForm extends FormBase {
         $class_name = $preferred_instrument . "s";
         $header = Instrument::generateHeader();
         $output = Instrument::generateOutput($this->getList());
+        break;
+
+      // ACTUATOR STEM
+      case "actuatorstem":
+        $class_name = $preferred_actuator . " Stems";
+        $header = ActuatorStem::generateHeader();
+        $output = ActuatorStem::generateOutput($this->getList());
+        break;
+
+      // ACTUATOR
+      case "actuator":
+        $class_name = $preferred_actuator . "s";
+        $header = Actuator::generateHeader();
+        $output = Actuator::generateOutput($this->getList());
         break;
 
       // DETECTOR STEM
@@ -165,7 +270,12 @@ class SIRListForm extends FormBase {
 
     $output = $output['output'];
 
-    $form['element_table'] = [
+    $form['element_table_wrapper'] = [
+      '#type' => 'container',
+      '#attributes' => ['id' => 'element-table-wrapper'],
+    ];
+
+    $form['element_table_wrapper']['element_table'] = [
       '#type' => 'table',
       //'#type' => 'tableselect',
       '#header' => array_merge(
@@ -181,18 +291,38 @@ class SIRListForm extends FormBase {
 
     // ADD lines to table
     foreach ($output as $key => $row) {
+      $row_status = strtolower($row['element_hasStatus']);
+      $row_language = strtolower($row['element_hasLanguage']);
+
+      if ($elementtype == 'instrument' || $elementtype == 'codebook')
+        $row_label = strtolower($row['element_name']);
+      else if ($elementtype == 'detector' || $elementtype == 'detectorstem' || $elementtype == 'responseoption' || $elementtype == 'actuator' || $elementtype == 'actuatorstem')
+        $row_label = strtolower($row['element_content']);
+
+      if ($status_filter !== 'all' && $row_status !== $status_filter) {
+          continue;
+      }
+
+      if ($language_filter !== 'all' && $row_language !== $language_filter) {
+        continue;
+      }
+
+      // Use strpos to check if the text filter is contained in the label.
+      if ($text_filter !== '' && strpos($row_label, $text_filter) === false) {
+        continue;
+      }
       //$is_disabled = isset($disabled_rows[$key]);
 
       // ADD checkbox's to row
-      $checkbox = [
-          '#type' => 'checkbox',
-          '#title' => $this->t('Select'),
-          '#title_display' => 'invisible',
-          '#return_value' => $key,
-          '#attributes' => [
-              'class' => ['element-select-checkbox checkbox-status-'. strtolower($row['element_hasStatus'])],
-          ],
-      ];
+      // $checkbox = [
+      //     '#type' => 'checkbox',
+      //     '#title' => $this->t('Select'),
+      //     '#title_display' => 'invisible',
+      //     '#return_value' => $key,
+      //     '#attributes' => [
+      //         'class' => ['element-select-checkbox checkbox-status-'. strtolower($row['element_hasStatus'])],
+      //     ],
+      // ];
 
       // Assemble row
       // $form['element_table'][$key]['select'] = $is_disabled ? [
@@ -202,8 +332,8 @@ class SIRListForm extends FormBase {
 
       // Next Columns
       foreach ($row as $field_key => $field_value) {
-          if ($field_key !== 'element_hasStatus') {
-              $form['element_table'][$key][$field_key] = [
+          if ($field_key !== 'element_hasStatus' && $field_key !== 'element_hasLanguage') {
+              $form['element_table_wrapper']['element_table'][$key][$field_key] = [
                   '#markup' => $field_value,
               ];
           }
@@ -215,7 +345,7 @@ class SIRListForm extends FormBase {
       // }
     }
 
-    $form['pager'] = [
+    $form['element_table_wrapper']['pager'] = [
       '#theme' => 'list-page',
       '#items' => [
         'page' => strval($page),
@@ -231,6 +361,15 @@ class SIRListForm extends FormBase {
 
     return $form;
   }
+
+  /**
+   * Callback AJAX para recarregar a tabela quando um filtro for aplicado.
+   */
+  public function ajaxReloadTable(array &$form, FormStateInterface $form_state) {
+    $form_state->setRebuild(TRUE);
+    return $form['element_table_wrapper'];
+  }
+
 
   /**
    * {@inheritdoc}

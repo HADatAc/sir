@@ -39,13 +39,13 @@ class ContainerSlot {
             $detector = $api->parseObjectResponse($api->getUri($element->hasDetector), 'getUri');
             if ($detector != NULL) {
               $nsUri = Utils::namespaceUri($detector->uri);
-              $detectorStr =  t('<a href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($detector->uri).'">'.$nsUri.'</a>');
+              $detectorStr =  t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($detector->uri).'">'.$nsUri.'</a>');
             }
           }
         }
         $output[$uri] = [
-          'element_detector' => $detectorStr,     
-          'element_position' => $priority,     
+          'element_detector' => $detectorStr,
+          'element_position' => $priority,
         ];
       }
     }

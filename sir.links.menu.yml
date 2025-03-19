@@ -25,29 +25,29 @@ sir.divider1:
   weight: 9
   route_name: '<none>'
 
-sir.manage_ins_files:
-  title: Manage INS Templates
-  description: Manage INS Templates
-  route_name: rep.select_mt_element
-  route_parameters:
-    elementtype: 'ins'
-    mode: 'table'
-    page: '1'
-    pagesize: '9'
-    studyuri: 'none'
-  parent: sir.top_level
-  menu_name: main
-  weight: 10
-  requirements:
-    _permission: 'access content'
-    _role: 'authenticated'
+# sir.manage_ins_files:
+#   title: Manage INS Templates
+#   description: Manage INS Templates
+#   route_name: rep.select_mt_element
+#   route_parameters:
+#     elementtype: 'ins'
+#     mode: 'table'
+#     page: '1'
+#     pagesize: '9'
+#     studyuri: 'none'
+#   parent: sir.top_level
+#   menu_name: main
+#   weight: 10
+#   requirements:
+#     _permission: 'access content'
+#     _role: 'authenticated'
 
-sir.divider2:
-  title: '_________________________________'
-  parent: sir.top_level
-  menu_name: main
-  weight: 19
-  route_name: '<none>'
+# sir.divider2:
+#   title: '_________________________________'
+#   parent: sir.top_level
+#   menu_name: main
+#   weight: 19
+#   route_name: '<none>'
 
 sir.manage_processstems :
   title: Manage Process Stems
@@ -94,6 +94,36 @@ sir.manage_instruments:
     _permission: 'access content'
     _role: 'authenticated'
 
+sir.manage_actuatorstems :
+  title: Manage Actuator Stems
+  description: Manage Actuator Stems
+  route_name: sir.select_element
+  route_parameters:
+    elementtype: 'actuatorstem'
+    page: '1'
+    pagesize: '9'
+  parent: sir.top_level
+  menu_name: main
+  weight: 50
+  requirements:
+    _permission: 'access content'
+    _role: 'authenticated'
+
+sir.manage_actuators :
+  title: Manage Actuator
+  description: Manage Actuator
+  route_name: sir.select_element
+  route_parameters:
+    elementtype: 'actuator'
+    page: '1'
+    pagesize: '9'
+  parent: sir.top_level
+  menu_name: main
+  weight: 60
+  requirements:
+    _permission: 'access content'
+    _role: 'authenticated'
+
 sir.manage_detectorstems :
   title: Manage Detector Stems
   description: Manage Detector Stems
@@ -104,7 +134,7 @@ sir.manage_detectorstems :
     pagesize: '9'
   parent: sir.top_level
   menu_name: main
-  weight: 50
+  weight: 70
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -119,7 +149,7 @@ sir.manage_detectors :
     pagesize: '9'
   parent: sir.top_level
   menu_name: main
-  weight: 60
+  weight: 80
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -134,7 +164,7 @@ sir.manage_codebooks :
     pagesize: '9'
   parent: sir.top_level
   menu_name: main
-  weight: 70
+  weight: 90
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -149,7 +179,7 @@ sir.manage_responseoptions :
     pagesize: '9'
   parent: sir.top_level
   menu_name: main
-  weight: 80
+  weight: 100
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -164,7 +194,7 @@ sir.manage_annotationstems :
     pagesize: '9'
   parent: sir.top_level
   menu_name: main
-  weight: 100
+  weight: 110
   requirements:
     _permission: 'access content'
     _role: 'authenticated'

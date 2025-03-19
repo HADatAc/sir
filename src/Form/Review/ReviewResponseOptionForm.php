@@ -97,16 +97,48 @@ class ReviewResponseOptionForm extends FormBase {
         'disabled' => 'disabled',
       ],
     ];
+    $form['responseoption_webdocument'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Web Document'),
+      '#default_value' => $this->getResponseOption()->hasWebDocument,
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ],
+      '#disabled' => TRUE,
+    ];
     if ($this->getResponseOption()->wasDerivedFrom !== NULL) {
-      $form['responseoption_wasderivedfrom'] = [
+      $form['responseoption_df_wrapper'] = [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['d-flex', 'align-items-center', 'w-100'], // Flex container para alinhamento correto
+          'style' => "width: 100%; gap: 10px;", // Garante espaçamento correto
+        ],
+      ];
+
+      // Campo de texto desativado que ocupa todo o espaço disponível
+      $form['responseoption_df_wrapper']['responseoption_wasderivedfrom'] = [
         '#type' => 'textfield',
         '#title' => $this->t('Derived From'),
         '#default_value' => $this->getResponseOption()->wasDerivedFrom,
         '#attributes' => [
+          'class' => ['flex-grow-1'], // Expande ao máximo dentro do flex container
+          'style' => "width: 100%; min-width: 0;", // Corrige problemas de flexbox em alguns browsers
           'disabled' => 'disabled',
         ],
       ];
+
+      // Construção da URL
+      $elementUri = Utils::namespaceUri($this->getResponseOption()->wasDerivedFrom);
+      $elementUriEncoded = base64_encode($elementUri);
+      $url = Url::fromRoute('rep.describe_element', ['elementuri' => $elementUriEncoded], ['absolute' => TRUE])->toString();
+
+      // Botão para abrir nova janela - agora corrigido
+      $form['responseoption_df_wrapper']['responseoption_wasderivedfrom_button'] = [
+        '#type' => 'markup',
+        '#markup' => '<a href="' . $url . '" target="_blank" class="btn btn-success text-nowrap mt-2" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
+      ];
     }
+
     $form['responseoption_owner'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Owner'),
@@ -210,73 +242,11 @@ class ReviewResponseOptionForm extends FormBase {
           // THIS TO CURRENT
           ResponseOption::cloneResponseOption($this->getResponseOption()->uri, VSTOI::CURRENT);
 
-          // $responseOptionJSON = '{"uri":"'. $this->getResponseOption()->uri .'",'.
-          //   '"typeUri":"'.$this->getResponseOption()->typeUri.'",'.
-          //   '"hascoTypeUri":"'.$this->getResponseOption()->hascoTypeUri.'",'.
-          //   '"hasContent":"'.$this->getResponseOption()->hasContent.'",'.
-          //   '"hasLanguage":"'.$this->getResponseOption()->hasLanguage.'",'.
-          //   '"hasVersion":"'.$this->getResponseOption()->hasVersion.'",'.
-          //   '"hasStatus":"'.VSTOI::CURRENT.'",'.
-          //   '"comment":"'.$this->getResponseOption()->comment.'",'.
-          //   '"hasSIRManagerEmail":"' . $this->getResponseOption()->hasSIRManagerEmail . '",'.
-          //   '"hasReviewNote":"' . $form_state->getValue('responseoption_hasreviewnote') . '",'.
-          //   '"hasEditorEmail":"' . \Drupal::currentUser()->getEmail() . '",'.
-          //   '"wasDerivedFrom":"' . $this->getResponseOption()->wasDerivedFrom .
-          //   '"}';
-
-          // //dpm($responseOptionJSON);
-
-          // // UPDATE BY DELETING AND CREATING
-          // $api->responseOptionDel($this->getResponseOption()->uri);
-          // $api->responseOptionAdd($responseOptionJSON);
-
-          // //GET PARENT VALUES
-          // $rawresponse = $api->getUri($this->getResponseOption()->wasDerivedFrom);
-          // $obj = json_decode($rawresponse);
-          // $result = $obj->body;
-          // $responseOptionParentJSON = '{"uri":"'. $this->getResponseOption()->wasDerivedFrom .'",'.
-          //   '"typeUri":"'.$result->typeUri.'",'.
-          //   '"hascoTypeUri":"'.$result->hascoTypeUri.'",'.
-          //   '"hasContent":"'.$result->hasContent.'",'.
-          //   '"hasLanguage":"'.$result->hasLanguage.'",'.
-          //   '"hasVersion":"'.$result->hasVersion.'",'.
-          //   '"hasStatus":"'.VSTOI::DEPRECATED.'",'.
-          //   '"comment":"'.$result->comment.'",'.
-          //   '"hasSIRManagerEmail":"' . $result->hasSIRManagerEmail . '",'.
-          //   '"hasReviewNote":"' . $result->hasReviewNote . '",'.
-          //   '"hasEditorEmail":"'.$result->hasEditorEmail . '",'.
-          //   '"wasDerivedFrom":"'.$result->wasDerivedFrom .
-          //   '"}';
-
-          // dpm($responseOptionParentJSON);
-
-          // // UPDATE DERIVED FROM RECORD
-          // $api->responseOptionDel($result->wasDerivedFrom);
-          // $api->responseOptionAdd($responseOptionParentJSON);
-
         } else {
 
           // THIS TO CURRENT
           ResponseOption::cloneResponseOption($this->getResponseOption()->uri, VSTOI::CURRENT);
 
-          // // MUST UPDATE STATUS FROM PREVIOUS PARENT
-          // $responseOptionJSON = '{"uri":"'. $this->getResponseOption()->uri .'",'.
-          //   '"typeUri":"'.$this->getResponseOption()->typeUri.'",'.
-          //   '"hascoTypeUri":"'.$this->getResponseOption()->hascoTypeUri.'",'.
-          //   '"hasContent":"'.$this->getResponseOption()->hasContent.'",'.
-          //   '"hasLanguage":"'.$this->getResponseOption()->hasLanguage.'",'.
-          //   '"hasVersion":"'.$this->getResponseOption()->hasVersion.'",'.
-          //   '"hasStatus":"'.VSTOI::CURRENT.'",'.
-          //   '"comment":"'.$this->getResponseOption()->comment.'",'.
-          //   '"hasSIRManagerEmail":"' . $this->getResponseOption()->hasSIRManagerEmail.'",'.
-          //   '"hasReviewNote":"' . $form_state->getValue('responseoption_hasreviewnote').'",'.
-          //   '"hasEditorEmail":"'.\Drupal::currentUser()->getEmail().'",'.
-          //   '"wasDerivedFrom":"'.$this->getResponseOption()->wasDerivedFrom.
-          //   '"}';
-
-          // // UPDATE BY DELETING AND CREATING
-          // $api->responseOptionDel($this->getResponseOption()->uri);
-          // $api->responseOptionAdd($responseOptionJSON);
         }
 
         \Drupal::messenger()->addMessage(t("Response Option has been Approved."));

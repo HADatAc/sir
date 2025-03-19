@@ -131,6 +131,7 @@ class SIRSearchForm extends FormBase {
 
     $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument');
     $preferred_detector = \Drupal::config('rep.settings')->get('preferred_detector');
+    $preferred_actuator = \Drupal::config('rep.settings')->get('preferred_actuator') ?? 'Actuator';
 
     $form['search_element_type'] = [
       '#type' => 'select',
@@ -138,6 +139,8 @@ class SIRSearchForm extends FormBase {
       '#required' => TRUE,
       '#options' => [
         'instrument' => $this->t($preferred_instrument . 's'),
+        'actuatorstem' => $this->t($preferred_actuator . ' Stems'),
+        'actuator' => $this->t($preferred_actuator . 's'),
         'detectorstem' => $this->t($preferred_detector . ' Stems'),
         'detector' => $this->t($preferred_detector . 's'),
         'codebook' => $this->t('Codebooks'),
@@ -227,6 +230,7 @@ class SIRSearchForm extends FormBase {
 
     // IF ELEMENT TYPE IS CLASS
     if (($form_state->getValue('search_element_type') == 'instrument') ||
+        ($form_state->getValue('search_element_type') == 'actuatorstem') ||
         ($form_state->getValue('search_element_type') == 'detectorstem') ||
         ($form_state->getValue('search_element_type') == 'processstem')) {
       $url = Url::fromRoute('rep.browse_tree');
@@ -255,7 +259,7 @@ class SIRSearchForm extends FormBase {
     $elementType = $form_state->getValue('search_element_type');
 
     // Build URL for the route 'sir.search' with parameters.
-    if ($elementType === 'instrument' || $elementType === 'detectorstem' || $elementType === 'processstem'){
+    if ($elementType === 'instrument' || $elementType === 'detectorstem' || $elementType === 'processstem' || $elementType === 'actuatorstem'){
       $url = Url::fromRoute('sir.search', [
         'mode' => 'browse',
         'elementtype' => $elementType,

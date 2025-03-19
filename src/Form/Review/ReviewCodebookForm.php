@@ -99,6 +99,52 @@ class ReviewCodebookForm extends FormBase {
       '#default_value' => $this->getCodebook()->comment,
       '#disabled' => TRUE,
     ];
+    $form['codebook_information']['codebook_webdocument'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Web Document'),
+      '#default_value' => $this->getCodebook()->hasWebDocument,
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ],
+      '#disabled' => TRUE,
+    ];
+
+    if ($this->getCodebook()->wasDerivedFrom !== null && $this->getCodebook()->wasDerivedFrom !== '') {
+
+      // Campo de texto desativado que ocupa todo o espaço disponível
+      $form['codebook_information']['codebook_wasderivedfrom_wrapper'] = [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['d-flex', 'align-items-center', 'gap-2'], // Flexbox para alinhar na mesma linha
+          'style' => 'width: 100%;',
+        ],
+      ];
+
+      // Campo de texto
+      $form['codebook_information']['codebook_wasderivedfrom_wrapper']['codebook_wasderivedfrom'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Derived From'),
+        '#default_value' => $this->getCodebook()->wasDerivedFrom,
+        '#attributes' => [
+          'class' => ['flex-grow-1'], // Expande ao máximo dentro do flex container
+          'style' => "min-width: 0;", // Evita problemas de responsividade
+          'disabled' => 'disabled',
+        ],
+      ];
+
+      // Construção da URL
+      $elementUri = Utils::namespaceUri($this->getCodebook()->wasDerivedFrom);
+      $elementUriEncoded = base64_encode($elementUri);
+      $url = Url::fromRoute('rep.describe_element', ['elementuri' => $elementUriEncoded], ['absolute' => TRUE])->toString();
+
+      // Botão para abrir nova janela
+      $form['codebook_information']['codebook_wasderivedfrom_wrapper']['codebook_wasderivedfrom_button'] = [
+        '#type' => 'markup',
+        '#markup' => '<a href="' . $url . '" target="_blank" class="btn btn-success text-nowrap" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
+      ];
+
+    }
+
     $form['codebook_information']['codebook_hasSIRManagerEmail'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Owner'),
@@ -215,6 +261,14 @@ class ReviewCodebookForm extends FormBase {
       '#type' => 'item',
       '#title' => t('<br><br>'),
     ];
+    $form['submit'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Back'),
+      '#name' => 'back',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'back-button'],
+      ],
+    ];
 
 
     return $form;
@@ -249,30 +303,121 @@ class ReviewCodebookForm extends FormBase {
       return;
     }
 
-    if ($button_name === 'review_reject' && strlen($form_state->getValue('responseoption_hasreviewnote')) === 0) {
+    //REJECT? MOTIVE BLANK?
+    if ($button_name === 'review_reject' && strlen($form_state->getValue('codebook_hasreviewnote')) === 0) {
       \Drupal::messenger()->addWarning(t("To reject you must type a Review Note!"));
       return false;
     }
 
+    $api = \Drupal::service('rep.api_connector');
+
     try{
       $useremail = \Drupal::currentUser()->getEmail();
+      $result = $this->getCodebook();
 
-      $codebookJson = '{"uri":"'. $this->getCodebook()->uri .'",'.
-        '"typeUri":"'.VSTOI::CODEBOOK.'",'.
-        '"hascoTypeUri":"'.VSTOI::CODEBOOK.'",'.
-        '"hasStatus":"'.$this->getCodebook()->hasStatus.'",'.
-        '"label":"'.$form_state->getValue('codebook_name').'",'.
-        '"hasLanguage":"'.$form_state->getValue('codebook_language').'",'.
-        '"hasVersion":"'.$form_state->getValue('codebook_version').'",'.
-        '"comment":"'.$form_state->getValue('codebook_description').'",'.
-        '"hasSIRManagerEmail":"'.$useremail.'"}';
+      //APROVE
+      if ($button_name !== 'review_reject') {
 
-      // UPDATE BY DELETING AND CREATING
-      $api = \Drupal::service('rep.api_connector');
-      $api->codebookDel($this->getCodebook()->uri);
-      $api->codebookAdd($codebookJson);
+        //MAIN BODY CODEBOOK
+        $codebookJSON = '{'.
+          '"uri":"'.$result->uri.'",'.
+          '"typeUri":"'.VSTOI::CODEBOOK.'",'.
+          '"hascoTypeUri":"'.VSTOI::CODEBOOK.'",'.
+          '"label":"' . $result->label . '",' .
+          '"comment":"'.$result->comment.'",' .
+          '"hasStatus":"'.VSTOI::CURRENT.'",'.
+          '"hasLanguage":"'.$result->hasLanguage.'",' .
+          '"hasVersion":"'.$result->hasVersion.'",' .
+          '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.
+          '"hasSIRManagerEmail":"'.$result->hasSIRManagerEmail.'",'.
+          '"hasWebDocument":"'.$result->hasWebDocument.'",'.
+          '"hasReviewNote": "'. $form_state->getValue('codebook_hasreviewnote') .'",'.
+          '"hasEditorEmail": "'. $useremail .'"'.
+        '}';
 
-      \Drupal::messenger()->addMessage(t("Codebook has been updated successfully."));
+        // UPDATE BY DELETING AND CREATING
+        $api->codebookDel($result->uri);
+        $api->codebookAdd($codebookJSON);
+
+        //Change Status OF R.O. to Current, only change if they are Draft and Owned by the Submiter for Review
+        //LOOP TO ASSIGN RO TO CB
+        $slot_list = $api->codebookSlotList($result->uri);
+        $obj = json_decode($slot_list);
+        $slots = [];
+        if ($obj->isSuccessful) {
+          $slots = $obj->body;
+        }
+        $count = 1;
+        foreach ($slots as $slot) {
+          //GET RO->URI AND ATTACH TO SLOT
+          if ($result->codebookSlots[$count-1]->hasPriority === $slot->hasPriority) {
+            $roURI = $result->codebookSlots[$count-1]->responseOption->uri;
+          }
+          $api->responseOptionAttachStatus($roURI,$slot->uri, VSTOI::CURRENT); //Change to Current the Status if Draft
+          $count++;
+        }
+
+
+        //IF ITS A DERIVATION APROVAL PARENT MUST BECOME DEPRECATED
+        if ($result->wasDerivedFrom !== null && $result->wasDerivedFrom !== '') {
+
+          $rawresponse = $api->getUri($result->wasDerivedFrom);
+          $obj = json_decode($rawresponse);
+          $resultParent = $obj->body;
+
+          //MAIN BODY PARENT CODEBOOK
+          $parentCodeBookJSON = '{'.
+            '"uri":"'.$resultParent->uri.'",'.
+            '"typeUri":"'.VSTOI::CODEBOOK.'",'.
+            '"hascoTypeUri":"'.VSTOI::CODEBOOK.'",'.
+            '"label":"' . $resultParent->label . '",' .
+            '"comment":"'.$resultParent->comment.'",' .
+            '"hasStatus":"'.VSTOI::DEPRECATED.'",'.
+            '"hasLanguage":"'.$resultParent->hasLanguage.'",' .
+            '"hasVersion":"'.$resultParent->hasVersion.'",' .
+            '"wasDerivedFrom":"'.$resultParent->wasDerivedFrom.'",'.
+            '"hasSIRManagerEmail":"'.$resultParent->hasSIRManagerEmail.'",'.
+            '"hasReviewNote": "'. $resultParent->hasReviewNote .'",'.
+            '"hasEditorEmail": "'. $resultParent->hasEditorEmail .'"'.
+            '"hasWebDocument":"'.$resultParent->hasWebDocument.'",'.
+          '}';
+
+          // UPDATE BY DELETING AND CREATING
+          $api->codebookDel($resultParent->uri);
+          $api->codebookAdd($parentCodeBookJSON);
+
+        }
+
+        \Drupal::messenger()->addMessage(t("Codebook has been APPROVED successfully."));
+
+      // REJECT
+      } else {
+
+        //MAIN BODY CODEBOOK
+        $codebookJSON = '{'.
+          '"uri":"'.$result->uri.'",'.
+          '"typeUri":"'.VSTOI::CODEBOOK.'",'.
+          '"hascoTypeUri":"'.VSTOI::CODEBOOK.'",'.
+          '"label":"' . $result->label . '",' .
+          '"comment":"'.$result->comment.'",' .
+          '"hasStatus":"'.VSTOI::DRAFT.'",'.
+          '"hasLanguage":"'.$result->hasLanguage.'",' .
+          '"hasVersion":"'.$result->hasVersion.'",' .
+          '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.
+          '"hasSIRManagerEmail":"'.$result->hasSIRManagerEmail.'",'.
+          '"hasReviewNote": "'. $form_state->getValue('codebook_hasreviewnote') .'",'.
+          '"hasEditorEmail": "'. $useremail .'"'.
+          '"hasWebDocument":"'.$result->hasWebDocument.'",'.
+        '}';
+
+        $api = \Drupal::service('rep.api_connector');
+        $api->codebookDel($result->uri);
+        $api->codebookAdd($codebookJSON);
+
+        \Drupal::messenger()->addWarning(t("Codebook has been REJECTED."));
+
+      }
+
       self::backUrl();
       return;
 
@@ -281,7 +426,6 @@ class ReviewCodebookForm extends FormBase {
       self::backUrl();
       return;
     }
-
   }
 
   function backUrl() {
@@ -293,7 +437,4 @@ class ReviewCodebookForm extends FormBase {
       return;
     }
   }
-
-
-
 }

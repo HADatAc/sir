@@ -14,3 +14,30 @@ sir_process:
   dependencies:
     - core/jquery
     - core/drupal
+
+sir_detectorstem:
+  version: 1.x
+  js:
+    js/sir_detectorstem.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+
+sir_manageSlotsElementsForm:
+  version: 1.x
+  css:
+    theme:
+      css/sir_manageSlotsElementsForm.css: {}
+  js:
+    js/sir_manageSlotsElementsForm.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+
+sir_processstem:
+  version: 1.x
+  js:
+    js/sir_processstem.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
