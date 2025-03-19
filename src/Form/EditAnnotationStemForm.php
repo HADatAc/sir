@@ -85,7 +85,7 @@ class EditAnnotationStemForm extends FormBase {
     $form['annotationstem_content'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Content'),
-      '#default_value' => $this->getAnnotationStem()->hasContent,
+      '#default_value' => html_entity_decode($this->getAnnotationStem()->hasContent),
     ];
     $form['annotationstem_language'] = [
       '#type' => 'select',
@@ -97,11 +97,20 @@ class EditAnnotationStemForm extends FormBase {
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
       '#default_value' => $this->getAnnotationStem()->hasVersion,
+      '#disabled' => TRUE,
     ];
     $form['annotationstem_description'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
       '#default_value' => $this->getAnnotationStem()->comment,
+    ];
+    $form['annotationstem_webdocument'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Web Document'),
+      '#default_value' => $this->getAnnotationStem()->hasWebDocument,
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ]
     ];
     $form['annotationstem_was_derived_from'] = [
       '#type' => 'textfield',
@@ -155,6 +164,9 @@ class EditAnnotationStemForm extends FormBase {
       if(strlen($form_state->getValue('annotationstem_version')) < 1) {
         $form_state->setErrorByName('annotationstem_version', $this->t('Please enter a valid version'));
       }
+      if(strlen($form_state->getValue('annotationstem_description')) < 1) {
+        $form_state->setErrorByName('annotationstem_description', $this->t('Please enter a valid description'));
+      }
     }
   }
 
@@ -186,10 +198,12 @@ class EditAnnotationStemForm extends FormBase {
       $annotationStemJson = '{"uri":"'.$this->getAnnotationStem()->uri.'",'.
         '"typeUri":"'.VSTOI::ANNOTATION_STEM.'",'.
         '"hascoTypeUri":"'.VSTOI::ANNOTATION_STEM.'",'.
-        '"hasContent":"'.$form_state->getValue('annotationstem_content').'",'.
+        '"hasStatus":"'.$this->getAnnotationStem()->hasStatus.'",'.
+        '"hasContent":"'.htmlentities($form_state->getValue('annotationstem_content')).'",'.
         '"hasLanguage":"'.$form_state->getValue('annotationstem_language').'",'.
         '"hasVersion":"'.$form_state->getValue('annotationstem_version').'",'.
         '"comment":"'.$form_state->getValue('annotationstem_description').'",'.
+        '"hasWebDocument":"'.$form_state->getValue('annotationstem_webdocument').'",'.
         '"wasDerivedFrom":"'.$wasDerivedFrom.'",'.
         '"wasGeneratedBy":"'.$form_state->getValue('annotationstem_was_generated_by').'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';

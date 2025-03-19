@@ -148,3 +148,181 @@
   };
 })(jQuery, Drupal);
 
+// (function ($, Drupal) {
+//   'use strict';
+
+//   Drupal.behaviors.sirSelectForm = {
+//     attach: function (context, settings) {
+//       // Update the review button state
+//       function updateReviewButton() {
+//         const checkedBoxes = document.querySelectorAll('.checkbox-status-draft:checked').length;
+//         const reviewButton = document.getElementById('review-selected-button');
+
+//         const currentChecked = document.querySelectorAll('.checkbox-status-current:checked').length;
+//         const deprecatedChecked = document.querySelectorAll('.checkbox-status-deprecated:checked').length;
+
+//         if (reviewButton) {
+//           if (checkedBoxes > 0 && (currentChecked == 0 && deprecatedChecked == 0)) {
+//             reviewButton.removeAttribute('disabled');
+//           } else {
+//             reviewButton.setAttribute('disabled', 'disabled');
+//           }
+//         }
+
+//       }
+
+//       function updateDeleteButton() {
+//         const checkedBoxes = document.querySelectorAll('.checkbox-status-deprecated:checked').length;
+//         const deleteButton = document.getElementById('edit-delete-selected-element');
+
+//         if (deleteButton) {
+//           if (checkedBoxes > 0 ) {
+//             deleteButton.setAttribute('disabled', 'disabled');
+//           } else {
+//             deleteButton.removeAttribute('disabled');
+//           }
+//         }
+
+//       }
+
+//       function updateEditButton() {
+//         const deprecatedChecked = document.querySelectorAll('.checkbox-status-deprecated:checked').length;
+//         const underreviewChecked = document.querySelectorAll('.checkbox-status-underreview:checked').length;
+//         const editButton = document.getElementById('edit-edit-selected-element');
+
+//         if (editButton) {
+//           if (deprecatedChecked === 0 && underreviewChecked === 0) {
+//             editButton.removeAttribute('disabled');
+//           } else {
+//             editButton.setAttribute('disabled', 'disabled');
+//           }
+//         }
+
+//       }
+
+//       function updateManageCodeBookSlotsButton() {
+//         const checkedBoxes = document.querySelectorAll('.checkbox-status-draft:checked').length;
+//         const reviewButton = document.getElementById('manage-codebookslots-button');
+
+//         const currentChecked = document.querySelectorAll('.checkbox-status-current:checked').length;
+//         const deprecatedChecked = document.querySelectorAll('.checkbox-status-deprecated:checked').length;
+//         const underReviewBoxes = document.querySelectorAll('.checkbox-status-underreview:checked').length;
+
+//         if (reviewButton) {
+//           if (checkedBoxes > 0 && underReviewBoxes == 0) {
+//             reviewButton.removeAttribute('disabled');
+//           } else {
+//             reviewButton.setAttribute('disabled', 'disabled');
+//           }
+//         }
+
+//       }
+
+//       // Update the review button state when the page loads
+//       updateReviewButton();
+//       updateEditButton();
+//       updateDeleteButton();
+//       updateManageCodeBookSlotsButton();
+
+//       // Update the review button state when a checkbox is changed
+//       once('sirSelectForm', '.checkbox-status-draft', context).forEach(function (element) {
+//         element.addEventListener('change', function() {
+//           updateReviewButton();
+//           updateDeleteButton();
+//           updateEditButton();
+//           updateManageCodeBookSlotsButton();
+//         });
+//       });
+
+//       // Update the review button state when a checkbox is changed
+//       once('sirSelectForm', '.checkbox-status-current', context).forEach(function (element) {
+//         element.addEventListener('change', function() {
+//           updateReviewButton();
+//           updateDeleteButton();
+//           updateEditButton();
+//           updateManageCodeBookSlotsButton();
+//         });
+//       });
+
+//       // Update the review button state when a checkbox is changed
+//       once('sirSelectForm', '.checkbox-status-deprecated', context).forEach(function (element) {
+//         element.addEventListener('change', function() {
+//           updateReviewButton();
+//           updateDeleteButton();
+//           updateEditButton();
+//           updateManageCodeBookSlotsButton();
+//         });
+//       });
+
+//       // Update the review button state when a checkbox is changed
+//       once('sirSelectForm', '.checkbox-status-underreview', context).forEach(function (element) {
+//         element.addEventListener('change', function() {
+//           updateReviewButton();
+//           updateDeleteButton();
+//           updateEditButton();
+//           updateManageCodeBookSlotsButton();
+//         });
+//       });
+//     }
+//   };
+// })(jQuery, Drupal);
+
+(function ($, Drupal) {
+  'use strict';
+
+  Drupal.behaviors.sirSelectForm = {
+    attach: function (context, settings) {
+
+      const updateButtons = () => {
+        // States
+        const draftChecked = document.querySelectorAll('.checkbox-status-draft:checked').length;
+        const currentChecked = document.querySelectorAll('.checkbox-status-current:checked').length;
+        const deprecatedChecked = document.querySelectorAll('.checkbox-status-deprecated:checked').length;
+        const underReviewChecked = document.querySelectorAll('.checkbox-status-underreview:checked').length;
+
+        // Buttons
+        const reviewButton = document.getElementById('review-selected-button');
+        const deleteButton = document.getElementById('edit-delete-selected-element');
+        const editButton = document.getElementById('edit-edit-selected-element');
+        const manageCodeBookSlotsButton = document.getElementById('manage-codebookslots-button');
+        const manageStructureButton = document.getElementById('edit-manage-slotelements');
+
+        if (reviewButton) {
+          reviewButton.disabled = !(draftChecked > 0 && currentChecked === 0 && deprecatedChecked === 0);
+        }
+
+        if (deleteButton) {
+          deleteButton.disabled = deprecatedChecked > 0;
+        }
+
+        if (editButton) {
+          editButton.disabled = deprecatedChecked > 0 || underReviewChecked > 0;
+        }
+
+        if (manageCodeBookSlotsButton) {
+          manageCodeBookSlotsButton.disabled = !(draftChecked > 0 && underReviewChecked === 0);
+        }
+
+        if (manageStructureButton) {
+          manageStructureButton.disabled = !(draftChecked > 0 && underReviewChecked === 0);
+        }
+      };
+
+      updateButtons();
+
+      once('sirSelectForm', '.checkbox-status-draft, .checkbox-status-current, .checkbox-status-deprecated, .checkbox-status-underreview', context)
+        .forEach(element => {
+          element.addEventListener('change', updateButtons);
+        });
+    }
+  };
+})(jQuery, Drupal);
+
+(function ($, Drupal) {
+  Drupal.behaviors.removeCheckboxMargin = {
+    attach: function (context, settings) {
+      $('.js-form-type-checkbox').removeClass('mb-3');
+      $('.table.table-striped.responsive-enabled').addClass('align-middle');
+    }
+  };
+})(jQuery, Drupal);

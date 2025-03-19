@@ -44,18 +44,20 @@ class Annotation {
               $container = $instrument->label;
             }
           }
-          if ($element->annotationStem != NULL) {
-            if ($element->annotationStem->hasContent != NULL) {
-              //$content = $element->annotationStem->hasContent;
-              $content = substr($element->annotationStem->hasContent, 0, 125) . '   [Trunkated]';
+          if ($element->hasContentWithStyle != NULL) {
+            //$content = $element->annotationStem->hasContent;
+            if (strlen($element->hasContentWithStyle) > 124) {
+              $content = substr($element->hasContentWithStyle, 0, 125) . '[Trunkated]';
+            } else {
+              $content = $element->hasContentWithStyle;
             }
           }
         }
         $output[$uri] = [
-          'element_uri' => t('<a href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),     
-          'element_container' => $container,     
-          'element_position' => Utils::namespaceUri($position),     
-          'element_annotationstem' => $content,     
+          'element_uri' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),
+          'element_container' => $container,
+          'element_position' => Utils::namespaceUri($position),
+          'element_annotationstem' => html_entity_decode($content),
         ];
       }
     }

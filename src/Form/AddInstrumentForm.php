@@ -2,6 +2,7 @@
 
 namespace Drupal\sir\Form;
 
+use Abraham\TwitterOAuth\Util;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
@@ -25,10 +26,50 @@ class AddInstrumentForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
 
+    // MODAL
+    $form['#attached']['library'][] = 'rep/rep_modal';
+    $form['#attached']['library'][] = 'core/drupal.dialog';
+
     $tables = new Tables;
     $languages = $tables->getLanguages();
     $informants = $tables->getInformants();
 
+    //SELECT ONE
+    if ($languages)
+      $languages = ['' => $this->t('Select language please')] + $languages;
+    if ($informants)
+      $informants = ['' => $this->t('Select Informant please')] + $informants;
+
+    $form['instrument_type'] = [
+      'top' => [
+        '#type' => 'markup',
+        '#markup' => '<div class="pt-3 col border border-white">',
+      ],
+      'main' => [
+        '#type' => 'textfield',
+        '#title' => $this->t('Parent Type'),
+        '#name' => 'instrument_type',
+        '#default_value' => '',
+        '#id' => 'instrument_type',
+        '#parents' => ['instrument_type'],
+        '#attributes' => [
+          'class' => ['open-tree-modal'],
+          'data-dialog-type' => 'modal',
+          'data-dialog-options' => json_encode(['width' => 800]),
+          'data-url' => Url::fromRoute('rep.tree_form', [
+            'mode' => 'modal',
+            'elementtype' => 'instrument',
+          ], ['query' => ['field_id' => 'instrument_type']])->toString(),
+          'data-field-id' => 'instrument_type',
+          'data-elementtype' => 'instrument',
+          'autocomplete' => 'off',
+        ],
+      ],
+      'bottom' => [
+        '#type' => 'markup',
+        '#markup' => '</div>',
+      ],
+    ];
     $form['instrument_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name'),
@@ -47,15 +88,24 @@ class AddInstrumentForm extends FormBase {
       '#type' => 'select',
       '#title' => $this->t('Language'),
       '#options' => $languages,
-      '#default_value' => Constant::DEFAULT_LANGUAGE,
+      '#default_value' => 'en',
     ];
     $form['instrument_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
+      '#default_value' => '1',
+      '#disabled' => TRUE,
     ];
     $form['instrument_description'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
+    ];
+    $form['instrument_webdocument'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Web Document'),
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ]
     ];
     $form['save_submit'] = [
       '#type' => 'submit',
@@ -87,14 +137,17 @@ class AddInstrumentForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name != 'back') {
+      if(empty($form_state->getValue('instrument_type'))) {
+        $form_state->setErrorByName('instrument_type', $this->t('Please select a valid Instrument Parent type'));
+      }
       if(strlen($form_state->getValue('instrument_name')) < 1) {
-        $form_state->setErrorByName('instrument_name', $this->t('Please enter a valid name'));
+        $form_state->setErrorByName('instrument_name', $this->t('Please enter a valid Name'));
       }
       if(strlen($form_state->getValue('instrument_abbreviation')) < 1) {
-        $form_state->setErrorByName('instrument_abbreviation', $this->t('Please enter a valid abbreviation'));
+        $form_state->setErrorByName('instrument_abbreviation', $this->t('Please enter a valid Abbreviation'));
       }
       if(strlen($form_state->getValue('instrument_language')) < 1) {
-        $form_state->setErrorByName('instrument_language', $this->t('Please enter a valid language'));
+        $form_state->setErrorByName('instrument_language', $this->t('Please enter a valid Language'));
       }
     }
   }
@@ -115,14 +168,17 @@ class AddInstrumentForm extends FormBase {
     try{
       $useremail = \Drupal::currentUser()->getEmail();
       $newInstrumentUri = Utils::uriGen('instrument');
+      // dpm($newInstrumentUri);
       $instrumentJson = '{"uri":"'.$newInstrumentUri.'",'.
-        '"superUri":"'.VSTOI::INSTRUMENT.'",'.
+        '"superUri":"'.Utils::uriFromAutocomplete($form_state->getValue('instrument_type')).'",'.
         '"hascoTypeUri":"'.VSTOI::INSTRUMENT.'",'.
+        '"hasStatus":"'.VSTOI::DRAFT.'",'.
         '"label":"'.$form_state->getValue('instrument_name').'",'.
         '"hasShortName":"'.$form_state->getValue('instrument_abbreviation').'",'.
         '"hasInformant":"'.$form_state->getValue('instrument_informant').'",'.
         '"hasLanguage":"'.$form_state->getValue('instrument_language').'",'.
         '"hasVersion":"'.$form_state->getValue('instrument_version').'",'.
+        '"hasWebDocument":"'.$form_state->getValue('instrument_webdocument').'",'.
         '"comment":"'.$form_state->getValue('instrument_description').'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
 

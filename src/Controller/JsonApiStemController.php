@@ -8,7 +8,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Drupal\Component\Utility\Xss;
 
 /**
- * Class JsonApiCodebookController
+ * Class JsonApiStemController
  * @package Drupal\sir\Controller
  */
 class JsonApiStemController extends ControllerBase{
@@ -25,7 +25,7 @@ class JsonApiStemController extends ControllerBase{
     $keyword = Xss::filter($input);
     //dpm($keyword);
     $api = \Drupal::service('rep.api_connector');
-    $stem_list = $api->listByKeyword('detectorstem',$keyword,10,0);
+    $stem_list = $api->listByKeyword('detectorstem','_',10,0);
     $obj = json_decode($stem_list);
     $stems = [];
     if ($obj->isSuccessful) {

@@ -45,6 +45,10 @@ class AddAnnotationStemForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $sourceannotationstemuri = NULL) {
 
+    // MODAL
+    $form['#attached']['library'][] = 'rep/rep_modal';
+    $form['#attached']['library'][] = 'core/drupal.dialog';
+
     // ESTABLISH API SERVICE
     $api = \Drupal::service('rep.api_connector');
 
@@ -76,6 +80,34 @@ class AddAnnotationStemForm extends FormBase {
       $sourceContent = $this->getSourceAnnotationStem()->hasContent;
     }
 
+    // $form['annotationstem_type'] = [
+    //   'top' => [
+    //     '#type' => 'markup',
+    //     '#markup' => '<div class="pt-3 col border border-white">',
+    //   ],
+    //   'main' => [
+    //     '#type' => 'textfield',
+    //     '#title' => $this->t('Type'),
+    //     '#name' => 'annotationstem_type',
+    //     '#default_value' => '',
+    //     '#attributes' => [
+    //       'class' => ['open-tree-modal'],
+    //       'data-dialog-type' => 'modal',
+    //       'data-dialog-options' => json_encode(['width' => 800]),
+    //       'data-url' => Url::fromRoute('rep.tree_form', [
+    //         'mode' => 'modal',
+    //         'elementtype' => 'annotationstem',
+    //       ], ['query' => ['field_id' => 'annotationstem_type']])->toString(),
+    //       'data-field-id' => 'annotationstem_type',
+    //       'data-elementtype' => 'annotationstem',
+    //       'autocomplete' => 'off',
+    //     ],
+    //   ],
+    //   'bottom' => [
+    //     '#type' => 'markup',
+    //     '#markup' => '</div>',
+    //   ],
+    // ];
     $form['annotationstem_content'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Content'),
@@ -89,10 +121,23 @@ class AddAnnotationStemForm extends FormBase {
     $form['annotationstem_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
+      '#default_value' => '1',
+      '#disabled' => TRUE,
+    ];
+    $form['annotationstem_version'] = [
+      '#type' => 'hidden',
+      '#value' => '1',
     ];
     $form['annotationstem_description'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
+    ];
+    $form['annotationstem_webdocument'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Web Document'),
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ]
     ];
     $form['annotationstem_was_derived_from'] = [
       '#type' => 'textfield',
@@ -146,6 +191,9 @@ class AddAnnotationStemForm extends FormBase {
       if(strlen($form_state->getValue('annotationstem_version')) < 1) {
         $form_state->setErrorByName('annotationstem_version', $this->t('Please enter a valid version'));
       }
+      if(strlen($form_state->getValue('annotationstem_description')) < 1) {
+        $form_state->setErrorByName('annotationstem_description', $this->t('Please enter a valid description'));
+      }
     }
   }
 
@@ -179,10 +227,12 @@ class AddAnnotationStemForm extends FormBase {
       $annotationStemJson = '{"uri":"'.$newAnnotationStemUri.'",'.
         '"typeUri":"'.VSTOI::ANNOTATION_STEM.'",'.
         '"hascoTypeUri":"'.VSTOI::ANNOTATION_STEM.'",'.
-        '"hasContent":"'.$form_state->getValue('annotationstem_content').'",'.
+        '"hasStatus":"'.VSTOI::DRAFT.'",'.
+        '"hasContent":"'.htmlentities($form_state->getValue('annotationstem_content')).'",'.
         '"hasLanguage":"'.$form_state->getValue('annotationstem_language').'",'.
         '"hasVersion":"'.$form_state->getValue('annotationstem_version').'",'.
         '"comment":"'.$form_state->getValue('annotationstem_description').'",'.
+        '"hasWebDocument":"'.$form_state->getValue('annotationstem_webdocument').'",'.
         '"wasDerivedFrom":"'.$wasDerivedFrom.'",'.
         '"wasGeneratedBy":"'.$wasGeneratedBy.'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';

@@ -83,13 +83,32 @@ class AddResponseOptionForm extends FormBase {
       '#options' => $languages,
       '#default_value' => 'en',
     ];
-    $form['responseoption_version'] = [
+    // $form['responseoption_version'] = [
+    //   '#type' => 'textfield',
+    //   '#title' => $this->t('Version'),
+    // ];
+    $form['responseoption_version_display'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
+      '#default_value' => '1',
+      '#attributes' => [
+        'disabled' => 'disabled',
+      ],
+    ];
+    $form['responseoption_version'] = [
+      '#type' => 'hidden',
+      '#value' => '1',
     ];
     $form['responseoption_description'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
+    ];
+    $form['responseoption_webdocument'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Web Document'),
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ]
     ];
     $form['save_submit'] = [
       '#type' => 'submit',
@@ -154,10 +173,12 @@ class AddResponseOptionForm extends FormBase {
       $responseOptionJSON = '{"uri":"'.$newResponseOptionUri.'",'.
         '"typeUri":"'.VSTOI::RESPONSE_OPTION.'",'.
         '"hascoTypeUri":"'.VSTOI::RESPONSE_OPTION.'",'.
+        '"hasStatus":"'.VSTOI::DRAFT.'",'.
         '"hasContent":"'.$form_state->getValue('responseoption_content').'",'.
         '"hasLanguage":"'.$form_state->getValue('responseoption_language').'",'.
         '"hasVersion":"'.$form_state->getValue('responseoption_version').'",'.
         '"comment":"'.$form_state->getValue('responseoption_description').'",'.
+        '"hasWebDocument":"'.$form_state->getValue('responseoption_webdocument').'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
 
       $api = \Drupal::service('rep.api_connector');

@@ -56,6 +56,62 @@ sir.element_uri:
   options:
     no_cache: 'TRUE'
 
+# Process CRUD options
+
+sir.manage_process:
+  path: 'sir/manage/process'
+  defaults:
+    _title: 'Manage Process'
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+sir.add_process:
+  path: 'sir/manage/addprocess/{state}'
+  defaults:
+    _form: '\Drupal\sir\Form\AddProcessForm'
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+sir.edit_process:
+  path: 'sir/manage/editprocess/{state}/{processuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\EditProcessForm'
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+sir.process_instrument_autocomplete:
+  path: '/sir/manage/instrument/autocomplete'
+  defaults:
+    _controller: '\Drupal\sir\Controller\JsonApiInstrumentController::handleAutocomplete'
+    _format: json
+  requirements:
+    _permission: 'access content'
+
+sir.load_detectors:
+  path: '/sir/load-detectors'
+  defaults:
+    _controller: '\Drupal\sir\Controller\JsonApiProcessController::loadDetectors'
+    _title: 'Load Detectors'
+  requirements:
+    _permission: 'access content'
+  methods: [GET, POST]
+
+sir.process_task_autocomplete:
+  path: '/sir/manage/process/autocomplete'
+  defaults:
+    _controller: '\Drupal\sir\Controller\JsonApiProcessController::handleTasksAutocomplete'
+    _format: json
+  requirements:
+    _permission: 'access content'
 
 # Instrument CRUD options
 
@@ -155,6 +211,89 @@ sir.containerslot_detector_autocomplete:
   path: '/sir/manage/containerslot/autocomplete'
   defaults:
     _controller: '\Drupal\sir\Controller\JsonApiDetectorController::handleAutocomplete'
+    _format: json
+  requirements:
+    _permission: 'access content'
+
+sir.containerslot_actuator_autocomplete:
+  path: '/sir/manage/containeractuatorslot/autocomplete'
+  defaults:
+    _controller: '\Drupal\sir\Controller\JsonApiActuatorController::handleAutocomplete'
+    _format: json
+  requirements:
+    _permission: 'access content'
+
+# Actuator Stem CRUD options
+
+sir.add_actuatorstem:
+  path: 'sir/manage/addactuatorstem/{sourceactuatorstemuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\AddActuatorStemForm'
+    _title: 'Add Item Stem'
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+sir.edit_actuatorstem:
+  path: 'sir/manage/editactuatorstem/{actuatorstemuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\EditActuatorStemForm'
+    _title: 'Edit Item Stem'
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+# Actuator "Item" CRUD options
+
+sir.add_actuator:
+  path: 'sir/manage/addactuator/{sourceactuatoruri}/{containersloturi}'
+  defaults:
+    _form: '\Drupal\sir\Form\AddActuatorForm'
+    _title: 'Add Item'
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+sir.add_containerslot_actuator:
+  path: 'sir/manage/addattachactuator/{containersloturi}'
+  defaults:
+    _form: '\Drupal\sir\Form\AddContainerSlotActuatorForm'
+    _title: 'Add Item'
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+sir.edit_actuator:
+  path: 'sir/manage/editactuator/{actuatoruri}'
+  defaults:
+    _form: '\Drupal\sir\Form\EditActuatorForm'
+    _title: 'Edit Item'
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+sir.actuator_stem_autocomplete:
+  path: '/sir/manage/actuator/stem/autocomplete'
+  defaults:
+    _controller: '\Drupal\sir\Controller\JsonApiActuatorStemController::handleAutocomplete'
+    _format: json
+  requirements:
+    _permission: 'access content'
+
+sir.actuator_codebook_autocomplete:
+  path: '/sir/manage/actuator/codebook/autocomplete'
+  defaults:
+    _controller: '\Drupal\sir\Controller\JsonApiActuatorCodebookController::handleAutocomplete'
     _format: json
   requirements:
     _permission: 'access content'
@@ -365,6 +504,15 @@ sir.annotation_stem_autocomplete:
   requirements:
     _permission: 'access content'
 
+sir.annotation_autocomplete:
+  # path: '/sir/manage/annotation/autocomplete/{containeruri}/{manageremail}'
+  path: '/sir/manage/annotation/autocomplete'
+  defaults:
+    _controller: '\Drupal\sir\Controller\JsonApiAnnotationController::handleAutocomplete'
+    _format: json
+  requirements:
+    _permission: 'access content'
+
 # Annotation CRUD options
 
 sir.add_annotation:
@@ -410,12 +558,186 @@ sir.manage_annotations:
   options:
     no_cache: 'TRUE'
 
-# LOAD MORE
-# sir.load_more_data:
-#   path: '/sir/select/{elementtype}/load-more-data'
-#   defaults:
-#     _controller: '\Drupal\sir\Form\SIRSelectForm::loadMoreSubmit'
-#   requirements:
-#     _access: 'TRUE'
-#   options:
-#     _format: 'json'
+# Process Stem CRUD options
+
+sir.add_processstem:
+  path: 'sir/manage/addprocessstem/{sourceprocessstemuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\AddProcessStemForm'
+    _title: 'Add Process Stem'
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+sir.edit_processstem:
+  path: 'sir/manage/editprocessstem/{processstemuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\EditProcessStemForm'
+    _title: 'Edit Process Stem'
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+# Task CRUD options
+
+sir.manage_task:
+  path: 'sir/manage/task'
+  defaults:
+    _title: 'Manage Task'
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+sir.add_task:
+  path: 'sir/manage/addtask/{state}'
+  defaults:
+    _form: '\Drupal\sir\Form\AddTaskForm'
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+sir.edit_task:
+  path: 'sir/manage/edittasl/{state}/{taskuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\EditTaskForm'
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+# REVIEW ROUTES
+
+sir.select_review_element:
+  path: 'sir/review/{elementtype}/{page}/{pagesize}'
+  defaults:
+    _form: '\Drupal\sir\Form\Review\SIRReviewForm'
+  requirements:
+    # _permission: 'access reviewer menu'
+    _role: 'content_editor'
+  options:
+    no_cache: 'TRUE'
+
+## Response Options
+
+sir.review_response_option:
+  path: 'sir/manage/reviewresponseoption/{responseoptionuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\Review\ReviewResponseOptionForm'
+    _title: 'Review Response Option'
+  requirements:
+    # _permission: 'access reviewer menu'
+    _role: 'content_editor'
+  options:
+    no_cache: 'TRUE'
+
+## Codebook
+
+sir.review_codebook:
+  path: 'sir/manage/reviewcodebook/{codebookuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\Review\ReviewCodebookForm'
+    _title: 'Review Codebook'
+  requirements:
+    # _permission: 'access reviewer menu'
+    _role: 'content_editor'
+  options:
+    no_cache: 'TRUE'
+
+## Detector
+
+sir.review_detector:
+  path: 'sir/manage/reviewdetector/{detectoruri}'
+  defaults:
+    _form: '\Drupal\sir\Form\Review\ReviewDetectorForm'
+    _title: 'Review Detector'
+  requirements:
+    # _permission: 'access reviewer menu'
+    _role: 'content_editor'
+  options:
+    no_cache: 'TRUE'
+
+## Detector Stem
+
+sir.review_detectorstem:
+  path: 'sir/manage/reviewdetectorstem/{detectorstemuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\Review\ReviewDetectorStemForm'
+    _title: 'Review Detector Stem'
+  requirements:
+    # _permission: 'access reviewer menu'
+    _role: 'content_editor'
+  options:
+    no_cache: 'TRUE'
+
+# Process Stem
+
+sir.review_processstem:
+  path: 'sir/manage/reviewprocessstem/{processstemuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\Review\ReviewProcessStemForm'
+    _title: 'Review Process Stem'
+  requirements:
+    # _permission: 'access reviewer menu'
+    _role: 'content_editor'
+  options:
+    no_cache: 'TRUE'
+
+# Actuator
+
+sir.review_actuator:
+  path: 'sir/manage/reviewactuator/{actuatoruri}'
+  defaults:
+    _form: '\Drupal\sir\Form\Review\ReviewActuatorForm'
+    _title: 'Review Actuator'
+  requirements:
+    # _permission: 'access reviewer menu'
+    _role: 'content_editor'
+  options:
+    no_cache: 'TRUE'
+
+## Actuator Stem
+
+sir.review_actuatorstem:
+  path: 'sir/manage/reviewactuatorstem/{actuatorstemuri}'
+  defaults:
+    _form: '\Drupal\sir\Form\Review\ReviewActuatorStemForm'
+    _title: 'Review Actuator Stem'
+  requirements:
+    # _permission: 'access reviewer menu'
+    _role: 'content_editor'
+  options:
+    no_cache: 'TRUE'
+
+# Instrument
+
+sir.review_instrument:
+  path: 'sir/manage/reviewinstrument/{instrumenturi}'
+  defaults:
+    _form: '\Drupal\sir\Form\Review\ReviewInstrumentForm'
+    _title: 'Review Simulator'
+  requirements:
+    # _permission: 'access reviewer menu'
+    _role: 'content_editor'
+  options:
+    no_cache: 'TRUE'
+
+# INS EDITOR
+
+sir.generate_ins:
+  path: 'sir/manage/generateins'
+  defaults:
+    _form: '\Drupal\sir\Form\Generate\GenerateINSForm'
+    _title: 'Generate INS File'
+  requirements:
+    _role: 'content_editor'
+  options:
+    no_cache: 'TRUE'

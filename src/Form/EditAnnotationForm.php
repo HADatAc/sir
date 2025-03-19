@@ -81,8 +81,8 @@ class EditAnnotationForm extends FormBase {
     }
     $stemLabel = "";
     if ($this->getAnnotation()->annotationStem != NULL) {
-      //$stemLabel = $this->getAnnotation()->annotationStem->hasContent . ' [' . $this->getAnnotation()->annotationStem->uri . ']';
-      $stemLabel = Utils::trimAutoCompleteString($this->getAnnotation()->annotationStem->hasContent, $this->getAnnotation()->annotationStem->uri);
+      $stemLabel = $this->getAnnotation()->annotationStem->hasContent . ' [' . $this->getAnnotation()->annotationStem->uri . ']';
+      //$stemLabel = Utils::trimAutoCompleteString($this->getAnnotation()->annotationStem->hasContent, $this->getAnnotation()->annotationStem->uri);
     }
 
 
@@ -107,7 +107,7 @@ class EditAnnotationForm extends FormBase {
     $form['annotation_style'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Content w/Style (HTML)'),
-      '#default_value' => $this->getAnnotation()->hasContentWithStyle,
+      '#default_value' => html_entity_decode($this->getAnnotation()->hasContentWithStyle),
     ];
     $form['annotation_description'] = [
       '#type' => 'textarea',
@@ -186,7 +186,7 @@ class EditAnnotationForm extends FormBase {
         '"hascoTypeUri":"'.VSTOI::ANNOTATION.'",'.
         '"hasAnnotationStem":"'.$stem.'",'.
         '"hasPosition":"'.$form_state->getValue('annotation_position').'",'.
-        '"hasContentWithStyle":"'.$form_state->getValue('annotation_style').'",'.
+        '"hasContentWithStyle":"'.htmlentities($form_state->getValue('annotation_style')).'",'.
         '"comment":"'.$form_state->getValue('annotation_description').'",'.
         '"belongsTo":"'.$container.'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
@@ -196,6 +196,7 @@ class EditAnnotationForm extends FormBase {
       $api->annotationDel($this->getAnnotationUri());
       $updatedAnnotation = $api->annotationAdd($annotationJson);
       \Drupal::messenger()->addMessage(t("Annotation has been updated successfully."));
+
       self::backUrl();
       return;
 
@@ -208,13 +209,12 @@ class EditAnnotationForm extends FormBase {
 
   function backUrl() {
     $uid = \Drupal::currentUser()->id();
-    $previousUrl = Utils::trackingGetPreviousUrl($uid, \Drupal::request()->getRequestUri());
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.edit_annotation');
     if ($previousUrl) {
       $response = new RedirectResponse($previousUrl);
       $response->send();
       return;
     }
   }
-
 
 }

@@ -1,0 +1,4 @@
+access reviewer menu:
+  title: 'Access Reviewer Menu'
+  description: 'Allow access to the Reviewer menu link'
+  restrict access: TRUE

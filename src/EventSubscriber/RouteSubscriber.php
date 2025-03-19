@@ -26,11 +26,12 @@ class RouteSubscriber extends RouteSubscriberBase {
   }
 
   protected function alterRoutes(RouteCollection $collection) {
-    
+
     $config = $this->configFactory->get('sir.settings');
     $sir_home = $config->get('sir_home');
     $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument');
     $preferred_detector = \Drupal::config('rep.settings')->get('preferred_detector');
+    $preferred_processstem = \Drupal::config('rep.settings')->get('preferred_process');
 
     if($sir_home == '1'){
       if ($route = $collection->get('view.frontpage.page_1')) {
@@ -45,20 +46,32 @@ class RouteSubscriber extends RouteSubscriberBase {
       $route->setDefault('_title', 'Edit ' . $preferred_instrument);
     }
     if ($route = $collection->get('sir.add_detectorstem')) {
-      $route->setDefault('_title', 'Add ' . $preferred_detector . 'Stem');
+      $route->setDefault('_title', 'Add ' . $preferred_detector . ' Stem');
     }
     if ($route = $collection->get('sir.edit_detectorstem')) {
-      $route->setDefault('_title', 'Edit ' . $preferred_detector . 'Stem');
+      $route->setDefault('_title', 'Edit ' . $preferred_detector . ' Stem');
     }
     if ($route = $collection->get('sir.add_detector')) {
-      $route->setDefault('_title', 'Add ' . $preferred_detector);
-    }
-    if ($route = $collection->get('sir.add_containerslot_detector')) {
       $route->setDefault('_title', 'Add ' . $preferred_detector);
     }
     if ($route = $collection->get('sir.edit_detector')) {
       $route->setDefault('_title', 'Edit ' . $preferred_detector);
     }
+    if ($route = $collection->get('sir.add_containerslot_detector')) {
+      $route->setDefault('_title', 'Add ' . $preferred_detector);
+    }
+    if ($route = $collection->get('sir.edit_processstem')) {
+      $route->setDefault('_title', 'Edit ' . $preferred_processstem . ' Stem');
+    }
+    if ($route = $collection->get('sir.add_processstem')) {
+      $route->setDefault('_title', 'Add ' . $preferred_processstem . ' Stem');
+    }
+    if ($route = $collection->get('sir.edit_process')) {
+      $route->setDefault('_title', 'Edit ' . $preferred_processstem);
+    }
+    if ($route = $collection->get('sir.add_process')) {
+      $route->setDefault('_title', 'Add ' . $preferred_processstem);
+    }
   }
-  
+
 }

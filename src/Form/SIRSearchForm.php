@@ -131,6 +131,7 @@ class SIRSearchForm extends FormBase {
 
     $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument');
     $preferred_detector = \Drupal::config('rep.settings')->get('preferred_detector');
+    $preferred_actuator = \Drupal::config('rep.settings')->get('preferred_actuator') ?? 'Actuator';
 
     $form['search_element_type'] = [
       '#type' => 'select',
@@ -138,12 +139,16 @@ class SIRSearchForm extends FormBase {
       '#required' => TRUE,
       '#options' => [
         'instrument' => $this->t($preferred_instrument . 's'),
+        'actuatorstem' => $this->t($preferred_actuator . ' Stems'),
+        'actuator' => $this->t($preferred_actuator . 's'),
         'detectorstem' => $this->t($preferred_detector . ' Stems'),
         'detector' => $this->t($preferred_detector . 's'),
         'codebook' => $this->t('Codebooks'),
         'responseoption' => $this->t('Response Options'),
         'annotationstem' => $this->t('Annotation Stems'),
         'annotation' => $this->t('Annotations'),
+        'processstem' => $this->t('Process Stems'),
+        'process' => $this->t('Processes'),
       ],
       '#default_value' => $this->getElementType(),
       '#ajax' => [
@@ -181,6 +186,22 @@ class SIRSearchForm extends FormBase {
       ],
     ];
 
+    $form['bottom_space'] = [
+      '#type' => 'item',
+      '#title' => t('<br><br>'),
+    ];
+
+    $form['node_comment_display'] = [
+      '#type' => 'container',
+      '#text' => '',
+      '#attributes' => [
+          'id' => 'node-comment-display',
+          'class' => ['mt-2', 'w-100'],
+          'style' => 'display:none;'
+          //'style' => 'float:left',
+      ],
+    ];
+
     return $form;
   }
 
@@ -209,8 +230,9 @@ class SIRSearchForm extends FormBase {
 
     // IF ELEMENT TYPE IS CLASS
     if (($form_state->getValue('search_element_type') == 'instrument') ||
+        ($form_state->getValue('search_element_type') == 'actuatorstem') ||
         ($form_state->getValue('search_element_type') == 'detectorstem') ||
-        ($form_state->getValue('search_element_type') == 'detector')) {
+        ($form_state->getValue('search_element_type') == 'processstem')) {
       $url = Url::fromRoute('rep.browse_tree');
       $url->setRouteParameter('mode', 'browse');
       $url->setRouteParameter('elementtype', $form_state->getValue('search_element_type'));
@@ -234,7 +256,18 @@ class SIRSearchForm extends FormBase {
     $response = new AjaxResponse();
     $this->setPage(1);
     $this->setPageSize(12);
-    $url = $this->redirectUrl($form_state);
+    $elementType = $form_state->getValue('search_element_type');
+
+    // Build URL for the route 'sir.search' with parameters.
+    if ($elementType === 'instrument' || $elementType === 'detectorstem' || $elementType === 'processstem' || $elementType === 'actuatorstem'){
+      $url = Url::fromRoute('sir.search', [
+        'mode' => 'browse',
+        'elementtype' => $elementType,
+      ]);
+    } else {
+      $url = $this->redirectUrl($form_state);
+    }
+
     $response->addCommand(new RedirectCommand($url->toString()));
     return $response;
   }

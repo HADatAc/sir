@@ -55,36 +55,73 @@ class EditDetectorStemForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $detectorstemuri = NULL) {
+
+    // MODAL
+    $form['#attached']['library'][] = 'rep/rep_modal';
+    $form['#attached']['library'][] = 'core/drupal.dialog';
+
+    $form['#attached']['library'][] = 'sir/sir_detectorstem';
+
     $uri=$detectorstemuri;
     $uri_decode=base64_decode($uri);
     $this->setDetectorStemUri($uri_decode);
+
+    $this->setDetectorStem($this->retrieveDetectorStem($this->getDetectorStemUri()));
+    if ($this->getDetectorStem() == NULL) {
+      \Drupal::messenger()->addError(t("Failed to retrieve Detector."));
+      self::backUrl();
+      return;
+    }
 
     $tables = new Tables;
     $languages = $tables->getLanguages();
     $derivations = $tables->getGenerationActivities();
 
-    $sourceContent = '';
-    $wasGeneratedBy = Constant::DEFAULT_WAS_GENERATED_BY;
-    $this->setDetectorStem($this->retrieveDetectorStem($this->getDetectorStemUri()));
-    if ($this->getDetectorStem() == NULL) {
-      \Drupal::messenger()->addError(t("Failed to retrieve Detector Stem."));
-      self::backUrl();
-      return;
-    } else {
-      $wasGeneratedBy = $this->getDetectorStem()->wasGeneratedBy;
-      if ($this->getDetectorStem()->wasDerivedFrom != NULL) {
-        $this->setSourceDetectorStem($this->retrieveDetectorStem($this->getDetectorStem()->wasDerivedFrom));
-        if ($this->getSourceDetectorStem() != NULL && $this->getSourceDetectorStem()->hasContent != NULL) {
-          $sourceContent = $this->getSourceDetectorStem()->hasContent;
-        }
-      }
+    // IN CASE ITS A DERIVATION ORIGINAL MUST BE REMOVED ALSO
+    if ($this->getDetectorStem()->hasStatus === VSTOI::CURRENT || $this->getDetectorStem()->hasVersion > 1) {
+      unset($derivations[Constant::DEFAULT_WAS_GENERATED_BY]);
     }
 
-    //dpm($this->getDetector());
+    $languages = ['' => $this->t('Select one please')] + $languages;
+    $derivations = ['' => $this->t('Select one please')] + $derivations;
+
+    // dpm($this->getDetectorStem());
+    if ($this->getDetectorStem()->superUri) {
+      $form['detectorstem_type'] = [
+        'top' => [
+          '#type' => 'markup',
+          '#markup' => '<div class="pt-3 col border border-white">',
+        ],
+        'main' => [
+          '#type' => 'textfield',
+          '#title' => $this->t('Parent Type'),
+          '#name' => 'detectorstem_type',
+          '#default_value' => $this->getDetectorStem()->superUri ? Utils::fieldToAutocomplete($this->getDetectorStem()->superUri, $this->getDetectorStem()->superClassLabel) : '',
+          '#id' => 'detectorstem_type',
+          '#parents' => ['detectorstem_type'],
+          '#attributes' => [
+            'class' => ['open-tree-modal'],
+            'data-dialog-type' => 'modal',
+            'data-dialog-options' => json_encode(['width' => 800]),
+            'data-url' => Url::fromRoute('rep.tree_form', [
+              'mode' => 'modal',
+              'elementtype' => 'detectorstem',
+            ], ['query' => ['field_id' => 'detectorstem_type']])->toString(),
+            'data-field-id' => 'detectorstem_type',
+            'data-elementtype' => 'detectorstem',
+            'data-search-value' => $this->getDetectorStem()->superUri ?? '',
+          ],
+        ],
+        'bottom' => [
+          '#type' => 'markup',
+          '#markup' => '</div>',
+        ],
+      ];
+    }
 
     $form['detectorstem_content'] = [
-      '#type' => 'textarea',
-      '#title' => $this->t('Content'),
+      '#type' => 'textfield',
+      '#title' => $this->t('Name'),
       '#default_value' => $this->getDetectorStem()->hasContent,
     ];
     $form['detectorstem_language'] = [
@@ -92,29 +129,92 @@ class EditDetectorStemForm extends FormBase {
       '#title' => $this->t('Language'),
       '#options' => $languages,
       '#default_value' => $this->getDetectorStem()->hasLanguage,
+      '#attributes' => [
+        'id' => 'detectorstem_language'
+      ]
     ];
     $form['detectorstem_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
-      '#default_value' => $this->getDetectorStem()->hasVersion,
+      '#default_value' =>
+        ($this->getDetectorStem()->hasStatus === VSTOI::CURRENT || $this->getDetectorStem()->hasStatus === VSTOI::DEPRECATED) ?
+        $this->getDetectorStem()->hasVersion + 1 : $this->getDetectorStem()->hasVersion,
+      '#attributes' => [
+        'disabled' => 'disabled',
+      ],
     ];
     $form['detectorstem_description'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
       '#default_value' => $this->getDetectorStem()->comment,
     ];
-    $form['detectorstem_was_derived_from'] = [
+
+    $form['detectorstem_webdocument'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Was Derived From'),
-      '#default_value' => $sourceContent,
-      '#disabled' => TRUE,
+      '#title' => $this->t('Web Document'),
+      '#default_value' => $this->getDetectorStem()->hasWebDocument,
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ]
     ];
+
+    if ($this->getDetectorStem()->wasDerivedFrom !== NULL) {
+      $form['detectorstem_df_wrapper'] = [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['d-flex', 'align-items-center', 'w-100'], // Flex container para alinhamento correto
+          'style' => "width: 100%; gap: 10px;", // Garante espaçamento correto
+        ],
+      ];
+
+      if ($this->getDetectorStem()->wasDerivedFrom !== NULL) {
+        $form['detectorstem_df_wrapper']['detectorstem_wasderivedfrom'] = [
+          '#type' => 'textfield',
+          '#title' => $this->t('Derived From'),
+          '#default_value' => $this->getDetectorStem()->wasDerivedFrom,
+          '#attributes' => [
+            'class' => ['flex-grow-1'],
+            'style' => "width: 100%; min-width: 0;",
+            'disabled' => 'disabled',
+          ],
+        ];
+      }
+
+      $elementUri = Utils::namespaceUri($this->getDetectorStem()->wasDerivedFrom);
+      $elementUriEncoded = base64_encode($elementUri);
+      $url = Url::fromRoute('rep.describe_element', ['elementuri' => $elementUriEncoded], ['absolute' => TRUE])->toString();
+
+      $form['detectorstem_df_wrapper']['detectorstem_wasderivedfrom_button'] = [
+        '#type' => 'markup',
+        '#markup' => '<a href="' . $url . '" target="_blank" class="btn btn-primary text-nowrap mt-2" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
+      ];
+    }
     $form['detectorstem_was_generated_by'] = [
       '#type' => 'select',
       '#title' => $this->t('Was Derived By'),
       '#options' => $derivations,
-      '#default_value' => $wasGeneratedBy,
+      '#default_value' => $this->getDetectorStem()->wasGeneratedBy,
+      '#attributes' => [
+        'id' => 'detectorstem_was_generated_by'
+      ],
+      '#disabled' => ($this->getDetectorStem()->wasGeneratedBy === Constant::WGB_ORIGINAL ? true:false)
     ];
+    if ($this->getDetectorStem()->hasReviewNote !== NULL && $this->getDetectorStem()->hasStatus !== null) {
+      $form['detectorstem_hasreviewnote'] = [
+        '#type' => 'textarea',
+        '#title' => $this->t('Review Notes'),
+        '#default_value' => $this->getDetectorStem()->hasReviewNote,
+        '#disabled' => TRUE
+      ];
+      $form['detectorstem_haseditoremail'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Reviewer Email'),
+        '#default_value' => \Drupal::currentUser()->getEmail(),
+        '#attributes' => [
+          'disabled' => 'disabled',
+        ],
+      ];
+    }
     $form['update_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Update'),
@@ -129,6 +229,7 @@ class EditDetectorStemForm extends FormBase {
       '#name' => 'back',
       '#attributes' => [
         'class' => ['btn', 'btn-primary', 'cancel-button'],
+        'id' => 'cancel_button'
       ],
     ];
     $form['bottom_space'] = [
@@ -147,13 +248,7 @@ class EditDetectorStemForm extends FormBase {
 
     if ($button_name != 'back') {
       if(strlen($form_state->getValue('detectorstem_content')) < 1) {
-        $form_state->setErrorByName('detectorstem_content', $this->t('Please enter a valid content'));
-      }
-      if(strlen($form_state->getValue('detectorstem_language')) < 1) {
-        $form_state->setErrorByName('detectorstem_language', $this->t('Please enter a valid language'));
-      }
-      if(strlen($form_state->getValue('detectorstem_version')) < 1) {
-        $form_state->setErrorByName('detectorstem_version', $this->t('Please enter a valid version'));
+        $form_state->setErrorByName('detectorstem_content', $this->t('Please enter a valid Name'));
       }
     }
   }
@@ -171,34 +266,55 @@ class EditDetectorStemForm extends FormBase {
       return;
     }
 
+    $api = \Drupal::service('rep.api_connector');
+
     try{
 
-      $uid = \Drupal::currentUser()->id();
       $useremail = \Drupal::currentUser()->getEmail();
 
-      $wasDerivedFrom = '';
-      if ($this->getSourceDetectorStem() === NULL || $this->getSourceDetectorStem()->uri === NULL) {
-        $wasDerivedFrom = 'null';
-      } else {
-        $wasDerivedFrom = $this->getSourceDetectorStem()->uri;
-      }
+      // CHECK if Status is CURRENT OR DEPRECATED FOR NEW CREATION
+      if ($this->getDetectorStem()->hasStatus === VSTOI::CURRENT || $this->getDetectorStem()->hasStatus === VSTOI::DEPRECATED) {
 
-      $detectorStemJson = '{"uri":"'.$this->getDetectorStem()->uri.'",'.
-        '"typeUri":"'.VSTOI::DETECTOR_STEM.'",'.
+        $detectorStemJson = '{"uri":"'.Utils::uriGen('detectorstem').'",'.
+          '"superUri":"'.Utils::uriFromAutocomplete($this->getDetectorStem()->superUri).'",'.
+          '"label":"'.$form_state->getValue('detectorstem_content').'",'.
+          '"hascoTypeUri":"'.VSTOI::DETECTOR_STEM.'",'.
+          '"hasStatus":"'.VSTOI::DRAFT.'",'.
+          '"hasContent":"'.$form_state->getValue('detectorstem_content').'",'.
+          '"hasLanguage":"'.$form_state->getValue('detectorstem_language').'",'.
+          '"hasVersion":"'.$form_state->getValue('detectorstem_version').'",'.
+          '"comment":"'.$form_state->getValue('detectorstem_description').'",'.
+          '"wasDerivedFrom":"'.$this->getDetectorStem()->uri.'",'. //Previous Version is the New Derivation Value
+          '"wasGeneratedBy":"'.$form_state->getValue('detectorstem_was_generated_by').'",'.
+          '"hasSIRManagerEmail":"'.$useremail.'"}';
+
+        // UPDATE BY DELETING AND CREATING
+        $api->detectorStemAdd($detectorStemJson);
+        \Drupal::messenger()->addMessage(t("New Version Detector Stem has been created successfully."));
+
+      } else {
+
+        $detectorStemJson = '{"uri":"'.$this->getDetectorStem()->uri.'",'.
+        '"superUri":"'.Utils::uriFromAutocomplete($this->getDetectorStem()->superUri).'",'.
+        '"label":"'.$form_state->getValue('detectorstem_content').'",'.
         '"hascoTypeUri":"'.VSTOI::DETECTOR_STEM.'",'.
+        '"hasStatus":"'.$this->getDetectorStem()->hasStatus.'",'.
         '"hasContent":"'.$form_state->getValue('detectorstem_content').'",'.
         '"hasLanguage":"'.$form_state->getValue('detectorstem_language').'",'.
         '"hasVersion":"'.$form_state->getValue('detectorstem_version').'",'.
         '"comment":"'.$form_state->getValue('detectorstem_description').'",'.
-        '"wasDerivedFrom":"'.$wasDerivedFrom.'",'.
+        '"hasWebDocument":"'.$form_state->getValue('detectorstem_webdocument').'",'.
+        '"wasDerivedFrom":"'.$this->getDetectorStem()->wasDerivedFrom.'",'.
         '"wasGeneratedBy":"'.$form_state->getValue('detectorstem_was_generated_by').'",'.
+        '"hasReviewNote":"'.($this->getDetectorStem()->hasStatus !== null ? $this->getDetectorStem()->hasReviewNote : '').'",'.
+        '"hasEditorEmail":"'.($this->getDetectorStem()->hasStatus !== null ? $this->getDetectorStem()->hasEditorEmail : '').'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
 
-      // UPDATE BY DELETING AND CREATING
-      $api = \Drupal::service('rep.api_connector');
-      $api->detectorStemDel($this->getDetectorStemUri());
-      $updatedDetectorStem = $api->detectorStemAdd($detectorStemJson);
-      \Drupal::messenger()->addMessage(t("Detector Stem has been updated successfully."));
+        $api->detectorStemDel($this->getDetectorStemUri());
+        $api->detectorStemAdd($detectorStemJson);
+        \Drupal::messenger()->addMessage(t("Detector Stem has been updated successfully."));
+      }
+
       self::backUrl();
       return;
 
