@@ -10,6 +10,7 @@ use Drupal\rep\Constant;
 use Drupal\rep\Utils;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Vocabulary\VSTOI;
+use Drupal\rep\Vocabulary\REPGUI;
 
 class EditInstrumentForm extends FormBase {
 
@@ -54,6 +55,9 @@ class EditInstrumentForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $instrumenturi = NULL) {
+
+    // ROOT URL
+    $root_url = \Drupal::request()->getBaseUrl();
 
     // MODAL
     $form['#attached']['library'][] = 'rep/rep_modal';
@@ -109,6 +113,12 @@ class EditInstrumentForm extends FormBase {
         'class' => ['align-items-center', 'gap-2', 'mt-2'], // Flexbox para alinhar na mesma linha
         'style' => 'max-width: 1280px;margin-bottom:0!important;',
       ],
+    ];
+
+    $form['instrument_information']['instrument_parent_wrapper']['instrument_uri'] = [
+      '#type' => 'item',
+      '#title' => $this->t('URI: '),
+      '#markup' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($this->getInstrumentUri()).'">'.$this->getInstrumentUri().'</a>'),
     ];
 
     $form['instrument_information']['instrument_parent_wrapper']['instrument_type'] = [
