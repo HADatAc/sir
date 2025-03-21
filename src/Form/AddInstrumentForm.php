@@ -11,8 +11,19 @@ use Drupal\rep\Constant;
 use Drupal\rep\Utils;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Vocabulary\VSTOI;
+use Drupal\file\Entity\File;
 
 class AddInstrumentForm extends FormBase {
+
+  protected $instrumentUri;
+
+  public function setInstrumenUri() {
+    $this->instrumentUri = Utils::uriGen('instrument');
+  }
+
+  public function getInstrumenUri() {
+    return $this->instrumentUri;
+  }
 
   /**
    * {@inheritdoc}
@@ -25,6 +36,9 @@ class AddInstrumentForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+
+    // Because File Upload Path
+    $this->setInstrumenUri();
 
     // MODAL
     $form['#attached']['library'][] = 'rep/rep_modal';
@@ -100,13 +114,55 @@ class AddInstrumentForm extends FormBase {
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
     ];
-    $form['instrument_webdocument'] = [
+
+    // Add a select box to choose between URL and Upload.
+    $form['instrument_webdocument_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Web Document Type'),
+      '#options' => [
+        '' => $this->t('Select Document Type'),
+        'url' => $this->t('URL'),
+        'upload' => $this->t('Upload'),
+      ],
+      '#default_value' => '',
+    ];
+
+    // The textfield for entering a URL.
+    // It is only visible when the select box value is 'url'.
+    $form['instrument_webdocument_url'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Web Document'),
       '#attributes' => [
         'placeholder' => 'http://',
-      ]
+      ],
+      '#states' => [
+        'visible' => [
+          ':input[name="instrument_webdocument_type"]' => ['value' => 'url'],
+        ],
+      ],
     ];
+
+    // Wrap the managed_file element in a container with the #states condition.
+    // This container is only visible when the select box value is 'upload'.
+    $form['instrument_webdocument_upload_wrapper'] = [
+      '#type' => 'container',
+      '#states' => [
+        'visible' => [
+          ':input[name="instrument_webdocument_type"]' => ['value' => 'upload'],
+        ],
+      ],
+    ];
+
+    $modUri = (explode(":/", utils::namespaceUri($this->getInstrumenUri())))[1];
+    $form['instrument_webdocument_upload_wrapper']['instrument_webdocument_upload'] = [
+      '#type' => 'managed_file',
+      '#title' => $this->t('Upload Document'),
+      '#upload_location' => 'private://resources/'.$modUri.'/webdoc',
+      '#upload_validators' => [
+        'file_validate_extensions' => ['pdf doc docx txt xls xlsx'], // Adjust allowed extensions as needed.
+      ],
+    ];
+
     $form['save_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Save'),
@@ -163,28 +219,60 @@ class AddInstrumentForm extends FormBase {
     if ($button_name === 'back') {
       self::backUrl();
       return;
-  }
+    }
 
     try{
+
+      // Get the current user email and generate a new instrument URI.
       $useremail = \Drupal::currentUser()->getEmail();
       $newInstrumentUri = Utils::uriGen('instrument');
-      // dpm($newInstrumentUri);
-      $instrumentJson = '{"uri":"'.$newInstrumentUri.'",'.
-        '"superUri":"'.Utils::uriFromAutocomplete($form_state->getValue('instrument_type')).'",'.
-        '"hascoTypeUri":"'.VSTOI::INSTRUMENT.'",'.
-        '"hasStatus":"'.VSTOI::DRAFT.'",'.
-        '"label":"'.$form_state->getValue('instrument_name').'",'.
-        '"hasShortName":"'.$form_state->getValue('instrument_abbreviation').'",'.
-        '"hasInformant":"'.$form_state->getValue('instrument_informant').'",'.
-        '"hasLanguage":"'.$form_state->getValue('instrument_language').'",'.
-        '"hasVersion":"'.$form_state->getValue('instrument_version').'",'.
-        '"hasWebDocument":"'.$form_state->getValue('instrument_webdocument').'",'.
-        '"comment":"'.$form_state->getValue('instrument_description').'",'.
-        '"hasSIRManagerEmail":"'.$useremail.'"}';
 
+      // Determine the chosen document type.
+      $doc_type = $form_state->getValue('instrument_webdocument_type');
+      $instrument_webdocument = '';
+
+      // If user selected URL, use the textfield value.
+      if ($doc_type === 'url') {
+        $instrument_webdocument = $form_state->getValue('instrument_webdocument_url');
+      }
+      // If user selected Upload, load the file entity and get its filename.
+      elseif ($doc_type === 'upload') {
+        // Get the file IDs from the managed_file element.
+        $fids = $form_state->getValue('instrument_webdocument_upload');
+        if (!empty($fids)) {
+          // Load the first file (file ID is returned, e.g. "374").
+          $file = File::load(reset($fids));
+          if ($file) {
+            // Mark the file as permanent and save it.
+            $file->setPermanent();
+            $file->save();
+            // Optionally register file usage to prevent cleanup.
+            \Drupal::service('file.usage')->add($file, 'sir', 'instrument', 1);
+            // Now get the filename from the file entity.
+            $instrument_webdocument = $file->getFilename();
+          }
+        }
+      }
+
+      // Build the JSON string with the computed web document value.
+      $instrumentJson = '{"uri":"' . $newInstrumentUri . '",' .
+        '"superUri":"' . Utils::uriFromAutocomplete($form_state->getValue('instrument_type')) . '",' .
+        '"hascoTypeUri":"' . VSTOI::INSTRUMENT . '",' .
+        '"hasStatus":"' . VSTOI::DRAFT . '",' .
+        '"label":"' . $form_state->getValue('instrument_name') . '",' .
+        '"hasShortName":"' . $form_state->getValue('instrument_abbreviation') . '",' .
+        '"hasInformant":"' . $form_state->getValue('instrument_informant') . '",' .
+        '"hasLanguage":"' . $form_state->getValue('instrument_language') . '",' .
+        '"hasVersion":"' . $form_state->getValue('instrument_version') . '",' .
+        '"hasWebDocument":"' . $instrument_webdocument . '",' .
+        '"comment":"' . $form_state->getValue('instrument_description') . '",' .
+        '"hasSIRManagerEmail":"' . $useremail . '"}';
+
+      // Call the API connector service with the JSON.
       $api = \Drupal::service('rep.api_connector');
       $api->instrumentAdd($instrumentJson);
-      \Drupal::messenger()->addMessage(t("Instrument has been added successfully."));
+
+      \Drupal::messenger()->addMessage($this->t("Instrument has been added successfully."));
       self::backUrl();
       return;
 
