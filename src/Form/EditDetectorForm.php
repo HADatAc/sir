@@ -11,6 +11,7 @@ use Drupal\rep\Entity\Tables;
 use Drupal\rep\Constant;
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\VSTOI;
+use Drupal\rep\Vocabulary\REPGUI;
 
 class EditDetectorForm extends FormBase {
 
@@ -56,6 +57,8 @@ class EditDetectorForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $detectoruri = NULL) {
 
+     // ROOT URL
+     $root_url = \Drupal::request()->getBaseUrl();
 
     // MODAL
     $form['#attached']['library'][] = 'rep/rep_modal';
@@ -84,6 +87,12 @@ class EditDetectorForm extends FormBase {
     }
 
     // dpm($this->getDetector());
+
+    $form['detector_uri'] = [
+      '#type' => 'item',
+      '#title' => $this->t('URI: '),
+      '#markup' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($this->getDetectorUri()).'">'.$this->getDetectorUri().'</a>'),
+    ];
 
     $form['detector_stem'] = [
       'top' => [
@@ -133,8 +142,10 @@ class EditDetectorForm extends FormBase {
         'disabled' => 'disabled',
       ],
     ];
-    $api = \Drupal::service('rep.api_connector');
-    $attributOf = $api->parseObjectResponse($api->getUri($this->getDetector()->isAttributeOf),'getUri');
+    if (isset($this->getDetector()->isAttributeOf)) {
+      $api = \Drupal::service('rep.api_connector');
+      $attributOf = $api->parseObjectResponse($api->getUri($this->getDetector()->isAttributeOf),'getUri');
+    }
     $form['detector_isAttributeOf'] = [
       'top' => [
         '#type' => 'markup',
@@ -144,7 +155,7 @@ class EditDetectorForm extends FormBase {
         '#type' => 'textfield',
         '#title' => $this->t('Attribute Of <small><i>(optional)</i></small>'),
         '#name' => 'detector_isAttributeOf',
-        '#default_value' => $attributOf->label . ' [' . $this->getDetector()->isAttributeOf . ']',
+        '#default_value' => (isset($attributOf) ? $attributOf->label . ' [' . $this->getDetector()->isAttributeOf . ']' : ''),
         '#id' => 'detector_isAttributeOf',
         '#parents' => ['detector_isAttributeOf'],
         '#attributes' => [

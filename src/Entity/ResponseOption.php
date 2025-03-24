@@ -194,7 +194,7 @@ class ResponseOption {
     unset($clonedObject->query);
     unset($clonedObject->namedGraph);
     unset($clonedObject->serialNumber);
-    unset($clonedObject->image);
+    unset($clonedObject->hasImageUri);
     unset($clonedObject->typeLabel);
     unset($clonedObject->hascoTypeLabel);
 

@@ -84,7 +84,7 @@ class SIRListForm extends FormBase {
     // Gets Filter Values
     $status_filter = $form_state->getValue('status_filter') ?? 'all';
     $language_filter = $form_state->getValue('language_filter') ?? 'all';
-    $text_filter = $form_state->getValue('text_filter') ?? '';
+    $text_filter = ($form_state->getValue('text_filter') != '' && $form_state->getValue('text_filter') != '_') ? $form_state->getValue('text_filter') : $keyword;
     // Convert the text filter to lowercase for case-insensitive comparison
     $text_filter = strtolower($text_filter);
 

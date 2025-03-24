@@ -23,6 +23,8 @@ use Drupal\rep\Vocabulary\VSTOI;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\ListKeywordPage;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Drupal\rep\ListKeywordLanguagePage;
+use Drupal\sir\Entity\Task;
 
 use function Termwind\style;
 
@@ -87,9 +89,34 @@ class SIRSelectForm extends FormBase {
       return new RedirectResponse($url);
     }
 
-    if ($this->element_type != NULL) {
+    // Search values filter
+    $status_filter = $form_state->getValue('status_filter') ?? 'all';
+    $language_filter = $form_state->getValue('language_filter') ?? 'all';
+    $text_filter = $form_state->getValue('text_filter') ?? '';
+
+    // Get elements based on status
+    // dpm($text_filter.'='.strlen($text_filter).'|'.$language_filter.'='.strlen($language_filter));
+    if (strlen($text_filter) === 0 && $language_filter === 'all') {
+      $this->setList(ListManagerEmailPage::exec($this->element_type, $this->manager_email, $page, $pagesize));
       $this->setListSize(ListManagerEmailPage::total($this->element_type, $this->manager_email));
+    } else if (strlen($text_filter) > 0 && $language_filter !== 'all') {
+      $this->setList(ListKeywordLanguagePage::exec($this->element_type,$text_filter, $language_filter, $page, 9999));
+      $this->setListSize(ListKeywordLanguagePage::total($this->element_type, $text_filter, $language_filter));
+      $pagesize = 9999;
+    } else if (strlen($text_filter) === 0 && $language_filter !== 'all') {
+      $text_filter = '_';
+      $this->setList(ListKeywordLanguagePage::exec($this->element_type,$text_filter, $language_filter, $page, 9999));
+      $this->setListSize(ListKeywordLanguagePage::total($this->element_type, $text_filter, $language_filter));
+      $pagesize = 9999;
+    } else {
+      $this->setList(ListKeywordPage::exec($this->element_type, $text_filter, $page, 9999));
+      $this->setListSize(ListKeywordPage::total($this->element_type, $text_filter));
+      $pagesize = 9999;
     }
+
+    // if ($this->element_type != NULL) {
+    //   $this->setListSize(ListManagerEmailPage::total($this->element_type, $this->manager_email));
+    // }
 
     // Retrieve or set default view type
     $session = \Drupal::request()->getSession();
@@ -180,10 +207,6 @@ class SIRSelectForm extends FormBase {
         '#type' => 'container',
         '#attributes' => ['class' => ['d-flex', 'gap-2']],
       ];
-
-      $status_filter = $form_state->getValue('status_filter') ?? 'all';
-      $language_filter = $form_state->getValue('language_filter') ?? 'all';
-      $text_filter = $form_state->getValue('text_filter') ?? '';
 
       $form['actions_wrapper']['buttons_container']['add_element'] = [
         '#type' => 'submit',
@@ -551,20 +574,26 @@ class SIRSelectForm extends FormBase {
    * Build the table view.
    */
   protected function buildTableView(array &$form, FormStateInterface $form_state, $page, $pagesize) {
-    // Retrieve the filtered status
-    $status_filter = $form_state->getValue('status_filter') ?? 'all';
-    $language_filter = $form_state->getValue('language_filter') ?? 'all';
-    $text_filter = $form_state->getValue('text_filter') ?? '';
+    // // Retrieve the filtered status
+    // $status_filter = $form_state->getValue('status_filter') ?? 'all';
+    // $language_filter = $form_state->getValue('language_filter') ?? 'all';
+    // $text_filter = $form_state->getValue('text_filter') ?? '';
 
-    // Convert the text filter to lowercase for case-insensitive comparison
-    $text_filter = strtolower($text_filter);
+    // // // Convert the text filter to lowercase for case-insensitive comparison
+    // // $text_filter = strtolower($text_filter);
 
-    // Get elements based on status
-    if (strlen($text_filter) === 0 )
-      $this->setList(ListManagerEmailPage::exec($this->element_type, $this->manager_email, $page, $pagesize));
-    else
-      $this->setList(ListKeywordPage::exec($this->element_type, $text_filter, $page, 99999999));
-      // URGENT HAVE A API METHOD THAT RETURNS ONLY SEARCHED TEXT
+    // if (strlen($text_filter) === 0 ) {
+    //   $this->setList(ListManagerEmailPage::exec($this->element_type, $this->manager_email, $page, $pagesize));
+    //   $this->setListSize(ListManagerEmailPage::total($this->element_type, $this->manager_email));
+    // } elseif (strlen($text_filter) > 0 && $language_filter !== 'all') {
+    //   $this->setList(ListKeywordLanguagePage::exec($this->element_type,$text_filter, $language_filter, $page, 99999999));
+    //   $this->setListSize(ListKeywordLanguagePage::total($this->element_type, $text_filter, $language_filter));
+    //   // $pagesize = 99999999;
+    // } else {
+    //   $this->setList(ListKeywordPage::exec($this->element_type, $text_filter, 1, 99999999));
+    //   $this->setListSize(ListKeywordPage::total($this->element_type, $text_filter, 1, 99999999));
+    //   // $pagesize = 99999999;
+    // }
 
     $header = $this->generateHeader();
     $results = $this->generateOutput();
@@ -593,18 +622,18 @@ class SIRSelectForm extends FormBase {
         else if ($this->element_type == 'detector' || $this->element_type == 'detectorstem' || $this->element_type == 'responseoption' || $this->element_type == 'actuator' || $this->element_type == 'actuatorstem')
           $row_label = strtolower($row['element_content']);
 
-        if ($status_filter !== 'all' && $row_status !== $status_filter) {
-            continue;
-        }
+        // if ($status_filter !== 'all' && $row_status !== $status_filter) {
+        //     continue;
+        // }
 
-        if ($language_filter !== 'all' && $row_language !== $language_filter) {
-            continue;
-        }
+        // if ($language_filter !== 'all' && $row_language !== $language_filter) {
+        //     continue;
+        // }
 
-        // Use strpos to check if the text filter is contained in the label.
-        if ($text_filter !== '' && strpos($row_label, $text_filter) === false) {
-            continue;
-        }
+        // // Use strpos to check if the text filter is contained in the label.
+        // if ($text_filter !== '' && strpos($row_label, $text_filter) === false) {
+        //     continue;
+        // }
 
         // Checkbox for selection
         $checkbox = [
@@ -1029,6 +1058,8 @@ class SIRSelectForm extends FormBase {
         return ProcessStem::generateHeader();
       case "process":
         return Process::generateHeader();
+      case "task":
+        return Task::generateHeader();
       default:
         return [];
     }
@@ -1059,6 +1090,8 @@ class SIRSelectForm extends FormBase {
         return ProcessStem::generateOutput($this->getList());
       case "process":
         return Process::generateOutput($this->getList());
+      case "task":
+        return Task::generateOutput($this->getList());
       default:
         return [];
     }
@@ -1412,6 +1445,11 @@ class SIRSelectForm extends FormBase {
       $url = Url::fromRoute('sir.add_process');
       $url->setRouteParameter('state', 'basic');
       //$url->setRouteParameter('sourceprocessuri', 'EMPTY');
+    } elseif ($this->element_type == 'task') {
+      Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_task');
+      $url = Url::fromRoute('sir.add_task');
+      $url->setRouteParameter('state', 'basic');
+      //$url->setRouteParameter('sourceprocessuri', 'EMPTY');
     }
     $form_state->setRedirectUrl($url);
   }
@@ -1556,7 +1594,7 @@ class SIRSelectForm extends FormBase {
         unset($clonedObject->query);
         unset($clonedObject->namedGraph);
         unset($clonedObject->serialNumber);
-        unset($clonedObject->image);
+        unset($clonedObject->hasImageUri);
         unset($clonedObject->typeLabel);
         unset($clonedObject->hascoTypeLabel);
 

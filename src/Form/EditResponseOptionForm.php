@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\Utils;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Vocabulary\VSTOI;
+use Drupal\rep\Vocabulary\REPGUI;
 
 class EditResponseOptionForm extends FormBase {
 
@@ -43,6 +44,10 @@ class EditResponseOptionForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $responseoptionuri = NULL) {
+
+    // ROOT URL
+    $root_url = \Drupal::request()->getBaseUrl();
+
     $uri=$responseoptionuri ?? 'default';
     $uri_decode=base64_decode($uri);
     $this->setResponseOptionUri($uri_decode);
@@ -62,6 +67,11 @@ class EditResponseOptionForm extends FormBase {
       return;
     }
 
+    $form['responseoption_uri'] = [
+      '#type' => 'item',
+      '#title' => $this->t('URI: '),
+      '#markup' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($this->getResponseOptionUri()).'">'.$this->getResponseOptionUri().'</a>'),
+    ];
     $form['responseoption_content'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Content'),
