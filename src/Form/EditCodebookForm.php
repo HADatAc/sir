@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Vocabulary\VSTOI;
 use Drupal\rep\Utils;
+use Drupal\rep\Vocabulary\REPGUI;
 
 class EditCodebookForm extends FormBase {
 
@@ -43,6 +44,10 @@ class EditCodebookForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $codebookuri = NULL) {
+
+    // ROOT URL
+    $root_url = \Drupal::request()->getBaseUrl();
+
     $uri=$codebookuri ?? 'default';
     $uri_decode=base64_decode($uri);
     $this->setCodebookUri($uri_decode);
@@ -62,6 +67,11 @@ class EditCodebookForm extends FormBase {
       self::backUrl();
       return;
     }
+    $form['codebook_uri'] = [
+      '#type' => 'item',
+      '#title' => $this->t('URI: '),
+      '#markup' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($this->getCodebookUri()).'">'.$this->getCodebookUri().'</a>'),
+    ];
     $form['codebook_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name'),

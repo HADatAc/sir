@@ -11,6 +11,7 @@ use Drupal\rep\Entity\Tables;
 use Drupal\rep\Constant;
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\VSTOI;
+use Drupal\rep\Vocabulary\REPGUI;
 
 class EditActuatorForm extends FormBase {
 
@@ -56,6 +57,8 @@ class EditActuatorForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $actuatoruri = NULL) {
 
+    // ROOT URL
+    $root_url = \Drupal::request()->getBaseUrl();
 
     // MODAL
     $form['#attached']['library'][] = 'rep/rep_modal';
@@ -84,7 +87,11 @@ class EditActuatorForm extends FormBase {
     }
 
     // dpm($this->getActuator());
-
+    $form['actuator_uri'] = [
+      '#type' => 'item',
+      '#title' => $this->t('URI: '),
+      '#markup' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($this->getActuatorUri()).'">'.$this->getActuatorUri().'</a>'),
+    ];
     $form['actuator_stem'] = [
       'top' => [
         '#type' => 'markup',
@@ -133,8 +140,10 @@ class EditActuatorForm extends FormBase {
         'disabled' => 'disabled',
       ],
     ];
-    $api = \Drupal::service('rep.api_connector');
-    $attributOf = $api->parseObjectResponse($api->getUri($this->getActuator()->isAttributeOf),'getUri');
+    if (isset($this->getActuator()->isAttributeOf)) {
+      $api = \Drupal::service('rep.api_connector');
+      $attributOf = $api->parseObjectResponse($api->getUri($this->getActuator()->isAttributeOf),'getUri');
+    }
     $form['actuator_isAttributeOf'] = [
       'top' => [
         '#type' => 'markup',
@@ -144,7 +153,7 @@ class EditActuatorForm extends FormBase {
         '#type' => 'textfield',
         '#title' => $this->t('Attribute Of <small><i>(optional)</i></small>'),
         '#name' => 'actuator_isAttributeOf',
-        '#default_value' => $attributOf->label . ' [' . $this->getActuator()->isAttributeOf . ']',
+        '#default_value' => (isset($attributOf) ? $attributOf->label . ' [' . $this->getActuator()->isAttributeOf . ']' : ''),
         '#id' => 'actuator_isAttributeOf',
         '#parents' => ['actuator_isAttributeOf'],
         '#attributes' => [

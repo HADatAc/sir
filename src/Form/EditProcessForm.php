@@ -11,6 +11,7 @@ use Drupal\rep\Entity\Tables;
 use Drupal\rep\Constant;
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\VSTOI;
+use Drupal\rep\Vocabulary\REPGUI;
 
 class EditProcessForm extends FormBase {
 
@@ -56,6 +57,8 @@ class EditProcessForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $processuri = NULL) {
 
+    // ROOT URL
+    $root_url = \Drupal::request()->getBaseUrl();
 
     // MODAL
     $form['#attached']['library'][] = 'rep/rep_modal';
@@ -87,10 +90,15 @@ class EditProcessForm extends FormBase {
       $this->setProcess($process);
     }
 
+    $form['process_uri'] = [
+      '#type' => 'item',
+      '#title' => $this->t('URI: '),
+      '#markup' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($this->getProcessUri()).'">'.$this->getProcessUri().'</a>'),
+    ];
     $form['process_processstem'] = [
       'top' => [
         '#type' => 'markup',
-        '#markup' => '<div class="pt-3 col border border-white">',
+        '#markup' => '<div class="col border border-white">',
       ],
       'main' => [
         '#type' => 'textfield',

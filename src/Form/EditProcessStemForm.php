@@ -11,6 +11,7 @@ use Drupal\rep\Entity\Tables;
 use Drupal\rep\Constant;
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\VSTOI;
+use Drupal\rep\Vocabulary\REPGUI;
 
 class EditProcessStemForm extends FormBase {
 
@@ -56,6 +57,9 @@ class EditProcessStemForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $processstemuri = NULL) {
 
+    // ROOT URL
+    $root_url = \Drupal::request()->getBaseUrl();
+
     // MODAL
     $form['#attached']['library'][] = 'rep/rep_modal';
     $form['#attached']['library'][] = 'core/drupal.dialog';
@@ -85,12 +89,17 @@ class EditProcessStemForm extends FormBase {
     $languages = ['' => $this->t('Select one please')] + $languages;
     $derivations = ['' => $this->t('Select one please')] + $derivations;
 
+    $form['processstem_uri'] = [
+      '#type' => 'item',
+      '#title' => $this->t('URI: '),
+      '#markup' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($this->getProcessStemUri()).'">'.$this->getProcessStemUri().'</a>'),
+    ];
     // dpm($this->getProcessStem());
     if ($this->getProcessStem()->superUri) {
       $form['processstem_type'] = [
         'top' => [
           '#type' => 'markup',
-          '#markup' => '<div class="pt-3 col border border-white">',
+          '#markup' => '<div class="col border border-white">',
         ],
         'main' => [
           '#type' => 'textfield',

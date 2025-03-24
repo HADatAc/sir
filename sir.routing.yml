@@ -614,6 +614,14 @@ sir.edit_task:
   options:
     no_cache: 'TRUE'
 
+sir.task_autocomplete:
+  path: '/sir/manage/task/autocomplete'
+  defaults:
+    _controller: '\Drupal\sir\Controller\JsonApiTaskController::handleTasksAutocomplete'
+    _format: json
+  requirements:
+    _permission: 'access content'
+
 # REVIEW ROUTES
 
 sir.select_review_element:

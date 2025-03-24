@@ -11,6 +11,7 @@ use Drupal\rep\Entity\Tables;
 use Drupal\rep\Constant;
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\VSTOI;
+use Drupal\rep\Vocabulary\REPGUI;
 
 class EditDetectorStemForm extends FormBase {
 
@@ -56,6 +57,9 @@ class EditDetectorStemForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $detectorstemuri = NULL) {
 
+    // ROOT URL
+    $root_url = \Drupal::request()->getBaseUrl();
+
     // MODAL
     $form['#attached']['library'][] = 'rep/rep_modal';
     $form['#attached']['library'][] = 'core/drupal.dialog';
@@ -85,12 +89,18 @@ class EditDetectorStemForm extends FormBase {
     $languages = ['' => $this->t('Select one please')] + $languages;
     $derivations = ['' => $this->t('Select one please')] + $derivations;
 
+    $form['detectorstem_uri'] = [
+      '#type' => 'item',
+      '#title' => $this->t('URI: '),
+      '#markup' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($this->getDetectorStemUri()).'">'.$this->getDetectorStemUri().'</a>'),
+    ];
+
     // dpm($this->getDetectorStem());
 
     $form['detectorstem_type'] = [
       'top' => [
         '#type' => 'markup',
-        '#markup' => '<div class="pt-3 col border border-white">',
+        '#markup' => '<div class="col border border-white">',
       ],
       'main' => [
         '#type' => 'textfield',
@@ -117,7 +127,6 @@ class EditDetectorStemForm extends FormBase {
         '#markup' => '</div>',
       ],
     ];
-
 
     $form['detectorstem_content'] = [
       '#type' => 'textfield',
