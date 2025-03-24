@@ -86,38 +86,38 @@ class EditDetectorStemForm extends FormBase {
     $derivations = ['' => $this->t('Select one please')] + $derivations;
 
     // dpm($this->getDetectorStem());
-    if ($this->getDetectorStem()->superUri) {
-      $form['detectorstem_type'] = [
-        'top' => [
-          '#type' => 'markup',
-          '#markup' => '<div class="pt-3 col border border-white">',
+
+    $form['detectorstem_type'] = [
+      'top' => [
+        '#type' => 'markup',
+        '#markup' => '<div class="pt-3 col border border-white">',
+      ],
+      'main' => [
+        '#type' => 'textfield',
+        '#title' => $this->t('Parent Type'),
+        '#name' => 'detectorstem_type',
+        '#default_value' => $this->getDetectorStem()->superUri ? Utils::fieldToAutocomplete($this->getDetectorStem()->superUri, $this->getDetectorStem()->superClassLabel) : '',
+        '#id' => 'detectorstem_type',
+        '#parents' => ['detectorstem_type'],
+        '#attributes' => [
+          'class' => ['open-tree-modal'],
+          'data-dialog-type' => 'modal',
+          'data-dialog-options' => json_encode(['width' => 800]),
+          'data-url' => Url::fromRoute('rep.tree_form', [
+            'mode' => 'modal',
+            'elementtype' => 'detectorstem',
+          ], ['query' => ['field_id' => 'detectorstem_type']])->toString(),
+          'data-field-id' => 'detectorstem_type',
+          'data-elementtype' => 'detectorstem',
+          'data-search-value' => $this->getDetectorStem()->superUri ?? '',
         ],
-        'main' => [
-          '#type' => 'textfield',
-          '#title' => $this->t('Parent Type'),
-          '#name' => 'detectorstem_type',
-          '#default_value' => $this->getDetectorStem()->superUri ? Utils::fieldToAutocomplete($this->getDetectorStem()->superUri, $this->getDetectorStem()->superClassLabel) : '',
-          '#id' => 'detectorstem_type',
-          '#parents' => ['detectorstem_type'],
-          '#attributes' => [
-            'class' => ['open-tree-modal'],
-            'data-dialog-type' => 'modal',
-            'data-dialog-options' => json_encode(['width' => 800]),
-            'data-url' => Url::fromRoute('rep.tree_form', [
-              'mode' => 'modal',
-              'elementtype' => 'detectorstem',
-            ], ['query' => ['field_id' => 'detectorstem_type']])->toString(),
-            'data-field-id' => 'detectorstem_type',
-            'data-elementtype' => 'detectorstem',
-            'data-search-value' => $this->getDetectorStem()->superUri ?? '',
-          ],
-        ],
-        'bottom' => [
-          '#type' => 'markup',
-          '#markup' => '</div>',
-        ],
-      ];
-    }
+      ],
+      'bottom' => [
+        '#type' => 'markup',
+        '#markup' => '</div>',
+      ],
+    ];
+
 
     $form['detectorstem_content'] = [
       '#type' => 'textfield',
@@ -295,7 +295,7 @@ class EditDetectorStemForm extends FormBase {
       } else {
 
         $detectorStemJson = '{"uri":"'.$this->getDetectorStem()->uri.'",'.
-        '"superUri":"'.Utils::uriFromAutocomplete($this->getDetectorStem()->superUri).'",'.
+        '"superUri":"'.Utils::uriFromAutocomplete($form_state->getValue('detectorstem_type')).'",'.
         '"label":"'.$form_state->getValue('detectorstem_content').'",'.
         '"hascoTypeUri":"'.VSTOI::DETECTOR_STEM.'",'.
         '"hasStatus":"'.$this->getDetectorStem()->hasStatus.'",'.
