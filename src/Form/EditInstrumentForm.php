@@ -191,19 +191,99 @@ class EditInstrumentForm extends FormBase {
       '#title' => $this->t('Description'),
       '#default_value' => $this->getInstrument()->comment,
     ];
-    // $form['instrument_information']['instrument_parent_wrapper']['instrument_webdocument'] = [
-    //   '#type' => 'textfield',
-    //   '#title' => $this->t('Web Document'),
-    //   '#default_value' => $this->getInstrument()->hasWebDocument,
-    //   '#attributes' => [
-    //     'placeholder' => 'http://',
-    //   ]
-    // ];
-    // Retrieve the current web document value.
-    // Retrieve the current instrument and its web document.
+
+    // **** IMAGE ****
+    // Retrieve the current image value.
+    // Retrieve the current instrument and its image.
     $instrument = $this->getInstrument();
-    $instrument_webdocument = $instrument->hasWebDocument ?? '';
     $instrument_uri = Utils::namespaceUri($this->getInstrumentUri());
+    $instrument_image = $instrument->hasImageUri ?? '';
+
+    // Determine if the existing web document is a URL or a file.
+    $image_type = '';
+    if (!empty($instrument_image) && stripos(trim($instrument_image), 'http') === 0) {
+      $image_type = 'url';
+    }
+    elseif (!empty($instrument_image)) {
+      $image_type = 'upload';
+    }
+
+    $modUri = '';
+    if (!empty($instrument_uri)) {
+      // Example of extracting part of the URI. Adjust or remove if not needed.
+      $parts = explode(':/', $instrument_uri);
+      if (count($parts) > 1) {
+        $modUri = $parts[1];
+      }
+    }
+
+    // Image Type selector (URL or Upload).
+    $form['instrument_information']['instrument_image_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Image Type'),
+      '#options' => [
+        '' => $this->t('Select Image Type'),
+        'url' => $this->t('URL'),
+        'upload' => $this->t('Upload'),
+      ],
+      '#default_value' => $image_type,
+    ];
+
+    // Textfield for URL mode (only visible when type = 'url').
+    $form['instrument_information']['instrument_image_url'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Web Document'),
+      '#default_value' => ($image_type === 'url') ? $instrument_image : '',
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ],
+      '#states' => [
+        'visible' => [
+          ':input[name="instrument_image_type"]' => ['value' => 'url'],
+        ],
+      ],
+    ];
+
+    // Container for the file upload elements (only visible when type = 'upload').
+    $form['instrument_information']['instrument_image_upload_wrapper'] = [
+      '#type' => 'container',
+      '#states' => [
+        'visible' => [
+          ':input[name="instrument_image_type"]' => ['value' => 'upload'],
+        ],
+      ],
+    ];
+
+    // Attempt to load an existing file if the document is not a URL.
+    $existing_image_fid = NULL;
+    if ($image_type === 'upload' && !empty($instrument_image)) {
+      // Build the expected file URI in the private filesystem.
+      $desired_uri = 'private://resources/' . $modUri . '/image/' . $instrument_image;
+      $files = \Drupal::entityTypeManager()
+        ->getStorage('file')
+        ->loadByProperties(['uri' => $desired_uri]);
+      $file = reset($files);
+      if ($file) {
+        $existing_image_fid = $file->id();
+      }
+    }
+
+    // 5. Managed file element for uploading a new document.
+    $form['instrument_information']['instrument_image_upload_wrapper']['instrument_image_upload'] = [
+      '#type' => 'managed_file',
+      '#title' => $this->t('Upload Document'),
+      '#upload_location' => 'private://resources/' . $modUri . '/image',
+      '#upload_validators' => [
+        'file_validate_extensions' => ['png jpg jpeg'],
+        'file_validate_size' => [2097152],
+      ],
+      // If a file already exists, pass its ID so Drupal can display it.
+      '#default_value' => $existing_image_fid ? [$existing_image_fid] : NULL,
+    ];
+
+    // **** WEBDOCUMENT ****
+    // Retrieve the current web document value.
+    $instrument_webdocument = $instrument->hasWebDocument ?? '';
 
     // Determine if the existing web document is a URL or a file.
     $webdocument_type = '';
@@ -214,7 +294,7 @@ class EditInstrumentForm extends FormBase {
       $webdocument_type = 'upload';
     }
 
-    // 1. Web Document Type selector (URL or Upload).
+    // Web Document Type selector (URL or Upload).
     $form['instrument_information']['instrument_webdocument_type'] = [
       '#type' => 'select',
       '#title' => $this->t('Web Document Type'),
@@ -226,7 +306,7 @@ class EditInstrumentForm extends FormBase {
       '#default_value' => $webdocument_type,
     ];
 
-    // 2. Textfield for URL mode (only visible when type = 'url').
+    // Textfield for URL mode (only visible when type = 'url').
     $form['instrument_information']['instrument_webdocument_url'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Web Document'),
@@ -241,20 +321,7 @@ class EditInstrumentForm extends FormBase {
       ],
     ];
 
-    // 3. Determine the upload path from the instrument URI (if needed).
-    //    For example, if you store it under private://resources/<modUri>/webdoc.
-    $modUri = '';
-    if (!empty($instrument_uri)) {
-      // Example of extracting part of the URI. Adjust or remove if not needed.
-      $parts = explode(':/', $instrument_uri);
-      if (count($parts) > 1) {
-        $modUri = $parts[1];
-      }
-    }
-
-    // dpm($modUri);return false;
-
-    // 4. Container for the file upload elements (only visible when type = 'upload').
+    // Container for the file upload elements (only visible when type = 'upload').
     $form['instrument_information']['instrument_webdocument_upload_wrapper'] = [
       '#type' => 'container',
       '#states' => [
@@ -428,6 +495,7 @@ class EditInstrumentForm extends FormBase {
         '"hasLanguage":"'.$form_state->getValue('instrument_language').'",'.
         '"hasVersion":"'.$form_state->getValue('instrument_version').'",'.
         '"hasWebDocument":"",'.
+        '"hasImageUri":"",' .
         '"comment":"'.$form_state->getValue('instrument_description').'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
 
@@ -464,6 +532,33 @@ class EditInstrumentForm extends FormBase {
           }
         }
 
+        // Determine the chosen image type.
+        $image_type = $form_state->getValue('instrument_image_type');
+        $instrument_image = '';
+
+        // If user selected URL, use the textfield value.
+        if ($image_type === 'url') {
+          $instrument_image = $form_state->getValue('instrument_image_url');
+        }
+        // If user selected Upload, load the file entity and get its filename.
+        elseif ($image_type === 'upload') {
+          // Get the file IDs from the managed_file element.
+          $fids = $form_state->getValue('instrument_image_upload');
+          if (!empty($fids)) {
+            // Load the first file (file ID is returned, e.g. "374").
+            $file = File::load(reset($fids));
+            if ($file) {
+              // Mark the file as permanent and save it.
+              $file->setPermanent();
+              $file->save();
+              // Optionally register file usage to prevent cleanup.
+              \Drupal::service('file.usage')->add($file, 'sir', 'instrument', 1);
+              // Now get the filename from the file entity.
+              $instrument_image = $file->getFilename();
+            }
+          }
+        }
+
         // MUST PAY ATENTION TO CONTANINER ANS NEXT/PREVIOUS/ETC...
 
         $instrumentJson = '{"uri":"'.$this->getInstrumentUri().'",'.
@@ -476,6 +571,7 @@ class EditInstrumentForm extends FormBase {
         '"hasLanguage":"'.$form_state->getValue('instrument_language').'",'.
         '"hasVersion":"'.$form_state->getValue('instrument_version').'",'.
         '"hasWebDocument":"' . $instrument_webdocument . '",' .
+        '"hasImageUri":"' . $instrument_image . '",' .
         '"comment":"'.$form_state->getValue('instrument_description').'",'.
 
         '"hasFirst":"'.$this->getInstrument()->hasFirst.'",'.

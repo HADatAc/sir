@@ -82,6 +82,7 @@ class Process {
         'element_status' => $status,
         'element_hasStatus' => parse_url($element->hasStatus, PHP_URL_FRAGMENT),
         'element_hasLanguage' => $element->hasLanguage,
+        'element_hasImageUri' => $element->hasImageUri,
       ];
     }
 
@@ -162,6 +163,7 @@ class Process {
         'element_status' => $status,
         'element_owner' => $owner,
         'element_hasStatus' => parse_url($element->hasStatus, PHP_URL_FRAGMENT),
+        'element_hasImageUri' => $element->hasImageUri,
       ];
     }
 

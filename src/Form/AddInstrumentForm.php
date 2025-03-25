@@ -130,6 +130,53 @@ class AddInstrumentForm extends FormBase {
     ];
 
     // Add a select box to choose between URL and Upload.
+    $form['instrument_image_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Image Type'),
+      '#options' => [
+        '' => $this->t('Select Image Type'),
+        'url' => $this->t('URL'),
+        'upload' => $this->t('Upload'),
+      ],
+      '#default_value' => '',
+    ];
+
+    // The textfield for entering a URL.
+    // It is only visible when the select box value is 'url'.
+    $form['instrument_image_url'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Image'),
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ],
+      '#states' => [
+        'visible' => [
+          ':input[name="instrument_image_type"]' => ['value' => 'url'],
+        ],
+      ],
+    ];
+
+    // Because File Upload Path (use the persisted instrument URI for file uploads)
+    $modUri = (explode(":/", utils::namespaceUri($this->instrumentUri)))[1];
+    $form['instrument_image_upload_wrapper'] = [
+      '#type' => 'container',
+      '#states' => [
+        'visible' => [
+          ':input[name="instrument_image_type"]' => ['value' => 'upload'],
+        ],
+      ],
+    ];
+    $form['instrument_image_upload_wrapper']['instrument_image_upload'] = [
+      '#type' => 'managed_file',
+      '#title' => $this->t('Upload Image'),
+      '#upload_location' => 'private://resources/' . $modUri . '/image',
+      '#upload_validators' => [
+        'file_validate_extensions' => ['png jpg jpeg'], // Adjust allowed extensions as needed.
+        'file_validate_size' => [2097152],
+      ],
+    ];
+
+    // Add a select box to choose between URL and Upload.
     $form['instrument_webdocument_type'] = [
       '#type' => 'select',
       '#title' => $this->t('Web Document Type'),
@@ -157,7 +204,6 @@ class AddInstrumentForm extends FormBase {
     ];
 
     // Because File Upload Path (use the persisted instrument URI for file uploads)
-    $modUri = (explode(":/", utils::namespaceUri($this->instrumentUri)))[1];
     $form['instrument_webdocument_upload_wrapper'] = [
       '#type' => 'container',
       '#states' => [
@@ -172,6 +218,7 @@ class AddInstrumentForm extends FormBase {
       '#upload_location' => 'private://resources/' . $modUri . '/webdoc',
       '#upload_validators' => [
         'file_validate_extensions' => ['pdf doc docx txt xls xlsx'], // Adjust allowed extensions as needed.
+        'file_validate_size' => [2097152],
       ],
     ];
 
@@ -267,6 +314,33 @@ class AddInstrumentForm extends FormBase {
         }
       }
 
+      // Determine the chosen image type.
+      $image_type = $form_state->getValue('instrument_image_type');
+      $instrument_image = '';
+
+      // If user selected URL, use the textfield value.
+      if ($image_type === 'url') {
+        $instrument_image = $form_state->getValue('instrument_image_url');
+      }
+      // If user selected Upload, load the file entity and get its filename.
+      elseif ($image_type === 'upload') {
+        // Get the file IDs from the managed_file element.
+        $fids = $form_state->getValue('instrument_image_upload');
+        if (!empty($fids)) {
+          // Load the first file (file ID is returned, e.g. "374").
+          $file = File::load(reset($fids));
+          if ($file) {
+            // Mark the file as permanent and save it.
+            $file->setPermanent();
+            $file->save();
+            // Optionally register file usage to prevent cleanup.
+            \Drupal::service('file.usage')->add($file, 'sir', 'instrument', 1);
+            // Now get the filename from the file entity.
+            $instrument_image = $file->getFilename();
+          }
+        }
+      }
+
       // Build the JSON string with the computed web document value.
       $instrumentJson = '{"uri":"' . $newInstrumentUri . '",' .
         '"superUri":"' . Utils::uriFromAutocomplete($form_state->getValue('instrument_type')) . '",' .
@@ -278,6 +352,7 @@ class AddInstrumentForm extends FormBase {
         '"hasLanguage":"' . $form_state->getValue('instrument_language') . '",' .
         '"hasVersion":"' . $form_state->getValue('instrument_version') . '",' .
         '"hasWebDocument":"' . $instrument_webdocument . '",' .
+        '"hasImageUri":"' . $instrument_image . '",' .
         '"comment":"' . $form_state->getValue('instrument_description') . '",' .
         '"hasSIRManagerEmail":"' . $useremail . '"}';
 

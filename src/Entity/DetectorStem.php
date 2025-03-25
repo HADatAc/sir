@@ -92,7 +92,7 @@ class DetectorStem {
         'element_status' => $status,
         'element_hasStatus' => parse_url($element->hasStatus, PHP_URL_FRAGMENT),
         'element_hasLanguage' => $element->hasLanguage,
-
+        'element_hasImageUri' => $element->hasImageUri,
       ];
     }
 
@@ -192,7 +192,7 @@ class DetectorStem {
         'element_status' => $status,
         'element_hasStatus' => parse_url($element->hasStatus, PHP_URL_FRAGMENT),
         'element_hasLanguage' => $element->hasLanguage,
-
+        'element_hasImageUri' => $element->hasImageUri,
       ];
     }
 

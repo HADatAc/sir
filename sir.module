@@ -92,4 +92,3 @@ function sir_update_8001() {
   \Drupal::configFactory()->getEditable('system.site')->set('page.front', '/sir/list/instrument/_/_/1/12')->save();
 
 }
-

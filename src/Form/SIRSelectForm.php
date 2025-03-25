@@ -765,7 +765,8 @@ class SIRSelectForm extends FormBase {
         }
 
         // Set image URL, use placeholder if no image in item
-        $image_uri = !empty($item_vars['image']) ? $item_vars['image'] : $placeholder_image;
+        // $image_uri = !empty($item_vars['element_hasImageUri']) ? $item_vars['element_hasImageUri'] : $placeholder_image;
+        $image_uri = Utils::getAccessibleImageUrl($key, $item_vars['element_hasImageUri'], $placeholder_image);
 
         // Build card structure
         $card = [
@@ -820,7 +821,8 @@ class SIRSelectForm extends FormBase {
                   '#type' => 'container',
                   '#attributes' => [
                       'style' => 'margin-bottom:0!important;',
-                      'class' => ['col-md-5', 'text-center', 'mb-0', 'align-middle', 'js-form-wrapper', 'form-wrapper', 'mb-3'],
+                      // 'class' => ['col-md-5', 'text-center', 'mb-0', 'align-middle', 'js-form-wrapper', 'form-wrapper', 'mb-3'],
+                      'class' => ['col-md-5', 'd-flex', 'justify-content-center', 'align-items-center'],
                       'data-drupal-selector' => 'edit-image-column',
                       'id' => 'edit-image-column--' . md5($uri),
                   ],
@@ -829,8 +831,8 @@ class SIRSelectForm extends FormBase {
                       '#uri' => $image_uri,
                       '#alt' => $this->t('Image for @name', ['@name' => $item_vars['label'] ?? '']),
                       '#attributes' => [
-                          'style' => 'width: 70%',
-                          'class' => ['img-fluid', 'mb-0'],
+                          // 'style' => 'width: 70%',
+                          'class' => ['img-fluid', 'mb-0', 'border', 'border-5', 'rounded', 'rounded-5'],
                           'data-drupal-selector' => 'edit-image',
                       ],
                   ],
