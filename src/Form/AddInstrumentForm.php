@@ -37,8 +37,16 @@ class AddInstrumentForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
 
-    // Because File Upload Path
-    $this->setInstrumenUri();
+    // Check if the instrument URI already exists in the form state.
+    // If not, generate a new URI and store it in the form state.
+    if (!$form_state->has('instrument_uri')) {
+      $this->setInstrumenUri();
+      $form_state->set('instrument_uri', $this->getInstrumenUri());
+    }
+    else {
+      // Retrieve the persisted URI from form state.
+      $this->instrumentUri = $form_state->get('instrument_uri');
+    }
 
     // MODAL
     $form['#attached']['library'][] = 'rep/rep_modal';
@@ -115,6 +123,12 @@ class AddInstrumentForm extends FormBase {
       '#title' => $this->t('Description'),
     ];
 
+    // Add a hidden field to persist the instrument URI between form rebuilds.
+    $form['instrument_uri'] = [
+      '#type' => 'hidden',
+      '#value' => $this->instrumentUri,
+    ];
+
     // Add a select box to choose between URL and Upload.
     $form['instrument_webdocument_type'] = [
       '#type' => 'select',
@@ -142,8 +156,8 @@ class AddInstrumentForm extends FormBase {
       ],
     ];
 
-    // Wrap the managed_file element in a container with the #states condition.
-    // This container is only visible when the select box value is 'upload'.
+    // Because File Upload Path (use the persisted instrument URI for file uploads)
+    $modUri = (explode(":/", utils::namespaceUri($this->instrumentUri)))[1];
     $form['instrument_webdocument_upload_wrapper'] = [
       '#type' => 'container',
       '#states' => [
@@ -152,12 +166,10 @@ class AddInstrumentForm extends FormBase {
         ],
       ],
     ];
-
-    $modUri = (explode(":/", utils::namespaceUri($this->getInstrumenUri())))[1];
     $form['instrument_webdocument_upload_wrapper']['instrument_webdocument_upload'] = [
       '#type' => 'managed_file',
       '#title' => $this->t('Upload Document'),
-      '#upload_location' => 'private://resources/'.$modUri.'/webdoc',
+      '#upload_location' => 'private://resources/' . $modUri . '/webdoc',
       '#upload_validators' => [
         'file_validate_extensions' => ['pdf doc docx txt xls xlsx'], // Adjust allowed extensions as needed.
       ],
@@ -225,7 +237,8 @@ class AddInstrumentForm extends FormBase {
 
       // Get the current user email and generate a new instrument URI.
       $useremail = \Drupal::currentUser()->getEmail();
-      $newInstrumentUri = Utils::uriGen('instrument');
+      // $newInstrumentUri = Utils::uriGen('instrument');
+      $newInstrumentUri = $form_state->getValue('instrument_uri');
 
       // Determine the chosen document type.
       $doc_type = $form_state->getValue('instrument_webdocument_type');
