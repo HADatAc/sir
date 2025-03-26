@@ -12,6 +12,7 @@ use Drupal\rep\Constant;
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\VSTOI;
 use Drupal\rep\Vocabulary\REPGUI;
+use Drupal\file\Entity\File;
 
 class EditActuatorForm extends FormBase {
 
@@ -174,14 +175,172 @@ class EditActuatorForm extends FormBase {
         '#markup' => '</div>',
       ],
     ];
-    $form['actuator_webdocument'] = [
+
+    // **** IMAGE ****
+    // Retrieve the current image value.
+    // Retrieve the current actuator and its image.
+    $actuator = $this->getActuator();
+    $actuator_uri = Utils::namespaceUri($this->getActuatorUri());
+    $actuator_image = $actuator->hasImageUri ?? '';
+
+    // Determine if the existing web document is a URL or a file.
+    $image_type = '';
+    if (!empty($actuator_image) && stripos(trim($actuator_image), 'http') === 0) {
+      $image_type = 'url';
+    }
+    elseif (!empty($actuator_image)) {
+      $image_type = 'upload';
+    }
+
+    $modUri = '';
+    if (!empty($actuator_uri)) {
+      // Example of extracting part of the URI. Adjust or remove if not needed.
+      $parts = explode(':/', $actuator_uri);
+      if (count($parts) > 1) {
+        $modUri = $parts[1];
+      }
+    }
+
+    // Image Type selector (URL or Upload).
+    $form['actuator_information']['actuator_image_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Image Type'),
+      '#options' => [
+        '' => $this->t('Select Image Type'),
+        'url' => $this->t('URL'),
+        'upload' => $this->t('Upload'),
+      ],
+      '#default_value' => $image_type,
+    ];
+
+    // Textfield for URL mode (only visible when type = 'url').
+    $form['actuator_information']['actuator_image_url'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Web Document'),
-      '#default_value' => $this->getActuator()->hasWebDocument,
+      '#default_value' => ($image_type === 'url') ? $actuator_image : '',
       '#attributes' => [
         'placeholder' => 'http://',
-      ]
+      ],
+      '#states' => [
+        'visible' => [
+          ':input[name="actuator_image_type"]' => ['value' => 'url'],
+        ],
+      ],
     ];
+
+    // Container for the file upload elements (only visible when type = 'upload').
+    $form['actuator_information']['actuator_image_upload_wrapper'] = [
+      '#type' => 'container',
+      '#states' => [
+        'visible' => [
+          ':input[name="actuator_image_type"]' => ['value' => 'upload'],
+        ],
+      ],
+    ];
+
+    // Attempt to load an existing file if the document is not a URL.
+    $existing_image_fid = NULL;
+    if ($image_type === 'upload' && !empty($actuator_image)) {
+      // Build the expected file URI in the private filesystem.
+      $desired_uri = 'private://resources/' . $modUri . '/image/' . $actuator_image;
+      $files = \Drupal::entityTypeManager()
+        ->getStorage('file')
+        ->loadByProperties(['uri' => $desired_uri]);
+      $file = reset($files);
+      if ($file) {
+        $existing_image_fid = $file->id();
+      }
+    }
+
+    // 5. Managed file element for uploading a new document.
+    $form['actuator_information']['actuator_image_upload_wrapper']['actuator_image_upload'] = [
+      '#type' => 'managed_file',
+      '#title' => $this->t('Upload Document'),
+      '#upload_location' => 'private://resources/' . $modUri . '/image',
+      '#upload_validators' => [
+        'file_validate_extensions' => ['png jpg jpeg'],
+        'file_validate_size' => [2097152],
+      ],
+      // If a file already exists, pass its ID so Drupal can display it.
+      '#default_value' => $existing_image_fid ? [$existing_image_fid] : NULL,
+    ];
+
+    // **** WEBDOCUMENT ****
+    // Retrieve the current web document value.
+    $actuator_webdocument = $actuator->hasWebDocument ?? '';
+
+    // Determine if the existing web document is a URL or a file.
+    $webdocument_type = '';
+    if (!empty($actuator_webdocument) && stripos(trim($actuator_webdocument), 'http') === 0) {
+      $webdocument_type = 'url';
+    }
+    elseif (!empty($actuator_webdocument)) {
+      $webdocument_type = 'upload';
+    }
+
+    // Web Document Type selector (URL or Upload).
+    $form['actuator_information']['actuator_webdocument_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Web Document Type'),
+      '#options' => [
+        '' => $this->t('Select Document Type'),
+        'url' => $this->t('URL'),
+        'upload' => $this->t('Upload'),
+      ],
+      '#default_value' => $webdocument_type,
+    ];
+
+    // Textfield for URL mode (only visible when type = 'url').
+    $form['actuator_information']['actuator_webdocument_url'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Web Document'),
+      '#default_value' => ($webdocument_type === 'url') ? $actuator_webdocument : '',
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ],
+      '#states' => [
+        'visible' => [
+          ':input[name="actuator_webdocument_type"]' => ['value' => 'url'],
+        ],
+      ],
+    ];
+
+    // Container for the file upload elements (only visible when type = 'upload').
+    $form['actuator_information']['actuator_webdocument_upload_wrapper'] = [
+      '#type' => 'container',
+      '#states' => [
+        'visible' => [
+          ':input[name="actuator_webdocument_type"]' => ['value' => 'upload'],
+        ],
+      ],
+    ];
+
+    // Attempt to load an existing file if the document is not a URL.
+    $existing_fid = NULL;
+    if ($webdocument_type === 'upload' && !empty($actuator_webdocument)) {
+      // Build the expected file URI in the private filesystem.
+      $desired_uri = 'private://resources/' . $modUri . '/webdoc/' . $actuator_webdocument;
+      $files = \Drupal::entityTypeManager()
+        ->getStorage('file')
+        ->loadByProperties(['uri' => $desired_uri]);
+      $file = reset($files);
+      if ($file) {
+        $existing_fid = $file->id();
+      }
+    }
+
+    // 5. Managed file element for uploading a new document.
+    $form['actuator_information']['actuator_webdocument_upload_wrapper']['actuator_webdocument_upload'] = [
+      '#type' => 'managed_file',
+      '#title' => $this->t('Upload Document'),
+      '#upload_location' => 'private://resources/' . $modUri . '/webdoc',
+      '#upload_validators' => [
+        'file_validate_extensions' => ['pdf doc docx txt xls xlsx'],
+      ],
+      // If a file already exists, pass its ID so Drupal can display it.
+      '#default_value' => $existing_fid ? [$existing_fid] : NULL,
+    ];
+
     if ($this->getActuator()->hasReviewNote !== NULL && $this->getActuator()->hasSatus !== null) {
       $form['actuator_hasreviewnote'] = [
         '#type' => 'textarea',
@@ -295,7 +454,8 @@ class EditActuatorForm extends FormBase {
         '"hasContent":"'.$label.'",'.
         '"hasSIRManagerEmail":"'.$useremail.'",'.
         '"label":"'.$label.'",'.
-        '"hasWebDocument":"'.$form_state->getValue('actuator_webdocument').'",'.
+        '"hasWebDocument":"",'.
+        '"hasImageUri":"",' .
         '"hasVersion":"'.$form_state->getValue('actuator_version').'",'.
         '"isAttributeOf":"'.$form_state->getValue('actuator_isAttributeOf').'",'.
         '"wasDerivedFrom":"'.$this->getActuator()->uri.'",'.
@@ -308,6 +468,60 @@ class EditActuatorForm extends FormBase {
 
       } else {
 
+        // Determine the chosen document type.
+        $doc_type = $form_state->getValue('actuator_webdocument_type');
+        $actuator_webdocument = '';
+
+        // If user selected URL, use the textfield value.
+        if ($doc_type === 'url') {
+          $actuator_webdocument = $form_state->getValue('actuator_webdocument_url');
+        }
+        // If user selected Upload, load the file entity and get its filename.
+        elseif ($doc_type === 'upload') {
+          // Get the file IDs from the managed_file element.
+          $fids = $form_state->getValue('actuator_webdocument_upload');
+          if (!empty($fids)) {
+            // Load the first file (file ID is returned, e.g. "374").
+            $file = File::load(reset($fids));
+            if ($file) {
+              // Mark the file as permanent and save it.
+              $file->setPermanent();
+              $file->save();
+              // Optionally register file usage to prevent cleanup.
+              \Drupal::service('file.usage')->add($file, 'sir', 'actuator', 1);
+              // Now get the filename from the file entity.
+              $actuator_webdocument = $file->getFilename();
+            }
+          }
+        }
+
+        // Determine the chosen image type.
+        $image_type = $form_state->getValue('actuator_image_type');
+        $actuator_image = '';
+
+        // If user selected URL, use the textfield value.
+        if ($image_type === 'url') {
+          $actuator_image = $form_state->getValue('actuator_image_url');
+        }
+        // If user selected Upload, load the file entity and get its filename.
+        elseif ($image_type === 'upload') {
+          // Get the file IDs from the managed_file element.
+          $fids = $form_state->getValue('actuator_image_upload');
+          if (!empty($fids)) {
+            // Load the first file (file ID is returned, e.g. "374").
+            $file = File::load(reset($fids));
+            if ($file) {
+              // Mark the file as permanent and save it.
+              $file->setPermanent();
+              $file->save();
+              // Optionally register file usage to prevent cleanup.
+              \Drupal::service('file.usage')->add($file, 'sir', 'actuator', 1);
+              // Now get the filename from the file entity.
+              $actuator_image = $file->getFilename();
+            }
+          }
+        }
+
         $actuatorJson = '{"uri":"'.$this->getActuator()->uri.'",'.
           '"typeUri":"'.Utils::uriFromAutocomplete($form_state->getValue('actuator_stem')).'",'.
           '"hascoTypeUri":"'.VSTOI::ACTUATOR.'",'.
@@ -316,7 +530,8 @@ class EditActuatorForm extends FormBase {
           '"hasContent":"'.$label.'",'.
           '"hasSIRManagerEmail":"'.$useremail.'",'.
           '"label":"'.$label.'",'.
-          '"hasWebDocument":"'.$form_state->getValue('actuator_webdocument').'",'.
+          '"hasWebDocument":"' . $actuator_webdocument . '",' .
+          '"hasImageUri":"' . $actuator_image . '",' .
           '"hasVersion":"'.$form_state->getValue('actuator_version').'",'.
           '"isAttributeOf":"'.$form_state->getValue('actuator_isAttributeOf').'",'.
           '"wasDerivedFrom":"'.$this->getActuator()->wasDerivedFrom.'",'.

@@ -651,7 +651,7 @@ class SIRSelectForm extends FormBase {
 
         // Hide unnecessary columns
         foreach ($row as $field_key => $field_value) {
-            if ($field_key !== 'element_hasStatus' && $field_key !== 'element_hasLanguage') {
+            if ($field_key !== 'element_hasStatus' && $field_key !== 'element_hasLanguage' && $field_key !== 'element_hasImageUri') {
                 $form['element_table_wrapper']['element_table'][$key][$field_key] = [
                     '#markup' => $field_value,
                 ];

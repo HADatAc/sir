@@ -504,7 +504,6 @@ class EditInstrumentForm extends FormBase {
         \Drupal::messenger()->addMessage(t("New Version instrument has been created successfully."));
       } else {
 
-
         // Determine the chosen document type.
         $doc_type = $form_state->getValue('instrument_webdocument_type');
         $instrument_webdocument = '';
