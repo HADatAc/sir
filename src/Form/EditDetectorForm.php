@@ -218,7 +218,7 @@ class EditDetectorForm extends FormBase {
     // Textfield for URL mode (only visible when type = 'url').
     $form['detector_information']['detector_image_url'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Web Document'),
+      '#title' => $this->t('Image'),
       '#default_value' => ($image_type === 'url') ? $detector_image : '',
       '#attributes' => [
         'placeholder' => 'http://',
@@ -342,8 +342,6 @@ class EditDetectorForm extends FormBase {
       // If a file already exists, pass its ID so Drupal can display it.
       '#default_value' => $existing_fid ? [$existing_fid] : NULL,
     ];
-
-
 
     if ($this->getDetector()->hasReviewNote !== NULL && $this->getDetector()->hasSatus !== null) {
       $form['detector_hasreviewnote'] = [

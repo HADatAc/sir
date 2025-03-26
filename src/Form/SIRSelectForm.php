@@ -1596,7 +1596,7 @@ class SIRSelectForm extends FormBase {
         unset($clonedObject->query);
         unset($clonedObject->namedGraph);
         unset($clonedObject->serialNumber);
-        unset($clonedObject->hasImageUri);
+        // unset($clonedObject->hasImageUri);
         unset($clonedObject->typeLabel);
         unset($clonedObject->hascoTypeLabel);
 
@@ -1652,6 +1652,7 @@ class SIRSelectForm extends FormBase {
           '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.
           '"hasSIRManagerEmail":"'.$result->hasSIRManagerEmail.'",'.
           '"hasReviewNote": "'. $result->hasReviewNote .'",'.
+          '"hasImageUri": "'. $result->hasImageUri .'",'.
           '"hasWebDocument": "'. $result->hasWebDocument .'",'.
           '"hasEditorEmail": "'. $useremail .'"'.
         '}';
@@ -1688,6 +1689,7 @@ class SIRSelectForm extends FormBase {
                   '"hasSIRManagerEmail": "'.$slot->responseOption->hasSIRManagerEmail.'",'.
                   '"hasEditorEmail": "'.($slot->responseOption->hasEditorEmail ?? NULL).'",'.
                   '"typeLabel": "'.$slot->responseOption->typeLabel.'",'.
+                  '"hasImageUri": "'. $slot->responseOption->hasImageUri .'",'.
                   '"hasWebDocument": "'. $slot->responseOption->hasWebDocument .'",'.
                   '"hascoTypeLabel": "'.$slot->responseOption->hascoTypeLabel.'"'.
                 '},'.
@@ -1700,8 +1702,8 @@ class SIRSelectForm extends FormBase {
           }
 
         // UPDATE BY DELETING AND CREATING
-        $api->codebookDel($result->uri);
-        $api->codebookAdd($codebookJSON);
+        $api->elementDel('codebook', $result->uri);
+        $api->elementAdd('codebook', $codebookJSON);
 
       } elseif ($this->element_type == 'actuator') {
         // CENARIO #1: CHECK IF IT HAS wasDerivedFrom property, means it is a derived element
@@ -1728,13 +1730,14 @@ class SIRSelectForm extends FormBase {
           '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.
           '"hasReviewNote":"'.$result->hasReviewNote.'",'.
           '"hasEditorEmail":"'.$result->hasEditorEmail.'",'.
+          '"hasImageUri": "'. $result->hasImageUri .'",'.
           '"hasWebDocument": "'. $result->hasWebDocument .'",'.
           '"hasStatus":"'.VSTOI::UNDER_REVIEW.'"'.
         '}';
 
         // UPDATE BY DELETING AND CREATING
-        $api->actuatorDel($result->uri);
-        $api->actuatorAdd($actuatorJson);
+        $api->elementDel('actuator', $result->uri);
+        $api->elementAdd('actuator', $actuatorJson);
 
       } elseif ($this->element_type == 'actuatorstem') {
         // CENARIO #1: CHECK IF IT HAS wasDerivedFrom property, means it is a derived element
@@ -1772,14 +1775,15 @@ class SIRSelectForm extends FormBase {
         '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.
         '"wasGeneratedBy":"'.$result->wasGeneratedBy.'",'.
         '"hasReviewNote":"'.$result->hasReviewNote.'",'.
+        '"hasImageUri": "'. $result->hasImageUri .'",'.
         '"hasWebDocument":"'.$result->hasWebDocument.'",'.
         '"hasEditorEmail":"'.$result->hasEditorEmail.'",'.
         '"hasSIRManagerEmail":"'.$result->hasSIRManagerEmail.'"}';
 
         // UPDATE BY DELETING AND CREATING
         $api = \Drupal::service('rep.api_connector');
-        $api->actuatorStemDel($result->uri);
-        $api->actuatorStemAdd($actuatorStemJson);
+        $api->elementDel('actuatorstem', $result->uri);
+        $api->elementAdd('atuatorstem', $actuatorStemJson);
       } elseif ($this->element_type == 'detector') {
         // CENARIO #1: CHECK IF IT HAS wasDerivedFrom property, means it is a derived element
         if ($result->wasDerivedFrom !== NULL
@@ -1819,13 +1823,14 @@ class SIRSelectForm extends FormBase {
           '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.
           '"hasReviewNote":"'.$result->hasReviewNote.'",'.
           '"hasEditorEmail":"'.$result->hasEditorEmail.'",'.
+          '"hasImageUri": "'. $result->hasImageUri .'",'.
           '"hasWebDocument": "'. $result->hasWebDocument .'",'.
           '"hasStatus":"'.VSTOI::UNDER_REVIEW.'"'.
         '}';
 
         // UPDATE BY DELETING AND CREATING
-        $api->detectorDel($result->uri);
-        $api->detectorAdd($detectorJson);
+        $api->elementDel('detector', $result->uri);
+        $api->elementAdd('detector', $detectorJson);
 
       } elseif ($this->element_type == 'detectorstem') {
         // CENARIO #1: CHECK IF IT HAS wasDerivedFrom property, means it is a derived element
@@ -1863,14 +1868,15 @@ class SIRSelectForm extends FormBase {
         '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.
         '"wasGeneratedBy":"'.$result->wasGeneratedBy.'",'.
         '"hasReviewNote":"'.$result->hasReviewNote.'",'.
+        '"hasImageUri": "'. $result->hasImageUri .'",'.
         '"hasWebDocument":"'.$result->hasWebDocument.'",'.
         '"hasEditorEmail":"'.$result->hasEditorEmail.'",'.
         '"hasSIRManagerEmail":"'.$result->hasSIRManagerEmail.'"}';
 
         // UPDATE BY DELETING AND CREATING
         $api = \Drupal::service('rep.api_connector');
-        $api->detectorStemDel($result->uri);
-        $api->detectorStemAdd($detectorStemJson);
+        $api->elementDel('detectorstem', $result->uri);
+        $api->elementAdd('detectorstem', $detectorStemJson);
       } elseif ($this->element_type == 'processstem') {
         // CENARIO #1: CHECK IF IT HAS wasDerivedFrom property, means it is a derived element
         if ($result->wasDerivedFrom !== NULL
@@ -1907,6 +1913,7 @@ class SIRSelectForm extends FormBase {
         '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.
         '"wasGeneratedBy":"'.$result->wasGeneratedBy.'",'.
         '"hasReviewNote":"'.$result->hasReviewNote.'",'.
+        '"hasImageUri": "'. $result->hasImageUri .'",'.
         '"hasWebDocument":"'.$result->hasWebDocument.'",'.
         '"hasEditorEmail":"'.$result->hasEditorEmail.'",'.
         '"hasSIRManagerEmail":"'.$result->hasSIRManagerEmail.'"}';

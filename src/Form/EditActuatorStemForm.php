@@ -240,7 +240,7 @@ class EditActuatorStemForm extends FormBase {
     // Textfield for URL mode (only visible when type = 'url').
     $form['actuatorstem_information']['actuatorstem_image_url'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Web Document'),
+      '#title' => $this->t('Image'),
       '#default_value' => ($image_type === 'url') ? $actuatorstem_image : '',
       '#attributes' => [
         'placeholder' => 'http://',

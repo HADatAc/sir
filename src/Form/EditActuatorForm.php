@@ -216,7 +216,7 @@ class EditActuatorForm extends FormBase {
     // Textfield for URL mode (only visible when type = 'url').
     $form['actuator_information']['actuator_image_url'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Web Document'),
+      '#title' => $this->t('Image'),
       '#default_value' => ($image_type === 'url') ? $actuator_image : '',
       '#attributes' => [
         'placeholder' => 'http://',

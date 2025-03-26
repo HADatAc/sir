@@ -246,6 +246,7 @@ class ReviewCodebookForm extends FormBase {
       '#value' => $this->t('Approve'),
       '#name' => 'review_approve',
       '#attributes' => [
+        'onclick' => 'if(!confirm("Are you sure you want to Approve?")){return false;}',
         'class' => ['btn', 'btn-success', 'aprove-button'],
       ],
     ];
@@ -254,6 +255,7 @@ class ReviewCodebookForm extends FormBase {
       '#value' => $this->t('Reject'),
       '#name' => 'review_reject',
       '#attributes' => [
+        'onclick' => 'if(!confirm("Are you sure you want to Reject?")){return false;}',
         'class' => ['btn', 'btn-primary', 'cancel-button'],
       ],
     ];

@@ -140,7 +140,7 @@ class EditResponseOptionForm extends FormBase {
     // Textfield for URL mode (only visible when type = 'url').
     $form['responseoption_information']['responseoption_image_url'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Web Document'),
+      '#title' => $this->t('Image'),
       '#default_value' => ($image_type === 'url') ? $responseoption_image : '',
       '#attributes' => [
         'placeholder' => 'http://',

@@ -232,7 +232,7 @@ class EditInstrumentForm extends FormBase {
     // Textfield for URL mode (only visible when type = 'url').
     $form['instrument_information']['instrument_image_url'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Web Document'),
+      '#title' => $this->t('Image'),
       '#default_value' => ($image_type === 'url') ? $instrument_image : '',
       '#attributes' => [
         'placeholder' => 'http://',
