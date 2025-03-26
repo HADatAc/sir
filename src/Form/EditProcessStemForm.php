@@ -12,6 +12,7 @@ use Drupal\rep\Constant;
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\VSTOI;
 use Drupal\rep\Vocabulary\REPGUI;
+use Drupal\file\Entity\File;
 
 class EditProcessStemForm extends FormBase {
 
@@ -158,15 +159,6 @@ class EditProcessStemForm extends FormBase {
       '#default_value' => $this->getProcessStem()->comment,
     ];
 
-    $form['processstem_webdocument'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Web Document'),
-      '#default_value' => $this->getProcessStem()->hasWebDocument,
-      '#attributes' => [
-        'placeholder' => 'http://',
-      ]
-    ];
-
     if ($this->getProcessStem()->wasDerivedFrom !== NULL) {
       $form['processstem_df_wrapper'] = [
         '#type' => 'container',
@@ -208,6 +200,172 @@ class EditProcessStemForm extends FormBase {
       ],
       '#disabled' => ($this->getProcessStem()->wasGeneratedBy === Constant::WGB_ORIGINAL ? true:false)
     ];
+
+    // **** IMAGE ****
+    // Retrieve the current image value.
+    // Retrieve the current processstem and its image.
+    $processstem = $this->getProcessStem();
+    $processstem_uri = Utils::namespaceUri($this->getProcessStemUri());
+    $processstem_image = $processstem->hasImageUri ?? '';
+
+    // Determine if the existing web document is a URL or a file.
+    $image_type = '';
+    if (!empty($processstem_image) && stripos(trim($processstem_image), 'http') === 0) {
+      $image_type = 'url';
+    }
+    elseif (!empty($processstem_image)) {
+      $image_type = 'upload';
+    }
+
+    $modUri = '';
+    if (!empty($processstem_uri)) {
+      // Example of extracting part of the URI. Adjust or remove if not needed.
+      $parts = explode(':/', $processstem_uri);
+      if (count($parts) > 1) {
+        $modUri = $parts[1];
+      }
+    }
+
+    // Image Type selector (URL or Upload).
+    $form['processstem_information']['processstem_image_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Image Type'),
+      '#options' => [
+        '' => $this->t('Select Image Type'),
+        'url' => $this->t('URL'),
+        'upload' => $this->t('Upload'),
+      ],
+      '#default_value' => $image_type,
+    ];
+
+    // Textfield for URL mode (only visible when type = 'url').
+    $form['processstem_information']['processstem_image_url'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Web Document'),
+      '#default_value' => ($image_type === 'url') ? $processstem_image : '',
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ],
+      '#states' => [
+        'visible' => [
+          ':input[name="processstem_image_type"]' => ['value' => 'url'],
+        ],
+      ],
+    ];
+
+    // Container for the file upload elements (only visible when type = 'upload').
+    $form['processstem_information']['processstem_image_upload_wrapper'] = [
+      '#type' => 'container',
+      '#states' => [
+        'visible' => [
+          ':input[name="processstem_image_type"]' => ['value' => 'upload'],
+        ],
+      ],
+    ];
+
+    // Attempt to load an existing file if the document is not a URL.
+    $existing_image_fid = NULL;
+    if ($image_type === 'upload' && !empty($processstem_image)) {
+      // Build the expected file URI in the private filesystem.
+      $desired_uri = 'private://resources/' . $modUri . '/image/' . $processstem_image;
+      $files = \Drupal::entityTypeManager()
+        ->getStorage('file')
+        ->loadByProperties(['uri' => $desired_uri]);
+      $file = reset($files);
+      if ($file) {
+        $existing_image_fid = $file->id();
+      }
+    }
+
+    // 5. Managed file element for uploading a new document.
+    $form['processstem_information']['processstem_image_upload_wrapper']['processstem_image_upload'] = [
+      '#type' => 'managed_file',
+      '#title' => $this->t('Upload Document'),
+      '#upload_location' => 'private://resources/' . $modUri . '/image',
+      '#upload_validators' => [
+        'file_validate_extensions' => ['png jpg jpeg'],
+        'file_validate_size' => [2097152],
+      ],
+      // If a file already exists, pass its ID so Drupal can display it.
+      '#default_value' => $existing_image_fid ? [$existing_image_fid] : NULL,
+    ];
+
+    // **** WEBDOCUMENT ****
+    // Retrieve the current web document value.
+    $processstem_webdocument = $processstem->hasWebDocument ?? '';
+
+    // Determine if the existing web document is a URL or a file.
+    $webdocument_type = '';
+    if (!empty($processstem_webdocument) && stripos(trim($processstem_webdocument), 'http') === 0) {
+      $webdocument_type = 'url';
+    }
+    elseif (!empty($processstem_webdocument)) {
+      $webdocument_type = 'upload';
+    }
+
+    // Web Document Type selector (URL or Upload).
+    $form['processstem_information']['processstem_webdocument_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Web Document Type'),
+      '#options' => [
+        '' => $this->t('Select Document Type'),
+        'url' => $this->t('URL'),
+        'upload' => $this->t('Upload'),
+      ],
+      '#default_value' => $webdocument_type,
+    ];
+
+    // Textfield for URL mode (only visible when type = 'url').
+    $form['processstem_information']['processstem_webdocument_url'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Web Document'),
+      '#default_value' => ($webdocument_type === 'url') ? $processstem_webdocument : '',
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ],
+      '#states' => [
+        'visible' => [
+          ':input[name="processstem_webdocument_type"]' => ['value' => 'url'],
+        ],
+      ],
+    ];
+
+    // Container for the file upload elements (only visible when type = 'upload').
+    $form['processstem_information']['processstem_webdocument_upload_wrapper'] = [
+      '#type' => 'container',
+      '#states' => [
+        'visible' => [
+          ':input[name="processstem_webdocument_type"]' => ['value' => 'upload'],
+        ],
+      ],
+    ];
+
+    // Attempt to load an existing file if the document is not a URL.
+    $existing_fid = NULL;
+    if ($webdocument_type === 'upload' && !empty($processstem_webdocument)) {
+      // Build the expected file URI in the private filesystem.
+      $desired_uri = 'private://resources/' . $modUri . '/webdoc/' . $processstem_webdocument;
+      $files = \Drupal::entityTypeManager()
+        ->getStorage('file')
+        ->loadByProperties(['uri' => $desired_uri]);
+      $file = reset($files);
+      if ($file) {
+        $existing_fid = $file->id();
+      }
+    }
+
+    // 5. Managed file element for uploading a new document.
+    $form['processstem_information']['processstem_webdocument_upload_wrapper']['processstem_webdocument_upload'] = [
+      '#type' => 'managed_file',
+      '#title' => $this->t('Upload Document'),
+      '#upload_location' => 'private://resources/' . $modUri . '/webdoc',
+      '#upload_validators' => [
+        'file_validate_extensions' => ['pdf doc docx txt xls xlsx'],
+      ],
+      // If a file already exists, pass its ID so Drupal can display it.
+      '#default_value' => $existing_fid ? [$existing_fid] : NULL,
+    ];
+
     if ($this->getProcessStem()->hasReviewNote !== NULL && $this->getProcessStem()->hasStatus !== null) {
       $form['processstem_hasreviewnote'] = [
         '#type' => 'textarea',
@@ -284,7 +442,7 @@ class EditProcessStemForm extends FormBase {
       // CHECK if Status is CURRENT OR DEPRECATED FOR NEW CREATION
       if ($this->getProcessStem()->hasStatus === VSTOI::CURRENT || $this->getProcessStem()->hasStatus === VSTOI::DEPRECATED) {
 
-        $detectorStemJson = '{"uri":"'.Utils::uriGen('processstem').'",'.
+        $processStemJson = '{"uri":"'.Utils::uriGen('processstem').'",'.
           '"superUri":"'.Utils::uriFromAutocomplete($this->getProcessStem()->superUri).'",'.
           '"label":"'.$form_state->getValue('processstem_content').'",'.
           '"hascoTypeUri":"'.VSTOI::PROCESS_STEM.'",'.
@@ -293,17 +451,73 @@ class EditProcessStemForm extends FormBase {
           '"hasLanguage":"'.$form_state->getValue('processstem_language').'",'.
           '"hasVersion":"'.$form_state->getValue('processstem_version').'",'.
           '"comment":"'.$form_state->getValue('processstem_description').'",'.
+          '"hasWebDocument":"",'.
+          '"hasImageUri":"",' .
           '"wasDerivedFrom":"'.$this->getProcessStem()->uri.'",'. //Previous Version is the New Derivation Value
           '"wasGeneratedBy":"'.$form_state->getValue('processstem_was_generated_by').'",'.
           '"hasSIRManagerEmail":"'.$useremail.'"}';
 
         // UPDATE BY DELETING AND CREATING
-        $api->detectorStemAdd($detectorStemJson);
+        $api->elementAdd('processtem', $processStemJson);
         \Drupal::messenger()->addMessage(t("New Version Process Stem has been created successfully."));
 
       } else {
 
-        $detectorStemJson = '{"uri":"'.$this->getProcessStem()->uri.'",'.
+        // Determine the chosen document type.
+        $doc_type = $form_state->getValue('processstem_webdocument_type');
+        $processstem_webdocument = '';
+
+        // If user selected URL, use the textfield value.
+        if ($doc_type === 'url') {
+          $processstem_webdocument = $form_state->getValue('processstem_webdocument_url');
+        }
+        // If user selected Upload, load the file entity and get its filename.
+        elseif ($doc_type === 'upload') {
+          // Get the file IDs from the managed_file element.
+          $fids = $form_state->getValue('processstem_webdocument_upload');
+          if (!empty($fids)) {
+            // Load the first file (file ID is returned, e.g. "374").
+            $file = File::load(reset($fids));
+            if ($file) {
+              // Mark the file as permanent and save it.
+              $file->setPermanent();
+              $file->save();
+              // Optionally register file usage to prevent cleanup.
+              \Drupal::service('file.usage')->add($file, 'sir', 'processstem', 1);
+              // Now get the filename from the file entity.
+              $processstem_webdocument = $file->getFilename();
+            }
+          }
+        }
+
+        // Determine the chosen image type.
+        $image_type = $form_state->getValue('processstem_image_type');
+        $processstem_image = '';
+
+        // If user selected URL, use the textfield value.
+        if ($image_type === 'url') {
+          $processstem_image = $form_state->getValue('processstem_image_url');
+        }
+        // If user selected Upload, load the file entity and get its filename.
+        elseif ($image_type === 'upload') {
+          // Get the file IDs from the managed_file element.
+          $fids = $form_state->getValue('processstem_image_upload');
+          if (!empty($fids)) {
+            // Load the first file (file ID is returned, e.g. "374").
+            $file = File::load(reset($fids));
+            if ($file) {
+              // Mark the file as permanent and save it.
+              $file->setPermanent();
+              $file->save();
+              // Optionally register file usage to prevent cleanup.
+              \Drupal::service('file.usage')->add($file, 'sir', 'processstem', 1);
+              // Now get the filename from the file entity.
+              $processstem_image = $file->getFilename();
+            }
+          }
+        }
+
+        $processStemJson = '{"uri":"'.$this->getProcessStem()->uri.'",'.
         '"superUri":"'.Utils::uriFromAutocomplete($this->getProcessStem()->superUri).'",'.
         '"label":"'.$form_state->getValue('processstem_content').'",'.
         '"hascoTypeUri":"'.VSTOI::PROCESS_STEM.'",'.
@@ -312,15 +526,16 @@ class EditProcessStemForm extends FormBase {
         '"hasLanguage":"'.$form_state->getValue('processstem_language').'",'.
         '"hasVersion":"'.$form_state->getValue('processstem_version').'",'.
         '"comment":"'.$form_state->getValue('processstem_description').'",'.
-        '"hasWebDocument":"'.$form_state->getValue('processstem_webdocument').'",'.
+        '"hasWebDocument":"' . $processstem_webdocument . '",' .
+        '"hasImageUri":"' . $processstem_image . '",' .
         '"wasDerivedFrom":"'.$this->getProcessStem()->wasDerivedFrom.'",'.
         '"wasGeneratedBy":"'.$form_state->getValue('processstem_was_generated_by').'",'.
         '"hasReviewNote":"'.($this->getProcessStem()->hasStatus !== null ? $this->getProcessStem()->hasReviewNote : '').'",'.
         '"hasEditorEmail":"'.($this->getProcessStem()->hasStatus !== null ? $this->getProcessStem()->hasEditorEmail : '').'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
 
-        $api->detectorStemDel($this->getProcessStemUri());
-        $api->detectorStemAdd($detectorStemJson);
+        $api->elementDel('processstem', $this->getProcessStemUri());
+        $api->elementAdd('processstem', $processStemJson);
         \Drupal::messenger()->addMessage(t("Process Stem has been updated successfully."));
       }
 

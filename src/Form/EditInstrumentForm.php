@@ -481,7 +481,6 @@ class EditInstrumentForm extends FormBase {
       $uid = \Drupal::currentUser()->id();
       $useremail = \Drupal::currentUser()->getEmail();
 
-
       // CHECK if Status is CURRENT OR DEPRECATED FOR NEW CREATION
       if ($this->getInstrument()->hasStatus === VSTOI::CURRENT || $this->getInstrument()->hasStatus === VSTOI::DEPRECATED) {
 
