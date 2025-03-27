@@ -248,20 +248,20 @@ class GenerateInsForm extends FormBase {
       case 'instrument':
         // For "INS per Instrument", get the instrument value.
         $instrument = utils::uriFromAutocomplete($form_state->getValue(['additional_fields', 'instrument', 'main']));
-        $result = $api_service->generateINSPerInstrument($instrument, $filename);
+        $result = $api_service->generateMTPerInstrument('ins',$instrument, $filename);
         break;
 
       case 'status':
         // For "INS by Status", get the status.
         $status = $form_state->getValue(['additional_fields', 'status']);
-        $result = $api_service->generateINSPerStatus($status, $filename);
+        $result = $api_service->generateMTPerStatus('ins',$status, $filename);
         break;
 
       case 'user_status':
         // For "INS by User and by Status", get both status and user email.
         $status = $form_state->getValue(['additional_fields', 'status']);
         $user_email = $form_state->getValue(['additional_fields', 'user_email']);
-        $result = $api_service->generateINSPerUserStatus($user_email, $status, $filename);
+        $result = $api_service->generateMTPerUserStatus('ins',$user_email, $status, $filename);
         break;
 
       default:
