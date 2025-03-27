@@ -121,7 +121,7 @@ class AddTaskForm extends FormBase {
     // Define pills as links with AJAX callback.
     $states = [
       'basic' => 'Basic task properties',
-      'instrument' => 'Instruments and detectors',
+      'instrument' => 'Instruments and Elements',
       //'codebook' => 'Detector mappings'
     ];
 
@@ -246,7 +246,25 @@ class AddTaskForm extends FormBase {
           'placeholder' => 'http://',
         ]
       ];
-
+      $form['task_issupertask'] = [
+        '#type' => 'checkbox',
+        '#title' => $this->t('Is this a Super Task?'),
+        '#default_value' => 1,
+        '#attributes' => [
+          'class' => ['bootstrap-toggle'],
+        ],
+      ];
+      $form['task_supertask'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Select Super Task'),
+        '#autocomplete_route_name' => 'sir.task_autocomplete',
+        '#disabled' => TRUE,
+        '#states' => [
+          'enabled' => [
+            ':input[name="task_issupertask"]' => ['checked' => FALSE],
+          ],
+        ],
+      ];
     }
 
     /* ======================= INSTRUMENT ======================= */

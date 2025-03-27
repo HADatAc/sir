@@ -11,6 +11,7 @@ use Drupal\rep\Entity\Tables;
 use Drupal\rep\Constant;
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\VSTOI;
+use Drupal\rep\Vocabulary\REPGUI;
 
 class EditActuatorStemForm extends FormBase {
 
@@ -55,6 +56,8 @@ class EditActuatorStemForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $actuatorstemuri = NULL) {
+    // ROOT URL
+    $root_url = \Drupal::request()->getBaseUrl();
 
     // MODAL
     $form['#attached']['library'][] = 'rep/rep_modal';
@@ -86,6 +89,11 @@ class EditActuatorStemForm extends FormBase {
     $derivations = ['' => $this->t('Select one please')] + $derivations;
 
     // dpm($this->getActuatorStem());
+    $form['actuatorstem_uri'] = [
+      '#type' => 'item',
+      '#title' => $this->t('URI: '),
+      '#markup' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($this->getActuatorStemUri()).'">'.$this->getActuatorStemUri().'</a>'),
+    ];
     if ($this->getActuatorStem()->superUri) {
       $form['actuatorstem_type'] = [
         'top' => [

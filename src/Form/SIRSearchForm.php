@@ -158,38 +158,43 @@ class SIRSearchForm extends FormBase {
         'class' => ['mt-1'],
       ],
     ];
-    $form['search_language'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Language'),
-      '#options' => $languages,
-      '#default_value' => $this->getLanguage(),
-      '#ajax' => [
-        'callback' => '::ajaxSubmitForm',
-      ],
-      '#attributes' => [
-        'class' => ['mt-1'],
-      ],
-    ];
-    $form['search_keyword'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Keyword'),
-      '#default_value' => $this->getKeyword(),
-      '#attributes' => [
-        'class' => ['mt-1'],
-      ],
-    ];
-    $form['search_submit'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Search'),
-      '#attributes' => [
-        'class' => ['btn', 'btn-primary', 'search-button'],
-      ],
-    ];
 
-    $form['bottom_space'] = [
-      '#type' => 'item',
-      '#title' => t('<br><br>'),
-    ];
+    $element = $this->getElementType();
+    if (($element !== null && $element !== 'instrument')) {
+      $form['search_language'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Language'),
+        '#options' => $languages,
+        '#default_value' => $this->getLanguage(),
+        '#ajax' => [
+          'callback' => '::ajaxSubmitForm',
+        ],
+        '#attributes' => [
+          'class' => ['mt-1'],
+        ],
+      ];
+
+      $form['search_keyword'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Keyword'),
+        '#default_value' => $this->getKeyword(),
+        '#attributes' => [
+          'class' => ['mt-1'],
+        ],
+      ];
+      $form['search_submit'] = [
+        '#type' => 'submit',
+        '#value' => $this->t('Search'),
+        '#attributes' => [
+          'class' => ['btn', 'btn-primary', 'search-button'],
+        ],
+      ];
+
+      $form['bottom_space'] = [
+        '#type' => 'item',
+        '#title' => t('<br><br>'),
+      ];
+    }
 
     $form['node_comment_display'] = [
       '#type' => 'container',
