@@ -75,6 +75,12 @@ class SIRSearchForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
 
+    // MODAL
+    $form['#attached']['library'][] = 'sir/sir_modal';
+    $form['#attached']['library'][] = 'core/drupal.dialog';
+
+
+
     // LOAD LANGUAGE TABLE
     $tables = new Tables;
     $tablesLanguages = $tables->getLanguages();
@@ -205,6 +211,15 @@ class SIRSearchForm extends FormBase {
           'style' => 'display:none;'
           //'style' => 'float:left',
       ],
+    ];
+
+    $form['modal'] = [
+      '#type' => 'markup',
+      '#markup' => '
+        <div id="docModal" title="View Document" style="display:none;">
+          <iframe id="docIframe" src="" style="width:100%; height:500px;" frameborder="0"></iframe>
+        </div>
+      ',
     ];
 
     return $form;

@@ -41,3 +41,11 @@ sir_processstem:
   dependencies:
     - core/jquery
     - core/drupal
+
+sir_modal:
+  version: 1.x
+  js:
+    js/sir_modal.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
