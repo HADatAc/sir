@@ -196,15 +196,14 @@ class ResponseOption {
     unset($clonedObject->query);
     unset($clonedObject->namedGraph);
     unset($clonedObject->serialNumber);
-    unset($clonedObject->hasImageUri);
     unset($clonedObject->typeLabel);
     unset($clonedObject->hascoTypeLabel);
 
     $finalObject = json_encode($clonedObject, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
     // UPDATE BY DELETING AND CREATING
-    $api->responseOptionDel($uri);
-    $api->responseOptionAdd($finalObject);
+    $api->elementDel('responseoption', $uri);
+    $api->elementAdd('responseoption', $finalObject);
 
     return;
   }

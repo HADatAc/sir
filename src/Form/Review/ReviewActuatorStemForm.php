@@ -11,6 +11,7 @@ use Drupal\rep\Entity\Tables;
 use Drupal\rep\Constant;
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\VSTOI;
+use Drupal\rep\Vocabulary\REPGUI;
 
 class ReviewActuatorStemForm extends FormBase {
 
@@ -56,6 +57,9 @@ class ReviewActuatorStemForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $actuatorstemuri = NULL) {
 
+    // ROOT URL
+    $root_url = \Drupal::request()->getBaseUrl();
+
     // MODAL
     $form['#attached']['library'][] = 'rep/rep_modal';
     $form['#attached']['library'][] = 'core/drupal.dialog';
@@ -86,11 +90,25 @@ class ReviewActuatorStemForm extends FormBase {
     }
 
     //dpm($this->getActuator());
+
+    $form['actuatorstem_wrapper'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'style' => 'max-width: 1280px;margin-bottom:15px!important;',
+      ],
+    ];
+
+    $form['actuatorstem_wrapper']['actuatorstem_uri'] = [
+      '#type' => 'item',
+      '#title' => $this->t('URI: '),
+      '#markup' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($this->getActuatorStemUri()).'">'.$this->getActuatorStemUri().'</a>'),
+    ];
+
     if ($this->getActuatorStem()->superUri) {
-      $form['actuatorstem_type'] = [
+      $form['actuatorstem_wrapper']['actuatorstem_type'] = [
         'top' => [
           '#type' => 'markup',
-          '#markup' => '<div class="pt-3 col border border-white">',
+          '#markup' => '<div class="col border border-white">',
         ],
         'main' => [
           '#type' => 'textfield',
@@ -119,20 +137,20 @@ class ReviewActuatorStemForm extends FormBase {
         ],
       ];
     }
-    $form['actuatorstem_content'] = [
+    $form['actuatorstem_wrapper']['actuatorstem_content'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name'),
       '#default_value' => $this->getActuatorStem()->hasContent,
       '#disabled' => TRUE,
     ];
-    $form['actuatorstem_language'] = [
+    $form['actuatorstem_wrapper']['actuatorstem_language'] = [
       '#type' => 'select',
       '#title' => $this->t('Language'),
       '#options' => $languages,
       '#default_value' => $this->getActuatorStem()->hasLanguage,
       '#disabled' => TRUE,
     ];
-    $form['actuatorstem_version'] = [
+    $form['actuatorstem_wrapper']['actuatorstem_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
       '#default_value' => $this->getActuatorStem()->hasVersion,
@@ -143,21 +161,13 @@ class ReviewActuatorStemForm extends FormBase {
         'disabled' => 'disabled',
       ],
     ];
-    $form['actuatorstem_description'] = [
+    $form['actuatorstem_wrapper']['actuatorstem_description'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
       '#default_value' => $this->getActuatorStem()->comment,
       '#disabled' => TRUE,
     ];
-    $form['actuatorstem_webdocument'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Web Document'),
-      '#default_value' => $this->getActuatorStem()->hasWebDocument,
-      '#attributes' => [
-        'placeholder' => 'http://',
-      ],
-      '#disabled' => TRUE,
-    ];
+
     if ($this->getActuatorStem()->wasDerivedFrom !== NULL) {
       $api = \Drupal::service('rep.api_connector');
       $rawresponse = $api->getUri($this->getActuatorStem()->wasDerivedFrom);
@@ -165,7 +175,7 @@ class ReviewActuatorStemForm extends FormBase {
       if ($obj->isSuccessful) {
         $result = $obj->body;
 
-        $form['actuatorstem__df_wrapper'] = [
+        $form['actuatorstem_wrapper']['actuatorstem__df_wrapper'] = [
           '#type' => 'container',
           '#attributes' => [
             'class' => ['d-flex', 'align-items-center', 'w-100'], // Flex container para alinhamento correto
@@ -173,7 +183,7 @@ class ReviewActuatorStemForm extends FormBase {
           ],
         ];
 
-        $form['actuatorstem__df_wrapper']['actuatorstem__wasderivedfrom'] = [
+        $form['actuatorstem_wrapper']['actuatorstem__df_wrapper']['actuatorstem__wasderivedfrom'] = [
           '#type' => 'textfield',
           '#title' => $this->t('Derived From'),
           '#default_value' => Utils::fieldToAutocomplete($this->getActuatorStem()->wasDerivedFrom, $result->label),
@@ -188,14 +198,14 @@ class ReviewActuatorStemForm extends FormBase {
         $elementUriEncoded = base64_encode($elementUri);
         $url = Url::fromRoute('rep.describe_element', ['elementuri' => $elementUriEncoded], ['absolute' => TRUE])->toString();
 
-        $form['actuatorstem__df_wrapper']['actuatorstem__wasderivedfrom_button'] = [
+        $form['actuatorstem_wrapper']['actuatorstem__df_wrapper']['actuatorstem__wasderivedfrom_button'] = [
           '#type' => 'markup',
           '#markup' => '<a href="' . $url . '" target="_blank" class="btn btn-success text-nowrap mt-2" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
         ];
       }
     }
 
-    $form['actuatorstem_was_generated_by'] = [
+    $form['actuatorstem_wrapper']['actuatorstem_was_generated_by'] = [
       '#type' => 'select',
       '#title' => $this->t('Was Derived By'),
       '#options' => $derivations,
@@ -203,7 +213,7 @@ class ReviewActuatorStemForm extends FormBase {
       '#disabled' => TRUE,
     ];
 
-    $form['actuatorstem_owner'] = [
+    $form['actuatorstem_wrapper']['actuatorstem_owner'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Owner'),
       '#default_value' => $this->getActuatorStem()->hasSIRManagerEmail,
@@ -211,12 +221,185 @@ class ReviewActuatorStemForm extends FormBase {
         'disabled' => 'disabled',
       ],
     ];
-    $form['actuatorstem_hasreviewnote'] = [
+    // **** IMAGE ****
+    // Retrieve the current image value.
+    // Retrieve the current actuatorstem and its image.
+    $actuatorstem = $this->getActuatorStem();
+    $actuatorstem_uri = Utils::namespaceUri($this->getActuatorStemUri());
+    $actuatorstem_image = $actuatorstem->hasImageUri ?? '';
+
+    // Determine if the existing web document is a URL or a file.
+    $image_type = '';
+    if (!empty($actuatorstem_image) && stripos(trim($actuatorstem_image), 'http') === 0) {
+      $image_type = 'url';
+    }
+    elseif (!empty($actuatorstem_image)) {
+      $image_type = 'upload';
+    }
+
+    $modUri = '';
+    if (!empty($actuatorstem_uri)) {
+      // Example of extracting part of the URI. Adjust or remove if not needed.
+      $parts = explode(':/', $actuatorstem_uri);
+      if (count($parts) > 1) {
+        $modUri = $parts[1];
+      }
+    }
+
+    // Image Type selector (URL or Upload).
+    $form['actuatorstem_wrapper']['actuatorstem_information']['actuatorstem_image_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Image Type'),
+      '#options' => [
+        '' => $this->t('Select Image Type'),
+        'url' => $this->t('URL'),
+        'upload' => $this->t('Upload'),
+      ],
+      '#disabled' => TRUE,
+      '#default_value' => $image_type,
+    ];
+
+    // Textfield for URL mode (only visible when type = 'url').
+    $form['actuatorstem_wrapper']['actuatorstem_information']['actuatorstem_image_url'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Image'),
+      '#default_value' => ($image_type === 'url') ? $actuatorstem_image : '',
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ],
+      '#disabled' => TRUE,
+      '#states' => [
+        'visible' => [
+          ':input[name="actuatorstem_image_type"]' => ['value' => 'url'],
+        ],
+      ],
+    ];
+
+    // Container for the file upload elements (only visible when type = 'upload').
+    $form['actuatorstem_wrapper']['actuatorstem_information']['actuatorstem_image_upload_wrapper'] = [
+      '#type' => 'container',
+      '#disabled' => TRUE,
+      '#states' => [
+        'visible' => [
+          ':input[name="actuatorstem_image_type"]' => ['value' => 'upload'],
+        ],
+      ],
+    ];
+
+    // Attempt to load an existing file if the document is not a URL.
+    $existing_image_fid = NULL;
+    if ($image_type === 'upload' && !empty($actuatorstem_image)) {
+      // Build the expected file URI in the private filesystem.
+      $desired_uri = 'private://resources/' . $modUri . '/image/' . $actuatorstem_image;
+      $files = \Drupal::entityTypeManager()
+        ->getStorage('file')
+        ->loadByProperties(['uri' => $desired_uri]);
+      $file = reset($files);
+      if ($file) {
+        $existing_image_fid = $file->id();
+      }
+    }
+
+    // 5. Managed file element for uploading a new document.
+    $form['actuatorstem_wrapper']['actuatorstem_information']['actuatorstem_image_upload_wrapper']['actuatorstem_image_upload'] = [
+      '#type' => 'managed_file',
+      '#title' => $this->t('Upload Document'),
+      '#upload_location' => 'private://resources/' . $modUri . '/image',
+      '#upload_validators' => [
+        'file_validate_extensions' => ['png jpg jpeg'],
+        'file_validate_size' => [2097152],
+      ],
+      '#disabled' => TRUE,
+      // If a file already exists, pass its ID so Drupal can display it.
+      '#default_value' => $existing_image_fid ? [$existing_image_fid] : NULL,
+    ];
+
+    // **** WEBDOCUMENT ****
+    // Retrieve the current web document value.
+    $actuatorstem_webdocument = $actuatorstem->hasWebDocument ?? '';
+
+    // Determine if the existing web document is a URL or a file.
+    $webdocument_type = '';
+    if (!empty($actuatorstem_webdocument) && stripos(trim($actuatorstem_webdocument), 'http') === 0) {
+      $webdocument_type = 'url';
+    }
+    elseif (!empty($actuatorstem_webdocument)) {
+      $webdocument_type = 'upload';
+    }
+
+    // Web Document Type selector (URL or Upload).
+    $form['actuatorstem_wrapper']['actuatorstem_information']['actuatorstem_webdocument_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Web Document Type'),
+      '#options' => [
+        '' => $this->t('Select Document Type'),
+        'url' => $this->t('URL'),
+        'upload' => $this->t('Upload'),
+      ],
+      '#disabled' => TRUE,
+      '#default_value' => $webdocument_type,
+    ];
+
+    // Textfield for URL mode (only visible when type = 'url').
+    $form['actuatorstem_wrapper']['actuatorstem_information']['actuatorstem_webdocument_url'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Web Document'),
+      '#default_value' => ($webdocument_type === 'url') ? $actuatorstem_webdocument : '',
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ],
+      '#disabled' => TRUE,
+      '#states' => [
+        'visible' => [
+          ':input[name="actuatorstem_webdocument_type"]' => ['value' => 'url'],
+        ],
+      ],
+    ];
+
+    // Container for the file upload elements (only visible when type = 'upload').
+    $form['actuatorstem_wrapper']['actuatorstem_information']['actuatorstem_webdocument_upload_wrapper'] = [
+      '#type' => 'container',
+      '#disabled' => TRUE,
+      '#states' => [
+        'visible' => [
+          ':input[name="actuatorstem_webdocument_type"]' => ['value' => 'upload'],
+        ],
+      ],
+    ];
+
+    // Attempt to load an existing file if the document is not a URL.
+    $existing_fid = NULL;
+    if ($webdocument_type === 'upload' && !empty($actuatorstem_webdocument)) {
+      // Build the expected file URI in the private filesystem.
+      $desired_uri = 'private://resources/' . $modUri . '/webdoc/' . $actuatorstem_webdocument;
+      $files = \Drupal::entityTypeManager()
+        ->getStorage('file')
+        ->loadByProperties(['uri' => $desired_uri]);
+      $file = reset($files);
+      if ($file) {
+        $existing_fid = $file->id();
+      }
+    }
+
+    // 5. Managed file element for uploading a new document.
+    $form['actuatorstem_wrapper']['actuatorstem_information']['actuatorstem_webdocument_upload_wrapper']['actuatorstem_webdocument_upload'] = [
+      '#type' => 'managed_file',
+      '#title' => $this->t('Upload Document'),
+      '#upload_location' => 'private://resources/' . $modUri . '/webdoc',
+      '#upload_validators' => [
+        'file_validate_extensions' => ['pdf doc docx txt xls xlsx'],
+      ],
+      '#disabled' => TRUE,
+      // If a file already exists, pass its ID so Drupal can display it.
+      '#default_value' => $existing_fid ? [$existing_fid] : NULL,
+    ];
+
+    $form['actuatorstem_wrapper']['actuatorstem_hasreviewnote'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Review Notes'),
       '#default_value' => $this->getActuatorStem()->hasReviewNote,
     ];
-    $form['actuatorstem_haseditoremail'] = [
+    $form['actuatorstem_wrapper']['actuatorstem_haseditoremail'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Reviewer Email'),
       '#default_value' => \Drupal::currentUser()->getEmail(),
@@ -317,13 +500,14 @@ class ReviewActuatorStemForm extends FormBase {
           '"wasDerivedFrom":"'.$this->getActuatorStem()->wasDerivedFrom.'",'.
           '"wasGeneratedBy":"'.$this->getActuatorStem()->wasGeneratedBy.'",'.
           '"hasReviewNote":"'.$form_state->getValue('actuatorstem_hasreviewnote').'",'.
-          '"hasWebDocument":"'.$form_state->getValue('actuatorstem_webdocument').'",'.
+          '"hasImageUri":"'.$this->getActuatorStem()->hasImageUri.'",'.
+          '"hasWebDocument":"'.$this->getActuatorStem()->hasWebDocument.'",'.
           '"hasEditorEmail":"'.$useremail.'",'.
           '"hasSIRManagerEmail":"'.$this->getActuatorStem()->hasSIRManagerEmail.'"}';
 
         // UPDATE BY DELETING AND CREATING
-        $api->actuatorStemDel($this->getActuatorStemUri());
-        $api->actuatorStemAdd($actuatorStemJson);
+        $api->elementDel('actuatorstem', $this->getActuatorStemUri());
+        $api->elementAdd('actuatorstem', $actuatorStemJson);
 
         // IF ITS A DERIVATION APROVAL PARENT MUST BECOME DEPRECATED, but in this case version must be also greater than 1, because
         // Actuator Stems can start to be like a derivation element by itself
@@ -344,13 +528,14 @@ class ReviewActuatorStemForm extends FormBase {
           (!empty($resultParent->wasDerivedFrom) ? '"wasDerivedFrom":"'.$resultParent->wasDerivedFrom.'",' : '').
           '"wasGeneratedBy":"'.$resultParent->wasGeneratedBy.'",'.
           '"hasReviewNote":"'.$resultParent->hasReviewNote.'",'.
+          '"hasImageUri":"'.$resultParent->hasImageUri.'",'.
           '"hasWebDocument":"'.$resultParent->hasWebDocument.'",'.
           '"hasEditorEmail":"'.$useremail.'",'.
           '"hasSIRManagerEmail":"'.$resultParent->hasSIRManagerEmail.'"}';
 
           // UPDATE BY DELETING AND CREATING
-          $api->actuatorStemDel($resultParent->uri);
-          $api->actuatorStemAdd($parentActuatorStemJson);
+          $api->elementDel('actuatorstem', $resultParent->uri);
+          $api->elementAdd('actuatorstem', $parentActuatorStemJson);
         }
 
         \Drupal::messenger()->addMessage(t("Actuator Stem has been updated successfully."));
@@ -369,13 +554,14 @@ class ReviewActuatorStemForm extends FormBase {
           '"wasDerivedFrom":"'.$this->getActuatorStem()->wasDerivedFrom.'",'.
           '"wasGeneratedBy":"'.$this->getActuatorStem()->wasGeneratedBy.'",'.
           '"hasReviewNote":"'.$form_state->getValue('actuatorstem_hasreviewnote').'",'.
-          '"hasWebDocument":"'.$form_state->getValue('actuatorstem_webdocument').'",'.
+          '"hasImageUri":"'.$this->getActuatorStem()->hasImageUri.'",'.
+          '"hasWebDocument":"'.$this->getActuatorStem()->hasWebDocument.'",'.
           '"hasEditorEmail":"'.$useremail.'",'.
           '"hasSIRManagerEmail":"'.$this->getActuatorStem()->hasSIRManagerEmail.'"}';
 
         // UPDATE BY DELETING AND CREATING
-        $api->actuatorStemDel($this->getActuatorStemUri());
-        $api->actuatorStemAdd($actuatorStemJson);
+        $api->elementDel('actuatorstem', $this->getActuatorStemUri());
+        $api->elementAdd('actuatorstem', $actuatorStemJson);
       }
 
       self::backUrl();

@@ -1783,7 +1783,7 @@ class SIRSelectForm extends FormBase {
         // UPDATE BY DELETING AND CREATING
         $api = \Drupal::service('rep.api_connector');
         $api->elementDel('actuatorstem', $result->uri);
-        $api->elementAdd('atuatorstem', $actuatorStemJson);
+        $api->elementAdd('actuatorstem', $actuatorStemJson);
       } elseif ($this->element_type == 'detector') {
         // CENARIO #1: CHECK IF IT HAS wasDerivedFrom property, means it is a derived element
         if ($result->wasDerivedFrom !== NULL
