@@ -10,6 +10,7 @@ use Drupal\Core\Ajax\RedirectCommand;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Vocabulary\HASCO;
 use Drupal\rep\Vocabulary\VSTOI;
+use Drupal\Core\Render\Markup;
 
 class SIRSearchForm extends FormBase {
 
@@ -78,7 +79,11 @@ class SIRSearchForm extends FormBase {
     // MODAL
     $form['#attached']['library'][] = 'sir/sir_modal';
     $form['#attached']['library'][] = 'core/drupal.dialog';
-
+    $base_url = \Drupal::request()->getSchemeAndHttpHost() . \Drupal::request()->getBaseUrl();
+    $form['#attached']['drupalSettings']['sir_modal'] = [
+      'baseUrl' => $base_url,
+    ];
+    $form['#attached']['library'][] = 'std/pdfjs';
 
 
     // LOAD LANGUAGE TABLE
@@ -215,11 +220,16 @@ class SIRSearchForm extends FormBase {
 
     $form['modal'] = [
       '#type' => 'markup',
-      '#markup' => '
-        <div id="docModal" title="View Document" style="display:none;">
-          <iframe id="docIframe" src="" style="width:100%; height:500px;" frameborder="0"></iframe>
+      '#markup' => Markup::create('
+        <div id="modal-container" class="modal-media hidden">
+          <div class="modal-content">
+            <button class="close-btn" type="button">&times;</button>
+            <div id="pdf-scroll-container"></div>
+            <div id="modal-content"></div>
+          </div>
+          <div class="modal-backdrop"></div>
         </div>
-      ',
+      '),
     ];
 
     return $form;

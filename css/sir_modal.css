@@ -1,0 +1,72 @@
+#drupal-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10000; /* Garante que fique acima de outros elementos */
+}
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  z-index: 9999;
+}
+
+/* Modal backdrop styles */
+.my-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 10000;
+}
+
+/* Close button styles */
+.modal-close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 24px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #333;
+}
+
+/* Optionally, style the pdf-pages container */
+#pdf-container {
+  z-index: 1000001;
+  position: relative;
+}
+
+.pdf-pages-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+  max-height: 100vh !important;
+
+}
+
+#drupal-modal.ui-front {
+  display: block !important;   /* In case something sets display: none */
+  position: absolute !important;  /* Keep it above the page content */
+  top: calc(50% - 10px) !important;
+  left: 50% !important;
+  /* transform: translate(-50%, -50%) !important; */
+  background: #fff !important;
+  width: 80% !important;
+  min-width: 100% !important;
+  max-width: 100% !important;
+  max-height: 100vh !important;
+  overflow-y: auto !important;
+  z-index: 10000 !important; /* So it’s above other elements */
+}
+
+.pdf-pages-container canvas {margin-top:40px !important;margin-bottom:40px !important;}

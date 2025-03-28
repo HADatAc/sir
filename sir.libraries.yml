@@ -44,8 +44,12 @@ sir_processstem:
 
 sir_modal:
   version: 1.x
+  css:
+    theme:
+      css/sir_modal.css: {}
   js:
     js/sir_modal.js: {}
   dependencies:
     - core/jquery
     - core/drupal
+    - core/drupal.dialog
