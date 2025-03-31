@@ -732,26 +732,7 @@ class SIRSelectForm extends FormBase {
         }
 
         // Set image URL, use placeholder if no image in item
-        // $image_uri = !empty($item_vars['element_hasImageUri']) ? $item_vars['element_hasImageUri'] : $placeholder_image;
-        // $image_uri = Utils::getAccessibleImageUrl($key, $item_vars['element_hasImageUri'], $placeholder_image);
-        $api = \Drupal::service('rep.api_connector');
-        $response = $api->downloadFile($uri, $item_vars['element_hasImageUri']);
-        if ($response) {
-          // Obtém o conteúdo da imagem usando getContent()
-          $file_content = $response->getContent();
-
-          // Obtém o Content-Type usando os headers do Symfony Response
-          $content_type = $response->headers->get('Content-Type');
-
-          // Codifica o conteúdo em base64
-          $base64_image = base64_encode($file_content);
-
-          // Monta o data URI
-          $image_src = "data:" . $content_type . ";base64," . $base64_image;
-        }
-        else {
-          $image_src = '';
-        }
+        $image_src = Utils::getAPIImage($key, $item_vars['element_hasImageUri'], $placeholder_image);
 
         // Build card structure
         $card = [

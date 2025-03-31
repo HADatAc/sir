@@ -386,7 +386,7 @@ class AddInstrumentForm extends FormBase {
       \Drupal::messenger()->addMessage(t("An error occurred while adding instrument: ".$e->getMessage()));
       self::backUrl();
       return;
- }
+    }
 
   }
 
