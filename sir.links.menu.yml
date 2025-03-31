@@ -49,36 +49,6 @@ sir.divider1:
 #   weight: 19
 #   route_name: '<none>'
 
-sir.manage_processstems :
-  title: Manage Process Stems
-  description: Manage Process Stems
-  route_name: sir.select_element
-  route_parameters:
-    elementtype: 'processstem'
-    page: '1'
-    pagesize: '9'
-  parent: sir.top_level
-  menu_name: main
-  weight: 20
-  requirements:
-    _permission: 'access content'
-    _role: 'authenticated'
-
-sir.manage_process :
-  title: Manage Processes
-  description: Manage Processes
-  route_name: sir.select_element
-  route_parameters:
-    elementtype: 'process'
-    page: '1'
-    pagesize: '9'
-  parent: sir.top_level
-  menu_name: main
-  weight: 30
-  requirements:
-    _permission: 'access content'
-    _role: 'authenticated'
-
 sir.manage_instruments:
   title: Manage Instruments
   description: Manage Instruments

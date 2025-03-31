@@ -14,8 +14,6 @@ use Drupal\sir\Entity\Detector;
 use Drupal\sir\Entity\Codebook;
 use Drupal\sir\Entity\Instrument;
 use Drupal\sir\Entity\ResponseOption;
-use Drupal\sir\Entity\Process;
-use Drupal\sir\Entity\ProcessStem;
 
 class ManageAnnotationsForm extends FormBase {
 

@@ -361,6 +361,24 @@ class AddInstrumentForm extends FormBase {
       $api->instrumentAdd($instrumentJson);
 
       \Drupal::messenger()->addMessage($this->t("Instrument has been added successfully."));
+
+      // UPLOAD IMAGE TO API
+      if ($image_type === 'upload') {
+        $fids = $form_state->getValue('instrument_image_upload');
+        $msg = $api->parseObjectResponse($api->uploadFile($newInstrumentUri, reset($fids)), 'uploadFile');
+        if ($msg == NULL) {
+          \Drupal::messenger()->addError(t("The Uploaded Image FAILED to be submited to API."));
+        }
+      }
+
+      if ($doc_type === 'upload') {
+        $fids = $form_state->getValue('instrument_webdocument_upload');
+        $msg = $api->parseObjectResponse($api->uploadFile($newInstrumentUri, reset($fids)), 'uploadFile');
+        if ($msg == NULL) {
+          \Drupal::messenger()->addError(t("The Uploaded WebDocument FAILED to be submited to API."));
+        }
+      }
+
       self::backUrl();
       return;
 
