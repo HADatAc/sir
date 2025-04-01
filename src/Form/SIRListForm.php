@@ -301,7 +301,7 @@ class SIRListForm extends FormBase {
         // ];
 
         // Create the table row
-        $form['element_table_wrapper']['element_table'][$key]['select'] = $checkbox;
+        // $form['element_table_wrapper']['element_table'][$key]['select'] = $checkbox;
 
         // Hide unnecessary columns
         foreach ($row as $field_key => $field_value) {
