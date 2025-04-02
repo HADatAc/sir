@@ -11,6 +11,7 @@ use Drupal\rep\Vocabulary\VSTOI;
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\REPGUI;
 use Drupal\file\Entity\File;
+use Drupal\Core\Render\Markup;
 
 class EditCodebookForm extends FormBase {
 
@@ -179,14 +180,14 @@ class EditCodebookForm extends FormBase {
     // 5. Managed file element for uploading a new document.
     $form['codebook_information']['codebook_image_upload_wrapper']['codebook_image_upload'] = [
       '#type' => 'managed_file',
-      '#title' => $this->t('Upload Document'),
+      '#title' => $this->t('Upload Image'),
       '#upload_location' => 'private://resources/' . $modUri . '/image',
       '#upload_validators' => [
-        'file_validate_extensions' => ['png jpg jpeg'],
-        'file_validate_size' => [2097152],
+        'file_validate_extensions' => ['png jpg jpeg'], // Allowed file extensions.
+        'file_validate_size' => [2097152], // Maximum file size (in bytes).
       ],
-      // If a file already exists, pass its ID so Drupal can display it.
-      '#default_value' => $existing_image_fid ? [$existing_image_fid] : NULL,
+      // Description in red: allowed file types and a warning that choosing a new image will remove the previous one.
+      '#description' => Markup::create('<span style="color: red;">Allowed file types: png, jpg, jpeg. Selecting a new image will remove the previous one.</span>'),
     ];
 
     // **** WEBDOCUMENT ****
@@ -256,13 +257,14 @@ class EditCodebookForm extends FormBase {
     // 5. Managed file element for uploading a new document.
     $form['codebook_information']['codebook_webdocument_upload_wrapper']['codebook_webdocument_upload'] = [
       '#type' => 'managed_file',
-      '#title' => $this->t('Upload Document'),
-      '#upload_location' => 'private://resources/' . $modUri . '/webdoc',
+      '#title' => $this->t('Upload Image'),
+      '#upload_location' => 'private://resources/' . $modUri . '/image',
       '#upload_validators' => [
         'file_validate_extensions' => ['pdf doc docx txt xls xlsx'],
+        'file_validate_size' => [2097152], // Maximum file size (in bytes).
       ],
-      // If a file already exists, pass its ID so Drupal can display it.
-      '#default_value' => $existing_fid ? [$existing_fid] : NULL,
+      // Description in red: allowed file types and a warning that choosing a new image will remove the previous one.
+      '#description' => Markup::create('<span style="color: red;">Allowed file types: pdf, doc, docx, txt, xls, xlsx. Selecting a new document will remove the previous one.</span>'),
     ];
 
     if ($this->getCodebook()->hasReviewNote !== NULL && $this->getCodebook()->hasSatus !== null) {
@@ -393,7 +395,7 @@ class EditCodebookForm extends FormBase {
 
         // Determine the chosen document type.
         $doc_type = $form_state->getValue('codebook_webdocument_type');
-        $codebook_webdocument = '';
+        $codebook_webdocument = $this->getCodebook()->hasWebDocument;
 
         // If user selected URL, use the textfield value.
         if ($doc_type === 'url') {
@@ -420,7 +422,7 @@ class EditCodebookForm extends FormBase {
 
         // Determine the chosen image type.
         $image_type = $form_state->getValue('codebook_image_type');
-        $codebook_image = '';
+        $codebook_image = $this->getCodebook()->hasImageUri;
 
         // If user selected URL, use the textfield value.
         if ($image_type === 'url') {
@@ -463,6 +465,24 @@ class EditCodebookForm extends FormBase {
           // UPDATE BY DELETING AND CREATING
           $api->elementDel('codebook', $this->getCodebook()->uri);
           $api->elementAdd('codebook', $codebookJson);
+
+          // UPLOAD IMAGE TO API
+          if ($image_type === 'upload' && $codebook_image !== $this->getCodeBook()->hasImageUri) {
+            $fids = $form_state->getValue('codebook_image_upload');
+            $msg = $api->parseObjectResponse($api->uploadFile($this->getCodeBookUri(), reset($fids)), 'uploadFile');
+            if ($msg == NULL) {
+              \Drupal::messenger()->addError(t("The Uploaded Image FAILED to be submited to API."));
+            }
+          }
+
+          // UPLOAD DOCUMENT TO API
+          if ($doc_type === 'upload' && $codebook_webdocument !== $this->getCodeBook()->hasWebDocument) {
+            $fids = $form_state->getValue('codebook_webdocument_upload');
+            $msg = $api->parseObjectResponse($api->uploadFile($this->getCodeBookUri(), reset($fids)), 'uploadFile');
+            if ($msg == NULL) {
+              \Drupal::messenger()->addError(t("The Uploaded WebDocument FAILED to be submited to API."));
+            }
+          }
 
           \Drupal::messenger()->addMessage(t("Codebook has been updated successfully."));
       }

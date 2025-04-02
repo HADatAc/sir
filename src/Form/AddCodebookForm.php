@@ -299,6 +299,24 @@ class AddCodebookForm extends FormBase {
 
       $api = \Drupal::service('rep.api_connector');
       $api->elementAdd('codebook', $codebookJSON);
+
+      // UPLOAD IMAGE TO API
+      if ($image_type === 'upload') {
+        $fids = $form_state->getValue('codebook_image_upload');
+        $msg = $api->parseObjectResponse($api->uploadFile($newCodebookUri, reset($fids)), 'uploadFile');
+        if ($msg == NULL) {
+          \Drupal::messenger()->addError(t("The Uploaded Image FAILED to be submited to API."));
+        }
+      }
+      // UPLOAD DOCUMENT TO API
+      if ($doc_type === 'upload') {
+        $fids = $form_state->getValue('codebook_webdocument_upload');
+        $msg = $api->parseObjectResponse($api->uploadFile($newCodebookUri, reset($fids)), 'uploadFile');
+        if ($msg == NULL) {
+          \Drupal::messenger()->addError(t("The Uploaded Document FAILED to be submited to API."));
+        }
+      }
+
       \Drupal::messenger()->addMessage(t("Codebook has been added successfully."));
       self::backUrl();
       return;

@@ -512,6 +512,23 @@ class AddDetectorForm extends FormBase {
         $form_state->setRedirectUrl($url);
         return;
       } else {
+        // UPLOAD IMAGE TO API
+        if ($image_type === 'upload') {
+          $fids = $form_state->getValue('detector_image_upload');
+          $msg = $api->parseObjectResponse($api->uploadFile($newDetectorUri, reset($fids)), 'uploadFile');
+          if ($msg == NULL) {
+            \Drupal::messenger()->addError(t("The Uploaded Image FAILED to be submited to API."));
+          }
+        }
+        // UPLOAD DOCUMENT TO API
+        if ($doc_type === 'upload') {
+          $fids = $form_state->getValue('detector_webdocument_upload');
+          $msg = $api->parseObjectResponse($api->uploadFile($newDetectorUri, reset($fids)), 'uploadFile');
+          if ($msg == NULL) {
+            \Drupal::messenger()->addError(t("The Uploaded Document FAILED to be submited to API."));
+          }
+        }
+
         \Drupal::messenger()->addMessage(t("Detector has been added successfully."));
         self::backUrl();
         return;

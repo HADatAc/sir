@@ -12,6 +12,7 @@ use Drupal\rep\Entity\Tables;
 use Drupal\rep\Vocabulary\VSTOI;
 use Drupal\rep\Vocabulary\REPGUI;
 use Drupal\file\Entity\File;
+use Drupal\Core\Render\Markup;
 
 class EditInstrumentForm extends FormBase {
 
@@ -271,14 +272,14 @@ class EditInstrumentForm extends FormBase {
     // 5. Managed file element for uploading a new document.
     $form['instrument_information']['instrument_image_upload_wrapper']['instrument_image_upload'] = [
       '#type' => 'managed_file',
-      '#title' => $this->t('Upload Document'),
+      '#title' => $this->t('Upload Image'),
       '#upload_location' => 'private://resources/' . $modUri . '/image',
       '#upload_validators' => [
-        'file_validate_extensions' => ['png jpg jpeg'],
-        'file_validate_size' => [2097152],
+        'file_validate_extensions' => ['png jpg jpeg'], // Allowed file extensions.
+        'file_validate_size' => [2097152], // Maximum file size (in bytes).
       ],
-      // If a file already exists, pass its ID so Drupal can display it.
-      '#default_value' => $existing_image_fid ? [$existing_image_fid] : NULL,
+      // Description in red: allowed file types and a warning that choosing a new image will remove the previous one.
+      '#description' => Markup::create('<span style="color: red;">Allowed file types: png, jpg, jpeg. Selecting a new image will remove the previous one.</span>'),
     ];
 
     // **** WEBDOCUMENT ****
@@ -348,13 +349,14 @@ class EditInstrumentForm extends FormBase {
     // 5. Managed file element for uploading a new document.
     $form['instrument_information']['instrument_webdocument_upload_wrapper']['instrument_webdocument_upload'] = [
       '#type' => 'managed_file',
-      '#title' => $this->t('Upload Document'),
-      '#upload_location' => 'private://resources/' . $modUri . '/webdoc',
+      '#title' => $this->t('Upload Image'),
+      '#upload_location' => 'private://resources/' . $modUri . '/image',
       '#upload_validators' => [
         'file_validate_extensions' => ['pdf doc docx txt xls xlsx'],
+        'file_validate_size' => [2097152], // Maximum file size (in bytes).
       ],
-      // If a file already exists, pass its ID so Drupal can display it.
-      '#default_value' => $existing_fid ? [$existing_fid] : NULL,
+      // Description in red: allowed file types and a warning that choosing a new image will remove the previous one.
+      '#description' => Markup::create('<span style="color: red;">Allowed file types: pdf, doc, docx, txt, xls, xlsx. Selecting a new document will remove the previous one.</span>'),
     ];
 
     // **************
@@ -505,7 +507,7 @@ class EditInstrumentForm extends FormBase {
 
         // Determine the chosen document type.
         $doc_type = $form_state->getValue('instrument_webdocument_type');
-        $instrument_webdocument = '';
+        $instrument_webdocument = $this->getInstrument()->hasWebDocument;
 
         // If user selected URL, use the textfield value.
         if ($doc_type === 'url') {
@@ -532,7 +534,7 @@ class EditInstrumentForm extends FormBase {
 
         // Determine the chosen image type.
         $image_type = $form_state->getValue('instrument_image_type');
-        $instrument_image = '';
+        $instrument_image = $this->getInstrument()->hasImageUri;
 
         // If user selected URL, use the textfield value.
         if ($image_type === 'url') {
@@ -589,6 +591,25 @@ class EditInstrumentForm extends FormBase {
         // UPDATE BY DELETING AND CREATING CURRENT INSTRUMENT
         $api->elementDel('instrument', $this->getInstrumentUri());
         $api->elementAdd('instrument', $instrumentJson);
+
+        // UPLOAD IMAGE TO API
+        if ($image_type === 'upload' && $instrument_image !== $this->getInstrument()->hasImageUri) {
+          $fids = $form_state->getValue('instrument_image_upload');
+          $msg = $api->parseObjectResponse($api->uploadFile($this->getInstrumentUri(), reset($fids)), 'uploadFile');
+          if ($msg == NULL) {
+            \Drupal::messenger()->addError(t("The Uploaded Image FAILED to be submited to API."));
+          }
+        }
+
+        // UPLOAD DOCUMENT TO API
+        if ($doc_type === 'upload' && $instrument_webdocument !== $this->getInstrument()->hasWebDocument) {
+          $fids = $form_state->getValue('instrument_webdocument_upload');
+          $msg = $api->parseObjectResponse($api->uploadFile($this->getInstrumentUri(), reset($fids)), 'uploadFile');
+          if ($msg == NULL) {
+            \Drupal::messenger()->addError(t("The Uploaded WebDocument FAILED to be submited to API."));
+          }
+        }
+
         \Drupal::messenger()->addMessage(t("instrument has been updated successfully."));
       }
 

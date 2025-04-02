@@ -172,7 +172,7 @@ sir.add_actuatorstem:
   path: 'sir/manage/addactuatorstem/{sourceactuatorstemuri}'
   defaults:
     _form: '\Drupal\sir\Form\AddActuatorStemForm'
-    _title: 'Add Item Stem'
+    _title: 'Add Actuator Stem'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'
@@ -183,20 +183,20 @@ sir.edit_actuatorstem:
   path: 'sir/manage/editactuatorstem/{actuatorstemuri}'
   defaults:
     _form: '\Drupal\sir\Form\EditActuatorStemForm'
-    _title: 'Edit Item Stem'
+    _title: 'Edit Actuator Stem'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
-# Actuator "Item" CRUD options
+# Actuator CRUD options
 
 sir.add_actuator:
   path: 'sir/manage/addactuator/{sourceactuatoruri}/{containersloturi}'
   defaults:
     _form: '\Drupal\sir\Form\AddActuatorForm'
-    _title: 'Add Item'
+    _title: 'Add Actuator'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'
@@ -207,7 +207,7 @@ sir.add_containerslot_actuator:
   path: 'sir/manage/addattachactuator/{containersloturi}'
   defaults:
     _form: '\Drupal\sir\Form\AddContainerSlotActuatorForm'
-    _title: 'Add Item'
+    _title: 'Add Container Slot'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'
@@ -218,7 +218,7 @@ sir.edit_actuator:
   path: 'sir/manage/editactuator/{actuatoruri}'
   defaults:
     _form: '\Drupal\sir\Form\EditActuatorForm'
-    _title: 'Edit Item'
+    _title: 'Edit Actuator'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'
@@ -247,7 +247,7 @@ sir.add_detectorstem:
   path: 'sir/manage/adddetectorstem/{sourcedetectorstemuri}'
   defaults:
     _form: '\Drupal\sir\Form\AddDetectorStemForm'
-    _title: 'Add Item Stem'
+    _title: 'Add Detector Stem'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'
@@ -258,20 +258,20 @@ sir.edit_detectorstem:
   path: 'sir/manage/editdetectorstem/{detectorstemuri}'
   defaults:
     _form: '\Drupal\sir\Form\EditDetectorStemForm'
-    _title: 'Edit Item Stem'
+    _title: 'Edit Detector Stem'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
-# Detector "Item" CRUD options
+# Detector CRUD options
 
 sir.add_detector:
   path: 'sir/manage/adddetector/{sourcedetectoruri}/{containersloturi}'
   defaults:
     _form: '\Drupal\sir\Form\AddDetectorForm'
-    _title: 'Add Item'
+    _title: 'Add Detector'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'
@@ -282,7 +282,7 @@ sir.add_containerslot_detector:
   path: 'sir/manage/addattachdetector/{containersloturi}'
   defaults:
     _form: '\Drupal\sir\Form\AddContainerSlotDetectorForm'
-    _title: 'Add Item'
+    _title: 'Add Contaniner Slot'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'
@@ -293,7 +293,7 @@ sir.edit_detector:
   path: 'sir/manage/editdetector/{detectoruri}'
   defaults:
     _form: '\Drupal\sir\Form\EditDetectorForm'
-    _title: 'Edit Item'
+    _title: 'Edit Detector'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'

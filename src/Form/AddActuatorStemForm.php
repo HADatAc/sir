@@ -16,11 +16,11 @@ class AddActuatorStemForm extends FormBase {
 
   protected $actuatorstemUri;
 
-  public function setInstrumenUri() {
+  public function setActuatorStemUri() {
     $this->actuatorstemUri = Utils::uriGen('actuatorstem');
   }
 
-  public function getInstrumenUri() {
+  public function getActuatorStemUri() {
     return $this->actuatorstemUri;
   }
 
@@ -59,8 +59,8 @@ class AddActuatorStemForm extends FormBase {
     // Check if the actuatorstem URI already exists in the form state.
     // If not, generate a new URI and store it in the form state.
     if (!$form_state->has('actuatorstem_uri')) {
-      $this->setInstrumenUri();
-      $form_state->set('actuatorstem_uri', $this->getInstrumenUri());
+      $this->setActuatorStemUri();
+      $form_state->set('actuatorstem_uri', $this->getActuatorStemUri());
     }
     else {
       // Retrieve the persisted URI from form state.
@@ -417,7 +417,7 @@ class AddActuatorStemForm extends FormBase {
           '"wasGeneratedBy":"'.$form_state->getValue('actuatorstem_was_generated_by').'",'.
           '"hasSIRManagerEmail":"'.$useremail.'"}';
 
-        $api->actuatorStemAdd($actuatorStemJson);
+        $api->elementAdd('actuatorstem', $actuatorStemJson);
 
       } else {
         // #2 CENARIO - ADD ACTUATOR THAT WAS DERIVED FROM
@@ -437,7 +437,6 @@ class AddActuatorStemForm extends FormBase {
         */
         if ($parentResult !== '') {
 
-          $newActuatorStemUri = Utils::uriGen('actuatorstem');
           $actuatorStemJson = '{"uri":"'.$newActuatorStemUri.'",'.
             '"superUri":"'.($form_state->getValue('actuatorstem_was_generated_by') === Constant::WGB_SPECIALIZATION ? UTILS::uriFromAutocomplete($form_state->getValue('actuatorstem_type')) : $parentResult->superUri).'",'.
             '"label":"'.$form_state->getValue('actuatorstem_content').'",'.
@@ -447,12 +446,15 @@ class AddActuatorStemForm extends FormBase {
             '"hasLanguage":"'.$form_state->getValue('actuatorstem_language').'",'.
             '"hasVersion":"'.$form_state->getValue('actuatorstem_version').'",'.
             '"comment":"'.$form_state->getValue('actuatorstem_description').'",'.
-            '"hasWebDocument":"'.$form_state->getValue('actuatorstem_webdocument').'",'.
+            '"hasWebDocument":"' . $actuatorstem_webdocument . '",' .
+            '"hasImageUri":"' . $actuatorstem_image . '",' .
             '"wasDerivedFrom":"'.UTILS::uriFromAutocomplete($form_state->getValue('actuatorstem_type')).'",'.
             '"wasGeneratedBy":"'.$form_state->getValue('actuatorstem_was_generated_by').'",'.
             '"hasSIRManagerEmail":"'.$useremail.'"}';
 
-          $api->actuatorStemAdd($actuatorStemJson);
+            $api->elementAdd('actuatorstem', $actuatorStemJson);
+
+          \Drupal::messenger()->addMessage(t("Added a new Actuator Stem with URI: ".$newActuatorStemUri));
 
         } else {
           \Drupal::messenger()->addError(t("An error occurred while getting Derived From element"));
@@ -461,15 +463,31 @@ class AddActuatorStemForm extends FormBase {
         }
       }
 
-      \Drupal::messenger()->addMessage(t("Added a new Actuator Stem with URI: ".$newActuatorStemUri));
+      // UPLOAD IMAGE TO API
+      if ($image_type === 'upload') {
+        $fids = $form_state->getValue('actuatorstem_image_upload');
+        $msg = $api->parseObjectResponse($api->uploadFile($newActuatorStemUri, reset($fids)), 'uploadFile');
+        if ($msg == NULL) {
+          \Drupal::messenger()->addError(t("The Uploaded Image FAILED to be submited to API."));
+        }
+      }
+      // UPLOAD DOCUMENT TO API
+      if ($doc_type === 'upload') {
+        $fids = $form_state->getValue('actuatorstem_webdocument_upload');
+        $msg = $api->parseObjectResponse($api->uploadFile($newActuatorStemUri, reset($fids)), 'uploadFile');
+        if ($msg == NULL) {
+          \Drupal::messenger()->addError(t("The Uploaded Document FAILED to be submited to API."));
+        }
+      }
+
       self::backUrl();
       return;
 
     } catch(\Exception $e) {
-        \Drupal::messenger()->addError(t("An error occurred while adding the Actuator Stem: ".$e->getMessage()));
-        self::backUrl();
-        return;
-      }
+      \Drupal::messenger()->addError(t("An error occurred while adding the Actuator Stem: ".$e->getMessage()));
+      self::backUrl();
+      return;
+    }
   }
 
   function backUrl() {
