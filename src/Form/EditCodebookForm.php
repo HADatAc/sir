@@ -365,7 +365,7 @@ class EditCodebookForm extends FormBase {
         $api->elementAdd('codebook', $codebookJson);
 
         // ADD SLOTS AND RO TO V++ CODEBOOK
-        if (!empty($this->getCodebook()->codebookSlots)){
+        if (!empty($this->getCodeBook()->codebookSlots)){
 
           //MUST CREATE SAME NUMBER SLOTS ON CLONE
           $api->codebookSlotAdd($newCodeBookUri,count($this->getCodebook()->codebookSlots));
@@ -395,7 +395,7 @@ class EditCodebookForm extends FormBase {
 
         // Determine the chosen document type.
         $doc_type = $form_state->getValue('codebook_webdocument_type');
-        $codebook_webdocument = $this->getCodebook()->hasWebDocument;
+        $codebook_webdocument = $this->getCodeBook()->hasWebDocument;
 
         // If user selected URL, use the textfield value.
         if ($doc_type === 'url') {
