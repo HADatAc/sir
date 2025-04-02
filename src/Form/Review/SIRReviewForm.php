@@ -618,6 +618,10 @@ class SIRReviewForm extends FormBase {
 
     if ($this->element_type == 'instrument') {
       $url = Url::fromRoute('sir.review_instrument', ['instrumenturi' => base64_encode($uri)]);
+    } elseif ($this->element_type == 'actuatorstem') {
+      $url = Url::fromRoute('sir.review_actuatorstem', ['actuatorstemuri' => base64_encode($uri)]);
+    } elseif ($this->element_type == 'actuator') {
+      $url = Url::fromRoute('sir.review_actuator', ['actuatoruri' => base64_encode($uri)]);
     } elseif ($this->element_type == 'detectorstem') {
       $url = Url::fromRoute('sir.review_detectorstem', ['detectorstemuri' => base64_encode($uri)]);
     } elseif ($this->element_type == 'detector') {
@@ -637,7 +641,6 @@ class SIRReviewForm extends FormBase {
       return;
     }
 
-    // Definir redirecionamento explícito
     Utils::trackingStoreUrls($uid,$previousUrl,$url->toString());
     $form_state->setRedirectUrl($url);
   }

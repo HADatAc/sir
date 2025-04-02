@@ -10,6 +10,7 @@ use Drupal\rep\Utils;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Vocabulary\VSTOI;
 use Drupal\sir\Entity\ResponseOption;
+use Drupal\rep\Vocabulary\REPGUI;
 
 class ReviewResponseOptionForm extends FormBase {
 
@@ -45,6 +46,9 @@ class ReviewResponseOptionForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $responseoptionuri = NULL) {
 
+    // ROOT URL
+    $root_url = \Drupal::request()->getBaseUrl();
+
     $uri=$responseoptionuri ?? 'default';
     $uri_decode=base64_decode($uri);
     $this->setResponseOptionUri($uri_decode);
@@ -64,7 +68,20 @@ class ReviewResponseOptionForm extends FormBase {
       return;
     }
 
-    $form['responseoption_content'] = [
+    $form['responseoption_wrapper'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'style' => 'max-width: 1280px;margin-bottom:15px!important;',
+      ],
+    ];
+
+    $form['responseoption_wrapper']['responseoption_uri'] = [
+      '#type' => 'item',
+      '#title' => $this->t('URI: '),
+      '#markup' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($this->getResponseOptionUri()).'">'.$this->getResponseOptionUri().'</a>'),
+    ];
+
+    $form['responseoption_wrapper']['responseoption_content'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Content'),
       '#default_value' => $this->getResponseOption()->hasContent,
@@ -72,7 +89,7 @@ class ReviewResponseOptionForm extends FormBase {
         'disabled' => 'disabled',
       ],
     ];
-    $form['responseoption_language'] = [
+    $form['responseoption_wrapper']['responseoption_language'] = [
       '#type' => 'select',
       '#title' => $this->t('Language'),
       '#options' => $languages,
@@ -81,7 +98,7 @@ class ReviewResponseOptionForm extends FormBase {
         'disabled' => 'disabled',
       ],
     ];
-    $form['responseoption_version'] = [
+    $form['responseoption_wrapper']['responseoption_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
       '#default_value' => $this->getResponseOption()->hasVersion,
@@ -89,7 +106,7 @@ class ReviewResponseOptionForm extends FormBase {
         'disabled' => 'disabled',
       ],
     ];
-    $form['responseoption_description'] = [
+    $form['responseoption_wrapper']['responseoption_description'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
       '#default_value' => $this->getResponseOption()->comment,
@@ -97,15 +114,7 @@ class ReviewResponseOptionForm extends FormBase {
         'disabled' => 'disabled',
       ],
     ];
-    $form['responseoption_webdocument'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Web Document'),
-      '#default_value' => $this->getResponseOption()->hasWebDocument,
-      '#attributes' => [
-        'placeholder' => 'http://',
-      ],
-      '#disabled' => TRUE,
-    ];
+
     if ($this->getResponseOption()->wasDerivedFrom !== NULL) {
       $form['responseoption_df_wrapper'] = [
         '#type' => 'container',
@@ -139,7 +148,7 @@ class ReviewResponseOptionForm extends FormBase {
       ];
     }
 
-    $form['responseoption_owner'] = [
+    $form['responseoption_wrapper']['responseoption_owner'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Owner'),
       '#default_value' => $this->getResponseOption()->hasSIRManagerEmail,
@@ -147,12 +156,186 @@ class ReviewResponseOptionForm extends FormBase {
         'disabled' => 'disabled',
       ],
     ];
-    $form['responseoption_hasreviewnote'] = [
+
+    // **** IMAGE ****
+    // Retrieve the current image value.
+    // Retrieve the current responseoption and its image.
+    $responseoption = $this->getResponseOption();
+    $responseoption_uri = Utils::namespaceUri($this->getResponseOptionUri());
+    $responseoption_image = $responseoption->hasImageUri ?? '';
+
+    // Determine if the existing web document is a URL or a file.
+    $image_type = '';
+    if (!empty($responseoption_image) && stripos(trim($responseoption_image), 'http') === 0) {
+      $image_type = 'url';
+    }
+    elseif (!empty($responseoption_image)) {
+      $image_type = 'upload';
+    }
+
+    $modUri = '';
+    if (!empty($responseoption_uri)) {
+      // Example of extracting part of the URI. Adjust or remove if not needed.
+      $parts = explode(':/', $responseoption_uri);
+      if (count($parts) > 1) {
+        $modUri = $parts[1];
+      }
+    }
+
+    // Image Type selector (URL or Upload).
+    $form['responseoption_wrapper']['responseoption_information']['responseoption_image_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Image Type'),
+      '#options' => [
+        '' => $this->t('Select Image Type'),
+        'url' => $this->t('URL'),
+        'upload' => $this->t('Upload'),
+      ],
+      '#disabled' => TRUE,
+      '#default_value' => $image_type,
+    ];
+
+    // Textfield for URL mode (only visible when type = 'url').
+    $form['responseoption_wrapper']['responseoption_information']['responseoption_image_url'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Image'),
+      '#default_value' => ($image_type === 'url') ? $responseoption_image : '',
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ],
+      '#disabled' => TRUE,
+      '#states' => [
+        'visible' => [
+          ':input[name="responseoption_image_type"]' => ['value' => 'url'],
+        ],
+      ],
+    ];
+
+    // Container for the file upload elements (only visible when type = 'upload').
+    $form['responseoption_wrapper']['responseoption_information']['responseoption_image_upload_wrapper'] = [
+      '#type' => 'container',
+      '#disabled' => TRUE,
+      '#states' => [
+        'visible' => [
+          ':input[name="responseoption_image_type"]' => ['value' => 'upload'],
+        ],
+      ],
+    ];
+
+    // Attempt to load an existing file if the document is not a URL.
+    $existing_image_fid = NULL;
+    if ($image_type === 'upload' && !empty($responseoption_image)) {
+      // Build the expected file URI in the private filesystem.
+      $desired_uri = 'private://resources/' . $modUri . '/image/' . $responseoption_image;
+      $files = \Drupal::entityTypeManager()
+        ->getStorage('file')
+        ->loadByProperties(['uri' => $desired_uri]);
+      $file = reset($files);
+      if ($file) {
+        $existing_image_fid = $file->id();
+      }
+    }
+
+    // 5. Managed file element for uploading a new document.
+    $form['responseoption_wrapper']['responseoption_information']['responseoption_image_upload_wrapper']['responseoption_image_upload'] = [
+      '#type' => 'managed_file',
+      '#title' => $this->t('Upload Document'),
+      '#upload_location' => 'private://resources/' . $modUri . '/image',
+      '#upload_validators' => [
+        'file_validate_extensions' => ['png jpg jpeg'],
+        'file_validate_size' => [2097152],
+      ],
+      '#disabled' => TRUE,
+      // If a file already exists, pass its ID so Drupal can display it.
+      '#default_value' => $existing_image_fid ? [$existing_image_fid] : NULL,
+    ];
+
+    // **** WEBDOCUMENT ****
+    // Retrieve the current web document value.
+    $responseoption_webdocument = $responseoption->hasWebDocument ?? '';
+
+    // Determine if the existing web document is a URL or a file.
+    $webdocument_type = '';
+    if (!empty($responseoption_webdocument) && stripos(trim($responseoption_webdocument), 'http') === 0) {
+      $webdocument_type = 'url';
+    }
+    elseif (!empty($responseoption_webdocument)) {
+      $webdocument_type = 'upload';
+    }
+
+    // Web Document Type selector (URL or Upload).
+    $form['responseoption_wrapper']['responseoption_information']['responseoption_webdocument_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Web Document Type'),
+      '#options' => [
+        '' => $this->t('Select Document Type'),
+        'url' => $this->t('URL'),
+        'upload' => $this->t('Upload'),
+      ],
+      '#disabled' => TRUE,
+      '#default_value' => $webdocument_type,
+    ];
+
+    // Textfield for URL mode (only visible when type = 'url').
+    $form['responseoption_wrapper']['responseoption_information']['responseoption_webdocument_url'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Web Document'),
+      '#default_value' => ($webdocument_type === 'url') ? $responseoption_webdocument : '',
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ],
+      '#disabled' => TRUE,
+      '#states' => [
+        'visible' => [
+          ':input[name="responseoption_webdocument_type"]' => ['value' => 'url'],
+        ],
+      ],
+    ];
+
+    // Container for the file upload elements (only visible when type = 'upload').
+    $form['responseoption_wrapper']['responseoption_information']['responseoption_webdocument_upload_wrapper'] = [
+      '#type' => 'container',
+      '#disabled' => TRUE,
+      '#states' => [
+        'visible' => [
+          ':input[name="responseoption_webdocument_type"]' => ['value' => 'upload'],
+        ],
+      ],
+    ];
+
+    // Attempt to load an existing file if the document is not a URL.
+    $existing_fid = NULL;
+    if ($webdocument_type === 'upload' && !empty($responseoption_webdocument)) {
+      // Build the expected file URI in the private filesystem.
+      $desired_uri = 'private://resources/' . $modUri . '/webdoc/' . $responseoption_webdocument;
+      $files = \Drupal::entityTypeManager()
+        ->getStorage('file')
+        ->loadByProperties(['uri' => $desired_uri]);
+      $file = reset($files);
+      if ($file) {
+        $existing_fid = $file->id();
+      }
+    }
+
+    // 5. Managed file element for uploading a new document.
+    $form['responseoption_wrapper']['responseoption_information']['responseoption_webdocument_upload_wrapper']['responseoption_webdocument_upload'] = [
+      '#type' => 'managed_file',
+      '#title' => $this->t('Upload Document'),
+      '#upload_location' => 'private://resources/' . $modUri . '/webdoc',
+      '#upload_validators' => [
+        'file_validate_extensions' => ['pdf doc docx txt xls xlsx'],
+      ],
+      '#disabled' => TRUE,
+      // If a file already exists, pass its ID so Drupal can display it.
+      '#default_value' => $existing_fid ? [$existing_fid] : NULL,
+    ];
+
+    $form['responseoption_wrapper']['responseoption_hasreviewnote'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Review Notes'),
       '#default_value' => $this->getResponseOption()->hasReviewNote,
     ];
-    $form['responseoption_haseditoremail'] = [
+    $form['responseoption_wrapper']['responseoption_haseditoremail'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Reviewer Email'),
       '#default_value' => \Drupal::currentUser()->getEmail(),
@@ -165,6 +348,7 @@ class ReviewResponseOptionForm extends FormBase {
       '#value' => $this->t('Approve'),
       '#name' => 'review_approve',
       '#attributes' => [
+        'onclick' => 'if(!confirm("Are you sure you want to Approve?")){return false;}',
         'class' => ['btn', 'btn-success', 'aprove-button'],
       ],
     ];
@@ -173,6 +357,7 @@ class ReviewResponseOptionForm extends FormBase {
       '#value' => $this->t('Reject'),
       '#name' => 'review_reject',
       '#attributes' => [
+        'onclick' => 'if(!confirm("Are you sure you want to Reject?")){return false;}',
         'class' => ['btn', 'btn-primary', 'cancel-button'],
       ],
     ];

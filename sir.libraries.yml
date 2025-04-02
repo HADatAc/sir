@@ -7,14 +7,6 @@ sir_js_css:
     - core/drupal
     - core/jquery.once
 
-sir_process:
-  version: 1.x
-  js:
-    js/sir_process.js: {}
-  dependencies:
-    - core/jquery
-    - core/drupal
-
 sir_detectorstem:
   version: 1.x
   js:
@@ -34,10 +26,14 @@ sir_manageSlotsElementsForm:
     - core/jquery
     - core/drupal
 
-sir_processstem:
+sir_modal:
   version: 1.x
+  css:
+    theme:
+      css/sir_modal.css: {}
   js:
-    js/sir_processstem.js: {}
+    js/sir_modal.js: {}
   dependencies:
     - core/jquery
     - core/drupal
+    - core/drupal.dialog

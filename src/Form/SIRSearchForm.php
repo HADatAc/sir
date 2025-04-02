@@ -10,6 +10,7 @@ use Drupal\Core\Ajax\RedirectCommand;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Vocabulary\HASCO;
 use Drupal\rep\Vocabulary\VSTOI;
+use Drupal\Core\Render\Markup;
 
 class SIRSearchForm extends FormBase {
 
@@ -74,6 +75,16 @@ class SIRSearchForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+
+    // MODAL
+    $form['#attached']['library'][] = 'sir/sir_modal';
+    $form['#attached']['library'][] = 'core/drupal.dialog';
+    $base_url = \Drupal::request()->getSchemeAndHttpHost() . \Drupal::request()->getBaseUrl();
+    $form['#attached']['drupalSettings']['sir_modal'] = [
+      'baseUrl' => $base_url,
+    ];
+    $form['#attached']['library'][] = 'std/pdfjs';
+
 
     // LOAD LANGUAGE TABLE
     $tables = new Tables;
@@ -147,8 +158,6 @@ class SIRSearchForm extends FormBase {
         'responseoption' => $this->t('Response Options'),
         'annotationstem' => $this->t('Annotation Stems'),
         'annotation' => $this->t('Annotations'),
-        'processstem' => $this->t('Process Stems'),
-        'process' => $this->t('Processes'),
       ],
       '#default_value' => $this->getElementType(),
       '#ajax' => [
@@ -207,6 +216,20 @@ class SIRSearchForm extends FormBase {
       ],
     ];
 
+    $form['modal'] = [
+      '#type' => 'markup',
+      '#markup' => Markup::create('
+        <div id="modal-container" class="modal-media hidden">
+          <div class="modal-content">
+            <button class="close-btn" type="button">&times;</button>
+            <div id="pdf-scroll-container"></div>
+            <div id="modal-content"></div>
+          </div>
+          <div class="modal-backdrop"></div>
+        </div>
+      '),
+    ];
+
     return $form;
   }
 
@@ -236,8 +259,7 @@ class SIRSearchForm extends FormBase {
     // IF ELEMENT TYPE IS CLASS
     if (($form_state->getValue('search_element_type') == 'instrument') ||
         ($form_state->getValue('search_element_type') == 'actuatorstem') ||
-        ($form_state->getValue('search_element_type') == 'detectorstem') ||
-        ($form_state->getValue('search_element_type') == 'processstem')) {
+        ($form_state->getValue('search_element_type') == 'detectorstem')) {
       $url = Url::fromRoute('rep.browse_tree');
       $url->setRouteParameter('mode', 'browse');
       $url->setRouteParameter('elementtype', $form_state->getValue('search_element_type'));
@@ -264,7 +286,7 @@ class SIRSearchForm extends FormBase {
     $elementType = $form_state->getValue('search_element_type');
 
     // Build URL for the route 'sir.search' with parameters.
-    if ($elementType === 'instrument' || $elementType === 'detectorstem' || $elementType === 'processstem' || $elementType === 'actuatorstem'){
+    if ($elementType === 'instrument' || $elementType === 'detectorstem' || $elementType === 'actuatorstem'){
       $url = Url::fromRoute('sir.search', [
         'mode' => 'browse',
         'elementtype' => $elementType,

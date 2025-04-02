@@ -108,6 +108,7 @@ class Detector {
         'element_attribute_of' => $attributeOf,
         'element_status' => $status,
         'element_hasStatus' => parse_url($element->hasStatus, PHP_URL_FRAGMENT),
+        'element_hasImageUri' => $element->hasImageUri,
       ];
     }
 
@@ -182,6 +183,7 @@ class Detector {
         'element_owner' => $owner,
         'element_status' => $status,
         'element_hasStatus' => parse_url($element->hasStatus, PHP_URL_FRAGMENT),
+        'element_hasImageUri' => $element->hasImageUri,
       ];
     }
 

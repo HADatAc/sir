@@ -14,8 +14,6 @@ use Drupal\sir\Entity\Detector;
 use Drupal\sir\Entity\Codebook;
 use Drupal\sir\Entity\Instrument;
 use Drupal\sir\Entity\ResponseOption;
-use Drupal\sir\Entity\ProcessStem;
-use Drupal\sir\Entity\Process;
 use Drupal\rep\Entity\Tables;
 
 class SIRListForm extends FormBase {
@@ -240,20 +238,6 @@ class SIRListForm extends FormBase {
         $output = Annotation::generateOutput($this->getList());
         break;
 
-      // PROCESS STEM
-      case "processstem":
-        $class_name = "Process Stems";
-        $header = ProcessStem::generateHeader();
-        $output = ProcessStem::generateOutput($this->getList());
-        break;
-
-      // PROCESS
-      case "process":
-        $class_name = "Processes";
-        $header = Process::generateHeader();
-        $output = Process::generateOutput($this->getList());
-        break;
-
       default:
         $class_name = "Objects of Unknown Types";
     }
@@ -271,78 +255,62 @@ class SIRListForm extends FormBase {
     $output = $output['output'];
 
     $form['element_table_wrapper'] = [
-      '#type' => 'container',
-      '#attributes' => ['id' => 'element-table-wrapper'],
+        '#type' => 'container',
+        '#attributes' => ['id' => 'element-table-wrapper'],
     ];
 
     $form['element_table_wrapper']['element_table'] = [
-      '#type' => 'table',
-      //'#type' => 'tableselect',
-      '#header' => array_merge(
-        //['select' => ''],
-        $header
-      ),
-      '#empty' => $this->t('No ' . $this->plural_class_name . ' found'),
-      '#attributes' => [
-        'class' => ['table', 'table-striped'],
-      ],
-      '#js_select' => FALSE,
+        '#type' => 'table',
+        '#header' => array_merge( $header),
+        '#empty' => $this->t('No ' . $this->plural_class_name . ' found'),
+        '#attributes' => ['class' => ['table', 'table-striped']],
+        '#js_select' => FALSE,
     ];
 
-    // ADD lines to table
     foreach ($output as $key => $row) {
-      $row_status = strtolower($row['element_hasStatus']);
-      $row_language = strtolower($row['element_hasLanguage']);
+        $row_status = strtolower($row['element_hasStatus']);
+        $row_language = strtolower($row['element_hasLanguage']);
 
-      if ($elementtype == 'instrument' || $elementtype == 'codebook')
-        $row_label = strtolower($row['element_name']);
-      else if ($elementtype == 'detector' || $elementtype == 'detectorstem' || $elementtype == 'responseoption' || $elementtype == 'actuator' || $elementtype == 'actuatorstem')
-        $row_label = strtolower($row['element_content']);
+        if ($elementtype == 'instrument' || $elementtype == 'codebook')
+          $row_label = strtolower($row['element_name']);
+        else if ($elementtype == 'detector' || $elementtype == 'detectorstem' || $elementtype == 'responseoption' || $elementtype == 'actuator' || $elementtype == 'actuatorstem')
+          $row_label = strtolower($row['element_content']);
 
-      if ($status_filter !== 'all' && $row_status !== $status_filter) {
-          continue;
-      }
+        // if ($status_filter !== 'all' && $row_status !== $status_filter) {
+        //     continue;
+        // }
 
-      if ($language_filter !== 'all' && $row_language !== $language_filter) {
-        continue;
-      }
+        // if ($language_filter !== 'all' && $row_language !== $language_filter) {
+        //     continue;
+        // }
 
-      // Use strpos to check if the text filter is contained in the label.
-      if ($text_filter !== '' && strpos($row_label, $text_filter) === false) {
-        continue;
-      }
-      //$is_disabled = isset($disabled_rows[$key]);
+        // // Use strpos to check if the text filter is contained in the label.
+        // if ($text_filter !== '' && strpos($row_label, $text_filter) === false) {
+        //     continue;
+        // }
 
-      // ADD checkbox's to row
-      // $checkbox = [
-      //     '#type' => 'checkbox',
-      //     '#title' => $this->t('Select'),
-      //     '#title_display' => 'invisible',
-      //     '#return_value' => $key,
-      //     '#attributes' => [
-      //         'class' => ['element-select-checkbox checkbox-status-'. strtolower($row['element_hasStatus'])],
-      //     ],
-      // ];
+        // Checkbox for selection
+        // $checkbox = [
+        //     '#type' => 'checkbox',
+        //     '#title' => $this->t('Select'),
+        //     '#title_display' => 'invisible',
+        //     '#return_value' => $key,
+        //     '#attributes' => [
+        //         'class' => ['element-select-checkbox', 'checkbox-status-' . $row_status],
+        //     ],
+        // ];
 
-      // Assemble row
-      // $form['element_table'][$key]['select'] = $is_disabled ? [
-      //     '#markup' => '',  // Célula vazia para linhas desativadas
-      // ] : $checkbox;
-      //$form['element_table'][$key]['select'] = [];
+        // Create the table row
+        // $form['element_table_wrapper']['element_table'][$key]['select'] = $checkbox;
 
-      // Next Columns
-      foreach ($row as $field_key => $field_value) {
-          if ($field_key !== 'element_hasStatus' && $field_key !== 'element_hasLanguage') {
-              $form['element_table_wrapper']['element_table'][$key][$field_key] = [
-                  '#markup' => $field_value,
-              ];
-          }
-      }
-
-      // Add classes to disabled rows
-      // if ($is_disabled) {
-      //     $form['element_table'][$key]['#attributes']['class'][] = 'disabled-row';
-      // }
+        // Hide unnecessary columns
+        foreach ($row as $field_key => $field_value) {
+            if ($field_key !== 'element_hasStatus' && $field_key !== 'element_hasLanguage' && $field_key !== 'element_hasImageUri') {
+                $form['element_table_wrapper']['element_table'][$key][$field_key] = [
+                    '#markup' => $field_value,
+                ];
+            }
+        }
     }
 
     $form['element_table_wrapper']['pager'] = [

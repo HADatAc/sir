@@ -10,6 +10,7 @@ use Drupal\rep\Utils;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Vocabulary\VSTOI;
 use Drupal\rep\Vocabulary\REPGUI;
+use Drupal\file\Entity\File;
 
 class EditResponseOptionForm extends FormBase {
 
@@ -98,14 +99,172 @@ class EditResponseOptionForm extends FormBase {
       '#title' => $this->t('Description'),
       '#default_value' => $this->getResponseOption()->comment,
     ];
-    $form['responseoption_webdocument'] = [
+
+    // **** IMAGE ****
+    // Retrieve the current image value.
+    // Retrieve the current responseoption and its image.
+    $responseoption = $this->getResponseOption();
+    $responseoption_uri = Utils::namespaceUri($this->getResponseOptionUri());
+    $responseoption_image = $responseoption->hasImageUri ?? '';
+
+    // Determine if the existing web document is a URL or a file.
+    $image_type = '';
+    if (!empty($responseoption_image) && stripos(trim($responseoption_image), 'http') === 0) {
+      $image_type = 'url';
+    }
+    elseif (!empty($responseoption_image)) {
+      $image_type = 'upload';
+    }
+
+    $modUri = '';
+    if (!empty($responseoption_uri)) {
+      // Example of extracting part of the URI. Adjust or remove if not needed.
+      $parts = explode(':/', $responseoption_uri);
+      if (count($parts) > 1) {
+        $modUri = $parts[1];
+      }
+    }
+
+    // Image Type selector (URL or Upload).
+    $form['responseoption_information']['responseoption_image_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Image Type'),
+      '#options' => [
+        '' => $this->t('Select Image Type'),
+        'url' => $this->t('URL'),
+        'upload' => $this->t('Upload'),
+      ],
+      '#default_value' => $image_type,
+    ];
+
+    // Textfield for URL mode (only visible when type = 'url').
+    $form['responseoption_information']['responseoption_image_url'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Web Document'),
-      '#default_value' => $this->getResponseOption()->hasWebDocument,
+      '#title' => $this->t('Image'),
+      '#default_value' => ($image_type === 'url') ? $responseoption_image : '',
       '#attributes' => [
         'placeholder' => 'http://',
-      ]
+      ],
+      '#states' => [
+        'visible' => [
+          ':input[name="responseoption_image_type"]' => ['value' => 'url'],
+        ],
+      ],
     ];
+
+    // Container for the file upload elements (only visible when type = 'upload').
+    $form['responseoption_information']['responseoption_image_upload_wrapper'] = [
+      '#type' => 'container',
+      '#states' => [
+        'visible' => [
+          ':input[name="responseoption_image_type"]' => ['value' => 'upload'],
+        ],
+      ],
+    ];
+
+    // Attempt to load an existing file if the document is not a URL.
+    $existing_image_fid = NULL;
+    if ($image_type === 'upload' && !empty($responseoption_image)) {
+      // Build the expected file URI in the private filesystem.
+      $desired_uri = 'private://resources/' . $modUri . '/image/' . $responseoption_image;
+      $files = \Drupal::entityTypeManager()
+        ->getStorage('file')
+        ->loadByProperties(['uri' => $desired_uri]);
+      $file = reset($files);
+      if ($file) {
+        $existing_image_fid = $file->id();
+      }
+    }
+
+    // 5. Managed file element for uploading a new document.
+    $form['responseoption_information']['responseoption_image_upload_wrapper']['responseoption_image_upload'] = [
+      '#type' => 'managed_file',
+      '#title' => $this->t('Upload Document'),
+      '#upload_location' => 'private://resources/' . $modUri . '/image',
+      '#upload_validators' => [
+        'file_validate_extensions' => ['png jpg jpeg'],
+        'file_validate_size' => [2097152],
+      ],
+      // If a file already exists, pass its ID so Drupal can display it.
+      '#default_value' => $existing_image_fid ? [$existing_image_fid] : NULL,
+    ];
+
+    // **** WEBDOCUMENT ****
+    // Retrieve the current web document value.
+    $responseoption_webdocument = $responseoption->hasWebDocument ?? '';
+
+    // Determine if the existing web document is a URL or a file.
+    $webdocument_type = '';
+    if (!empty($responseoption_webdocument) && stripos(trim($responseoption_webdocument), 'http') === 0) {
+      $webdocument_type = 'url';
+    }
+    elseif (!empty($responseoption_webdocument)) {
+      $webdocument_type = 'upload';
+    }
+
+    // Web Document Type selector (URL or Upload).
+    $form['responseoption_information']['responseoption_webdocument_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Web Document Type'),
+      '#options' => [
+        '' => $this->t('Select Document Type'),
+        'url' => $this->t('URL'),
+        'upload' => $this->t('Upload'),
+      ],
+      '#default_value' => $webdocument_type,
+    ];
+
+    // Textfield for URL mode (only visible when type = 'url').
+    $form['responseoption_information']['responseoption_webdocument_url'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Web Document'),
+      '#default_value' => ($webdocument_type === 'url') ? $responseoption_webdocument : '',
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ],
+      '#states' => [
+        'visible' => [
+          ':input[name="responseoption_webdocument_type"]' => ['value' => 'url'],
+        ],
+      ],
+    ];
+
+    // Container for the file upload elements (only visible when type = 'upload').
+    $form['responseoption_information']['responseoption_webdocument_upload_wrapper'] = [
+      '#type' => 'container',
+      '#states' => [
+        'visible' => [
+          ':input[name="responseoption_webdocument_type"]' => ['value' => 'upload'],
+        ],
+      ],
+    ];
+
+    // Attempt to load an existing file if the document is not a URL.
+    $existing_fid = NULL;
+    if ($webdocument_type === 'upload' && !empty($responseoption_webdocument)) {
+      // Build the expected file URI in the private filesystem.
+      $desired_uri = 'private://resources/' . $modUri . '/webdoc/' . $responseoption_webdocument;
+      $files = \Drupal::entityTypeManager()
+        ->getStorage('file')
+        ->loadByProperties(['uri' => $desired_uri]);
+      $file = reset($files);
+      if ($file) {
+        $existing_fid = $file->id();
+      }
+    }
+
+    // 5. Managed file element for uploading a new document.
+    $form['responseoption_information']['responseoption_webdocument_upload_wrapper']['responseoption_webdocument_upload'] = [
+      '#type' => 'managed_file',
+      '#title' => $this->t('Upload Document'),
+      '#upload_location' => 'private://resources/' . $modUri . '/webdoc',
+      '#upload_validators' => [
+        'file_validate_extensions' => ['pdf doc docx txt xls xlsx'],
+      ],
+      // If a file already exists, pass its ID so Drupal can display it.
+      '#default_value' => $existing_fid ? [$existing_fid] : NULL,
+    ];
+
     if ($this->getResponseOption()->hasReviewNote !== NULL && $this->getResponseOption()->hasSatus !== null) {
       $form['responseoption_hasreviewnote'] = [
         '#type' => 'textarea',
@@ -197,13 +356,68 @@ class EditResponseOptionForm extends FormBase {
           '"hasVersion":"'.$form_state->getValue('responseoption_version').'",'.
           '"comment":"'.$form_state->getValue('responseoption_description').'",'.
           '"wasDerivedFrom":"'.$this->getResponseOption()->uri.'",'.
-          '"hasWebDocument":"'.$form_state->getValue('responseoption_webdocument').'",'.
+          '"hasWebDocument":"",'.
+          '"hasImageUri":"",' .
           '"hasSIRManagerEmail":"'.$useremail.'"}';
 
-        $api->responseOptionAdd($responseOptionJSON_new);
+        $api->elementAdd('responseoption', $responseOptionJSON_new);
         \Drupal::messenger()->addMessage(t("New Version Response Option has been created successfully."));
 
       } else {
+
+        // Determine the chosen document type.
+        $doc_type = $form_state->getValue('responseoption_webdocument_type');
+        $responseoption_webdocument = '';
+
+        // If user selected URL, use the textfield value.
+        if ($doc_type === 'url') {
+          $responseoption_webdocument = $form_state->getValue('responseoption_webdocument_url');
+        }
+        // If user selected Upload, load the file entity and get its filename.
+        elseif ($doc_type === 'upload') {
+          // Get the file IDs from the managed_file element.
+          $fids = $form_state->getValue('responseoption_webdocument_upload');
+          if (!empty($fids)) {
+            // Load the first file (file ID is returned, e.g. "374").
+            $file = File::load(reset($fids));
+            if ($file) {
+              // Mark the file as permanent and save it.
+              $file->setPermanent();
+              $file->save();
+              // Optionally register file usage to prevent cleanup.
+              \Drupal::service('file.usage')->add($file, 'sir', 'responseoption', 1);
+              // Now get the filename from the file entity.
+              $responseoption_webdocument = $file->getFilename();
+            }
+          }
+        }
+
+        // Determine the chosen image type.
+        $image_type = $form_state->getValue('responseoption_image_type');
+        $responseoption_image = '';
+
+        // If user selected URL, use the textfield value.
+        if ($image_type === 'url') {
+          $responseoption_image = $form_state->getValue('responseoption_image_url');
+        }
+        // If user selected Upload, load the file entity and get its filename.
+        elseif ($image_type === 'upload') {
+          // Get the file IDs from the managed_file element.
+          $fids = $form_state->getValue('responseoption_image_upload');
+          if (!empty($fids)) {
+            // Load the first file (file ID is returned, e.g. "374").
+            $file = File::load(reset($fids));
+            if ($file) {
+              // Mark the file as permanent and save it.
+              $file->setPermanent();
+              $file->save();
+              // Optionally register file usage to prevent cleanup.
+              \Drupal::service('file.usage')->add($file, 'sir', 'responseoption', 1);
+              // Now get the filename from the file entity.
+              $responseoption_image = $file->getFilename();
+            }
+          }
+        }
 
         // ITS DRAFT UPDATE CURRENT REGISTRY
         $responseOptionJSON = '{"uri":"'. $this->getResponseOption()->uri .'",'.
@@ -215,12 +429,13 @@ class EditResponseOptionForm extends FormBase {
           '"hasVersion":"'.$form_state->getValue('responseoption_version').'",'.
           '"comment":"'.$form_state->getValue('responseoption_description').'",'.
           '"wasDerivedFrom":"'.$this->getResponseOption()->wasDerivedFrom.'",'.
-          '"hasWebDocument":"'.$form_state->getValue('responseoption_webdocument').'",'.
+          '"hasWebDocument":"' . $responseoption_webdocument . '",' .
+          '"hasImageUri":"' . $responseoption_image . '",' .
           '"hasSIRManagerEmail":"'.$useremail.'"}';
 
         // UPDATE BY DELETING AND CREATING
-        $api->responseOptionDel($this->getResponseOption()->uri);
-        $api->responseOptionAdd($responseOptionJSON);
+        $api->elementDel('responseoption', $this->getResponseOption()->uri);
+        $api->elementAdd('responseoption', $responseOptionJSON);
         \Drupal::messenger()->addMessage(t("Response Option has been updated successfully."));
       }
 

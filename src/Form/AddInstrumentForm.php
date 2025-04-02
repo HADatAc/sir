@@ -37,8 +37,16 @@ class AddInstrumentForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
 
-    // Because File Upload Path
-    $this->setInstrumenUri();
+    // Check if the instrument URI already exists in the form state.
+    // If not, generate a new URI and store it in the form state.
+    if (!$form_state->has('instrument_uri')) {
+      $this->setInstrumenUri();
+      $form_state->set('instrument_uri', $this->getInstrumenUri());
+    }
+    else {
+      // Retrieve the persisted URI from form state.
+      $this->instrumentUri = $form_state->get('instrument_uri');
+    }
 
     // MODAL
     $form['#attached']['library'][] = 'rep/rep_modal';
@@ -115,6 +123,59 @@ class AddInstrumentForm extends FormBase {
       '#title' => $this->t('Description'),
     ];
 
+    // Add a hidden field to persist the instrument URI between form rebuilds.
+    $form['instrument_uri'] = [
+      '#type' => 'hidden',
+      '#value' => $this->instrumentUri,
+    ];
+
+    // Add a select box to choose between URL and Upload.
+    $form['instrument_image_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Image Type'),
+      '#options' => [
+        '' => $this->t('Select Image Type'),
+        'url' => $this->t('URL'),
+        'upload' => $this->t('Upload'),
+      ],
+      '#default_value' => '',
+    ];
+
+    // The textfield for entering a URL.
+    // It is only visible when the select box value is 'url'.
+    $form['instrument_image_url'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Image'),
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ],
+      '#states' => [
+        'visible' => [
+          ':input[name="instrument_image_type"]' => ['value' => 'url'],
+        ],
+      ],
+    ];
+
+    // Because File Upload Path (use the persisted instrument URI for file uploads)
+    $modUri = (explode(":/", utils::namespaceUri($this->instrumentUri)))[1];
+    $form['instrument_image_upload_wrapper'] = [
+      '#type' => 'container',
+      '#states' => [
+        'visible' => [
+          ':input[name="instrument_image_type"]' => ['value' => 'upload'],
+        ],
+      ],
+    ];
+    $form['instrument_image_upload_wrapper']['instrument_image_upload'] = [
+      '#type' => 'managed_file',
+      '#title' => $this->t('Upload Image'),
+      '#upload_location' => 'private://resources/' . $modUri . '/image',
+      '#upload_validators' => [
+        'file_validate_extensions' => ['png jpg jpeg'], // Adjust allowed extensions as needed.
+        'file_validate_size' => [2097152],
+      ],
+    ];
+
     // Add a select box to choose between URL and Upload.
     $form['instrument_webdocument_type'] = [
       '#type' => 'select',
@@ -142,8 +203,7 @@ class AddInstrumentForm extends FormBase {
       ],
     ];
 
-    // Wrap the managed_file element in a container with the #states condition.
-    // This container is only visible when the select box value is 'upload'.
+    // Because File Upload Path (use the persisted instrument URI for file uploads)
     $form['instrument_webdocument_upload_wrapper'] = [
       '#type' => 'container',
       '#states' => [
@@ -152,14 +212,13 @@ class AddInstrumentForm extends FormBase {
         ],
       ],
     ];
-
-    $modUri = (explode(":/", utils::namespaceUri($this->getInstrumenUri())))[1];
     $form['instrument_webdocument_upload_wrapper']['instrument_webdocument_upload'] = [
       '#type' => 'managed_file',
       '#title' => $this->t('Upload Document'),
-      '#upload_location' => 'private://resources/'.$modUri.'/webdoc',
+      '#upload_location' => 'private://resources/' . $modUri . '/webdoc',
       '#upload_validators' => [
         'file_validate_extensions' => ['pdf doc docx txt xls xlsx'], // Adjust allowed extensions as needed.
+        'file_validate_size' => [2097152],
       ],
     ];
 
@@ -225,7 +284,8 @@ class AddInstrumentForm extends FormBase {
 
       // Get the current user email and generate a new instrument URI.
       $useremail = \Drupal::currentUser()->getEmail();
-      $newInstrumentUri = Utils::uriGen('instrument');
+      // $newInstrumentUri = Utils::uriGen('instrument');
+      $newInstrumentUri = $form_state->getValue('instrument_uri');
 
       // Determine the chosen document type.
       $doc_type = $form_state->getValue('instrument_webdocument_type');
@@ -254,6 +314,33 @@ class AddInstrumentForm extends FormBase {
         }
       }
 
+      // Determine the chosen image type.
+      $image_type = $form_state->getValue('instrument_image_type');
+      $instrument_image = '';
+
+      // If user selected URL, use the textfield value.
+      if ($image_type === 'url') {
+        $instrument_image = $form_state->getValue('instrument_image_url');
+      }
+      // If user selected Upload, load the file entity and get its filename.
+      elseif ($image_type === 'upload') {
+        // Get the file IDs from the managed_file element.
+        $fids = $form_state->getValue('instrument_image_upload');
+        if (!empty($fids)) {
+          // Load the first file (file ID is returned, e.g. "374").
+          $file = File::load(reset($fids));
+          if ($file) {
+            // Mark the file as permanent and save it.
+            $file->setPermanent();
+            $file->save();
+            // Optionally register file usage to prevent cleanup.
+            \Drupal::service('file.usage')->add($file, 'sir', 'instrument', 1);
+            // Now get the filename from the file entity.
+            $instrument_image = $file->getFilename();
+          }
+        }
+      }
+
       // Build the JSON string with the computed web document value.
       $instrumentJson = '{"uri":"' . $newInstrumentUri . '",' .
         '"superUri":"' . Utils::uriFromAutocomplete($form_state->getValue('instrument_type')) . '",' .
@@ -265,6 +352,7 @@ class AddInstrumentForm extends FormBase {
         '"hasLanguage":"' . $form_state->getValue('instrument_language') . '",' .
         '"hasVersion":"' . $form_state->getValue('instrument_version') . '",' .
         '"hasWebDocument":"' . $instrument_webdocument . '",' .
+        '"hasImageUri":"' . $instrument_image . '",' .
         '"comment":"' . $form_state->getValue('instrument_description') . '",' .
         '"hasSIRManagerEmail":"' . $useremail . '"}';
 
@@ -273,6 +361,24 @@ class AddInstrumentForm extends FormBase {
       $api->instrumentAdd($instrumentJson);
 
       \Drupal::messenger()->addMessage($this->t("Instrument has been added successfully."));
+
+      // UPLOAD IMAGE TO API
+      if ($image_type === 'upload') {
+        $fids = $form_state->getValue('instrument_image_upload');
+        $msg = $api->parseObjectResponse($api->uploadFile($newInstrumentUri, reset($fids)), 'uploadFile');
+        if ($msg == NULL) {
+          \Drupal::messenger()->addError(t("The Uploaded Image FAILED to be submited to API."));
+        }
+      }
+
+      if ($doc_type === 'upload') {
+        $fids = $form_state->getValue('instrument_webdocument_upload');
+        $msg = $api->parseObjectResponse($api->uploadFile($newInstrumentUri, reset($fids)), 'uploadFile');
+        if ($msg == NULL) {
+          \Drupal::messenger()->addError(t("The Uploaded WebDocument FAILED to be submited to API."));
+        }
+      }
+
       self::backUrl();
       return;
 
@@ -280,7 +386,7 @@ class AddInstrumentForm extends FormBase {
       \Drupal::messenger()->addMessage(t("An error occurred while adding instrument: ".$e->getMessage()));
       self::backUrl();
       return;
- }
+    }
 
   }
 
