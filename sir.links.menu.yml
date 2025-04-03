@@ -168,3 +168,242 @@ sir.manage_annotationstems :
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
+
+# OPTION 1
+# REQUIRE SIR MODULE TO SHOW
+reviewer.elements_review:
+  title: Review Content
+  description: ''
+  menu_name: main
+  route_name: 'sir.select_review_element'
+  route_parameters:
+    elementtype: 'instrument'
+    page: '1'
+    pagesize: '9'
+  parent: reviewer.top_level
+  weight: 10
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'
+
+reviewer.instruments:
+  title: Simulators
+  description: Manage Simulator Reviews
+  menu_name: main
+  route_name: sir.select_review_element
+  route_parameters:
+    elementtype: 'instrument'
+    page: '1'
+    pagesize: '9'
+  parent: reviewer.elements_review
+  weight: 10
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'
+
+reviewer.detectorsstem:
+  title: Detector Stems
+  description: Manage Detectors Stem Reviews
+  menu_name: main
+  route_name: sir.select_review_element
+  route_parameters:
+    elementtype: 'detectorstem'
+    page: '1'
+    pagesize: '9'
+  parent: reviewer.elements_review
+  weight: 40
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'
+
+reviewer.detectors:
+  title: Detectors
+  description: Manage Detectors Reviews
+  menu_name: main
+  route_name: sir.select_review_element
+  route_parameters:
+    elementtype: 'detector'
+    page: '1'
+    pagesize: '9'
+  parent: reviewer.elements_review
+  weight: 50
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'
+
+reviewer.actuatorstem:
+  title: Actuator Stems
+  description: Manage Actuators Stem Reviews
+  menu_name: main
+  route_name: sir.select_review_element
+  route_parameters:
+    elementtype: 'actuatorstem'
+    page: '1'
+    pagesize: '9'
+  parent: reviewer.elements_review
+  weight: 60
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'
+
+reviewer.actuators:
+  title: Actuators
+  description: Manage Actuators Reviews
+  menu_name: main
+  route_name: sir.select_review_element
+  route_parameters:
+    elementtype: 'actuator'
+    page: '1'
+    pagesize: '9'
+  parent: reviewer.elements_review
+  weight: 70
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'
+
+reviewer.codebooks:
+  title: Codebooks
+  description: Manage Codebooks Reviews
+  menu_name: main
+  route_name: sir.select_review_element
+  route_parameters:
+    elementtype: 'codebook'
+    page: '1'
+    pagesize: '9'
+  parent: reviewer.elements_review
+  weight: 80
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'
+
+reviewer.response_options:
+  title: Response Options
+  description: Manage Response Options Reviews
+  menu_name: main
+  route_name: sir.select_review_element
+  route_parameters:
+    elementtype: 'responseoption'
+    page: '1'
+    pagesize: '9'
+  parent: reviewer.elements_review
+  weight: 90
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'
+
+# OPTION 2
+
+reviewer.manage_ins_files:
+  title: INS Templates
+  description: Manage INS Templates
+  route_name: rep.select_mt_element
+  route_parameters:
+    elementtype: 'ins'
+    mode: 'table'
+    page: '1'
+    pagesize: '9'
+    studyuri: 'none'
+  parent: reviewer.uploadingest_review
+  menu_name: main
+  weight: 10
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'
+
+std.manage_dsg_template:
+  title: DSG Templates
+  description: Manage DSG Templates
+  route_name: rep.select_mt_element
+  route_parameters:
+    elementtype: 'dsg'
+    mode: 'table'
+    page: '1'
+    pagesize: '9'
+    studyuri: 'none'
+  parent: reviewer.uploadingest_review
+  menu_name: main
+  weight: 12
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'
+
+std.manage_dd_template:
+  title: DD Templates
+  description: Manage DD Templates
+  route_name: rep.select_mt_element
+  route_parameters:
+    elementtype: 'dd'
+    mode: 'table'
+    page: '1'
+    pagesize: '9'
+    studyuri: 'none'
+  parent: reviewer.uploadingest_review
+  menu_name: main
+  weight: 13
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'
+
+std.manage_sdd_template:
+  title: SDD Templates
+  description: Manage SDD Templates
+  route_name: rep.select_mt_element
+  route_parameters:
+    elementtype: 'sdd'
+    mode: 'table'
+    page: '1'
+    pagesize: '9'
+    studyuri: 'none'
+  parent: reviewer.uploadingest_review
+  menu_name: main
+  weight: 14
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'
+
+reviewer.manage_ins_files_dp2:
+  title: DP2 Templates
+  description: Manage DP2 Templates
+  route_name: rep.select_mt_element
+  route_parameters:
+    elementtype: 'dp2'
+    mode: 'table'
+    page: '1'
+    pagesize: '9'
+    studyuri: 'none'
+  parent: reviewer.uploadingest_review
+  menu_name: main
+  weight: 16
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'
+
+reviewer.manage_ins_files_str:
+  title: STR Templates
+  description: Manage STR Templates
+  route_name: rep.select_mt_element
+  route_parameters:
+    elementtype: 'str'
+    mode: 'table'
+    page: '1'
+    pagesize: '9'
+    studyuri: 'none'
+  parent: reviewer.uploadingest_review
+  menu_name: main
+  weight: 17
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'
+
+
+# OPTION 3
+reviewer.generate_ins_file:
+  title: INS
+  description: Generate INS File
+  route_name: sir.generate_ins
+  parent: reviewer.generate_review
+  menu_name: main
+  weight: 10
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'
