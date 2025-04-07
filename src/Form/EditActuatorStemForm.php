@@ -146,9 +146,13 @@ class EditActuatorStemForm extends FormBase {
     $form['actuatorstem_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
-      '#default_value' =>
-        ($this->getActuatorStem()->hasStatus === VSTOI::CURRENT || $this->getActuatorStem()->hasStatus === VSTOI::DEPRECATED) ?
-        $this->getActuatorStem()->hasVersion + 1 : $this->getActuatorStem()->hasVersion,
+      '#default_value' => isset($this->getActuatorStem()->hasVersion) && $this->getActuatorStem()->hasVersion !== null
+        ? (
+          ($this->getActuatorStem()->hasStatus === VSTOI::CURRENT || $this->getActuatorStem()->hasStatus === VSTOI::DEPRECATED)
+            ? $this->getActuatorStem()->hasVersion + 1
+            : $this->getActuatorStem()->hasVersion
+        )
+        : 1,
       '#attributes' => [
         'disabled' => 'disabled',
       ],

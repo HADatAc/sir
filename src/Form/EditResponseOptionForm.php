@@ -87,9 +87,13 @@ class EditResponseOptionForm extends FormBase {
     $form['responseoption_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
-      '#default_value' =>
-        ($this->getResponseOption()->hasStatus === VSTOI::CURRENT || $this->getResponseOption()->hasStatus === VSTOI::DEPRECATED) ?
-        $this->getResponseOption()->hasVersion + 1 : $this->getResponseOption()->hasVersion,
+      '#default_value' => isset($this->getResponseOption()->hasVersion) && $this->getResponseOption()->hasVersion !== null
+        ? (
+            ($this->getResponseOption()->hasStatus === VSTOI::CURRENT || $this->getResponseOption()->hasStatus === VSTOI::DEPRECATED)
+              ? $this->getResponseOption()->hasVersion + 1
+              : $this->getResponseOption()->hasVersion
+          )
+        : 1,
       '#attributes' => [
         'disabled' => 'disabled',
       ],

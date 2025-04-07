@@ -137,9 +137,13 @@ class EditDetectorForm extends FormBase {
     $form['detector_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
-      '#default_value' =>
-        ($this->getDetector()->hasStatus === VSTOI::CURRENT || $this->getDetector()->hasStatus === VSTOI::DEPRECATED) ?
-        $this->getDetector()->hasVersion + 1 : $this->getDetector()->hasVersion,
+      '#default_value' => isset($this->getDetector()->hasVersion) && $this->getDetector()->hasVersion !== null
+        ? (
+            ($this->getDetector()->hasStatus === VSTOI::CURRENT || $this->getDetector()->hasStatus === VSTOI::DEPRECATED)
+              ? $this->getDetector()->hasVersion + 1
+              : $this->getDetector()->hasVersion
+          )
+        : 1,
       '#attributes' => [
         'disabled' => 'disabled',
       ],

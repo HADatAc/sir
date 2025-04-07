@@ -88,9 +88,13 @@ class EditCodebookForm extends FormBase {
     $form['codebook_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
-      '#default_value' =>
-        ($this->getCodebook()->hasStatus === VSTOI::CURRENT || $this->getCodebook()->hasStatus === VSTOI::DEPRECATED) ?
-        $this->getCodebook()->hasVersion + 1 : $this->getCodebook()->hasVersion,
+      '#default_value' => isset($this->getCodebook()->hasVersion) && $this->getCodebook()->hasVersion !== null
+        ? (
+            ($this->getCodebook()->hasStatus === VSTOI::CURRENT || $this->getCodebook()->hasStatus === VSTOI::DEPRECATED)
+              ? $this->getCodebook()->hasVersion + 1
+              : $this->getCodebook()->hasVersion
+          )
+        : 1,
       '#attributes' => [
         'disabled' => 'disabled',
       ],
