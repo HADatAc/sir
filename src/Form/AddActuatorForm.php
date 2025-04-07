@@ -221,10 +221,10 @@ class AddActuatorForm extends FormBase {
           'data-dialog-options' => json_encode(['width' => 800]),
           'data-url' => Url::fromRoute('rep.tree_form', [
             'mode' => 'modal',
-            'elementtype' => 'detectorattribute',
+            'elementtype' => 'actuatorattribute',
           ], ['query' => ['field_id' => 'actuator_isAttributeOf']])->toString(),
           'data-field-id' => 'actuator_isAttributeOf',
-          'data-elementtype' => 'detectorattribute',
+          'data-elementtype' => 'actuatorattribute',
           'autocomplete' => 'off',
         ],
       ],
