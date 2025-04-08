@@ -445,7 +445,7 @@ class SIRSelectForm extends FormBase {
 
     $form['notes'] = [
       '#type' => 'markup',
-      '#markup' => '<div class="info-label">Informative Notes:</div>
+      '#markup' => '<div class="info-label" style="margin-top:1rem;">Informative Notes:</div>
       <ul>
         <li>You cannot Delete nor Edit if the status is "Deprecated".</li>
         <li>You cannot Submit for Review if the status is different from "Draft".</li>
