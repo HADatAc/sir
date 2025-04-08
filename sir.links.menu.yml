@@ -18,36 +18,16 @@ sir.search:
   requirements:
    _permission: 'access content'
 
-sir.divider1:
-  title: '_________________________________'
+sir.manage_top_level:
+  title: Manage Elements
+  description: Manage SIR Elements
+  route_name: '<nolink>'
   parent: sir.top_level
   menu_name: main
-  weight: 9
-  route_name: '<none>'
-
-# sir.manage_ins_files:
-#   title: Manage INS Templates
-#   description: Manage INS Templates
-#   route_name: rep.select_mt_element
-#   route_parameters:
-#     elementtype: 'ins'
-#     mode: 'table'
-#     page: '1'
-#     pagesize: '9'
-#     studyuri: 'none'
-#   parent: sir.top_level
-#   menu_name: main
-#   weight: 10
-#   requirements:
-#     _permission: 'access content'
-#     _role: 'authenticated'
-
-# sir.divider2:
-#   title: '_________________________________'
-#   parent: sir.top_level
-#   menu_name: main
-#   weight: 19
-#   route_name: '<none>'
+  weight: 2
+  requirements:
+    _permission: 'access content'
+    _role: 'authenticated'
 
 sir.manage_instruments:
   title: Manage Instruments
@@ -57,9 +37,9 @@ sir.manage_instruments:
     elementtype: 'instrument'
     page: '1'
     pagesize: '9'
-  parent: sir.top_level
+  parent: sir.manage_top_level
   menu_name: main
-  weight: 40
+  weight: 1
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -72,9 +52,9 @@ sir.manage_actuatorstems :
     elementtype: 'actuatorstem'
     page: '1'
     pagesize: '9'
-  parent: sir.top_level
+  parent: sir.manage_top_level
   menu_name: main
-  weight: 50
+  weight: 2
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -87,9 +67,9 @@ sir.manage_actuators :
     elementtype: 'actuator'
     page: '1'
     pagesize: '9'
-  parent: sir.top_level
+  parent: sir.manage_top_level
   menu_name: main
-  weight: 60
+  weight: 3
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -102,9 +82,9 @@ sir.manage_detectorstems :
     elementtype: 'detectorstem'
     page: '1'
     pagesize: '9'
-  parent: sir.top_level
+  parent: sir.manage_top_level
   menu_name: main
-  weight: 70
+  weight: 4
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -117,9 +97,9 @@ sir.manage_detectors :
     elementtype: 'detector'
     page: '1'
     pagesize: '9'
-  parent: sir.top_level
+  parent: sir.manage_top_level
   menu_name: main
-  weight: 80
+  weight: 5
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -132,9 +112,9 @@ sir.manage_codebooks :
     elementtype: 'codebook'
     page: '1'
     pagesize: '9'
-  parent: sir.top_level
+  parent: sir.manage_top_level
   menu_name: main
-  weight: 90
+  weight: 6
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -147,9 +127,9 @@ sir.manage_responseoptions :
     elementtype: 'responseoption'
     page: '1'
     pagesize: '9'
-  parent: sir.top_level
+  parent: sir.manage_top_level
   menu_name: main
-  weight: 100
+  weight: 7
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -162,9 +142,9 @@ sir.manage_annotationstems :
     elementtype: 'annotationstem'
     page: '1'
     pagesize: '9'
-  parent: sir.top_level
+  parent: sir.manage_top_level
   menu_name: main
-  weight: 110
+  weight: 8
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
