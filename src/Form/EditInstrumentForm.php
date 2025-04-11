@@ -180,9 +180,13 @@ class EditInstrumentForm extends FormBase {
     $form['instrument_information']['instrument_parent_wrapper']['instrument_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
-      '#default_value' =>
-        ($this->getInstrument()->hasStatus === VSTOI::CURRENT || $this->getInstrument()->hasStatus === VSTOI::DEPRECATED) ?
-        $this->getInstrument()->hasVersion + 1 : $this->getInstrument()->hasVersion,
+      '#default_value' => isset($this->getInstrument()->hasVersion) && $this->getInstrument()->hasVersion !== null
+        ? (
+            ($this->getInstrument()->hasStatus === VSTOI::CURRENT || $this->getInstrument()->hasStatus === VSTOI::DEPRECATED)
+              ? $this->getInstrument()->hasVersion + 1
+              : $this->getInstrument()->hasVersion
+          )
+        : 1,
       '#attributes' => [
         'disabled' => 'disabled',
       ],

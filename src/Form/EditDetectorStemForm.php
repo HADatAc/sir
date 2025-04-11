@@ -147,9 +147,13 @@ class EditDetectorStemForm extends FormBase {
     $form['detectorstem_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
-      '#default_value' =>
-        ($this->getDetectorStem()->hasStatus === VSTOI::CURRENT || $this->getDetectorStem()->hasStatus === VSTOI::DEPRECATED) ?
-        $this->getDetectorStem()->hasVersion + 1 : $this->getDetectorStem()->hasVersion,
+      '#default_value' => isset($this->getDetectorStem()->hasVersion) && $this->getDetectorStem()->hasVersion !== null
+        ? (
+            ($this->getDetectorStem()->hasStatus === VSTOI::CURRENT || $this->getDetectorStem()->hasStatus === VSTOI::DEPRECATED)
+              ? $this->getDetectorStem()->hasVersion + 1
+              : $this->getDetectorStem()->hasVersion
+          )
+        : 1,
       '#attributes' => [
         'disabled' => 'disabled',
       ],

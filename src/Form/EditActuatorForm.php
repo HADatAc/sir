@@ -135,9 +135,11 @@ class EditActuatorForm extends FormBase {
     $form['actuator_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
-      '#default_value' =>
-        ($this->getActuator()->hasStatus === VSTOI::CURRENT || $this->getActuator()->hasStatus === VSTOI::DEPRECATED) ?
-        $this->getActuator()->hasVersion + 1 : $this->getActuator()->hasVersion,
+      '#default_value' => isset($this->getActuator()->hasVersion) && $this->getActuator()->hasVersion !== null
+        ? (($this->getActuator()->hasStatus === VSTOI::CURRENT || $this->getActuator()->hasStatus === VSTOI::DEPRECATED)
+            ? $this->getActuator()->hasVersion + 1
+            : $this->getActuator()->hasVersion)
+        : 1,
       '#attributes' => [
         'disabled' => 'disabled',
       ],
@@ -164,10 +166,10 @@ class EditActuatorForm extends FormBase {
           'data-dialog-options' => json_encode(['width' => 800]),
           'data-url' => Url::fromRoute('rep.tree_form', [
             'mode' => 'modal',
-            'elementtype' => 'detectorattribute',
+            'elementtype' => 'actuatorattribute',
           ], ['query' => ['field_id' => 'actuator_isAttributeOf']])->toString(),
           'data-field-id' => 'actuator_isAttributeOf',
-          'data-elementtype' => 'detectorattribute',
+          'data-elementtype' => 'actuatorattribute',
           'autocomplete' => 'off',
         ],
       ],

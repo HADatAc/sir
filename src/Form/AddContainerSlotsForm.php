@@ -74,7 +74,7 @@ class AddContainerSlotsForm extends FormBase {
     ];
     $form['containerslot_total_number'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Specify number of new items to add for this questionnaire'),
+      '#title' => $this->t('Specify number of new items to add.'),
     ];
     $form['save_submit'] = [
       '#type' => 'submit',

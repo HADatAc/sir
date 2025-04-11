@@ -77,13 +77,13 @@ class SIRSearchForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
 
     // MODAL
-    $form['#attached']['library'][] = 'sir/sir_modal';
+    $form['#attached']['library'][] = 'rep/webdoc_modal';
     $form['#attached']['library'][] = 'core/drupal.dialog';
     $base_url = \Drupal::request()->getSchemeAndHttpHost() . \Drupal::request()->getBaseUrl();
-    $form['#attached']['drupalSettings']['sir_modal'] = [
+    $form['#attached']['drupalSettings']['webdoc_modal'] = [
       'baseUrl' => $base_url,
     ];
-    $form['#attached']['library'][] = 'std/pdfjs';
+    $form['#attached']['library'][] = 'rep/pdfjs';
 
 
     // LOAD LANGUAGE TABLE
