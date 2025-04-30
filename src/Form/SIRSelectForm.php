@@ -443,9 +443,14 @@ class SIRSelectForm extends FormBase {
       $this->buildCardView($form, $form_state, $page, $pagesize);
     }
 
+    $form['space_0'] = [
+      '#type' => 'item',
+      '#markup' => '<br><br>',
+    ];
+
     $form['notes'] = [
       '#type' => 'markup',
-      '#markup' => '<div class="info-label" style="margin-top:1rem;">Informative Notes:</div>
+      '#markup' => '<div class="info-label" style="margin-top:2rem"!important;">Informative Notes:</div>
       <ul>
         <li>You cannot Delete nor Edit if the status is "Deprecated".</li>
         <li>You cannot Submit for Review if the status is different from "Draft".</li>
@@ -666,8 +671,18 @@ class SIRSelectForm extends FormBase {
     $output = $results['output'];
     $disabled_rows = $results['disabled_rows'];
 
-    // Definir imagem placeholder
-    $placeholder_image = base_path() . \Drupal::service('extension.list.module')->getPath('rep') . '/images/ins_placeholder.png';
+    // Define Placeholder image
+
+    switch ($this->element_type) {
+      case 'detector':
+        $placeholder_image = base_path() . \Drupal::service('extension.list.module')->getPath('rep') . '/images/icons/detector.png';
+        break;
+      case 'actuator':
+        $placeholder_image = base_path() . \Drupal::service('extension.list.module')->getPath('rep') . '/images/icons/actuator.png';
+        break;
+      default:
+        $placeholder_image = base_path() . \Drupal::service('extension.list.module')->getPath('rep') . '/images/ins_placeholder.png';
+    }
 
     // Se não estiver adicionando mais, crie o wrapper principal
     if (!$addMore) {
