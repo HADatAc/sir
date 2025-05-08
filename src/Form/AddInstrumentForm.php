@@ -96,6 +96,18 @@ class AddInstrumentForm extends FormBase {
       '#type' => 'textfield',
       '#title' => $this->t('Name'),
     ];
+
+    $form['instrument_maker'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Maker'),
+      '#required' => TRUE,
+      '#autocomplete_route_name'       => 'rep.autocomplete_maker',
+      '#autocomplete_route_parameters' => [
+        'entityType' => 'organization',
+      ],
+    ];
+
+
     $form['instrument_abbreviation'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Abbreviation'),
