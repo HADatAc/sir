@@ -105,7 +105,7 @@ class AddInstrumentForm extends FormBase {
         '#type' => 'textfield',
         '#title' => $this->t('Maker'),
         '#required' => TRUE,
-        '#autocomplete_route_name'       => 'rep.autocomplete_maker',
+        '#autocomplete_route_name'       => 'rep.social_autocomplete',
         '#autocomplete_route_parameters' => [
           'entityType' => 'organization',
         ],
