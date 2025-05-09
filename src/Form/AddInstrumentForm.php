@@ -100,7 +100,7 @@ class AddInstrumentForm extends FormBase {
       '#title' => $this->t('Name'),
     ];
 
-    if (!$socialEnabled) {
+    // if ($socialEnabled) {
       $form['instrument_maker'] = [
         '#type' => 'textfield',
         '#title' => $this->t('Maker'),
@@ -110,7 +110,7 @@ class AddInstrumentForm extends FormBase {
           'entityType' => 'organization',
         ],
       ];
-    }
+    // }
 
     $form['instrument_abbreviation'] = [
       '#type' => 'textfield',
