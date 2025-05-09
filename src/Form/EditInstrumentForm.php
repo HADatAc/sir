@@ -160,6 +160,16 @@ class EditInstrumentForm extends FormBase {
       '#title' => $this->t('Name'),
       '#default_value' => $this->getInstrument()->label,
     ];
+    $form['instrument_information']['instrument_parent_wrapper']['instrument_maker'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Maker'),
+      '#default_value' => $this->getInstrument()->hasMaker ?? '',
+      // '#required' => TRUE,
+      '#autocomplete_route_name'       => 'rep.social_autocomplete',
+      '#autocomplete_route_parameters' => [
+        'entityType' => 'organization',
+      ],
+    ];
     $form['instrument_information']['instrument_parent_wrapper']['instrument_abbreviation'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Abbreviation'),
@@ -374,6 +384,7 @@ class EditInstrumentForm extends FormBase {
 
     # POPULATE DATA
     $uri=$this->getInstrument()->uri;
+    // dpm($uri);
     $api = \Drupal::service('rep.api_connector');
     $container = $api->parseObjectResponse($api->getUri($uri),'getUri');
     if ($container == NULL) {
