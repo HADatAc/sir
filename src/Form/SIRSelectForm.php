@@ -1402,38 +1402,84 @@ class SIRSelectForm extends FormBase {
   /**
    * Perform the delete action.
    */
-  protected function performDelete(array $uris, FormStateInterface $form_state) {
+  // protected function performDelete(array $uris, FormStateInterface $form_state) {
 
+  //   $api = \Drupal::service('rep.api_connector');
+  //   foreach ($uris as $shortUri) {
+  //     $uri = Utils::plainUri($shortUri);
+  //     $resp = $api->elementDel($this->element_type, $uri);
+  //     $msg = json_decode($resp->getContents());
+  //     if ($msg && $msg->isSuccessful) {
+  //       \Drupal::messenger()->addMessage($this->t('Selected @elements have been deleted successfully.', ['@elements' => $this->plural_class_name]));
+  //     } else {
+  //       \Drupal::messenger()->addError($this->t('Failed to delete @elements, @resp.', ['@elements' => $this->plural_class_name, '@resp' => $resp]));
+  //     }
+
+  //     // if ($this->element_type == 'instrument') {
+  //     //   $resp = $api->instrumentDel($uri);
+  //     // } elseif ($this->element_type == 'actuatorstem') {
+  //     //   $resp =$api->actuatorStemDel($uri);
+  //     // } elseif ($this->element_type == 'actuator') {
+  //     //   $resp =$api->actuatorDel($uri);
+  //     // } elseif ($this->element_type == 'detectorstem') {
+  //     //   $resp =$api->detectorStemDel($uri);
+  //     // } elseif ($this->element_type == 'detector') {
+  //     //   $resp =$api->detectorDel($uri);
+  //     // } elseif ($this->element_type == 'codebook') {
+  //     //   $resp =$api->codebookDel($uri);
+  //     // } elseif ($this->element_type == 'responseoption') {
+  //     //   $resp =$api->responseOptionDel($uri);
+  //     // } elseif ($this->element_type == 'annotationstem') {
+  //     //   $resp =$api->annotationStemDel($uri);
+  //     // }
+  //   }
+
+  //   $form_state->setRebuild();
+  // }
+  protected function performDelete(array $uris, FormStateInterface $form_state) {
+    /** @var \Drupal\rep\ApiConnectorInterface $api */
     $api = \Drupal::service('rep.api_connector');
+
     foreach ($uris as $shortUri) {
       $uri = Utils::plainUri($shortUri);
       $resp = $api->elementDel($this->element_type, $uri);
-      $msg = json_decode($resp->getContents());
-      if ($msg && $msg->isSuccessful) {
-        \Drupal::messenger()->addMessage($this->t('Selected @elements have been deleted successfully.', ['@elements' => $this->plural_class_name]));
-      } else {
-        \Drupal::messenger()->addError($this->t('Failed to delete @elements, @resp.', ['@elements' => $this->plural_class_name, '@resp' => $resp]));
+
+      // 1) Normalize resp into a JSON string
+      if (is_string($resp)) {
+        $json = $resp;
+      }
+      elseif (method_exists($resp, 'getContents')) {
+        // Some connectors return a Symfony Response
+        $json = $resp->getContents();
+      }
+      elseif (method_exists($resp, 'getBody')) {
+        // PSR-7 Response
+        $json = $resp->getBody()->getContents();
+      }
+      else {
+        $json = '';
       }
 
-      // if ($this->element_type == 'instrument') {
-      //   $resp = $api->instrumentDel($uri);
-      // } elseif ($this->element_type == 'actuatorstem') {
-      //   $resp =$api->actuatorStemDel($uri);
-      // } elseif ($this->element_type == 'actuator') {
-      //   $resp =$api->actuatorDel($uri);
-      // } elseif ($this->element_type == 'detectorstem') {
-      //   $resp =$api->detectorStemDel($uri);
-      // } elseif ($this->element_type == 'detector') {
-      //   $resp =$api->detectorDel($uri);
-      // } elseif ($this->element_type == 'codebook') {
-      //   $resp =$api->codebookDel($uri);
-      // } elseif ($this->element_type == 'responseoption') {
-      //   $resp =$api->responseOptionDel($uri);
-      // } elseif ($this->element_type == 'annotationstem') {
-      //   $resp =$api->annotationStemDel($uri);
-      // }
+      // 2) Decode and check
+      $msg = json_decode($json);
+      if ($msg && !empty($msg->isSuccessful)) {
+        \Drupal::messenger()->addMessage($this->t(
+          'Selected @elements have been deleted successfully.',
+          ['@elements' => $this->plural_class_name]
+        ));
+      }
+      else {
+        \Drupal::messenger()->addError($this->t(
+          'Failed to delete @elements; response was: @resp',
+          [
+            '@elements' => $this->plural_class_name,
+            '@resp' => substr($json, 0, 200) . (strlen($json) > 200 ? '…' : ''),
+          ]
+        ));
+      }
     }
 
+    // rebuild the page so the deleted items disappear
     $form_state->setRebuild();
   }
 

@@ -104,7 +104,7 @@ class AddInstrumentForm extends FormBase {
       $form['instrument_maker'] = [
         '#type' => 'textfield',
         '#title' => $this->t('Maker'),
-        '#required' => TRUE,
+        // '#required' => TRUE,
         '#autocomplete_route_name'       => 'rep.social_autocomplete',
         '#autocomplete_route_parameters' => [
           'entityType' => 'organization',
@@ -370,6 +370,7 @@ class AddInstrumentForm extends FormBase {
         '"hasWebDocument":"' . $instrument_webdocument . '",' .
         '"hasImageUri":"' . $instrument_image . '",' .
         '"comment":"' . $form_state->getValue('instrument_description') . '",' .
+        // '"hasMaker":"' . Utils::uriFromAutocomplete($form_state->getValue('instrument_maker')) . '",' .
         '"hasSIRManagerEmail":"' . $useremail . '"}';
 
       // Call the API connector service with the JSON.
