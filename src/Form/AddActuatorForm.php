@@ -86,6 +86,9 @@ class AddActuatorForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $sourceactuatoruri = NULL, $containersloturi = NULL) {
 
+    // Does the repo have a social network?
+    $socialEnabled = \Drupal::config('rep.settings')->get('social_conf');
+
     // Check if the actuator URI already exists in the form state.
     // If not, generate a new URI and store it in the form state.
     if (!$form_state->has('actuator_uri')) {
@@ -193,6 +196,17 @@ class AddActuatorForm extends FormBase {
       '#title' => $this->t('Codebook'),
       '#autocomplete_route_name' => 'sir.actuator_codebook_autocomplete',
     ];
+    // if ($socialEnabled) {
+      $form['actuator_maker'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Maker'),
+        // '#required' => TRUE,
+        '#autocomplete_route_name'       => 'rep.social_autocomplete',
+        '#autocomplete_route_parameters' => [
+          'entityType' => 'organization',
+        ],
+      ];
+    // }
     $form['actuator_version_hidden'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
@@ -495,6 +509,7 @@ class AddActuatorForm extends FormBase {
         '"label":"'.$label.'",'.
         '"hasVersion":"1",'.
         '"isAttributeOf":"'.Utils::uriFromAutocomplete($form_state->getValue('actuator_isAttributeOf')).'",'.
+        '"hasMakerUri":"' . Utils::uriFromAutocomplete($form_state->getValue('actuator_maker')) . '",' .
         '"hasWebDocument":"' . $actuator_webdocument . '",' .
         '"hasImageUri":"' . $actuator_image . '",' .
         '"hasStatus":"'.VSTOI::DRAFT.'"}';

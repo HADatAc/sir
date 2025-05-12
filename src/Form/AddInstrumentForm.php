@@ -370,7 +370,7 @@ class AddInstrumentForm extends FormBase {
         '"hasWebDocument":"' . $instrument_webdocument . '",' .
         '"hasImageUri":"' . $instrument_image . '",' .
         '"comment":"' . $form_state->getValue('instrument_description') . '",' .
-        // '"hasMaker":"' . Utils::uriFromAutocomplete($form_state->getValue('instrument_maker')) . '",' .
+        '"hasMakerUri":"' . Utils::uriFromAutocomplete($form_state->getValue('instrument_maker')) . '",' .
         '"hasSIRManagerEmail":"' . $useremail . '"}';
 
       // Call the API connector service with the JSON.
