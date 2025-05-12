@@ -58,6 +58,9 @@ class EditInstrumentForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $instrumenturi = NULL) {
 
+    // Does the repo have a social network?
+    $socialEnabled = \Drupal::config('rep.settings')->get('social_conf');
+
     // ROOT URL
     $root_url = \Drupal::request()->getBaseUrl();
 
@@ -160,16 +163,19 @@ class EditInstrumentForm extends FormBase {
       '#title' => $this->t('Name'),
       '#default_value' => $this->getInstrument()->label,
     ];
-    $form['instrument_information']['instrument_parent_wrapper']['instrument_maker'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Maker'),
-      '#default_value' => $this->getInstrument()->hasMaker ?? '',
-      // '#required' => TRUE,
-      '#autocomplete_route_name'       => 'rep.social_autocomplete',
-      '#autocomplete_route_parameters' => [
-        'entityType' => 'organization',
-      ],
-    ];
+    // if ($socialEnabled) {
+      $form['instrument_information']['instrument_parent_wrapper']['instrument_maker'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Maker'),
+        '#default_value' => isset($this->getInstrument()->hasMakerUri) ?
+                              Utils::fieldToAutocomplete($this->getInstrument()->hasMakerUri, $this->getInstrument()->hasMaker->label) : '',
+        // '#required' => TRUE,
+        '#autocomplete_route_name'       => 'rep.social_autocomplete',
+        '#autocomplete_route_parameters' => [
+          'entityType' => 'organization',
+        ],
+      ];
+    // }
     $form['instrument_information']['instrument_parent_wrapper']['instrument_abbreviation'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Abbreviation'),
@@ -594,6 +600,7 @@ class EditInstrumentForm extends FormBase {
         '"hasNext":"'.$this->getInstrument()->hasNext.'",'.
         '"hasPrevious":"'.$this->getInstrument()->hasPrevious.'",'.
         '"hasPriority":"'.$this->getInstrument()->hasPriority.'",'.
+        '"hasMakerUri":"'.Utils::uriFromAutocomplete($form_state->getValue('instrument_maker')).'",'.
         // '"annotations":"' . ($this->getInstrument()->annotations ?? null).'",'.
 
         '"hasReviewNote":"'.$this->getInstrument()->hasReviewNote.'",'.

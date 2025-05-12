@@ -86,6 +86,9 @@ class AddDetectorForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $sourcedetectoruri = NULL, $containersloturi = NULL) {
 
+    // Does the repo have a social network?
+    $socialEnabled = \Drupal::config('rep.settings')->get('social_conf');
+
     // Check if the detector URI already exists in the form state.
     // If not, generate a new URI and store it in the form state.
     if (!$form_state->has('detector_uri')) {
@@ -193,6 +196,17 @@ class AddDetectorForm extends FormBase {
       '#title' => $this->t('Codebook'),
       '#autocomplete_route_name' => 'sir.detector_codebook_autocomplete',
     ];
+    // if ($socialEnabled) {
+      $form['detector_maker'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Maker'),
+        // '#required' => TRUE,
+        '#autocomplete_route_name'       => 'rep.social_autocomplete',
+        '#autocomplete_route_parameters' => [
+          'entityType' => 'organization',
+        ],
+      ];
+    // }
     $form['detector_version_hidden'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
@@ -497,6 +511,7 @@ class AddDetectorForm extends FormBase {
         '"label":"'.$label.'",'.
         '"hasVersion":"1",'.
         '"isAttributeOf":"'.Utils::uriFromAutocomplete($form_state->getValue('detector_isAttributeOf')).'",'.
+        '"hasMakerUri":"' . Utils::uriFromAutocomplete($form_state->getValue('detector_maker')) . '",' .
         '"hasWebDocument":"' . $detector_webdocument . '",' .
         '"hasImageUri":"' . $detector_image . '",' .
         '"hasStatus":"'.VSTOI::DRAFT.'"}';
