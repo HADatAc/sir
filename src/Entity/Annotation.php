@@ -58,6 +58,7 @@ class Annotation {
           'element_container' => $container,
           'element_position' => Utils::namespaceUri($position),
           'element_annotationstem' => html_entity_decode($content),
+          'element_hasImageUri' => $element->hasImageUri,
         ];
       }
     }

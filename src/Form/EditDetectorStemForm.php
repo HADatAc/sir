@@ -11,6 +11,9 @@ use Drupal\rep\Entity\Tables;
 use Drupal\rep\Constant;
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\VSTOI;
+use Drupal\rep\Vocabulary\REPGUI;
+use Drupal\file\Entity\File;
+use Drupal\Core\Render\Markup;
 
 class EditDetectorStemForm extends FormBase {
 
@@ -56,6 +59,9 @@ class EditDetectorStemForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $detectorstemuri = NULL) {
 
+    // ROOT URL
+    $root_url = \Drupal::request()->getBaseUrl();
+
     // MODAL
     $form['#attached']['library'][] = 'rep/rep_modal';
     $form['#attached']['library'][] = 'core/drupal.dialog';
@@ -85,39 +91,44 @@ class EditDetectorStemForm extends FormBase {
     $languages = ['' => $this->t('Select one please')] + $languages;
     $derivations = ['' => $this->t('Select one please')] + $derivations;
 
+    $form['detectorstem_uri'] = [
+      '#type' => 'item',
+      '#title' => $this->t('URI: '),
+      '#markup' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($this->getDetectorStemUri()).'">'.$this->getDetectorStemUri().'</a>'),
+    ];
+
     // dpm($this->getDetectorStem());
-    if ($this->getDetectorStem()->superUri) {
-      $form['detectorstem_type'] = [
-        'top' => [
-          '#type' => 'markup',
-          '#markup' => '<div class="pt-3 col border border-white">',
+
+    $form['detectorstem_type'] = [
+      'top' => [
+        '#type' => 'markup',
+        '#markup' => '<div class="col border border-white">',
+      ],
+      'main' => [
+        '#type' => 'textfield',
+        '#title' => $this->t('Parent Type'),
+        '#name' => 'detectorstem_type',
+        '#default_value' => $this->getDetectorStem()->superUri ? Utils::fieldToAutocomplete($this->getDetectorStem()->superUri, $this->getDetectorStem()->superClassLabel) : '',
+        '#id' => 'detectorstem_type',
+        '#parents' => ['detectorstem_type'],
+        '#attributes' => [
+          'class' => ['open-tree-modal'],
+          'data-dialog-type' => 'modal',
+          'data-dialog-options' => json_encode(['width' => 800]),
+          'data-url' => Url::fromRoute('rep.tree_form', [
+            'mode' => 'modal',
+            'elementtype' => 'detectorstem',
+          ], ['query' => ['field_id' => 'detectorstem_type']])->toString(),
+          'data-field-id' => 'detectorstem_type',
+          'data-elementtype' => 'detectorstem',
+          'data-search-value' => $this->getDetectorStem()->superUri ?? '',
         ],
-        'main' => [
-          '#type' => 'textfield',
-          '#title' => $this->t('Parent Type'),
-          '#name' => 'detectorstem_type',
-          '#default_value' => $this->getDetectorStem()->superUri ? Utils::fieldToAutocomplete($this->getDetectorStem()->superUri, $this->getDetectorStem()->superClassLabel) : '',
-          '#id' => 'detectorstem_type',
-          '#parents' => ['detectorstem_type'],
-          '#attributes' => [
-            'class' => ['open-tree-modal'],
-            'data-dialog-type' => 'modal',
-            'data-dialog-options' => json_encode(['width' => 800]),
-            'data-url' => Url::fromRoute('rep.tree_form', [
-              'mode' => 'modal',
-              'elementtype' => 'detectorstem',
-            ], ['query' => ['field_id' => 'detectorstem_type']])->toString(),
-            'data-field-id' => 'detectorstem_type',
-            'data-elementtype' => 'detectorstem',
-            'data-search-value' => $this->getDetectorStem()->superUri ?? '',
-          ],
-        ],
-        'bottom' => [
-          '#type' => 'markup',
-          '#markup' => '</div>',
-        ],
-      ];
-    }
+      ],
+      'bottom' => [
+        '#type' => 'markup',
+        '#markup' => '</div>',
+      ],
+    ];
 
     $form['detectorstem_content'] = [
       '#type' => 'textfield',
@@ -136,9 +147,13 @@ class EditDetectorStemForm extends FormBase {
     $form['detectorstem_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
-      '#default_value' =>
-        ($this->getDetectorStem()->hasStatus === VSTOI::CURRENT || $this->getDetectorStem()->hasStatus === VSTOI::DEPRECATED) ?
-        $this->getDetectorStem()->hasVersion + 1 : $this->getDetectorStem()->hasVersion,
+      '#default_value' => isset($this->getDetectorStem()->hasVersion) && $this->getDetectorStem()->hasVersion !== null
+        ? (
+            ($this->getDetectorStem()->hasStatus === VSTOI::CURRENT || $this->getDetectorStem()->hasStatus === VSTOI::DEPRECATED)
+              ? $this->getDetectorStem()->hasVersion + 1
+              : $this->getDetectorStem()->hasVersion
+          )
+        : 1,
       '#attributes' => [
         'disabled' => 'disabled',
       ],
@@ -147,15 +162,6 @@ class EditDetectorStemForm extends FormBase {
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
       '#default_value' => $this->getDetectorStem()->comment,
-    ];
-
-    $form['detectorstem_webdocument'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Web Document'),
-      '#default_value' => $this->getDetectorStem()->hasWebDocument,
-      '#attributes' => [
-        'placeholder' => 'http://',
-      ]
     ];
 
     if ($this->getDetectorStem()->wasDerivedFrom !== NULL) {
@@ -215,6 +221,173 @@ class EditDetectorStemForm extends FormBase {
         ],
       ];
     }
+
+    // **** IMAGE ****
+    // Retrieve the current image value.
+    // Retrieve the current detectorstem and its image.
+    $detectorstem = $this->getDetectorStem();
+    $detectorstem_uri = Utils::namespaceUri($this->getDetectorStemUri());
+    $detectorstem_image = $detectorstem->hasImageUri ?? '';
+
+    // Determine if the existing web document is a URL or a file.
+    $image_type = '';
+    if (!empty($detectorstem_image) && stripos(trim($detectorstem_image), 'http') === 0) {
+      $image_type = 'url';
+    }
+    elseif (!empty($detectorstem_image)) {
+      $image_type = 'upload';
+    }
+
+    $modUri = '';
+    if (!empty($detectorstem_uri)) {
+      // Example of extracting part of the URI. Adjust or remove if not needed.
+      $parts = explode(':/', $detectorstem_uri);
+      if (count($parts) > 1) {
+        $modUri = $parts[1];
+      }
+    }
+
+    // Image Type selector (URL or Upload).
+    $form['detectorstem_information']['detectorstem_image_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Image Type'),
+      '#options' => [
+        '' => $this->t('Select Image Type'),
+        'url' => $this->t('URL'),
+        'upload' => $this->t('Upload'),
+      ],
+      '#default_value' => $image_type,
+    ];
+
+    // Textfield for URL mode (only visible when type = 'url').
+    $form['detectorstem_information']['detectorstem_image_url'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Image'),
+      '#default_value' => ($image_type === 'url') ? $detectorstem_image : '',
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ],
+      '#states' => [
+        'visible' => [
+          ':input[name="detectorstem_image_type"]' => ['value' => 'url'],
+        ],
+      ],
+    ];
+
+    // Container for the file upload elements (only visible when type = 'upload').
+    $form['detectorstem_information']['detectorstem_image_upload_wrapper'] = [
+      '#type' => 'container',
+      '#states' => [
+        'visible' => [
+          ':input[name="detectorstem_image_type"]' => ['value' => 'upload'],
+        ],
+      ],
+    ];
+
+    // Attempt to load an existing file if the document is not a URL.
+    $existing_image_fid = NULL;
+    if ($image_type === 'upload' && !empty($detectorstem_image)) {
+      // Build the expected file URI in the private filesystem.
+      $desired_uri = 'private://resources/' . $modUri . '/image/' . $detectorstem_image;
+      $files = \Drupal::entityTypeManager()
+        ->getStorage('file')
+        ->loadByProperties(['uri' => $desired_uri]);
+      $file = reset($files);
+      if ($file) {
+        $existing_image_fid = $file->id();
+      }
+    }
+
+    // 5. Managed file element for uploading a new document.
+    $form['detectorstem_information']['detectorstem_image_upload_wrapper']['detectorstem_image_upload'] = [
+      '#type' => 'managed_file',
+      '#title' => $this->t('Upload Image'),
+      '#upload_location' => 'private://resources/' . $modUri . '/image',
+      '#upload_validators' => [
+        'file_validate_extensions' => ['png jpg jpeg'], // Allowed file extensions.
+        'file_validate_size' => [2097152], // Maximum file size (in bytes).
+      ],
+      // Description in red: allowed file types and a warning that choosing a new image will remove the previous one.
+      '#description' => Markup::create('<span style="color: red;">Allowed file types: png, jpg, jpeg. Selecting a new image will remove the previous one.</span>'),
+    ];
+
+    // **** WEBDOCUMENT ****
+    // Retrieve the current web document value.
+    $detectorstem_webdocument = $detectorstem->hasWebDocument ?? '';
+
+    // Determine if the existing web document is a URL or a file.
+    $webdocument_type = '';
+    if (!empty($detectorstem_webdocument) && stripos(trim($detectorstem_webdocument), 'http') === 0) {
+      $webdocument_type = 'url';
+    }
+    elseif (!empty($detectorstem_webdocument)) {
+      $webdocument_type = 'upload';
+    }
+
+    // Web Document Type selector (URL or Upload).
+    $form['detectorstem_information']['detectorstem_webdocument_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Web Document Type'),
+      '#options' => [
+        '' => $this->t('Select Document Type'),
+        'url' => $this->t('URL'),
+        'upload' => $this->t('Upload'),
+      ],
+      '#default_value' => $webdocument_type,
+    ];
+
+    // Textfield for URL mode (only visible when type = 'url').
+    $form['detectorstem_information']['detectorstem_webdocument_url'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Web Document'),
+      '#default_value' => ($webdocument_type === 'url') ? $detectorstem_webdocument : '',
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ],
+      '#states' => [
+        'visible' => [
+          ':input[name="detectorstem_webdocument_type"]' => ['value' => 'url'],
+        ],
+      ],
+    ];
+
+    // Container for the file upload elements (only visible when type = 'upload').
+    $form['detectorstem_information']['detectorstem_webdocument_upload_wrapper'] = [
+      '#type' => 'container',
+      '#states' => [
+        'visible' => [
+          ':input[name="detectorstem_webdocument_type"]' => ['value' => 'upload'],
+        ],
+      ],
+    ];
+
+    // Attempt to load an existing file if the document is not a URL.
+    $existing_fid = NULL;
+    if ($webdocument_type === 'upload' && !empty($detectorstem_webdocument)) {
+      // Build the expected file URI in the private filesystem.
+      $desired_uri = 'private://resources/' . $modUri . '/webdoc/' . $detectorstem_webdocument;
+      $files = \Drupal::entityTypeManager()
+        ->getStorage('file')
+        ->loadByProperties(['uri' => $desired_uri]);
+      $file = reset($files);
+      if ($file) {
+        $existing_fid = $file->id();
+      }
+    }
+
+    // 5. Managed file element for uploading a new document.
+    $form['detectorstem_information']['detectorstem_webdocument_upload_wrapper']['detectorstem_webdocument_upload'] = [
+      '#type' => 'managed_file',
+      '#title' => $this->t('Upload Image'),
+      '#upload_location' => 'private://resources/' . $modUri . '/image',
+      '#upload_validators' => [
+        'file_validate_extensions' => ['pdf doc docx txt xls xlsx'],
+        'file_validate_size' => [2097152], // Maximum file size (in bytes).
+      ],
+      // Description in red: allowed file types and a warning that choosing a new image will remove the previous one.
+      '#description' => Markup::create('<span style="color: red;">Allowed file types: pdf, doc, docx, txt, xls, xlsx. Selecting a new document will remove the previous one.</span>'),
+    ];
+
     $form['update_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Update'),
@@ -286,6 +459,8 @@ class EditDetectorStemForm extends FormBase {
           '"comment":"'.$form_state->getValue('detectorstem_description').'",'.
           '"wasDerivedFrom":"'.$this->getDetectorStem()->uri.'",'. //Previous Version is the New Derivation Value
           '"wasGeneratedBy":"'.$form_state->getValue('detectorstem_was_generated_by').'",'.
+          '"hasWebDocument":"",'.
+          '"hasImageUri":"",' .
           '"hasSIRManagerEmail":"'.$useremail.'"}';
 
         // UPDATE BY DELETING AND CREATING
@@ -294,8 +469,62 @@ class EditDetectorStemForm extends FormBase {
 
       } else {
 
+        // Determine the chosen document type.
+        $doc_type = $form_state->getValue('detectorstem_webdocument_type');
+        $detectorstem_webdocument = $this->getDetectorStem()->hasWebDocument;
+
+        // If user selected URL, use the textfield value.
+        if ($doc_type === 'url') {
+          $detectorstem_webdocument = $form_state->getValue('detectorstem_webdocument_url');
+        }
+        // If user selected Upload, load the file entity and get its filename.
+        elseif ($doc_type === 'upload') {
+          // Get the file IDs from the managed_file element.
+          $fids = $form_state->getValue('detectorstem_webdocument_upload');
+          if (!empty($fids)) {
+            // Load the first file (file ID is returned, e.g. "374").
+            $file = File::load(reset($fids));
+            if ($file) {
+              // Mark the file as permanent and save it.
+              $file->setPermanent();
+              $file->save();
+              // Optionally register file usage to prevent cleanup.
+              \Drupal::service('file.usage')->add($file, 'sir', 'detectorstem', 1);
+              // Now get the filename from the file entity.
+              $detectorstem_webdocument = $file->getFilename();
+            }
+          }
+        }
+
+        // Determine the chosen image type.
+        $image_type = $form_state->getValue('detectorstem_image_type');
+        $detectorstem_image = $this->getDetectorStem()->hasImageUri;
+
+        // If user selected URL, use the textfield value.
+        if ($image_type === 'url') {
+          $detectorstem_image = $form_state->getValue('detectorstem_image_url');
+        }
+        // If user selected Upload, load the file entity and get its filename.
+        elseif ($image_type === 'upload') {
+          // Get the file IDs from the managed_file element.
+          $fids = $form_state->getValue('detectorstem_image_upload');
+          if (!empty($fids)) {
+            // Load the first file (file ID is returned, e.g. "374").
+            $file = File::load(reset($fids));
+            if ($file) {
+              // Mark the file as permanent and save it.
+              $file->setPermanent();
+              $file->save();
+              // Optionally register file usage to prevent cleanup.
+              \Drupal::service('file.usage')->add($file, 'sir', 'detectorstem', 1);
+              // Now get the filename from the file entity.
+              $detectorstem_image = $file->getFilename();
+            }
+          }
+        }
+
         $detectorStemJson = '{"uri":"'.$this->getDetectorStem()->uri.'",'.
-        '"superUri":"'.Utils::uriFromAutocomplete($this->getDetectorStem()->superUri).'",'.
+        '"superUri":"'.Utils::uriFromAutocomplete($form_state->getValue('detectorstem_type')).'",'.
         '"label":"'.$form_state->getValue('detectorstem_content').'",'.
         '"hascoTypeUri":"'.VSTOI::DETECTOR_STEM.'",'.
         '"hasStatus":"'.$this->getDetectorStem()->hasStatus.'",'.
@@ -303,7 +532,8 @@ class EditDetectorStemForm extends FormBase {
         '"hasLanguage":"'.$form_state->getValue('detectorstem_language').'",'.
         '"hasVersion":"'.$form_state->getValue('detectorstem_version').'",'.
         '"comment":"'.$form_state->getValue('detectorstem_description').'",'.
-        '"hasWebDocument":"'.$form_state->getValue('detectorstem_webdocument').'",'.
+        '"hasWebDocument":"' . $detectorstem_webdocument . '",' .
+        '"hasImageUri":"' . $detectorstem_image . '",' .
         '"wasDerivedFrom":"'.$this->getDetectorStem()->wasDerivedFrom.'",'.
         '"wasGeneratedBy":"'.$form_state->getValue('detectorstem_was_generated_by').'",'.
         '"hasReviewNote":"'.($this->getDetectorStem()->hasStatus !== null ? $this->getDetectorStem()->hasReviewNote : '').'",'.
@@ -312,6 +542,25 @@ class EditDetectorStemForm extends FormBase {
 
         $api->detectorStemDel($this->getDetectorStemUri());
         $api->detectorStemAdd($detectorStemJson);
+
+        // UPLOAD IMAGE TO API
+        if ($image_type === 'upload' && $detectorstem_image !== $this->getDetectorStem()->hasImageUri) {
+          $fids = $form_state->getValue('detectorstem_image_upload');
+          $msg = $api->parseObjectResponse($api->uploadFile($this->getDetectorStemUri(), reset($fids)), 'uploadFile');
+          if ($msg == NULL) {
+            \Drupal::messenger()->addError(t("The Uploaded Image FAILED to be submited to API."));
+          }
+        }
+
+        // UPLOAD DOCUMENT TO API
+        if ($doc_type === 'upload' && $detectorstem_webdocument !== $this->getDetectorStem()->hasWebDocument) {
+          $fids = $form_state->getValue('detectorstem_webdocument_upload');
+          $msg = $api->parseObjectResponse($api->uploadFile($this->getDetectorStemUri(), reset($fids)), 'uploadFile');
+          if ($msg == NULL) {
+            \Drupal::messenger()->addError(t("The Uploaded WebDocument FAILED to be submited to API."));
+          }
+        }
+
         \Drupal::messenger()->addMessage(t("Detector Stem has been updated successfully."));
       }
 

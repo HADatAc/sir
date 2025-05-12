@@ -56,63 +56,6 @@ sir.element_uri:
   options:
     no_cache: 'TRUE'
 
-# Process CRUD options
-
-sir.manage_process:
-  path: 'sir/manage/process'
-  defaults:
-    _title: 'Manage Process'
-  requirements:
-    _permission: 'access content'
-    _custom_access_check: 'TRUE'
-  options:
-    no_cache: 'TRUE'
-
-sir.add_process:
-  path: 'sir/manage/addprocess/{state}'
-  defaults:
-    _form: '\Drupal\sir\Form\AddProcessForm'
-  requirements:
-    _permission: 'access content'
-    _custom_access_check: 'TRUE'
-  options:
-    no_cache: 'TRUE'
-
-sir.edit_process:
-  path: 'sir/manage/editprocess/{state}/{processuri}'
-  defaults:
-    _form: '\Drupal\sir\Form\EditProcessForm'
-  requirements:
-    _permission: 'access content'
-    _custom_access_check: 'TRUE'
-  options:
-    no_cache: 'TRUE'
-
-sir.process_instrument_autocomplete:
-  path: '/sir/manage/instrument/autocomplete'
-  defaults:
-    _controller: '\Drupal\sir\Controller\JsonApiInstrumentController::handleAutocomplete'
-    _format: json
-  requirements:
-    _permission: 'access content'
-
-sir.load_detectors:
-  path: '/sir/load-detectors'
-  defaults:
-    _controller: '\Drupal\sir\Controller\JsonApiProcessController::loadDetectors'
-    _title: 'Load Detectors'
-  requirements:
-    _permission: 'access content'
-  methods: [GET, POST]
-
-sir.process_task_autocomplete:
-  path: '/sir/manage/process/autocomplete'
-  defaults:
-    _controller: '\Drupal\sir\Controller\JsonApiProcessController::handleTasksAutocomplete'
-    _format: json
-  requirements:
-    _permission: 'access content'
-
 # Instrument CRUD options
 
 sir.add_instrument:
@@ -229,7 +172,7 @@ sir.add_actuatorstem:
   path: 'sir/manage/addactuatorstem/{sourceactuatorstemuri}'
   defaults:
     _form: '\Drupal\sir\Form\AddActuatorStemForm'
-    _title: 'Add Item Stem'
+    _title: 'Add Actuator Stem'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'
@@ -240,20 +183,20 @@ sir.edit_actuatorstem:
   path: 'sir/manage/editactuatorstem/{actuatorstemuri}'
   defaults:
     _form: '\Drupal\sir\Form\EditActuatorStemForm'
-    _title: 'Edit Item Stem'
+    _title: 'Edit Actuator Stem'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
-# Actuator "Item" CRUD options
+# Actuator CRUD options
 
 sir.add_actuator:
   path: 'sir/manage/addactuator/{sourceactuatoruri}/{containersloturi}'
   defaults:
     _form: '\Drupal\sir\Form\AddActuatorForm'
-    _title: 'Add Item'
+    _title: 'Add Actuator'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'
@@ -264,7 +207,7 @@ sir.add_containerslot_actuator:
   path: 'sir/manage/addattachactuator/{containersloturi}'
   defaults:
     _form: '\Drupal\sir\Form\AddContainerSlotActuatorForm'
-    _title: 'Add Item'
+    _title: 'Add Container Slot'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'
@@ -275,7 +218,7 @@ sir.edit_actuator:
   path: 'sir/manage/editactuator/{actuatoruri}'
   defaults:
     _form: '\Drupal\sir\Form\EditActuatorForm'
-    _title: 'Edit Item'
+    _title: 'Edit Actuator'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'
@@ -304,7 +247,7 @@ sir.add_detectorstem:
   path: 'sir/manage/adddetectorstem/{sourcedetectorstemuri}'
   defaults:
     _form: '\Drupal\sir\Form\AddDetectorStemForm'
-    _title: 'Add Item Stem'
+    _title: 'Add Detector Stem'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'
@@ -315,20 +258,20 @@ sir.edit_detectorstem:
   path: 'sir/manage/editdetectorstem/{detectorstemuri}'
   defaults:
     _form: '\Drupal\sir\Form\EditDetectorStemForm'
-    _title: 'Edit Item Stem'
+    _title: 'Edit Detector Stem'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
-# Detector "Item" CRUD options
+# Detector CRUD options
 
 sir.add_detector:
   path: 'sir/manage/adddetector/{sourcedetectoruri}/{containersloturi}'
   defaults:
     _form: '\Drupal\sir\Form\AddDetectorForm'
-    _title: 'Add Item'
+    _title: 'Add Detector'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'
@@ -339,7 +282,7 @@ sir.add_containerslot_detector:
   path: 'sir/manage/addattachdetector/{containersloturi}'
   defaults:
     _form: '\Drupal\sir\Form\AddContainerSlotDetectorForm'
-    _title: 'Add Item'
+    _title: 'Add Contaniner Slot'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'
@@ -350,7 +293,7 @@ sir.edit_detector:
   path: 'sir/manage/editdetector/{detectoruri}'
   defaults:
     _form: '\Drupal\sir\Form\EditDetectorForm'
-    _title: 'Edit Item'
+    _title: 'Edit Detector'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'
@@ -558,62 +501,6 @@ sir.manage_annotations:
   options:
     no_cache: 'TRUE'
 
-# Process Stem CRUD options
-
-sir.add_processstem:
-  path: 'sir/manage/addprocessstem/{sourceprocessstemuri}'
-  defaults:
-    _form: '\Drupal\sir\Form\AddProcessStemForm'
-    _title: 'Add Process Stem'
-  requirements:
-    _permission: 'access content'
-    _custom_access_check: 'TRUE'
-  options:
-    no_cache: 'TRUE'
-
-sir.edit_processstem:
-  path: 'sir/manage/editprocessstem/{processstemuri}'
-  defaults:
-    _form: '\Drupal\sir\Form\EditProcessStemForm'
-    _title: 'Edit Process Stem'
-  requirements:
-    _permission: 'access content'
-    _custom_access_check: 'TRUE'
-  options:
-    no_cache: 'TRUE'
-
-# Task CRUD options
-
-sir.manage_task:
-  path: 'sir/manage/task'
-  defaults:
-    _title: 'Manage Task'
-  requirements:
-    _permission: 'access content'
-    _custom_access_check: 'TRUE'
-  options:
-    no_cache: 'TRUE'
-
-sir.add_task:
-  path: 'sir/manage/addtask/{state}'
-  defaults:
-    _form: '\Drupal\sir\Form\AddTaskForm'
-  requirements:
-    _permission: 'access content'
-    _custom_access_check: 'TRUE'
-  options:
-    no_cache: 'TRUE'
-
-sir.edit_task:
-  path: 'sir/manage/edittasl/{state}/{taskuri}'
-  defaults:
-    _form: '\Drupal\sir\Form\EditTaskForm'
-  requirements:
-    _permission: 'access content'
-    _custom_access_check: 'TRUE'
-  options:
-    no_cache: 'TRUE'
-
 # REVIEW ROUTES
 
 sir.select_review_element:
@@ -672,19 +559,6 @@ sir.review_detectorstem:
   defaults:
     _form: '\Drupal\sir\Form\Review\ReviewDetectorStemForm'
     _title: 'Review Detector Stem'
-  requirements:
-    # _permission: 'access reviewer menu'
-    _role: 'content_editor'
-  options:
-    no_cache: 'TRUE'
-
-# Process Stem
-
-sir.review_processstem:
-  path: 'sir/manage/reviewprocessstem/{processstemuri}'
-  defaults:
-    _form: '\Drupal\sir\Form\Review\ReviewProcessStemForm'
-    _title: 'Review Process Stem'
   requirements:
     # _permission: 'access reviewer menu'
     _role: 'content_editor'

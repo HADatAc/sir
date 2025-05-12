@@ -166,6 +166,7 @@ class ManageSlotElementsForm extends FormBase {
       foreach ($slotElements as $slotElement) {
 
         if ($slotElement === null) {
+          \Drupal::messenger()->addWarning(t("There were missing slots on the structure that could not be presented, redo ou recheck."));
           continue;
         }
 

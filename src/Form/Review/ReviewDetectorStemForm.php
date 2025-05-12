@@ -11,6 +11,7 @@ use Drupal\rep\Entity\Tables;
 use Drupal\rep\Constant;
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\VSTOI;
+use Drupal\rep\Vocabulary\REPGUI;
 
 class ReviewDetectorStemForm extends FormBase {
 
@@ -56,6 +57,9 @@ class ReviewDetectorStemForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $detectorstemuri = NULL) {
 
+    // ROOT URL
+    $root_url = \Drupal::request()->getBaseUrl();
+
     // MODAL
     $form['#attached']['library'][] = 'rep/rep_modal';
     $form['#attached']['library'][] = 'core/drupal.dialog';
@@ -86,11 +90,25 @@ class ReviewDetectorStemForm extends FormBase {
     }
 
     //dpm($this->getDetector());
+
+    $form['detectorstem_wrapper'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'style' => 'max-width: 1280px;margin-bottom:15px!important;',
+      ],
+    ];
+
+    $form['detectorstem_wrapper']['detectorstem_uri'] = [
+      '#type' => 'item',
+      '#title' => $this->t('URI: '),
+      '#markup' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($this->getDetectorStemUri()).'">'.$this->getDetectorStemUri().'</a>'),
+    ];
+
     if ($this->getDetectorStem()->superUri) {
-      $form['detectorstem_type'] = [
+      $form['detectorstem_wrapper']['detectorstem_type'] = [
         'top' => [
           '#type' => 'markup',
-          '#markup' => '<div class="pt-3 col border border-white">',
+          '#markup' => '<div class="col border border-white">',
         ],
         'main' => [
           '#type' => 'textfield',
@@ -119,20 +137,20 @@ class ReviewDetectorStemForm extends FormBase {
         ],
       ];
     }
-    $form['detectorstem_content'] = [
+    $form['detectorstem_wrapper']['detectorstem_content'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name'),
       '#default_value' => $this->getDetectorStem()->hasContent,
       '#disabled' => TRUE,
     ];
-    $form['detectorstem_language'] = [
+    $form['detectorstem_wrapper']['detectorstem_language'] = [
       '#type' => 'select',
       '#title' => $this->t('Language'),
       '#options' => $languages,
       '#default_value' => $this->getDetectorStem()->hasLanguage,
       '#disabled' => TRUE,
     ];
-    $form['detectorstem_version'] = [
+    $form['detectorstem_wrapper']['detectorstem_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
       '#default_value' => $this->getDetectorStem()->hasVersion,
@@ -143,21 +161,13 @@ class ReviewDetectorStemForm extends FormBase {
         'disabled' => 'disabled',
       ],
     ];
-    $form['detectorstem_description'] = [
+    $form['detectorstem_wrapper']['detectorstem_description'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
       '#default_value' => $this->getDetectorStem()->comment,
       '#disabled' => TRUE,
     ];
-    $form['detectorstem_webdocument'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Web Document'),
-      '#default_value' => $this->getDetectorStem()->hasWebDocument,
-      '#attributes' => [
-        'placeholder' => 'http://',
-      ],
-      '#disabled' => TRUE,
-    ];
+
     if ($this->getDetectorStem()->wasDerivedFrom !== NULL) {
       $api = \Drupal::service('rep.api_connector');
       $rawresponse = $api->getUri($this->getDetectorStem()->wasDerivedFrom);
@@ -165,7 +175,7 @@ class ReviewDetectorStemForm extends FormBase {
       if ($obj->isSuccessful) {
         $result = $obj->body;
 
-        $form['detectorstem__df_wrapper'] = [
+        $form['detectorstem_wrapper']['detectorstem__df_wrapper'] = [
           '#type' => 'container',
           '#attributes' => [
             'class' => ['d-flex', 'align-items-center', 'w-100'], // Flex container para alinhamento correto
@@ -173,7 +183,7 @@ class ReviewDetectorStemForm extends FormBase {
           ],
         ];
 
-        $form['detectorstem__df_wrapper']['detectorstem__wasderivedfrom'] = [
+        $form['detectorstem_wrapper']['detectorstem__df_wrapper']['detectorstem__wasderivedfrom'] = [
           '#type' => 'textfield',
           '#title' => $this->t('Derived From'),
           '#default_value' => Utils::fieldToAutocomplete($this->getDetectorStem()->wasDerivedFrom, $result->label),
@@ -195,7 +205,7 @@ class ReviewDetectorStemForm extends FormBase {
       }
     }
 
-    $form['detectorstem_was_generated_by'] = [
+    $form['detectorstem_wrapper']['detectorstem_was_generated_by'] = [
       '#type' => 'select',
       '#title' => $this->t('Was Derived By'),
       '#options' => $derivations,
@@ -203,7 +213,7 @@ class ReviewDetectorStemForm extends FormBase {
       '#disabled' => TRUE,
     ];
 
-    $form['detectorstem_owner'] = [
+    $form['detectorstem_wrapper']['detectorstem_owner'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Owner'),
       '#default_value' => $this->getDetectorStem()->hasSIRManagerEmail,
@@ -211,12 +221,186 @@ class ReviewDetectorStemForm extends FormBase {
         'disabled' => 'disabled',
       ],
     ];
-    $form['detectorstem_hasreviewnote'] = [
+
+    // **** IMAGE ****
+    // Retrieve the current image value.
+    // Retrieve the current detector and its image.
+    $detector = $this->getDetectorStem();
+    $detectorstem_uri = Utils::namespaceUri($this->getDetectorStemUri());
+    $detectorstem_image = $detector->hasImageUri ?? '';
+
+    // Determine if the existing web document is a URL or a file.
+    $image_type = '';
+    if (!empty($detectorstem_image) && stripos(trim($detectorstem_image), 'http') === 0) {
+      $image_type = 'url';
+    }
+    elseif (!empty($detectorstem_image)) {
+      $image_type = 'upload';
+    }
+
+    $modUri = '';
+    if (!empty($detectorstem_uri)) {
+      // Example of extracting part of the URI. Adjust or remove if not needed.
+      $parts = explode(':/', $detectorstem_uri);
+      if (count($parts) > 1) {
+        $modUri = $parts[1];
+      }
+    }
+
+    // Image Type selector (URL or Upload).
+    $form['detectorstem_wrapper']['detectorstem_information']['detectorstem_image_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Image Type'),
+      '#options' => [
+        '' => $this->t('Select Image Type'),
+        'url' => $this->t('URL'),
+        'upload' => $this->t('Upload'),
+      ],
+      '#disabled' => TRUE,
+      '#default_value' => $image_type,
+    ];
+
+    // Textfield for URL mode (only visible when type = 'url').
+    $form['detectorstem_wrapper']['detectorstem_information']['detectorstem_image_url'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Image'),
+      '#default_value' => ($image_type === 'url') ? $detectorstem_image : '',
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ],
+      '#disabled' => TRUE,
+      '#states' => [
+        'visible' => [
+          ':input[name="detectorstem_image_type"]' => ['value' => 'url'],
+        ],
+      ],
+    ];
+
+    // Container for the file upload elements (only visible when type = 'upload').
+    $form['detectorstem_wrapper']['detectorstem_information']['detectorstem_image_upload_wrapper'] = [
+      '#type' => 'container',
+      '#disabled' => TRUE,
+      '#states' => [
+        'visible' => [
+          ':input[name="detectorstem_image_type"]' => ['value' => 'upload'],
+        ],
+      ],
+    ];
+
+    // Attempt to load an existing file if the document is not a URL.
+    $existing_image_fid = NULL;
+    if ($image_type === 'upload' && !empty($detectorstem_image)) {
+      // Build the expected file URI in the private filesystem.
+      $desired_uri = 'private://resources/' . $modUri . '/image/' . $detectorstem_image;
+      $files = \Drupal::entityTypeManager()
+        ->getStorage('file')
+        ->loadByProperties(['uri' => $desired_uri]);
+      $file = reset($files);
+      if ($file) {
+        $existing_image_fid = $file->id();
+      }
+    }
+
+    // 5. Managed file element for uploading a new document.
+    $form['detectorstem_wrapper']['detectorstem_information']['detectorstem_image_upload_wrapper']['detectorstem_image_upload'] = [
+      '#type' => 'managed_file',
+      '#title' => $this->t('Upload Document'),
+      '#upload_location' => 'private://resources/' . $modUri . '/image',
+      '#upload_validators' => [
+        'file_validate_extensions' => ['png jpg jpeg'],
+        'file_validate_size' => [2097152],
+      ],
+      '#disabled' => TRUE,
+      // If a file already exists, pass its ID so Drupal can display it.
+      '#default_value' => $existing_image_fid ? [$existing_image_fid] : NULL,
+    ];
+
+    // **** WEBDOCUMENT ****
+    // Retrieve the current web document value.
+    $detectorstem_webdocument = $detector->hasWebDocument ?? '';
+
+    // Determine if the existing web document is a URL or a file.
+    $webdocument_type = '';
+    if (!empty($detectorstem_webdocument) && stripos(trim($detectorstem_webdocument), 'http') === 0) {
+      $webdocument_type = 'url';
+    }
+    elseif (!empty($detectorstem_webdocument)) {
+      $webdocument_type = 'upload';
+    }
+
+    // Web Document Type selector (URL or Upload).
+    $form['detectorstem_wrapper']['detectorstem_information']['detectorstem_webdocument_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Web Document Type'),
+      '#options' => [
+        '' => $this->t('Select Document Type'),
+        'url' => $this->t('URL'),
+        'upload' => $this->t('Upload'),
+      ],
+      '#disabled' => TRUE,
+      '#default_value' => $webdocument_type,
+    ];
+
+    // Textfield for URL mode (only visible when type = 'url').
+    $form['detectorstem_wrapper']['detectorstem_information']['detectorstem_webdocument_url'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Web Document'),
+      '#default_value' => ($webdocument_type === 'url') ? $detectorstem_webdocument : '',
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ],
+      '#disabled' => TRUE,
+      '#states' => [
+        'visible' => [
+          ':input[name="detectorstem_webdocument_type"]' => ['value' => 'url'],
+        ],
+      ],
+    ];
+
+    // Container for the file upload elements (only visible when type = 'upload').
+    $form['detectorstem_wrapper']['detectorstem_information']['detectorstem_webdocument_upload_wrapper'] = [
+      '#type' => 'container',
+      '#disabled' => TRUE,
+      '#states' => [
+        'visible' => [
+          ':input[name="detectorstem_webdocument_type"]' => ['value' => 'upload'],
+        ],
+      ],
+    ];
+
+    // Attempt to load an existing file if the document is not a URL.
+    $existing_fid = NULL;
+    if ($webdocument_type === 'upload' && !empty($detectorstem_webdocument)) {
+      // Build the expected file URI in the private filesystem.
+      $desired_uri = 'private://resources/' . $modUri . '/webdoc/' . $detectorstem_webdocument;
+      $files = \Drupal::entityTypeManager()
+        ->getStorage('file')
+        ->loadByProperties(['uri' => $desired_uri]);
+      $file = reset($files);
+      if ($file) {
+        $existing_fid = $file->id();
+      }
+    }
+
+    // 5. Managed file element for uploading a new document.
+    $form['detectorstem_wrapper']['detectorstem_information']['detectorstem_webdocument_upload_wrapper']['detectorstem_webdocument_upload'] = [
+      '#type' => 'managed_file',
+      '#title' => $this->t('Upload Document'),
+      '#upload_location' => 'private://resources/' . $modUri . '/webdoc',
+      '#upload_validators' => [
+        'file_validate_extensions' => ['pdf doc docx txt xls xlsx'],
+      ],
+      '#disabled' => TRUE,
+      // If a file already exists, pass its ID so Drupal can display it.
+      '#default_value' => $existing_fid ? [$existing_fid] : NULL,
+    ];
+
+    $form['detectorstem_wrapper']['detectorstem_hasreviewnote'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Review Notes'),
       '#default_value' => $this->getDetectorStem()->hasReviewNote,
     ];
-    $form['detectorstem_haseditoremail'] = [
+    $form['detectorstem_wrapper']['detectorstem_haseditoremail'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Reviewer Email'),
       '#default_value' => \Drupal::currentUser()->getEmail(),
@@ -230,6 +414,7 @@ class ReviewDetectorStemForm extends FormBase {
       '#value' => $this->t('Approve'),
       '#name' => 'review_approve',
       '#attributes' => [
+        'onclick' => 'if(!confirm("Are you sure you want to Approve?")){return false;}',
         'class' => ['btn', 'btn-success', 'aprove-button'],
       ],
     ];
@@ -238,6 +423,7 @@ class ReviewDetectorStemForm extends FormBase {
       '#value' => $this->t('Reject'),
       '#name' => 'review_reject',
       '#attributes' => [
+        'onclick' => 'if(!confirm("Are you sure you want to Reject?")){return false;}',
         'class' => ['btn', 'btn-primary', 'cancel-button'],
       ],
     ];
@@ -268,8 +454,8 @@ class ReviewDetectorStemForm extends FormBase {
 
     // if ($button_name != 'back') {
     //   if ($button_name === 'review_reject') {
-    //     if(strlen($form_state->getValue('detector_hasreviewnote')) < 1) {
-    //       $form_state->setErrorByName('detector_hasreviewnote', $this->t('You must enter a Reject Note'));
+    //     if(strlen($form_state->getValue('detectorstem_hasreviewnote')) < 1) {
+    //       $form_state->setErrorByName('detectorstem_hasreviewnote', $this->t('You must enter a Reject Note'));
     //     }
     //   }
     // }
@@ -315,13 +501,14 @@ class ReviewDetectorStemForm extends FormBase {
           '"wasDerivedFrom":"'.$this->getDetectorStem()->wasDerivedFrom.'",'.
           '"wasGeneratedBy":"'.$this->getDetectorStem()->wasGeneratedBy.'",'.
           '"hasReviewNote":"'.$form_state->getValue('detectorstem_hasreviewnote').'",'.
-          '"hasWebDocument":"'.$form_state->getValue('detectorstem_webdocument').'",'.
+          '"hasImageUri":"'.$this->getDetectorStem()->hasImageUri.'",'.
+          '"hasWebDocument":"'.$this->getDetectorStem()->hasWebDocument.'",'.
           '"hasEditorEmail":"'.$useremail.'",'.
           '"hasSIRManagerEmail":"'.$this->getDetectorStem()->hasSIRManagerEmail.'"}';
 
         // UPDATE BY DELETING AND CREATING
-        $api->detectorStemDel($this->getDetectorStemUri());
-        $api->detectorStemAdd($detectorStemJson);
+        $api->elementDel('detectorstem', $this->getDetectorStemUri());
+        $api->elementAdd('detectorstem', $detectorStemJson);
 
         // IF ITS A DERIVATION APROVAL PARENT MUST BECOME DEPRECATED, but in this case version must be also greater than 1, because
         // Detector Stems can start to be like a derivation element by itself
@@ -342,13 +529,14 @@ class ReviewDetectorStemForm extends FormBase {
           (!empty($resultParent->wasDerivedFrom) ? '"wasDerivedFrom":"'.$resultParent->wasDerivedFrom.'",' : '').
           '"wasGeneratedBy":"'.$resultParent->wasGeneratedBy.'",'.
           '"hasReviewNote":"'.$resultParent->hasReviewNote.'",'.
+          '"hasImageUri":"'.$resultParent->hasImageUri.'",'.
           '"hasWebDocument":"'.$resultParent->hasWebDocument.'",'.
           '"hasEditorEmail":"'.$useremail.'",'.
           '"hasSIRManagerEmail":"'.$resultParent->hasSIRManagerEmail.'"}';
 
           // UPDATE BY DELETING AND CREATING
-          $api->detectorStemDel($resultParent->uri);
-          $api->detectorStemAdd($parentDetectorStemJson);
+          $api->elementDel('detectorstem', $resultParent->uri);
+          $api->elementAdd('detectorstem', $parentDetectorStemJson);
         }
 
         \Drupal::messenger()->addMessage(t("Detector Stem has been updated successfully."));
@@ -367,13 +555,14 @@ class ReviewDetectorStemForm extends FormBase {
           '"wasDerivedFrom":"'.$this->getDetectorStem()->wasDerivedFrom.'",'.
           '"wasGeneratedBy":"'.$this->getDetectorStem()->wasGeneratedBy.'",'.
           '"hasReviewNote":"'.$form_state->getValue('detectorstem_hasreviewnote').'",'.
-          '"hasWebDocument":"'.$form_state->getValue('detectorstem_webdocument').'",'.
+          '"hasImageUri":"'.$this->getDetectorStem()->hasImageUri.'",'.
+          '"hasWebDocument":"'.$this->getDetectorStem()->hasWebDocument.'",'.
           '"hasEditorEmail":"'.$useremail.'",'.
           '"hasSIRManagerEmail":"'.$this->getDetectorStem()->hasSIRManagerEmail.'"}';
 
         // UPDATE BY DELETING AND CREATING
-        $api->detectorStemDel($this->getDetectorStemUri());
-        $api->detectorStemAdd($detectorStemJson);
+        $api->elementDel('detectorstem', $this->getDetectorStemUri());
+        $api->elementAdd('detectorstem', $detectorStemJson);
       }
 
       self::backUrl();

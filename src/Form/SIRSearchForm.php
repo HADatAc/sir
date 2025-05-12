@@ -10,6 +10,7 @@ use Drupal\Core\Ajax\RedirectCommand;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Vocabulary\HASCO;
 use Drupal\rep\Vocabulary\VSTOI;
+use Drupal\Core\Render\Markup;
 
 class SIRSearchForm extends FormBase {
 
@@ -74,6 +75,16 @@ class SIRSearchForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+
+    // MODAL
+    $form['#attached']['library'][] = 'rep/webdoc_modal';
+    $form['#attached']['library'][] = 'core/drupal.dialog';
+    $base_url = \Drupal::request()->getSchemeAndHttpHost() . \Drupal::request()->getBaseUrl();
+    $form['#attached']['drupalSettings']['webdoc_modal'] = [
+      'baseUrl' => $base_url,
+    ];
+    $form['#attached']['library'][] = 'rep/pdfjs';
+
 
     // LOAD LANGUAGE TABLE
     $tables = new Tables;
@@ -147,8 +158,6 @@ class SIRSearchForm extends FormBase {
         'responseoption' => $this->t('Response Options'),
         'annotationstem' => $this->t('Annotation Stems'),
         'annotation' => $this->t('Annotations'),
-        'processstem' => $this->t('Process Stems'),
-        'process' => $this->t('Processes'),
       ],
       '#default_value' => $this->getElementType(),
       '#ajax' => [
@@ -158,38 +167,43 @@ class SIRSearchForm extends FormBase {
         'class' => ['mt-1'],
       ],
     ];
-    $form['search_language'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Language'),
-      '#options' => $languages,
-      '#default_value' => $this->getLanguage(),
-      '#ajax' => [
-        'callback' => '::ajaxSubmitForm',
-      ],
-      '#attributes' => [
-        'class' => ['mt-1'],
-      ],
-    ];
-    $form['search_keyword'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Keyword'),
-      '#default_value' => $this->getKeyword(),
-      '#attributes' => [
-        'class' => ['mt-1'],
-      ],
-    ];
-    $form['search_submit'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Search'),
-      '#attributes' => [
-        'class' => ['btn', 'btn-primary', 'search-button'],
-      ],
-    ];
 
-    $form['bottom_space'] = [
-      '#type' => 'item',
-      '#title' => t('<br><br>'),
-    ];
+    $element = $this->getElementType();
+    if (($element !== null && $element !== 'instrument')) {
+      $form['search_language'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Language'),
+        '#options' => $languages,
+        '#default_value' => $this->getLanguage(),
+        '#ajax' => [
+          'callback' => '::ajaxSubmitForm',
+        ],
+        '#attributes' => [
+          'class' => ['mt-1'],
+        ],
+      ];
+
+      $form['search_keyword'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Keyword'),
+        '#default_value' => $this->getKeyword(),
+        '#attributes' => [
+          'class' => ['mt-1'],
+        ],
+      ];
+      $form['search_submit'] = [
+        '#type' => 'submit',
+        '#value' => $this->t('Search'),
+        '#attributes' => [
+          'class' => ['btn', 'btn-primary', 'search-button'],
+        ],
+      ];
+
+      $form['bottom_space'] = [
+        '#type' => 'item',
+        '#title' => t('<br><br>'),
+      ];
+    }
 
     $form['node_comment_display'] = [
       '#type' => 'container',
@@ -200,6 +214,20 @@ class SIRSearchForm extends FormBase {
           'style' => 'display:none;'
           //'style' => 'float:left',
       ],
+    ];
+
+    $form['modal'] = [
+      '#type' => 'markup',
+      '#markup' => Markup::create('
+        <div id="modal-container" class="modal-media hidden">
+          <div class="modal-content">
+            <button class="close-btn" type="button">&times;</button>
+            <div id="pdf-scroll-container"></div>
+            <div id="modal-content"></div>
+          </div>
+          <div class="modal-backdrop"></div>
+        </div>
+      '),
     ];
 
     return $form;
@@ -231,8 +259,7 @@ class SIRSearchForm extends FormBase {
     // IF ELEMENT TYPE IS CLASS
     if (($form_state->getValue('search_element_type') == 'instrument') ||
         ($form_state->getValue('search_element_type') == 'actuatorstem') ||
-        ($form_state->getValue('search_element_type') == 'detectorstem') ||
-        ($form_state->getValue('search_element_type') == 'processstem')) {
+        ($form_state->getValue('search_element_type') == 'detectorstem')) {
       $url = Url::fromRoute('rep.browse_tree');
       $url->setRouteParameter('mode', 'browse');
       $url->setRouteParameter('elementtype', $form_state->getValue('search_element_type'));
@@ -259,7 +286,7 @@ class SIRSearchForm extends FormBase {
     $elementType = $form_state->getValue('search_element_type');
 
     // Build URL for the route 'sir.search' with parameters.
-    if ($elementType === 'instrument' || $elementType === 'detectorstem' || $elementType === 'processstem' || $elementType === 'actuatorstem'){
+    if ($elementType === 'instrument' || $elementType === 'detectorstem' || $elementType === 'actuatorstem'){
       $url = Url::fromRoute('sir.search', [
         'mode' => 'browse',
         'elementtype' => $elementType,

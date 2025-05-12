@@ -18,7 +18,7 @@ class Task {
       'element_language' => t('Language'),
       'element_version' => t('Version'),
       'element_tot_instruments' => t('# Instruments'),
-      'element_tot_detectors' => t('# Detectors'),
+      'element_tot_detectors' => t('# Containers'),
       'element_status' => t('Status'),
     ];
 
@@ -98,6 +98,7 @@ class Task {
         'element_status' => $status,
         'element_hasStatus' => parse_url($element->hasStatus, PHP_URL_FRAGMENT),
         'element_hasLanguage' => $element->hasLanguage,
+        'element_hasImageUri' => $element->hasImageUri,
       ];
     }
 
@@ -178,6 +179,8 @@ class Task {
         'element_status' => $status,
         'element_owner' => $owner,
         'element_hasStatus' => parse_url($element->hasStatus, PHP_URL_FRAGMENT),
+        'element_hasLanguage' => $element->hasLanguage,
+        'element_hasImageUri' => $element->hasImageUri,
       ];
     }
 

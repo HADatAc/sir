@@ -10,6 +10,7 @@ use Drupal\rep\Constant;
 use Drupal\rep\Utils;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Vocabulary\VSTOI;
+use Drupal\file\Entity\File;
 
 class AddDetectorForm extends FormBase {
 
@@ -29,6 +30,16 @@ class AddDetectorForm extends FormBase {
   protected $containerslotUri;
 
   protected $containerslot;
+
+  protected $detectorUri;
+
+  public function setDetectorUri() {
+    $this->detectorUri = Utils::uriGen('detector');
+  }
+
+  public function getDetectorUri() {
+    return $this->detectorUri;
+  }
 
   public function getSourceDetectorUri() {
     return $this->sourceDetectorUri;
@@ -74,6 +85,17 @@ class AddDetectorForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $sourcedetectoruri = NULL, $containersloturi = NULL) {
+
+    // Check if the detector URI already exists in the form state.
+    // If not, generate a new URI and store it in the form state.
+    if (!$form_state->has('detector_uri')) {
+      $this->setDetectorUri();
+      $form_state->set('detector_uri', $this->getDetectorUri());
+    }
+    else {
+      // Retrieve the persisted URI from form state.
+      $this->detectorUri = $form_state->get('detector_uri');
+    }
 
     // MODAL
     $form['#attached']['library'][] = 'rep/rep_modal';
@@ -211,13 +233,106 @@ class AddDetectorForm extends FormBase {
         '#markup' => '</div>',
       ],
     ];
-    $form['detector_webdocument'] = [
+
+    // Add a hidden field to persist the detector URI between form rebuilds.
+    $form['detector_uri'] = [
+      '#type' => 'hidden',
+      '#value' => $this->detectorUri,
+    ];
+
+    // Add a select box to choose between URL and Upload.
+    $form['detector_image_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Image Type'),
+      '#options' => [
+        '' => $this->t('Select Image Type'),
+        'url' => $this->t('URL'),
+        'upload' => $this->t('Upload'),
+      ],
+      '#default_value' => '',
+    ];
+
+    // The textfield for entering a URL.
+    // It is only visible when the select box value is 'url'.
+    $form['detector_image_url'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Image'),
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ],
+      '#states' => [
+        'visible' => [
+          ':input[name="detector_image_type"]' => ['value' => 'url'],
+        ],
+      ],
+    ];
+
+    // Because File Upload Path (use the persisted detector URI for file uploads)
+    $modUri = (explode(":/", utils::namespaceUri($this->detectorUri)))[1];
+    $form['detector_image_upload_wrapper'] = [
+      '#type' => 'container',
+      '#states' => [
+        'visible' => [
+          ':input[name="detector_image_type"]' => ['value' => 'upload'],
+        ],
+      ],
+    ];
+    $form['detector_image_upload_wrapper']['detector_image_upload'] = [
+      '#type' => 'managed_file',
+      '#title' => $this->t('Upload Image'),
+      '#upload_location' => 'private://resources/' . $modUri . '/image',
+      '#upload_validators' => [
+        'file_validate_extensions' => ['png jpg jpeg'], // Adjust allowed extensions as needed.
+        'file_validate_size' => [2097152],
+      ],
+    ];
+
+    // Add a select box to choose between URL and Upload.
+    $form['detector_webdocument_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Web Document Type'),
+      '#options' => [
+        '' => $this->t('Select Document Type'),
+        'url' => $this->t('URL'),
+        'upload' => $this->t('Upload'),
+      ],
+      '#default_value' => '',
+    ];
+
+    // The textfield for entering a URL.
+    // It is only visible when the select box value is 'url'.
+    $form['detector_webdocument_url'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Web Document'),
       '#attributes' => [
         'placeholder' => 'http://',
-      ]
+      ],
+      '#states' => [
+        'visible' => [
+          ':input[name="detector_webdocument_type"]' => ['value' => 'url'],
+        ],
+      ],
     ];
+
+    // Because File Upload Path (use the persisted detector URI for file uploads)
+    $form['detector_webdocument_upload_wrapper'] = [
+      '#type' => 'container',
+      '#states' => [
+        'visible' => [
+          ':input[name="detector_webdocument_type"]' => ['value' => 'upload'],
+        ],
+      ],
+    ];
+    $form['detector_webdocument_upload_wrapper']['detector_webdocument_upload'] = [
+      '#type' => 'managed_file',
+      '#title' => $this->t('Upload Document'),
+      '#upload_location' => 'private://resources/' . $modUri . '/webdoc',
+      '#upload_validators' => [
+        'file_validate_extensions' => ['pdf doc docx txt xls xlsx'], // Adjust allowed extensions as needed.
+        'file_validate_size' => [2097152],
+      ],
+    ];
+
     $form['save_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Save'),
@@ -312,8 +427,66 @@ class AddDetectorForm extends FormBase {
         $label = $result->label . '  -- CB:EMPTY';
       }
 
+      // Get the current user email and generate a new detector URI.
+      $useremail = \Drupal::currentUser()->getEmail();
+      // $newInstrumentUri = Utils::uriGen('detector');
+      $newDetectorUri = $form_state->getValue('detector_uri');
+
+      // Determine the chosen document type.
+      $doc_type = $form_state->getValue('detector_webdocument_type');
+      $detector_webdocument = '';
+
+      // If user selected URL, use the textfield value.
+      if ($doc_type === 'url') {
+        $detector_webdocument = $form_state->getValue('detector_webdocument_url');
+      }
+      // If user selected Upload, load the file entity and get its filename.
+      elseif ($doc_type === 'upload') {
+        // Get the file IDs from the managed_file element.
+        $fids = $form_state->getValue('detector_webdocument_upload');
+        if (!empty($fids)) {
+          // Load the first file (file ID is returned, e.g. "374").
+          $file = File::load(reset($fids));
+          if ($file) {
+            // Mark the file as permanent and save it.
+            $file->setPermanent();
+            $file->save();
+            // Optionally register file usage to prevent cleanup.
+            \Drupal::service('file.usage')->add($file, 'sir', 'detector', 1);
+            // Now get the filename from the file entity.
+            $detector_webdocument = $file->getFilename();
+          }
+        }
+      }
+
+      // Determine the chosen image type.
+      $image_type = $form_state->getValue('detector_image_type');
+      $detector_image = '';
+
+      // If user selected URL, use the textfield value.
+      if ($image_type === 'url') {
+        $detector_image = $form_state->getValue('detector_image_url');
+      }
+      // If user selected Upload, load the file entity and get its filename.
+      elseif ($image_type === 'upload') {
+        // Get the file IDs from the managed_file element.
+        $fids = $form_state->getValue('detector_image_upload');
+        if (!empty($fids)) {
+          // Load the first file (file ID is returned, e.g. "374").
+          $file = File::load(reset($fids));
+          if ($file) {
+            // Mark the file as permanent and save it.
+            $file->setPermanent();
+            $file->save();
+            // Optionally register file usage to prevent cleanup.
+            \Drupal::service('file.usage')->add($file, 'sir', 'detector', 1);
+            // Now get the filename from the file entity.
+            $detector_image = $file->getFilename();
+          }
+        }
+      }
+
       // CREATE A NEW DETECTOR
-      $newDetectorUri = Utils::uriGen('detector');
       $detectorJson = '{"uri":"'.$newDetectorUri.'",'.
         '"typeUri":"'.Utils::uriFromAutocomplete($form_state->getValue('detector_stem')).'",'.
         '"hascoTypeUri":"'.VSTOI::DETECTOR.'",'.
@@ -324,7 +497,8 @@ class AddDetectorForm extends FormBase {
         '"label":"'.$label.'",'.
         '"hasVersion":"1",'.
         '"isAttributeOf":"'.Utils::uriFromAutocomplete($form_state->getValue('detector_isAttributeOf')).'",'.
-        '"hasWebDocument":"'.$form_state->getValue('detector_webdocument').'",'.
+        '"hasWebDocument":"' . $detector_webdocument . '",' .
+        '"hasImageUri":"' . $detector_image . '",' .
         '"hasStatus":"'.VSTOI::DRAFT.'"}';
 
       $api->detectorAdd($detectorJson);
@@ -338,6 +512,23 @@ class AddDetectorForm extends FormBase {
         $form_state->setRedirectUrl($url);
         return;
       } else {
+        // UPLOAD IMAGE TO API
+        if ($image_type === 'upload') {
+          $fids = $form_state->getValue('detector_image_upload');
+          $msg = $api->parseObjectResponse($api->uploadFile($newDetectorUri, reset($fids)), 'uploadFile');
+          if ($msg == NULL) {
+            \Drupal::messenger()->addError(t("The Uploaded Image FAILED to be submited to API."));
+          }
+        }
+        // UPLOAD DOCUMENT TO API
+        if ($doc_type === 'upload') {
+          $fids = $form_state->getValue('detector_webdocument_upload');
+          $msg = $api->parseObjectResponse($api->uploadFile($newDetectorUri, reset($fids)), 'uploadFile');
+          if ($msg == NULL) {
+            \Drupal::messenger()->addError(t("The Uploaded Document FAILED to be submited to API."));
+          }
+        }
+
         \Drupal::messenger()->addMessage(t("Detector has been added successfully."));
         self::backUrl();
         return;

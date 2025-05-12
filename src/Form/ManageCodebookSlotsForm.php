@@ -81,6 +81,13 @@ class ManageCodebookSlotsForm extends FormBase {
     // dpm($slots);
 
     foreach ($slots as $slot) {
+
+      // In case there is an empty slot do not break the loop
+      if ($slot === null) {
+        \Drupal::messenger()->addWarning(t("There were missing slots on the structure that could not be presented, redo ou recheck."));
+        continue;
+      }
+
       $content = "";
       if ($slot->hasResponseOption != null) {
         $rawresponseoption = $api->getUri($slot->hasResponseOption);

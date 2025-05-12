@@ -18,63 +18,13 @@ sir.search:
   requirements:
    _permission: 'access content'
 
-sir.divider1:
-  title: '_________________________________'
+sir.manage_top_level:
+  title: Manage Elements
+  description: Manage SIR Elements
+  route_name: '<nolink>'
   parent: sir.top_level
   menu_name: main
-  weight: 9
-  route_name: '<none>'
-
-# sir.manage_ins_files:
-#   title: Manage INS Templates
-#   description: Manage INS Templates
-#   route_name: rep.select_mt_element
-#   route_parameters:
-#     elementtype: 'ins'
-#     mode: 'table'
-#     page: '1'
-#     pagesize: '9'
-#     studyuri: 'none'
-#   parent: sir.top_level
-#   menu_name: main
-#   weight: 10
-#   requirements:
-#     _permission: 'access content'
-#     _role: 'authenticated'
-
-# sir.divider2:
-#   title: '_________________________________'
-#   parent: sir.top_level
-#   menu_name: main
-#   weight: 19
-#   route_name: '<none>'
-
-sir.manage_processstems :
-  title: Manage Process Stems
-  description: Manage Process Stems
-  route_name: sir.select_element
-  route_parameters:
-    elementtype: 'processstem'
-    page: '1'
-    pagesize: '9'
-  parent: sir.top_level
-  menu_name: main
-  weight: 20
-  requirements:
-    _permission: 'access content'
-    _role: 'authenticated'
-
-sir.manage_process :
-  title: Manage Processes
-  description: Manage Processes
-  route_name: sir.select_element
-  route_parameters:
-    elementtype: 'process'
-    page: '1'
-    pagesize: '9'
-  parent: sir.top_level
-  menu_name: main
-  weight: 30
+  weight: 2
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -87,9 +37,9 @@ sir.manage_instruments:
     elementtype: 'instrument'
     page: '1'
     pagesize: '9'
-  parent: sir.top_level
+  parent: sir.manage_top_level
   menu_name: main
-  weight: 40
+  weight: 1
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -102,9 +52,9 @@ sir.manage_actuatorstems :
     elementtype: 'actuatorstem'
     page: '1'
     pagesize: '9'
-  parent: sir.top_level
+  parent: sir.manage_top_level
   menu_name: main
-  weight: 50
+  weight: 2
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -117,9 +67,9 @@ sir.manage_actuators :
     elementtype: 'actuator'
     page: '1'
     pagesize: '9'
-  parent: sir.top_level
+  parent: sir.manage_top_level
   menu_name: main
-  weight: 60
+  weight: 3
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -132,9 +82,9 @@ sir.manage_detectorstems :
     elementtype: 'detectorstem'
     page: '1'
     pagesize: '9'
-  parent: sir.top_level
+  parent: sir.manage_top_level
   menu_name: main
-  weight: 70
+  weight: 4
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -147,9 +97,9 @@ sir.manage_detectors :
     elementtype: 'detector'
     page: '1'
     pagesize: '9'
-  parent: sir.top_level
+  parent: sir.manage_top_level
   menu_name: main
-  weight: 80
+  weight: 5
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -162,9 +112,9 @@ sir.manage_codebooks :
     elementtype: 'codebook'
     page: '1'
     pagesize: '9'
-  parent: sir.top_level
+  parent: sir.manage_top_level
   menu_name: main
-  weight: 90
+  weight: 6
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -177,9 +127,9 @@ sir.manage_responseoptions :
     elementtype: 'responseoption'
     page: '1'
     pagesize: '9'
-  parent: sir.top_level
+  parent: sir.manage_top_level
   menu_name: main
-  weight: 100
+  weight: 7
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -192,9 +142,248 @@ sir.manage_annotationstems :
     elementtype: 'annotationstem'
     page: '1'
     pagesize: '9'
-  parent: sir.top_level
+  parent: sir.manage_top_level
   menu_name: main
-  weight: 110
+  weight: 8
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
+
+# OPTION 1
+# REQUIRE SIR MODULE TO SHOW
+reviewer.elements_review:
+  title: Review Content
+  description: ''
+  menu_name: main
+  route_name: 'sir.select_review_element'
+  route_parameters:
+    elementtype: 'instrument'
+    page: '1'
+    pagesize: '9'
+  parent: reviewer.top_level
+  weight: 10
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'
+
+reviewer.instruments:
+  title: Simulators
+  description: Manage Simulator Reviews
+  menu_name: main
+  route_name: sir.select_review_element
+  route_parameters:
+    elementtype: 'instrument'
+    page: '1'
+    pagesize: '9'
+  parent: reviewer.elements_review
+  weight: 10
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'
+
+reviewer.detectorsstem:
+  title: Detector Stems
+  description: Manage Detectors Stem Reviews
+  menu_name: main
+  route_name: sir.select_review_element
+  route_parameters:
+    elementtype: 'detectorstem'
+    page: '1'
+    pagesize: '9'
+  parent: reviewer.elements_review
+  weight: 40
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'
+
+reviewer.detectors:
+  title: Detectors
+  description: Manage Detectors Reviews
+  menu_name: main
+  route_name: sir.select_review_element
+  route_parameters:
+    elementtype: 'detector'
+    page: '1'
+    pagesize: '9'
+  parent: reviewer.elements_review
+  weight: 50
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'
+
+reviewer.actuatorstem:
+  title: Actuator Stems
+  description: Manage Actuators Stem Reviews
+  menu_name: main
+  route_name: sir.select_review_element
+  route_parameters:
+    elementtype: 'actuatorstem'
+    page: '1'
+    pagesize: '9'
+  parent: reviewer.elements_review
+  weight: 60
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'
+
+reviewer.actuators:
+  title: Actuators
+  description: Manage Actuators Reviews
+  menu_name: main
+  route_name: sir.select_review_element
+  route_parameters:
+    elementtype: 'actuator'
+    page: '1'
+    pagesize: '9'
+  parent: reviewer.elements_review
+  weight: 70
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'
+
+reviewer.codebooks:
+  title: Codebooks
+  description: Manage Codebooks Reviews
+  menu_name: main
+  route_name: sir.select_review_element
+  route_parameters:
+    elementtype: 'codebook'
+    page: '1'
+    pagesize: '9'
+  parent: reviewer.elements_review
+  weight: 80
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'
+
+reviewer.response_options:
+  title: Response Options
+  description: Manage Response Options Reviews
+  menu_name: main
+  route_name: sir.select_review_element
+  route_parameters:
+    elementtype: 'responseoption'
+    page: '1'
+    pagesize: '9'
+  parent: reviewer.elements_review
+  weight: 90
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'
+
+# OPTION 2
+
+reviewer.manage_ins_files:
+  title: INS Templates
+  description: Manage INS Templates
+  route_name: rep.select_mt_element
+  route_parameters:
+    elementtype: 'ins'
+    mode: 'table'
+    page: '1'
+    pagesize: '9'
+    studyuri: 'none'
+  parent: reviewer.uploadingest_review
+  menu_name: main
+  weight: 10
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'
+
+std.manage_dsg_template:
+  title: DSG Templates
+  description: Manage DSG Templates
+  route_name: rep.select_mt_element
+  route_parameters:
+    elementtype: 'dsg'
+    mode: 'table'
+    page: '1'
+    pagesize: '9'
+    studyuri: 'none'
+  parent: reviewer.uploadingest_review
+  menu_name: main
+  weight: 12
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'
+
+std.manage_dd_template:
+  title: DD Templates
+  description: Manage DD Templates
+  route_name: rep.select_mt_element
+  route_parameters:
+    elementtype: 'dd'
+    mode: 'table'
+    page: '1'
+    pagesize: '9'
+    studyuri: 'none'
+  parent: reviewer.uploadingest_review
+  menu_name: main
+  weight: 13
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'
+
+std.manage_sdd_template:
+  title: SDD Templates
+  description: Manage SDD Templates
+  route_name: rep.select_mt_element
+  route_parameters:
+    elementtype: 'sdd'
+    mode: 'table'
+    page: '1'
+    pagesize: '9'
+    studyuri: 'none'
+  parent: reviewer.uploadingest_review
+  menu_name: main
+  weight: 14
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'
+
+reviewer.manage_ins_files_dp2:
+  title: DP2 Templates
+  description: Manage DP2 Templates
+  route_name: rep.select_mt_element
+  route_parameters:
+    elementtype: 'dp2'
+    mode: 'table'
+    page: '1'
+    pagesize: '9'
+    studyuri: 'none'
+  parent: reviewer.uploadingest_review
+  menu_name: main
+  weight: 16
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'
+
+reviewer.manage_ins_files_str:
+  title: STR Templates
+  description: Manage STR Templates
+  route_name: rep.select_mt_element
+  route_parameters:
+    elementtype: 'str'
+    mode: 'table'
+    page: '1'
+    pagesize: '9'
+    studyuri: 'none'
+  parent: reviewer.uploadingest_review
+  menu_name: main
+  weight: 17
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'
+
+
+# OPTION 3
+reviewer.generate_ins_file:
+  title: INS
+  description: Generate INS File
+  route_name: sir.generate_ins
+  parent: reviewer.generate_review
+  menu_name: main
+  weight: 10
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'

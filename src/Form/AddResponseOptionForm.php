@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\Utils;
 use Drupal\rep\Entity\Tables;
 use Drupal\rep\Vocabulary\VSTOI;
+use Drupal\file\Entity\File;
 
 class AddResponseOptionForm extends FormBase {
 
@@ -32,6 +33,16 @@ class AddResponseOptionForm extends FormBase {
     return $this->codebookSlot = $uri;
   }
 
+  protected $responseoptionUri;
+
+  public function setInstrumenUri() {
+    $this->responseoptionUri = Utils::uriGen('responseoption');
+  }
+
+  public function getInstrumenUri() {
+    return $this->responseoptionUri;
+  }
+
   /**
    * {@inheritdoc}
    */
@@ -43,6 +54,17 @@ class AddResponseOptionForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $codebooksloturi = NULL) {
+
+    // Check if the responseoption URI already exists in the form state.
+    // If not, generate a new URI and store it in the form state.
+    if (!$form_state->has('responseoption_uri')) {
+      $this->setInstrumenUri();
+      $form_state->set('responseoption_uri', $this->getInstrumenUri());
+    }
+    else {
+      // Retrieve the persisted URI from form state.
+      $this->responseoptionUri = $form_state->get('responseoption_uri');
+    }
 
     // SAVE RESPONSEOPTION SLOT URI
     if ($codebooksloturi == "EMPTY") {
@@ -103,13 +125,106 @@ class AddResponseOptionForm extends FormBase {
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
     ];
-    $form['responseoption_webdocument'] = [
+
+    // Add a hidden field to persist the responseoption URI between form rebuilds.
+    $form['responseoption_uri'] = [
+      '#type' => 'hidden',
+      '#value' => $this->responseoptionUri,
+    ];
+
+    // Add a select box to choose between URL and Upload.
+    $form['responseoption_image_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Image Type'),
+      '#options' => [
+        '' => $this->t('Select Image Type'),
+        'url' => $this->t('URL'),
+        'upload' => $this->t('Upload'),
+      ],
+      '#default_value' => '',
+    ];
+
+    // The textfield for entering a URL.
+    // It is only visible when the select box value is 'url'.
+    $form['responseoption_image_url'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Image'),
+      '#attributes' => [
+        'placeholder' => 'http://',
+      ],
+      '#states' => [
+        'visible' => [
+          ':input[name="responseoption_image_type"]' => ['value' => 'url'],
+        ],
+      ],
+    ];
+
+    // Because File Upload Path (use the persisted responseoption URI for file uploads)
+    $modUri = (explode(":/", utils::namespaceUri($this->responseoptionUri)))[1];
+    $form['responseoption_image_upload_wrapper'] = [
+      '#type' => 'container',
+      '#states' => [
+        'visible' => [
+          ':input[name="responseoption_image_type"]' => ['value' => 'upload'],
+        ],
+      ],
+    ];
+    $form['responseoption_image_upload_wrapper']['responseoption_image_upload'] = [
+      '#type' => 'managed_file',
+      '#title' => $this->t('Upload Image'),
+      '#upload_location' => 'private://resources/' . $modUri . '/image',
+      '#upload_validators' => [
+        'file_validate_extensions' => ['png jpg jpeg'], // Adjust allowed extensions as needed.
+        'file_validate_size' => [2097152],
+      ],
+    ];
+
+    // Add a select box to choose between URL and Upload.
+    $form['responseoption_webdocument_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Web Document Type'),
+      '#options' => [
+        '' => $this->t('Select Document Type'),
+        'url' => $this->t('URL'),
+        'upload' => $this->t('Upload'),
+      ],
+      '#default_value' => '',
+    ];
+
+    // The textfield for entering a URL.
+    // It is only visible when the select box value is 'url'.
+    $form['responseoption_webdocument_url'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Web Document'),
       '#attributes' => [
         'placeholder' => 'http://',
-      ]
+      ],
+      '#states' => [
+        'visible' => [
+          ':input[name="responseoption_webdocument_type"]' => ['value' => 'url'],
+        ],
+      ],
     ];
+
+    // Because File Upload Path (use the persisted responseoption URI for file uploads)
+    $form['responseoption_webdocument_upload_wrapper'] = [
+      '#type' => 'container',
+      '#states' => [
+        'visible' => [
+          ':input[name="responseoption_webdocument_type"]' => ['value' => 'upload'],
+        ],
+      ],
+    ];
+    $form['responseoption_webdocument_upload_wrapper']['responseoption_webdocument_upload'] = [
+      '#type' => 'managed_file',
+      '#title' => $this->t('Upload Document'),
+      '#upload_location' => 'private://resources/' . $modUri . '/webdoc',
+      '#upload_validators' => [
+        'file_validate_extensions' => ['pdf doc docx txt xls xlsx'], // Adjust allowed extensions as needed.
+        'file_validate_size' => [2097152],
+      ],
+    ];
+
     $form['save_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Save'),
@@ -169,7 +284,64 @@ class AddResponseOptionForm extends FormBase {
 
     try {
       $useremail = \Drupal::currentUser()->getEmail();
-      $newResponseOptionUri = Utils::uriGen('responseoption');
+
+      // $newResponseOptionUri = Utils::uriGen('responseoption');
+      $newResponseOptionUri = $form_state->getValue('responseoption_uri');
+
+      // Determine the chosen document type.
+      $doc_type = $form_state->getValue('responseoption_webdocument_type');
+      $responseoption_webdocument = '';
+
+      // If user selected URL, use the textfield value.
+      if ($doc_type === 'url') {
+        $responseoption_webdocument = $form_state->getValue('responseoption_webdocument_url');
+      }
+      // If user selected Upload, load the file entity and get its filename.
+      elseif ($doc_type === 'upload') {
+        // Get the file IDs from the managed_file element.
+        $fids = $form_state->getValue('responseoption_webdocument_upload');
+        if (!empty($fids)) {
+          // Load the first file (file ID is returned, e.g. "374").
+          $file = File::load(reset($fids));
+          if ($file) {
+            // Mark the file as permanent and save it.
+            $file->setPermanent();
+            $file->save();
+            // Optionally register file usage to prevent cleanup.
+            \Drupal::service('file.usage')->add($file, 'sir', 'responseoption', 1);
+            // Now get the filename from the file entity.
+            $responseoption_webdocument = $file->getFilename();
+          }
+        }
+      }
+
+      // Determine the chosen image type.
+      $image_type = $form_state->getValue('responseoption_image_type');
+      $responseoption_image = '';
+
+      // If user selected URL, use the textfield value.
+      if ($image_type === 'url') {
+        $responseoption_image = $form_state->getValue('responseoption_image_url');
+      }
+      // If user selected Upload, load the file entity and get its filename.
+      elseif ($image_type === 'upload') {
+        // Get the file IDs from the managed_file element.
+        $fids = $form_state->getValue('responseoption_image_upload');
+        if (!empty($fids)) {
+          // Load the first file (file ID is returned, e.g. "374").
+          $file = File::load(reset($fids));
+          if ($file) {
+            // Mark the file as permanent and save it.
+            $file->setPermanent();
+            $file->save();
+            // Optionally register file usage to prevent cleanup.
+            \Drupal::service('file.usage')->add($file, 'sir', 'responseoption', 1);
+            // Now get the filename from the file entity.
+            $responseoption_image = $file->getFilename();
+          }
+        }
+      }
+
       $responseOptionJSON = '{"uri":"'.$newResponseOptionUri.'",'.
         '"typeUri":"'.VSTOI::RESPONSE_OPTION.'",'.
         '"hascoTypeUri":"'.VSTOI::RESPONSE_OPTION.'",'.
@@ -178,7 +350,8 @@ class AddResponseOptionForm extends FormBase {
         '"hasLanguage":"'.$form_state->getValue('responseoption_language').'",'.
         '"hasVersion":"'.$form_state->getValue('responseoption_version').'",'.
         '"comment":"'.$form_state->getValue('responseoption_description').'",'.
-        '"hasWebDocument":"'.$form_state->getValue('responseoption_webdocument').'",'.
+        '"hasWebDocument":"' . $responseoption_webdocument . '",' .
+        '"hasImageUri":"' . $responseoption_image . '",' .
         '"hasSIRManagerEmail":"'.$useremail.'"}';
 
       $api = \Drupal::service('rep.api_connector');
