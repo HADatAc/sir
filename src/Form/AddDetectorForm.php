@@ -196,7 +196,7 @@ class AddDetectorForm extends FormBase {
       '#title' => $this->t('Codebook'),
       '#autocomplete_route_name' => 'sir.detector_codebook_autocomplete',
     ];
-    // if ($socialEnabled) {
+    if ($socialEnabled) {
       $form['detector_maker'] = [
         '#type' => 'textfield',
         '#title' => $this->t('Maker'),
@@ -206,7 +206,7 @@ class AddDetectorForm extends FormBase {
           'entityType' => 'organization',
         ],
       ];
-    // }
+    }
     $form['detector_version_hidden'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),

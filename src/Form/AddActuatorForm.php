@@ -196,7 +196,7 @@ class AddActuatorForm extends FormBase {
       '#title' => $this->t('Codebook'),
       '#autocomplete_route_name' => 'sir.actuator_codebook_autocomplete',
     ];
-    // if ($socialEnabled) {
+    if ($socialEnabled) {
       $form['actuator_maker'] = [
         '#type' => 'textfield',
         '#title' => $this->t('Maker'),
@@ -206,7 +206,7 @@ class AddActuatorForm extends FormBase {
           'entityType' => 'organization',
         ],
       ];
-    // }
+    }
     $form['actuator_version_hidden'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
