@@ -62,8 +62,8 @@ class EditDetectorForm extends FormBase {
     // Does the repo have a social network?
     $socialEnabled = \Drupal::config('rep.settings')->get('social_conf');
 
-     // ROOT URL
-     $root_url = \Drupal::request()->getBaseUrl();
+    // ROOT URL
+    $root_url = \Drupal::request()->getBaseUrl();
 
     // MODAL
     $form['#attached']['library'][] = 'rep/rep_modal';
@@ -138,11 +138,13 @@ class EditDetectorForm extends FormBase {
       '#autocomplete_route_name' => 'sir.detector_codebook_autocomplete',
     ];
     if ($socialEnabled) {
+      $api = \Drupal::service('rep.api_connector');
+      $makerUri = $api->getUri($this->getDetector()->hasMakerUri);
       $form['detector_maker'] = [
         '#type' => 'textfield',
         '#title' => $this->t('Maker'),
         '#default_value' => isset($this->getDetector()->hasMakerUri) ?
-                              Utils::fieldToAutocomplete($this->getDetector()->hasMakerUri, $this->getDetector()->hasMaker->label) : '',
+                              Utils::fieldToAutocomplete($this->getDetector()->hasMakerUri, $makerUri->label) : '',
         // '#required' => TRUE,
         '#autocomplete_route_name'       => 'rep.social_autocomplete',
         '#autocomplete_route_parameters' => [

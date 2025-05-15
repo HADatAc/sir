@@ -136,11 +136,13 @@ class EditActuatorForm extends FormBase {
       '#autocomplete_route_name' => 'sir.actuator_codebook_autocomplete',
     ];
     if ($socialEnabled) {
+      $api = \Drupal::service('rep.api_connector');
+      $makerUri = $api->getUri($this->getActuator()->hasMakerUri);
       $form['actuator_maker'] = [
         '#type' => 'textfield',
         '#title' => $this->t('Maker'),
         '#default_value' => isset($this->getActuator()->hasMakerUri) ?
-                              Utils::fieldToAutocomplete($this->getActuator()->hasMakerUri, $this->getActuator()->hasMaker->label) : '',
+                              Utils::fieldToAutocomplete($this->getActuator()->hasMakerUri, $makerUri->label) : '',
         // '#required' => TRUE,
         '#autocomplete_route_name'       => 'rep.social_autocomplete',
         '#autocomplete_route_parameters' => [
