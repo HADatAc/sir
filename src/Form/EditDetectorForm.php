@@ -137,7 +137,7 @@ class EditDetectorForm extends FormBase {
       '#default_value' => $codebookLabel,
       '#autocomplete_route_name' => 'sir.detector_codebook_autocomplete',
     ];
-    // if ($socialEnabled) {
+    if ($socialEnabled) {
       $form['detector_maker'] = [
         '#type' => 'textfield',
         '#title' => $this->t('Maker'),
@@ -149,7 +149,7 @@ class EditDetectorForm extends FormBase {
           'entityType' => 'organization',
         ],
       ];
-    // }
+    }
     $form['detector_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),

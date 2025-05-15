@@ -163,7 +163,7 @@ class EditInstrumentForm extends FormBase {
       '#title' => $this->t('Name'),
       '#default_value' => $this->getInstrument()->label,
     ];
-    // if ($socialEnabled) {
+    if ($socialEnabled) {
       $form['instrument_information']['instrument_parent_wrapper']['instrument_maker'] = [
         '#type' => 'textfield',
         '#title' => $this->t('Maker'),
@@ -175,7 +175,7 @@ class EditInstrumentForm extends FormBase {
           'entityType' => 'organization',
         ],
       ];
-    // }
+    }
     $form['instrument_information']['instrument_parent_wrapper']['instrument_abbreviation'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Abbreviation'),

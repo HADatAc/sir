@@ -135,7 +135,7 @@ class EditActuatorForm extends FormBase {
       '#default_value' => $codebookLabel,
       '#autocomplete_route_name' => 'sir.actuator_codebook_autocomplete',
     ];
-    // if ($socialEnabled) {
+    if ($socialEnabled) {
       $form['actuator_maker'] = [
         '#type' => 'textfield',
         '#title' => $this->t('Maker'),
@@ -147,7 +147,7 @@ class EditActuatorForm extends FormBase {
           'entityType' => 'organization',
         ],
       ];
-    // }
+    }
     $form['actuator_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
