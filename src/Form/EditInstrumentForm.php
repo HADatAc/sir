@@ -164,11 +164,12 @@ class EditInstrumentForm extends FormBase {
       '#default_value' => $this->getInstrument()->label,
     ];
     if ($socialEnabled) {
+      $makerUri = $api->parseparseObjectResponse($api->getUri($this->getInstrument()->hasMakerUri), 'getUri');
       $form['instrument_information']['instrument_parent_wrapper']['instrument_maker'] = [
         '#type' => 'textfield',
         '#title' => $this->t('Maker'),
         '#default_value' => isset($this->getInstrument()->hasMakerUri) ?
-                              Utils::fieldToAutocomplete($this->getInstrument()->hasMakerUri, $this->getInstrument()->hasMaker->label) : '',
+                              Utils::fieldToAutocomplete($this->getInstrument()->hasMakerUri, $makerUri->label) : '',
         // '#required' => TRUE,
         '#autocomplete_route_name'       => 'rep.social_autocomplete',
         '#autocomplete_route_parameters' => [
