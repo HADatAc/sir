@@ -164,7 +164,8 @@ class EditInstrumentForm extends FormBase {
       '#default_value' => $this->getInstrument()->label,
     ];
     if ($socialEnabled) {
-      $makerUri = $api->parseparseObjectResponse($api->getUri($this->getInstrument()->hasMakerUri), 'getUri');
+      $makerUri = json_decode($api->getUri($this->getInstrument()->hasMakerUri));
+      dpm($makerUri);
       $form['instrument_information']['instrument_parent_wrapper']['instrument_maker'] = [
         '#type' => 'textfield',
         '#title' => $this->t('Maker'),
