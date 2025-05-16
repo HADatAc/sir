@@ -59,8 +59,11 @@ class EditDetectorForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $detectoruri = NULL) {
 
-     // ROOT URL
-     $root_url = \Drupal::request()->getBaseUrl();
+    // Does the repo have a social network?
+    $socialEnabled = \Drupal::config('rep.settings')->get('social_conf');
+
+    // ROOT URL
+    $root_url = \Drupal::request()->getBaseUrl();
 
     // MODAL
     $form['#attached']['library'][] = 'rep/rep_modal';
@@ -134,6 +137,21 @@ class EditDetectorForm extends FormBase {
       '#default_value' => $codebookLabel,
       '#autocomplete_route_name' => 'sir.detector_codebook_autocomplete',
     ];
+    if ($socialEnabled) {
+      $api = \Drupal::service('rep.api_connector');
+      $makerUri = $api->getUri($this->getDetector()->hasMakerUri);
+      $form['detector_maker'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Maker'),
+        '#default_value' => isset($this->getDetector()->hasMakerUri) ?
+                              Utils::fieldToAutocomplete($this->getDetector()->hasMakerUri, $makerUri->label) : '',
+        // '#required' => TRUE,
+        '#autocomplete_route_name'       => 'rep.social_autocomplete',
+        '#autocomplete_route_parameters' => [
+          'entityType' => 'organization',
+        ],
+      ];
+    }
     $form['detector_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
@@ -545,6 +563,7 @@ class EditDetectorForm extends FormBase {
           '"wasDerivedFrom":"'.$this->getDetector()->wasDerivedFrom.'",'.
           '"hasReviewNote":"'.$this->getDetector()->hasReviewNote.'",'.
           '"hasEditorEmail":"'.$this->getDetector()->hasEditorEmail.'",'.
+          '"hasMakerUri":"'.Utils::uriFromAutocomplete($form_state->getValue('detector_maker')).'",'.
           '"hasStatus":"'.VSTOI::DRAFT.'"}';
 
         // UPDATE BY DELETING AND CREATING

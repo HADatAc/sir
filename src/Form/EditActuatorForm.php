@@ -59,6 +59,9 @@ class EditActuatorForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $actuatoruri = NULL) {
 
+    // Does the repo have a social network?
+    $socialEnabled = \Drupal::config('rep.settings')->get('social_conf');
+
     // ROOT URL
     $root_url = \Drupal::request()->getBaseUrl();
 
@@ -132,6 +135,21 @@ class EditActuatorForm extends FormBase {
       '#default_value' => $codebookLabel,
       '#autocomplete_route_name' => 'sir.actuator_codebook_autocomplete',
     ];
+    if ($socialEnabled) {
+      $api = \Drupal::service('rep.api_connector');
+      $makerUri = $api->getUri($this->getActuator()->hasMakerUri);
+      $form['actuator_maker'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Maker'),
+        '#default_value' => isset($this->getActuator()->hasMakerUri) ?
+                              Utils::fieldToAutocomplete($this->getActuator()->hasMakerUri, $makerUri->label) : '',
+        // '#required' => TRUE,
+        '#autocomplete_route_name'       => 'rep.social_autocomplete',
+        '#autocomplete_route_parameters' => [
+          'entityType' => 'organization',
+        ],
+      ];
+    }
     $form['actuator_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
@@ -541,6 +559,7 @@ class EditActuatorForm extends FormBase {
           '"wasDerivedFrom":"'.$this->getActuator()->wasDerivedFrom.'",'.
           '"hasReviewNote":"'.$this->getActuator()->hasReviewNote.'",'.
           '"hasEditorEmail":"'.$this->getActuator()->hasEditorEmail.'",'.
+          '"hasMakerUri":"'.Utils::uriFromAutocomplete($form_state->getValue('actuator_maker')).'",'.
           '"hasStatus":"'.VSTOI::DRAFT.'"}';
 
         // UPDATE BY DELETING AND CREATING
