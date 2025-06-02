@@ -137,7 +137,10 @@ class EditActuatorForm extends FormBase {
     ];
     if ($socialEnabled) {
       $api = \Drupal::service('rep.api_connector');
-      $makerUri = $api->getUri($this->getActuator()->hasMakerUri);
+      $makerUri = '';
+      if (isset($this->getActuator()->hasMakerUri) && $this->getActuator()->hasMakerUri !== NULL) {
+        $makerUri = $api->parseObjectResponse($api->getUri($this->getActuator()->hasMakerUri), 'getUri');
+      }
       $form['actuator_maker'] = [
         '#type' => 'textfield',
         '#title' => $this->t('Maker'),

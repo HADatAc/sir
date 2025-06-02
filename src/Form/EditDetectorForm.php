@@ -139,7 +139,10 @@ class EditDetectorForm extends FormBase {
     ];
     if ($socialEnabled) {
       $api = \Drupal::service('rep.api_connector');
-      $makerUri = $api->getUri($this->getDetector()->hasMakerUri);
+      $makerUri = '';
+      if (isset($this->getDetector()->hasMakerUri) && $this->getDetector()->hasMakerUri !== null) {
+        $makerUri = $api->parseObjectResponse($api->getUri($this->getDetector()->hasMakerUri), 'getUri');
+      }
       $form['detector_maker'] = [
         '#type' => 'textfield',
         '#title' => $this->t('Maker'),
