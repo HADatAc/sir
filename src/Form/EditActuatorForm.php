@@ -356,7 +356,7 @@ class EditActuatorForm extends FormBase {
     // 5. Managed file element for uploading a new document.
     $form['actuator_information']['actuator_webdocument_upload_wrapper']['actuator_webdocument_upload'] = [
       '#type' => 'managed_file',
-      '#title' => $this->t('Upload Image'),
+      '#title' => $this->t('Upload File'),
       '#upload_location' => 'private://resources/' . $modUri . '/image',
       '#upload_validators' => [
         'file_validate_extensions' => ['pdf doc docx txt xls xlsx'],
