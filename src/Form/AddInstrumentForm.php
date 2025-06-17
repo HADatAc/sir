@@ -195,7 +195,7 @@ class AddInstrumentForm extends FormBase {
     // Add a select box to choose between URL and Upload.
     $form['instrument_webdocument_type'] = [
       '#type' => 'select',
-      '#title' => $this->t('Web Document / Video Type'),
+      '#title' => $this->t('Web Document Type'),
       '#options' => [
         '' => $this->t('Select Document Type'),
         'url' => $this->t('URL'),
@@ -208,7 +208,7 @@ class AddInstrumentForm extends FormBase {
     // It is only visible when the select box value is 'url'.
     $form['instrument_webdocument_url'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Web Document / Video'),
+      '#title' => $this->t('Web Document'),
       '#attributes' => [
         'placeholder' => 'http://',
       ],
@@ -230,11 +230,11 @@ class AddInstrumentForm extends FormBase {
     ];
     $form['instrument_webdocument_upload_wrapper']['instrument_webdocument_upload'] = [
       '#type' => 'managed_file',
-      '#title' => $this->t('Upload Document / Video'),
+      '#title' => $this->t('Upload Document'),
       '#upload_location' => 'private://resources/' . $modUri . '/webdoc',
       '#upload_validators' => [
-        'file_validate_extensions' => ['pdf doc docx txt xls xlsx mp4'], // Adjust allowed extensions as needed.
-        'file_validate_size' => [209715200],
+        'file_validate_extensions' => ['pdf doc docx txt xls xlsx'], // Adjust allowed extensions as needed.
+        'file_validate_size' => [2097152],
       ],
     ];
 
