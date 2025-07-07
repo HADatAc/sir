@@ -74,11 +74,11 @@ class Task {
           $status = parse_url($element->hasStatus, PHP_URL_FRAGMENT);
         }
       }
-      $totInst = count($element->hasRequiredInstrumentationUris);
+      $totInst = count($element->hasRequiredInstrumentUris);
       $totDet = 0;
 
-      if (isset($element->requiredInstrumentation) && is_array($element->requiredInstrumentation)) {
-          foreach ($element->requiredInstrumentation as $instrument) {
+      if (isset($element->requiredInstrument) && is_array($element->requiredInstrument)) {
+          foreach ($element->requiredInstrument as $instrument) {
               if (isset($instrument->hasRequiredDetector) && is_array($instrument->hasRequiredDetector)) {
                   $totDet += count($instrument->hasRequiredDetector);
               } elseif (isset($instrument->detectors) && is_array($instrument->detectors)) {
