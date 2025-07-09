@@ -59,6 +59,9 @@ class EditActuatorForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $actuatoruri = NULL) {
 
+    // Does the repo have a social network?
+    $socialEnabled = \Drupal::config('rep.settings')->get('social_conf');
+
     // ROOT URL
     $root_url = \Drupal::request()->getBaseUrl();
 
@@ -132,6 +135,24 @@ class EditActuatorForm extends FormBase {
       '#default_value' => $codebookLabel,
       '#autocomplete_route_name' => 'sir.actuator_codebook_autocomplete',
     ];
+    if ($socialEnabled) {
+      $api = \Drupal::service('rep.api_connector');
+      $makerUri = '';
+      if (isset($this->getActuator()->hasMakerUri) && $this->getActuator()->hasMakerUri !== NULL) {
+        $makerUri = $api->parseObjectResponse($api->getUri($this->getActuator()->hasMakerUri), 'getUri');
+      }
+      $form['actuator_maker'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Maker'),
+        '#default_value' => isset($this->getActuator()->hasMakerUri) ?
+                              Utils::fieldToAutocomplete($this->getActuator()->hasMakerUri, $makerUri->label) : '',
+        // '#required' => TRUE,
+        '#autocomplete_route_name'       => 'rep.social_autocomplete',
+        '#autocomplete_route_parameters' => [
+          'entityType' => 'organization',
+        ],
+      ];
+    }
     $form['actuator_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
@@ -335,7 +356,7 @@ class EditActuatorForm extends FormBase {
     // 5. Managed file element for uploading a new document.
     $form['actuator_information']['actuator_webdocument_upload_wrapper']['actuator_webdocument_upload'] = [
       '#type' => 'managed_file',
-      '#title' => $this->t('Upload Image'),
+      '#title' => $this->t('Upload File'),
       '#upload_location' => 'private://resources/' . $modUri . '/image',
       '#upload_validators' => [
         'file_validate_extensions' => ['pdf doc docx txt xls xlsx'],
@@ -541,6 +562,7 @@ class EditActuatorForm extends FormBase {
           '"wasDerivedFrom":"'.$this->getActuator()->wasDerivedFrom.'",'.
           '"hasReviewNote":"'.$this->getActuator()->hasReviewNote.'",'.
           '"hasEditorEmail":"'.$this->getActuator()->hasEditorEmail.'",'.
+          '"hasMakerUri":"'.Utils::uriFromAutocomplete($form_state->getValue('actuator_maker')).'",'.
           '"hasStatus":"'.VSTOI::DRAFT.'"}';
 
         // UPDATE BY DELETING AND CREATING

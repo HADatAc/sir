@@ -254,7 +254,7 @@ class GenerateInsForm extends FormBase {
       case 'status':
         // For "INS by Status", get the status.
         $status = $form_state->getValue(['additional_fields', 'status']);
-        $result = $api_service->generateMTPerStatus('ins',$status, $filename);
+        $result = $api_service->generateMTPerStatus('ins',$status, $filename, '', '');
         break;
 
       case 'user_status':
