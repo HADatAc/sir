@@ -328,7 +328,7 @@ class ManageContainerAnnotationsForm extends FormBase {
 
       $msg = "";
 
-      dpm($form_state->getValue('annotation_topleft'));
+      // dpm($form_state->getValue('annotation_topleft'));
 
       // SAVE CONTAINER'S ANNOTATIONS
       if ($this->getContainer()->hascoTypeUri == VSTOI::INSTRUMENT) {
