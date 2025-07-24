@@ -131,6 +131,10 @@ class EditDetectorForm extends FormBase {
         '#markup' => '</div>',
       ],
     ];
+    $form['detector_stem']['main'] += [
+      '#maxlength' => 999,
+    ];
+
     $form['detector_codebook'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Codebook'),

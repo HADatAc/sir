@@ -127,6 +127,9 @@ class EditActuatorStemForm extends FormBase {
           '#markup' => '</div>',
         ],
       ];
+      $form['actuatorstem_type']['main'] += [
+        '#maxlength' => 999,
+      ];
     }
 
     $form['actuatorstem_content'] = [

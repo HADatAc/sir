@@ -143,6 +143,10 @@ class AddActuatorStemForm extends FormBase {
         '#markup' => '</div>',
       ],
     ];
+    $form['actuatorstem_type']['main'] += [
+      '#maxlength' => 999,
+    ];
+
     $form['actuatorstem_content'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name'),
