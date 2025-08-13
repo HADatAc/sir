@@ -26,8 +26,3 @@ sir_manageSlotsElementsForm:
     - core/jquery
     - core/drupal
 
-instrumentsearch_icons:
-  version: 1.x
-  css:
-    theme:
-      css/instrumentsearch_icons.css: {}
