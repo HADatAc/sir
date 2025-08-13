@@ -142,8 +142,6 @@ class SIRSearchForm extends FormBase {
     }
 
     $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument');
-    $preferred_detector = \Drupal::config('rep.settings')->get('preferred_detector');
-    $preferred_actuator = \Drupal::config('rep.settings')->get('preferred_actuator') ?? 'Actuator';
 
     $form['search_element_type'] = [
       '#type' => 'hidden',
@@ -162,10 +160,6 @@ class SIRSearchForm extends FormBase {
 
     $element_types = [
       'instrument'      => ['label' => $this->t($preferred_instrument . 's'),          'image' => 'instrument_placeholder.png'],
-      'actuatorstem'    => ['label' => $this->t($preferred_actuator . ' Stems'),       'image' => 'actuator_stem_placeholder.png'],
-      'actuator'        => ['label' => $this->t($preferred_actuator . 's'),            'image' => 'actuator_placeholder.png'],
-      'detectorstem'    => ['label' => $this->t($preferred_detector . ' Stems'),       'image' => 'detector_stem_placeholder.png'],
-      'detector'        => ['label' => $this->t($preferred_detector . 's'),            'image' => 'detector_placeholder.png'],
       'codebook'        => ['label' => $this->t('Codebooks'),                          'image' => 'codebook_placeholder.png'],
       'responseoption'  => ['label' => $this->t('Response Options'),                   'image' => 'response_option_placeholder.png'],
       'annotationstem'  => ['label' => $this->t('Annotation Stems'),                   'image' => 'annotation_stem_placeholder.png'],
@@ -292,9 +286,7 @@ class SIRSearchForm extends FormBase {
     }
 
     // IF ELEMENT TYPE IS CLASS
-    if (($form_state->getValue('search_element_type') == 'instrument') ||
-        ($form_state->getValue('search_element_type') == 'actuatorstem') ||
-        ($form_state->getValue('search_element_type') == 'detectorstem')) {
+    if (($form_state->getValue('search_element_type') == 'instrument')) {
       $url = Url::fromRoute('rep.browse_tree');
       $url->setRouteParameter('mode', 'browse');
       $url->setRouteParameter('elementtype', $form_state->getValue('search_element_type'));
@@ -321,7 +313,7 @@ class SIRSearchForm extends FormBase {
     $elementType = $form_state->getValue('search_element_type');
 
     // Build URL for the route 'sir.search' with parameters.
-    if ($elementType === 'instrument' || $elementType === 'detectorstem' || $elementType === 'actuatorstem') {
+    if ($elementType === 'instrument') {
       $url = Url::fromRoute('sir.search', [
         'mode' => 'browse',
         'elementtype' => $elementType,
