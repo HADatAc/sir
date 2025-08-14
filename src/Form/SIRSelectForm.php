@@ -131,7 +131,7 @@ class SIRSelectForm extends FormBase {
     $form['#attached']['library'][] = 'sir/sir_js_css';
 
 
-    $form['#attached']['drupalSettings']['sir_select_form']['base_url'] = \Drupal::request()->getSchemeAndHttpHost() . base_path();
+    $form['#attached']['drupalSettings']['sir_select_form']['base_url'] = Url::fromRoute('<front>', [], ['absolute' => TRUE, 'https' => TRUE])->toString() . base_path();
     $form['#attached']['drupalSettings']['sir_select_form']['elementtype'] = $elementtype;
 
     // Get value `pagesize` (default 9)
