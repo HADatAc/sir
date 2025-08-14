@@ -161,6 +161,7 @@ class AddDetectorForm extends FormBase {
     //     $this->t('Detector Stem'),
     //   '#autocomplete_route_name' => 'sir.detector_stem_autocomplete',
     // ];
+
     $form['detector_stem'] = [
       'top' => [
         '#type' => 'markup',
@@ -191,6 +192,11 @@ class AddDetectorForm extends FormBase {
         '#markup' => '</div>',
       ],
     ];
+
+    $form['detector_stem']['main'] += [
+      '#maxlength' => 999,
+    ];
+
     $form['detector_codebook'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Codebook'),
@@ -384,6 +390,10 @@ class AddDetectorForm extends FormBase {
       if ($form_state->getValue('detector_stem') == NULL || $form_state->getValue('detector_stem') == '') {
         $form_state->setErrorByName('detector_stem', $this->t('Detector stem value is empty. Please enter a valid stem.'));
       }
+
+      // if (strlen($form_state->getValue('detector_stem')) > 128) {
+      //   $form_state->setValue('detector_stem', Utils::trimPreserveBracket($form_state->getValue('detector_stem'), 127));
+      // }
       // $stemUri = Utils::uriFromAutocomplete($form_state->getValue('detector_stem'));
       // $this->setDetectorStem($api->parseObjectResponse($api->getUri($stemUri),'getUri'));
       // if($this->getDetectorStem() == NULL) {

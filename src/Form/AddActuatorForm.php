@@ -191,6 +191,9 @@ class AddActuatorForm extends FormBase {
         '#markup' => '</div>',
       ],
     ];
+    $form['actuator_stem']['main'] += [
+      '#maxlength' => 999,
+    ];
     $form['actuator_codebook'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Codebook'),

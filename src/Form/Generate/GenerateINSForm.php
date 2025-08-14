@@ -278,9 +278,7 @@ class GenerateInsForm extends FormBase {
       'pagesize' => '10',
       'studyuri' => 'none',
     ];
-    $url = Url::fromRoute('rep.select_mt_element', $parameters);
-    $response = new RedirectResponse($url->toString());
-    $response->send();
+
 
     // // Stream the file content directly without saving to disk.
     // $response = new Response();
@@ -292,6 +290,10 @@ class GenerateInsForm extends FormBase {
     // $response->setContent($result);
     // $response->send();
     // exit();
+
+    $url = Url::fromRoute('rep.select_mt_element', $parameters);
+    $response = new RedirectResponse($url->toString());
+    $response->send();
   }
 
   /**

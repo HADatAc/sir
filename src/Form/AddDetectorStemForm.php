@@ -145,6 +145,10 @@ class AddDetectorStemForm extends FormBase {
         '#markup' => '</div>',
       ],
     ];
+    $form['detectorstem_type']['main'] += [
+      '#maxlength' => 999,
+    ];
+
     $form['detectorstem_content'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name'),
