@@ -79,7 +79,7 @@ class SIRSearchForm extends FormBase {
     // MODAL
     $form['#attached']['library'][] = 'rep/webdoc_modal';
     $form['#attached']['library'][] = 'core/drupal.dialog';
-    $base_url = \Drupal::request()->getSchemeAndHttpHost() . \Drupal::request()->getBaseUrl();
+    $base_url = (\Drupal::request()->headers->get('x-forwarded-proto') === 'https' ? 'https://':'http://'). \Drupal::request()->getHost() . \Drupal::request()->getBaseUrl();
     $form['#attached']['drupalSettings']['webdoc_modal'] = [
       'baseUrl' => $base_url,
     ];
