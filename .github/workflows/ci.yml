@@ -1,0 +1,102 @@
+name: Run Selenium Tests
+
+on:
+  push:
+    branches:
+      - DEV_V0.9.3
+  pull_request:
+    branches:
+      - DEV_V0.9.3
+
+jobs:
+  run-selenium-tests:
+    runs-on: self-hosted
+    timeout-minutes: 60  # Adiciona timeout global para o job
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'  # Alterado para OpenJDK 11
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y unzip xvfb
+
+      - name: Prepare /var/data permissions and download chromedriver
+        run: |
+          sudo mkdir -p /var/data/chromedriver
+          sudo chown -R $(whoami):$(whoami) /var/data
+
+          cd /var/data/chromedriver
+          wget --no-verbose --show-progress https://storage.googleapis.com/chrome-for-testing-public/125.0.6422.141/linux64/chromedriver-linux64.zip
+
+          unzip -q chromedriver-linux64.zip || (echo "Unzip failed!" && exit 3)
+
+          mv chromedriver-linux64/chromedriver ./chromedriver
+          chmod +x chromedriver
+
+          rm -rf chromedriver-linux64.zip chromedriver-linux64
+          echo "/var/data/chromedriver" >> $GITHUB_PATH
+
+      - name: Start Xvfb
+        run: |
+          Xvfb :99 -screen 0 1920x1080x24 &
+          echo "DISPLAY=:99" >> $GITHUB_ENV
+          sleep 5
+
+      - name: Wait for hascogui to be ready
+        run: |
+          timeout 300 bash -c 'until curl -s http://18.203.69.17:80/ > /dev/null; do
+            echo "Waiting for hascogui environment to start..."
+            sleep 5
+          done'
+
+
+      - name: Run Maven test (specific class)
+        timeout-minutes: 45
+        run: |
+          export DISPLAY=:99
+          export MAVEN_OPTS="-Xmx4g -XX:+UseG1GC -XX:+DisableExplicitGC"
+
+          # Run Maven tests with real-time output
+          mvn test -Dtest=tests.A1.FullSetupWSandNHANES \
+            -Dmaven.test.failure.ignore=false \
+            -Dsurefire.timeout=3600 \
+            -Dsurefire.rerunFailingTestsCount=0 \
+            -Dfile.encoding=UTF-8 \
+            -Djava.awt.headless=true
+
+
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const prAuthor = context.payload.pull_request?.user?.login || "unknown";
+            const message = `❌ The tests have failed! @${prAuthor}, please check the logs and fix the problems before merging.`;
+
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: message
+            })
+
+      - name: Notify via Slack on failure
+        if: failure()
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data '{"text":"❌ The tests for the PR #${{ github.event.pull_request.number }} have failed. Author: @${{ github.event.pull_request.user.login }}. Check the details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}' \
+          ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Notify Slack on success
+        if: success()
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data '{"text":"✅ The tests for the PR #${{ github.event.pull_request.number }} have passed! Author: @${{ github.event.pull_request.user.login }}. Check the details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}' \
+          ${{ secrets.SLACK_WEBHOOK_URL }}
