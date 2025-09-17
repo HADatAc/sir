@@ -675,13 +675,13 @@ class SIRSelectForm extends FormBase {
 
     switch ($this->element_type) {
       case 'detector':
-        $placeholder_image = base_path() . \Drupal::service('extension.list.module')->getPath('rep') . '/images/icons/detector.png';
+        $placeholder_image = base_path() . \Drupal::service('extension.list.module')->getPath('rep') . '/images/placeholders/detector.png';
         break;
       case 'actuator':
-        $placeholder_image = base_path() . \Drupal::service('extension.list.module')->getPath('rep') . '/images/icons/actuator.png';
+        $placeholder_image = base_path() . \Drupal::service('extension.list.module')->getPath('rep') . '/images/placeholders/actuator.png';
         break;
       default:
-        $placeholder_image = base_path() . \Drupal::service('extension.list.module')->getPath('rep') . '/images/ins_placeholder.png';
+        $placeholder_image = base_path() . \Drupal::service('extension.list.module')->getPath('rep') . '/images/placeholders/instrument_placeholder.png';
     }
 
     // Se não estiver adicionando mais, crie o wrapper principal
