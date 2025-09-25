@@ -159,11 +159,11 @@ class SIRSearchForm extends FormBase {
     ];
 
     $element_types = [
-      'instrument'      => ['label' => $this->t($preferred_instrument . 's'),          'image' => 'instrument_placeholder.png'],
-      'codebook'        => ['label' => $this->t('Codebooks'),                          'image' => 'codebook_placeholder.png'],
-      'responseoption'  => ['label' => $this->t('Response Options'),                   'image' => 'response_option_placeholder.png'],
-      'annotationstem'  => ['label' => $this->t('Annotation Stems'),                   'image' => 'annotation_stem_placeholder.png'],
-      'annotation'      => ['label' => $this->t('Annotations'),                        'image' => 'annotation_placeholder.png'],
+      'instrument'      => ['label' => $this->t($preferred_instrument . 's'),          'image' => 'white/instrument_placeholder.png'],
+      'codebook'        => ['label' => $this->t('Codebooks'),                          'image' => 'white/codebook_placeholder.png'],
+      'responseoption'  => ['label' => $this->t('Response Options'),                   'image' => 'white/responseoption_placeholder.png'],
+      'annotationstem'  => ['label' => $this->t('Annotation Stems'),                   'image' => 'white/annotation_stem_placeholder.png'],
+      'annotation'      => ['label' => $this->t('Annotations'),                        'image' => 'white/annotation_placeholder.png'],
     ];
 
     $module_path = \Drupal::request()->getBaseUrl() . '/' . \Drupal::service('extension.list.module')->getPath('rep');
