@@ -18,7 +18,7 @@ class Task {
       'element_language' => t('Language'),
       'element_version' => t('Version'),
       'element_tot_instruments' => t('# Instruments'),
-      'element_tot_detectors' => t('# Containers'),
+      'element_tot_components' => t('# Containers'),
       'element_status' => t('Status'),
     ];
 
@@ -79,10 +79,10 @@ class Task {
 
       if (isset($element->requiredInstrument) && is_array($element->requiredInstrument)) {
           foreach ($element->requiredInstrument as $instrument) {
-              if (isset($instrument->hasRequiredDetector) && is_array($instrument->hasRequiredDetector)) {
-                  $totDet += count($instrument->hasRequiredDetector);
-              } elseif (isset($instrument->detectors) && is_array($instrument->detectors)) {
-                  $totDet += count($instrument->detectors);
+              if (isset($instrument->hasRequiredComponent) && is_array($instrument->hasRequiredComponent)) {
+                  $totDet += count($instrument->hasRequiredComponent);
+              } elseif (isset($instrument->components) && is_array($instrument->components)) {
+                  $totDet += count($instrument->components);
               }
           }
       }
@@ -94,7 +94,7 @@ class Task {
         'element_language' => $lang,
         'element_version' => $version,
         'element_tot_instruments' => $totInst,
-        'element_tot_detectors' => $totDet,
+        'element_tot_components' => $totDet,
         'element_status' => $status,
         'element_hasStatus' => parse_url($element->hasStatus, PHP_URL_FRAGMENT),
         'element_hasLanguage' => $element->hasLanguage,

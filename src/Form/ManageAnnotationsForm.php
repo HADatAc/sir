@@ -9,8 +9,8 @@ use Drupal\rep\ListManagerEmailPageByContainer;
 use Drupal\rep\Utils;
 use Drupal\sir\Entity\AnnotationStem;
 use Drupal\sir\Entity\Annotation;
-use Drupal\sir\Entity\DetectorStem;
-use Drupal\sir\Entity\Detector;
+use Drupal\sir\Entity\ComponentStem;
+use Drupal\sir\Entity\Component;
 use Drupal\sir\Entity\Codebook;
 use Drupal\sir\Entity\Instrument;
 use Drupal\sir\Entity\ResponseOption;
@@ -136,7 +136,7 @@ class ManageAnnotationsForm extends FormBase {
     $this->plural_class_name = "";
 
     $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument');
-    $preferred_detector = \Drupal::config('rep.settings')->get('preferred_detector');
+    $preferred_component = \Drupal::config('rep.settings')->get('preferred_component') ?? 'Component';
 
     $this->single_class_name = "Annotation";
     $this->plural_class_name = "Annotations";

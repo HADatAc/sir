@@ -7,7 +7,7 @@ use Drupal\rep\Vocabulary\VSTOI;
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\REPGUI;
 
-class Actuator {
+class Component {
 
   public static function generateHeader() {
 
@@ -191,5 +191,4 @@ class Actuator {
     return $output;
 
   }
-
 }

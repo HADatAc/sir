@@ -8,8 +8,8 @@ use Drupal\Core\Url;
 use Drupal\rep\ListManagerEmailPage;
 use Drupal\rep\Utils;
 use Drupal\sir\Entity\AnnotationStem;
-use Drupal\sir\Entity\DetectorStem;
-use Drupal\sir\Entity\Detector;
+use Drupal\sir\Entity\ComponentStem;
+use Drupal\sir\Entity\Component;
 use Drupal\sir\Entity\ProcessStem;
 use Drupal\sir\Entity\Codebook;
 use Drupal\sir\Entity\Instrument;
@@ -19,8 +19,6 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Drupal\Core\Render\Markup;
 use Drupal\rep\Vocabulary\VSTOI;
-use Drupal\sir\Entity\Actuator;
-use Drupal\sir\Entity\ActuatorStem;
 
 class SIRReviewForm extends FormBase {
 
@@ -175,8 +173,7 @@ class SIRReviewForm extends FormBase {
    */
   protected function prepareElementNames() {
     $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument');
-    $preferred_detector = \Drupal::config('rep.settings')->get('preferred_detector');
-    $preferred_actuator = \Drupal::config('rep.settings')->get('preferred_actuator');
+    $preferred_component = \Drupal::config('rep.settings')->get('preferred_component') ?? 'Component';
 
     switch ($this->element_type) {
 
@@ -186,28 +183,16 @@ class SIRReviewForm extends FormBase {
         $this->plural_class_name = $preferred_instrument . "s";
         break;
 
-      // ACTUATORSTEM
-      case "actuatorstem":
-        $this->single_class_name = $preferred_actuator . " Stem";
-        $this->plural_class_name = $preferred_actuator . " Stems";
+      // COMPONENTSTEM
+      case "componentstem":
+        $this->single_class_name = $preferred_component . " Stem";
+        $this->plural_class_name = $preferred_component . " Stems";
         break;
 
-      // ACTUATOR
-      case "actuator":
-        $this->single_class_name = $preferred_actuator;
-        $this->plural_class_name = $preferred_actuator . "s";
-        break;
-
-      // DETECTORSTEM
-      case "detectorstem":
-        $this->single_class_name = $preferred_detector . " Stem";
-        $this->plural_class_name = $preferred_detector . " Stems";
-        break;
-
-      // DETECTOR
-      case "detector":
-        $this->single_class_name = $preferred_detector;
-        $this->plural_class_name = $preferred_detector . "s";
+      // COMPONENT
+      case "component":
+        $this->single_class_name = $preferred_component;
+        $this->plural_class_name = $preferred_component . "s";
         break;
 
       // CODEBOOK
@@ -314,14 +299,10 @@ class SIRReviewForm extends FormBase {
     switch ($this->element_type) {
       case "instrument":
         return Instrument::generateReviewHeader();
-      case "actuatorstem":
-        return ActuatorStem::generateHeader();
-      case "actuator":
-        return Actuator::generateHeader();
-      case "detectorstem":
-        return DetectorStem::generateReviewHeader();
-      case "detector":
-        return Detector::generateReviewHeader();
+      case "componentstem":
+        return ComponentStem::generateReviewHeader();
+      case "component":
+        return Component::generateReviewHeader();
       case "codebook":
         return Codebook::generateReviewHeader();
       case "responseoption":
@@ -344,14 +325,10 @@ class SIRReviewForm extends FormBase {
     switch ($this->element_type) {
       case "instrument":
         return Instrument::generateReviewOutput($this->getList());
-      case "actuatorstem":
-        return ActuatorStem::generateReviewOutput($this->getList());
-      case "actuator":
-        return Actuator::generateReviewOutput($this->getList());
-      case "detectorstem":
-        return DetectorStem::generateReviewOutput($this->getList());
-      case "detector":
-        return Detector::generateReviewOutput($this->getList());
+      case "componentstem":
+        return ComponentStem::generateReviewOutput($this->getList());
+      case "component":
+        return Component::generateReviewOutput($this->getList());
       case "codebook":
         return Codebook::generateReviewOutput($this->getList());
       case "responseoption":
@@ -394,8 +371,8 @@ class SIRReviewForm extends FormBase {
       // Definir o mapeamento de tipos de elementos para suas respectivas rotas
       $route_map = [
         'instrument' => 'sir.edit_instrument',
-        'detectorstem' => 'sir.edit_detectorstem',
-        'detector' => 'sir.edit_detector',
+        'componentstem' => 'sir.edit_componentstem',
+        'component' => 'sir.edit_component',
         'codebook' => 'sir.edit_codebook',
         'responseoption' => 'sir.edit_response_option',
         'annotationstem' => 'sir.edit_annotationstem',
@@ -450,13 +427,13 @@ class SIRReviewForm extends FormBase {
   }
 
   /**
-   * Submit handler for deriving a detector stem in card view.
+   * Submit handler for deriving a component stem in card view.
    */
-  public function deriveDetectorStemSubmit(array &$form, FormStateInterface $form_state) {
+  public function deriveComponentStemSubmit(array &$form, FormStateInterface $form_state) {
     $triggering_element = $form_state->getTriggeringElement();
     $uri = $triggering_element['#element_uri'];
 
-    $this->performDeriveDetectorStem($uri, $form_state);
+    $this->performDeriveComponentStem($uri, $form_state);
   }
 
   /**
@@ -501,9 +478,9 @@ class SIRReviewForm extends FormBase {
     } elseif (strpos($button_name, 'manage_codebookslots_') === 0) {
       $uri = $triggering_element['#element_uri'];
       $this->performManageCodebookSlots($uri, $form_state);
-    } elseif (strpos($button_name, 'derive_detectorstem_') === 0) {
+    } elseif (strpos($button_name, 'derive_componentstem_') === 0) {
       $uri = $triggering_element['#element_uri'];
-      $this->performDeriveDetectorStem($uri, $form_state);
+      $this->performDeriveComponentStem($uri, $form_state);
     } elseif (strpos($button_name, 'derive_processstem_') === 0) {
       $uri = $triggering_element['#element_uri'];
       $this->performDeriveProcessStem($uri, $form_state);
@@ -544,12 +521,12 @@ class SIRReviewForm extends FormBase {
       } else {
         \Drupal::messenger()->addWarning($this->t('Please select exactly one codebook to manage.'));
       }
-    } elseif ($button_name === 'derive_detectorstem') {
+    } elseif ($button_name === 'derive_componentstem') {
       $selected_rows = array_filter($form_state->getValue('element_table'));
       if (count($selected_rows) == 1) {
         $selected_uris = array_keys($selected_rows);
         $uri = $selected_uris[0];
-        $this->performDeriveDetectorStem($uri, $form_state);
+        $this->performDeriveComponentStem($uri, $form_state);
       } else {
         \Drupal::messenger()->addWarning($this->t('Please select exactly one item stem to derive.'));
       }
@@ -578,14 +555,14 @@ class SIRReviewForm extends FormBase {
     if ($this->element_type == 'instrument') {
       Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_instrument');
       $url = Url::fromRoute('sir.add_instrument');
-    } elseif ($this->element_type == 'detectorstem') {
-      Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_detectorstem');
-      $url = Url::fromRoute('sir.add_detectorstem');
-      $url->setRouteParameter('sourcedetectorstemuri', 'EMPTY');
-    } elseif ($this->element_type == 'detector') {
-      Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_detector');
-      $url = Url::fromRoute('sir.add_detector');
-      $url->setRouteParameter('sourcedetectoruri', 'EMPTY');
+    } elseif ($this->element_type == 'componentstem') {
+      Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_componentstem');
+      $url = Url::fromRoute('sir.add_componentstem');
+      $url->setRouteParameter('sourcecomponentstemuri', 'EMPTY');
+    } elseif ($this->element_type == 'component') {
+      Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_component');
+      $url = Url::fromRoute('sir.add_component');
+      $url->setRouteParameter('sourcecomponenturi', 'EMPTY');
       $url->setRouteParameter('containersloturi', 'EMPTY');
     } elseif ($this->element_type == 'codebook') {
       Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_codebook');
@@ -618,14 +595,10 @@ class SIRReviewForm extends FormBase {
 
     if ($this->element_type == 'instrument') {
       $url = Url::fromRoute('sir.review_instrument', ['instrumenturi' => base64_encode($uri)]);
-    } elseif ($this->element_type == 'actuatorstem') {
-      $url = Url::fromRoute('sir.review_actuatorstem', ['actuatorstemuri' => base64_encode($uri)]);
-    } elseif ($this->element_type == 'actuator') {
-      $url = Url::fromRoute('sir.review_actuator', ['actuatoruri' => base64_encode($uri)]);
-    } elseif ($this->element_type == 'detectorstem') {
-      $url = Url::fromRoute('sir.review_detectorstem', ['detectorstemuri' => base64_encode($uri)]);
-    } elseif ($this->element_type == 'detector') {
-      $url = Url::fromRoute('sir.review_detector', ['detectoruri' => base64_encode($uri)]);
+    } elseif ($this->element_type == 'componentstem') {
+      $url = Url::fromRoute('sir.review_componentstem', ['componentstemuri' => base64_encode($uri)]);
+    } elseif ($this->element_type == 'component') {
+      $url = Url::fromRoute('sir.review_component', ['componenturi' => base64_encode($uri)]);
     } elseif ($this->element_type == 'codebook') {
       $url = Url::fromRoute('sir.review_codebook', ['codebookuri' => base64_encode($uri)]);
     } elseif ($this->element_type == 'responseoption') {
@@ -654,10 +627,10 @@ class SIRReviewForm extends FormBase {
       $uri = Utils::plainUri($shortUri);
       if ($this->element_type == 'instrument') {
         $api->instrumentDel($uri);
-      } elseif ($this->element_type == 'detectorstem') {
-        $api->detectorStemDel($uri);
-      } elseif ($this->element_type == 'detector') {
-        $api->detectorDel($uri);
+      } elseif ($this->element_type == 'componentstem') {
+        $api->componentStemDel($uri);
+      } elseif ($this->element_type == 'component') {
+        $api->componentDel($uri);
       } elseif ($this->element_type == 'codebook') {
         $api->codebookDel($uri);
       } elseif ($this->element_type == 'responseoption') {
@@ -702,14 +675,14 @@ class SIRReviewForm extends FormBase {
   }
 
   /**
-   * Perform derive detector stem action.
+   * Perform derive component stem action.
    */
-  protected function performDeriveDetectorStem($uri, FormStateInterface $form_state) {
+  protected function performDeriveComponentStem($uri, FormStateInterface $form_state) {
     $uid = \Drupal::currentUser()->id();
     $previousUrl = \Drupal::request()->getRequestUri();
-    Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_detectorstem');
-    $url = Url::fromRoute('sir.add_detectorstem');
-    $url->setRouteParameter('sourcedetectorstemuri', base64_encode($uri));
+    Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_componentstem');
+    $url = Url::fromRoute('sir.add_componentstem');
+    $url->setRouteParameter('sourcecomponentstemuri', base64_encode($uri));
     $url->setRouteParameter('containersloturi', 'EMPTY');
     $form_state->setRedirectUrl($url);
   }

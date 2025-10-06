@@ -9,10 +9,10 @@ use Drupal\Component\Utility\Xss;
 //use Drupal\Core\Entity\Element\EntityAutocomplete;
 
 /**
- * Class JsonApiDetectorController
+ * Class JsonApiComponentController
  * @package Drupal\sir\Controller
  */
-class JsonApiDetectorController extends ControllerBase{
+class JsonApiComponentController extends ControllerBase{
 
   /**
    * @return JsonResponse
@@ -27,28 +27,28 @@ class JsonApiDetectorController extends ControllerBase{
     }
     $input = Xss::filter($input);
     $api = \Drupal::service('rep.api_connector');
-    $detector_list = $api->listByKeyword('detector',$input,10,0);
-    $obj = json_decode($detector_list);
-    $detectors = [];
+    $component_list = $api->listByKeyword('component',$input,10,0);
+    $obj = json_decode($component_list);
+    $components = [];
     if ($obj->isSuccessful) {
-      $detectors = $obj->body;
+      $components = $obj->body;
     }
-    foreach ($detectors as $detector) {
+    foreach ($components as $component) {
       //$label = [
-      //  $detector->hasContent,
-      //  '<small>(' . $detector->uri . ')</small>',
+      //  $component->hasContent,
+      //  '<small>(' . $component->uri . ')</small>',
       //];
       //$results[] = [
-      //  'value' => EntityAutocomplete::getEntityLabels([$detector]),
+      //  'value' => EntityAutocomplete::getEntityLabels([$component]),
       //  'label' => implode(' ', $label),
       //];
       // $results[] = [
-      //   'value' => $detector->detectorStem->hasContent . '  -- CB: '  . $detector->codebook->label . ' [' . $detector->uri . ']',
-      //   'label' => $detector->detectorStem->hasContent . '  -- CB: '  . $detector->codebook->label,
+      //   'value' => $component->componentStem->hasContent . '  -- CB: '  . $component->codebook->label . ' [' . $component->uri . ']',
+      //   'label' => $component->componentStem->hasContent . '  -- CB: '  . $component->codebook->label,
       // ];
       $results[] = [
-          'value' => $detector->label . ' [' . $detector->uri . ']',
-          'label' => $detector->label,
+          'value' => $component->label . ' [' . $component->uri . ']',
+          'label' => $component->label,
         ];
     }
 

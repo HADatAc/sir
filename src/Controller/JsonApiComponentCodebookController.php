@@ -11,7 +11,7 @@ use Drupal\Component\Utility\Xss;
  * Class JsonApiCodebookController
  * @package Drupal\sir\Controller
  */
-class JsonApiActuatorCodebookController extends ControllerBase{
+class JsonApiComponentCodebookController extends ControllerBase{
 
   /**
    * @return JsonResponse

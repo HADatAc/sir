@@ -5,12 +5,10 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\rep\ListKeywordLanguagePage;
-use Drupal\sir\Entity\ActuatorStem;
-use Drupal\sir\Entity\Actuator;
 use Drupal\sir\Entity\AnnotationStem;
 use Drupal\sir\Entity\Annotation;
-use Drupal\sir\Entity\DetectorStem;
-use Drupal\sir\Entity\Detector;
+use Drupal\sir\Entity\ComponentStem;
+use Drupal\sir\Entity\Component;
 use Drupal\sir\Entity\Codebook;
 use Drupal\sir\Entity\Instrument;
 use Drupal\sir\Entity\ResponseOption;
@@ -90,8 +88,7 @@ class SIRListForm extends FormBase {
     $this->setList(ListKeywordLanguagePage::exec($elementtype, $keyword, $language, $page, $pagesize));
 
     $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument');
-    $preferred_detector = \Drupal::config('rep.settings')->get('preferred_detector');
-    $preferred_actuator = \Drupal::config('rep.settings')->get('preferred_actuator');
+    $preferred_component = \Drupal::config('rep.settings')->get('preferred_component') ?? 'Component';
 
     $status_options = [
       'all' => $this->t('All Status'),
@@ -134,7 +131,7 @@ class SIRListForm extends FormBase {
       ],
     ];
 
-    If ($elementtype !== 'detector' && $elementtype !== 'actuator'){
+    If ($elementtype !== 'component'){
       $tables = new Tables;
       $languages = $tables->getLanguages();
       if ($languages)
@@ -182,32 +179,18 @@ class SIRListForm extends FormBase {
         $output = Instrument::generateOutput($this->getList());
         break;
 
-      // ACTUATOR STEM
-      case "actuatorstem":
-        $class_name = $preferred_actuator . " Stems";
-        $header = ActuatorStem::generateHeader();
-        $output = ActuatorStem::generateOutput($this->getList());
+      // COMPONENT STEM
+      case "componentstem":
+        $class_name = $preferred_component . " Stems";
+        $header = ComponentStem::generateHeader();
+        $output = ComponentStem::generateOutput($this->getList());
         break;
 
-      // ACTUATOR
-      case "actuator":
-        $class_name = $preferred_actuator . "s";
-        $header = Actuator::generateHeader();
-        $output = Actuator::generateOutput($this->getList());
-        break;
-
-      // DETECTOR STEM
-      case "detectorstem":
-        $class_name = $preferred_detector . " Stems";
-        $header = DetectorStem::generateHeader();
-        $output = DetectorStem::generateOutput($this->getList());
-        break;
-
-      // DETECTOR
-      case "detector":
-        $class_name = $preferred_detector . "s";
-        $header = Detector::generateHeader();
-        $output = Detector::generateOutput($this->getList());
+      // COMPONENT
+      case "component":
+        $class_name = $preferred_component . "s";
+        $header = Component::generateHeader();
+        $output = Component::generateOutput($this->getList());
         break;
 
       // CODEBOOK
@@ -273,7 +256,7 @@ class SIRListForm extends FormBase {
 
         if ($elementtype == 'instrument' || $elementtype == 'codebook')
           $row_label = strtolower($row['element_name']);
-        else if ($elementtype == 'detector' || $elementtype == 'detectorstem' || $elementtype == 'responseoption' || $elementtype == 'actuator' || $elementtype == 'actuatorstem')
+        else if ($elementtype == 'component' || $elementtype == 'componentstem' || $elementtype == 'responseoption')
           $row_label = strtolower($row['element_content']);
 
         // if ($status_filter !== 'all' && $row_status !== $status_filter) {
