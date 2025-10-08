@@ -89,25 +89,32 @@ class SIRSelectForm extends FormBase {
     $status_filter = $form_state->getValue('status_filter') ?? 'all';
     $language_filter = $form_state->getValue('language_filter') ?? 'all';
     $text_filter = $form_state->getValue('text_filter') ?? '';
+    $type = NULL;
+    $manager_email = $this->manager_email;
+    $status = $status_filter;
 
     // Get elements based on status
     // dpm($text_filter.'='.strlen($text_filter).'|'.$language_filter.'='.strlen($language_filter));
-    if (strlen($text_filter) === 0 && $language_filter === 'all') {
+    if (strlen($text_filter) === 0 && $language_filter === 'all' && $status_filter === 'all') {
       $this->setList(ListManagerEmailPage::exec($this->element_type, $this->manager_email, $page, $pagesize));
       $this->setListSize(ListManagerEmailPage::total($this->element_type, $this->manager_email));
-    } else if (strlen($text_filter) > 0 && $language_filter !== 'all') {
-      $this->setList(ListKeywordLanguagePage::exec($this->element_type,$text_filter, $language_filter, $page, 9999));
-      $this->setListSize(ListKeywordLanguagePage::total($this->element_type, $text_filter, $language_filter));
-      $pagesize = 9999;
-    } else if (strlen($text_filter) === 0 && $language_filter !== 'all') {
-      $text_filter = '_';
-      $this->setList(ListKeywordLanguagePage::exec($this->element_type,$text_filter, $language_filter, $page, 9999));
-      $this->setListSize(ListKeywordLanguagePage::total($this->element_type, $text_filter, $language_filter));
-      $pagesize = 9999;
+    // } else if (strlen($text_filter) > 0 && $language_filter !== 'all') {
+    //   $this->setList(ListKeywordLanguagePage::exec($this->element_type,$text_filter, $language_filter, $type, $manager_email, $status, $page, 9999));
+    //   $this->setListSize(ListKeywordLanguagePage::total($this->element_type, $text_filter, $language_filter, $type, $manager_email, $status, ));
+    //   $pagesize = 9999;
+    // } else if (strlen($text_filter) === 0 && $language_filter !== 'all' && $status_filter !== 'all') {
+    //   $text_filter = '_';
+    //   $this->setList(ListKeywordLanguagePage::exec($this->element_type,$text_filter, $language_filter, $type, $manager_email, $status, $page, 9999));
+    //   $this->setListSize(ListKeywordLanguagePage::total($this->element_type, $text_filter, $language_filter, $type, $manager_email, $status, ));
+    //   $pagesize = 9999;
     } else {
-      $this->setList(ListKeywordPage::exec($this->element_type, $text_filter, $page, 9999));
-      $this->setListSize(ListKeywordPage::total($this->element_type, $text_filter));
+      // $text_filter = '_';
+      $this->setList(ListKeywordLanguagePage::exec($this->element_type,$text_filter, $language_filter, $type, $manager_email, $status, $page, 9999));
+      $this->setListSize(ListKeywordLanguagePage::total($this->element_type, $text_filter, $language_filter, $type, $manager_email, $status));
       $pagesize = 9999;
+      // $this->setList(ListKeywordPage::exec($this->element_type, $text_filter, $page, 9999));
+      // $this->setListSize(ListKeywordPage::total($this->element_type, $text_filter));
+      // $pagesize = 9999;
     }
 
     // if ($this->element_type != NULL) {
@@ -315,10 +322,10 @@ class SIRSelectForm extends FormBase {
 
       $status_options = [
         'all' => $this->t('All Status'),
-        'draft' => $this->t('Draft'),
-        'underreview' => $this->t('Under Review'),
-        'current' => $this->t('Current'),
-        'deprecated' => $this->t('Deprecated'),
+        VSTOI::DRAFT => $this->t('Draft'),
+        VSTOI::UNDER_REVIEW => $this->t('Under Review'),
+        VSTOI::CURRENT => $this->t('Current'),
+        VSTOI::DEPRECATED => $this->t('Deprecated'),
       ];
 
       $form['actions_wrapper']['filter_container'] = [
