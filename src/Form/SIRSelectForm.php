@@ -86,8 +86,8 @@ class SIRSelectForm extends FormBase {
     }
 
     // Search values filter
-    $status_filter = $form_state->getValue('status_filter') ?? 'all';
-    $language_filter = $form_state->getValue('language_filter') ?? 'all';
+    $status_filter = $form_state->getValue('status_filter') ?? '_';
+    $language_filter = $form_state->getValue('language_filter') ?? '_';
     $text_filter = $form_state->getValue('text_filter') ?? '';
     $type = NULL;
     $manager_email = $this->manager_email;
@@ -95,7 +95,7 @@ class SIRSelectForm extends FormBase {
 
     // Get elements based on status
     // dpm($text_filter.'='.strlen($text_filter).'|'.$language_filter.'='.strlen($language_filter));
-    if (strlen($text_filter) === 0 && $language_filter === 'all' && $status_filter === 'all') {
+    if (strlen($text_filter) === 0 && $language_filter === '_' && $status_filter === '_') {
       $this->setList(ListManagerEmailPage::exec($this->element_type, $this->manager_email, $page, $pagesize));
       $this->setListSize(ListManagerEmailPage::total($this->element_type, $this->manager_email));
     // } else if (strlen($text_filter) > 0 && $language_filter !== 'all') {
@@ -321,7 +321,7 @@ class SIRSelectForm extends FormBase {
       }
 
       $status_options = [
-        'all' => $this->t('All Status'),
+        '_' => $this->t('All Status'),
         VSTOI::DRAFT => $this->t('Draft'),
         VSTOI::UNDER_REVIEW => $this->t('Under Review'),
         VSTOI::CURRENT => $this->t('Current'),
