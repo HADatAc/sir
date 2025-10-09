@@ -356,7 +356,6 @@ class SIRSelectForm extends FormBase {
             'class' => ['form-select', 'w-auto', 'mt-2', 'me-1'],
             'style' => 'max-width:230px;margin-bottom:0!important;float:right;',
             'placeholder' => 'Type in your search criteria',
-            // Ao pressionar Enter, previne o submit e dispara o evento "change"
             'onkeydown' => 'if (event.keyCode == 13) { event.preventDefault(); this.blur(); }',
         ],
       ];
@@ -365,7 +364,7 @@ class SIRSelectForm extends FormBase {
         $tables = new Tables;
         $languages = $tables->getLanguages();
         if ($languages)
-          $languages = ['all' => $this->t('All Languages')] + $languages;
+          $languages = ['_' => $this->t('All Languages')] + $languages;
         $form['actions_wrapper']['filter_container']['language_filter'] = [
           '#type' => 'select',
           '#options' => $languages,
