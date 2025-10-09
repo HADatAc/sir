@@ -215,14 +215,14 @@ class SIRReviewForm extends FormBase {
 
       // PROCESS STEM
       case "processstem":
-        $this->single_class_name = "Process Stem";
-        $this->plural_class_name = "Process Stems";
+        $this->single_class_name = "Workflow Stem";
+        $this->plural_class_name = "Workflow Stems";
         break;
 
       // PROCESS
       case "process":
-        $this->single_class_name = "Process";
-        $this->plural_class_name = "Processes";
+        $this->single_class_name = "Workflow";
+        $this->plural_class_name = "Workflows";
         break;
 
       default:
