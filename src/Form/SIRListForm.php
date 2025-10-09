@@ -240,17 +240,29 @@ class SIRListForm extends FormBase {
 
     $output = $output['output'];
 
+    $form['header'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['header-container'],
+        'style' => 'display: flex; justify-content: space-between; align-items: center;',
+      ],
+    ];
+    $form['header']['title'] = [
+      '#type' => 'item',
+      '#markup' => t('<h3>Available <font style="color:DarkGreen;">' . $class_name . '</font></h3>'),
+    ];
+
     $form['element_table_wrapper'] = [
         '#type' => 'container',
         '#attributes' => ['id' => 'element-table-wrapper'],
     ];
 
-    $form['element_table_wrapper']['element_title'] = [
-        '#type' => 'markup',
-        '#markup' => $this->t('<h3 class="mt-0 mb-4">@class_name</h3>', [
-          '@class_name' => $class_name,
-        ]),
-    ];
+    // $form['element_table_wrapper']['element_title'] = [
+    //     '#type' => 'markup',
+    //     '#markup' => $this->t('<h3 class="mt-0 mb-4">@class_name</h3>', [
+    //       '@class_name' => $class_name,
+    //     ]),
+    // ];
 
     $form['element_table_wrapper']['element_table'] = [
         '#type' => 'table',
