@@ -15,49 +15,49 @@ use Drupal\rep\Vocabulary\REPGUI;
 use Drupal\file\Entity\File;
 use Drupal\Core\Render\Markup;
 
-class EditDetectorStemForm extends FormBase {
+class EditComponentStemForm extends FormBase {
 
-  protected $detectorStemUri;
+  protected $componentStemUri;
 
-  protected $detectorStem;
+  protected $componentStem;
 
-  protected $sourceDetectorStem;
+  protected $sourceComponentStem;
 
-  public function getDetectorStemUri() {
-    return $this->detectorStemUri;
+  public function getComponentStemUri() {
+    return $this->componentStemUri;
   }
 
-  public function setDetectorStemUri($uri) {
-    return $this->detectorStemUri = $uri;
+  public function setComponentStemUri($uri) {
+    return $this->componentStemUri = $uri;
   }
 
-  public function getDetectorStem() {
-    return $this->detectorStem;
+  public function getComponentStem() {
+    return $this->componentStem;
   }
 
-  public function setDetectorStem($obj) {
-    return $this->detectorStem = $obj;
+  public function setComponentStem($obj) {
+    return $this->componentStem = $obj;
   }
 
-  public function getSourceDetectorStem() {
-    return $this->sourceDetectorStem;
+  public function getSourceComponentStem() {
+    return $this->sourceComponentStem;
   }
 
-  public function setSourceDetectorStem($obj) {
-    return $this->sourceDetectorStem = $obj;
+  public function setSourceComponentStem($obj) {
+    return $this->sourceComponentStem = $obj;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'edit_detectorstem_form';
+    return 'edit_componentstem_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $detectorstemuri = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, $componentstemuri = NULL) {
 
     // ROOT URL
     $root_url = \Drupal::request()->getBaseUrl();
@@ -66,15 +66,15 @@ class EditDetectorStemForm extends FormBase {
     $form['#attached']['library'][] = 'rep/rep_modal';
     $form['#attached']['library'][] = 'core/drupal.dialog';
 
-    $form['#attached']['library'][] = 'sir/sir_detectorstem';
+    $form['#attached']['library'][] = 'sir/sir_componentstem';
 
-    $uri=$detectorstemuri;
+    $uri=$componentstemuri;
     $uri_decode=base64_decode($uri);
-    $this->setDetectorStemUri($uri_decode);
+    $this->setComponentStemUri($uri_decode);
 
-    $this->setDetectorStem($this->retrieveDetectorStem($this->getDetectorStemUri()));
-    if ($this->getDetectorStem() == NULL) {
-      \Drupal::messenger()->addError(t("Failed to retrieve Detector."));
+    $this->setComponentStem($this->retrieveComponentStem($this->getComponentStemUri()));
+    if ($this->getComponentStem() == NULL) {
+      \Drupal::messenger()->addError(t("Failed to retrieve Component."));
       self::backUrl();
       return;
     }
@@ -84,22 +84,22 @@ class EditDetectorStemForm extends FormBase {
     $derivations = $tables->getGenerationActivities();
 
     // IN CASE ITS A DERIVATION ORIGINAL MUST BE REMOVED ALSO
-    if ($this->getDetectorStem()->hasStatus === VSTOI::CURRENT || $this->getDetectorStem()->hasVersion > 1) {
+    if ($this->getComponentStem()->hasStatus === VSTOI::CURRENT || $this->getComponentStem()->hasVersion > 1) {
       unset($derivations[Constant::DEFAULT_WAS_GENERATED_BY]);
     }
 
     $languages = ['' => $this->t('Select one please')] + $languages;
     $derivations = ['' => $this->t('Select one please')] + $derivations;
 
-    $form['detectorstem_uri'] = [
+    $form['componentstem_uri'] = [
       '#type' => 'item',
       '#title' => $this->t('URI: '),
-      '#markup' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($this->getDetectorStemUri()).'">'.$this->getDetectorStemUri().'</a>'),
+      '#markup' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($this->getComponentStemUri()).'">'.$this->getComponentStemUri().'</a>'),
     ];
 
-    // dpm($this->getDetectorStem());
+    // dpm($this->getComponentStem());
 
-    $form['detectorstem_type'] = [
+    $form['componentstem_type'] = [
       'top' => [
         '#type' => 'markup',
         '#markup' => '<div class="col border border-white">',
@@ -107,21 +107,21 @@ class EditDetectorStemForm extends FormBase {
       'main' => [
         '#type' => 'textfield',
         '#title' => $this->t('Parent Type'),
-        '#name' => 'detectorstem_type',
-        '#default_value' => $this->getDetectorStem()->superUri ? Utils::fieldToAutocomplete($this->getDetectorStem()->superUri, $this->getDetectorStem()->superClassLabel) : '',
-        '#id' => 'detectorstem_type',
-        '#parents' => ['detectorstem_type'],
+        '#name' => 'componentstem_type',
+        '#default_value' => $this->getComponentStem()->superUri ? Utils::fieldToAutocomplete($this->getComponentStem()->superUri, $this->getComponentStem()->superClassLabel) : '',
+        '#id' => 'componentstem_type',
+        '#parents' => ['componentstem_type'],
         '#attributes' => [
           'class' => ['open-tree-modal'],
           'data-dialog-type' => 'modal',
           'data-dialog-options' => json_encode(['width' => 800]),
           'data-url' => Url::fromRoute('rep.tree_form', [
             'mode' => 'modal',
-            'elementtype' => 'detectorstem',
-          ], ['query' => ['field_id' => 'detectorstem_type']])->toString(),
-          'data-field-id' => 'detectorstem_type',
-          'data-elementtype' => 'detectorstem',
-          'data-search-value' => $this->getDetectorStem()->superUri ?? '',
+            'elementtype' => 'componentstem',
+          ], ['query' => ['field_id' => 'componentstem_type']])->toString(),
+          'data-field-id' => 'componentstem_type',
+          'data-elementtype' => 'componentstem',
+          'data-search-value' => $this->getComponentStem()->superUri ?? '',
         ],
       ],
       'bottom' => [
@@ -129,46 +129,46 @@ class EditDetectorStemForm extends FormBase {
         '#markup' => '</div>',
       ],
     ];
-    $form['detectorstem_type']['main'] += [
+    $form['componentstem_type']['main'] += [
       '#maxlength' => 999,
     ];
 
-    $form['detectorstem_content'] = [
+    $form['componentstem_content'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name'),
-      '#default_value' => $this->getDetectorStem()->hasContent,
+      '#default_value' => $this->getComponentStem()->hasContent,
     ];
-    $form['detectorstem_language'] = [
+    $form['componentstem_language'] = [
       '#type' => 'select',
       '#title' => $this->t('Language'),
       '#options' => $languages,
-      '#default_value' => $this->getDetectorStem()->hasLanguage,
+      '#default_value' => $this->getComponentStem()->hasLanguage,
       '#attributes' => [
-        'id' => 'detectorstem_language'
+        'id' => 'componentstem_language'
       ]
     ];
-    $form['detectorstem_version'] = [
+    $form['componentstem_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
-      '#default_value' => isset($this->getDetectorStem()->hasVersion) && $this->getDetectorStem()->hasVersion !== null
+      '#default_value' => isset($this->getComponentStem()->hasVersion) && $this->getComponentStem()->hasVersion !== null
         ? (
-            ($this->getDetectorStem()->hasStatus === VSTOI::CURRENT || $this->getDetectorStem()->hasStatus === VSTOI::DEPRECATED)
-              ? $this->getDetectorStem()->hasVersion + 1
-              : $this->getDetectorStem()->hasVersion
+            ($this->getComponentStem()->hasStatus === VSTOI::CURRENT || $this->getComponentStem()->hasStatus === VSTOI::DEPRECATED)
+              ? $this->getComponentStem()->hasVersion + 1
+              : $this->getComponentStem()->hasVersion
           )
         : 1,
       '#attributes' => [
         'disabled' => 'disabled',
       ],
     ];
-    $form['detectorstem_description'] = [
+    $form['componentstem_description'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
-      '#default_value' => $this->getDetectorStem()->comment,
+      '#default_value' => $this->getComponentStem()->comment,
     ];
 
-    if ($this->getDetectorStem()->wasDerivedFrom !== NULL) {
-      $form['detectorstem_df_wrapper'] = [
+    if ($this->getComponentStem()->wasDerivedFrom !== NULL) {
+      $form['componentstem_df_wrapper'] = [
         '#type' => 'container',
         '#attributes' => [
           'class' => ['d-flex', 'align-items-center', 'w-100'], // Flex container para alinhamento correto
@@ -176,11 +176,11 @@ class EditDetectorStemForm extends FormBase {
         ],
       ];
 
-      if ($this->getDetectorStem()->wasDerivedFrom !== NULL) {
-        $form['detectorstem_df_wrapper']['detectorstem_wasderivedfrom'] = [
+      if ($this->getComponentStem()->wasDerivedFrom !== NULL) {
+        $form['componentstem_df_wrapper']['componentstem_wasderivedfrom'] = [
           '#type' => 'textfield',
           '#title' => $this->t('Derived From'),
-          '#default_value' => $this->getDetectorStem()->wasDerivedFrom,
+          '#default_value' => $this->getComponentStem()->wasDerivedFrom,
           '#attributes' => [
             'class' => ['flex-grow-1'],
             'style' => "width: 100%; min-width: 0;",
@@ -189,33 +189,33 @@ class EditDetectorStemForm extends FormBase {
         ];
       }
 
-      $elementUri = Utils::namespaceUri($this->getDetectorStem()->wasDerivedFrom);
+      $elementUri = Utils::namespaceUri($this->getComponentStem()->wasDerivedFrom);
       $elementUriEncoded = base64_encode($elementUri);
       $url = Url::fromRoute('rep.describe_element', ['elementuri' => $elementUriEncoded], ['absolute' => TRUE])->toString();
 
-      $form['detectorstem_df_wrapper']['detectorstem_wasderivedfrom_button'] = [
+      $form['componentstem_df_wrapper']['componentstem_wasderivedfrom_button'] = [
         '#type' => 'markup',
         '#markup' => '<a href="' . $url . '" target="_blank" class="btn btn-primary text-nowrap mt-2" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
       ];
     }
-    $form['detectorstem_was_generated_by'] = [
+    $form['componentstem_was_generated_by'] = [
       '#type' => 'select',
       '#title' => $this->t('Was Derived By'),
       '#options' => $derivations,
-      '#default_value' => $this->getDetectorStem()->wasGeneratedBy,
+      '#default_value' => $this->getComponentStem()->wasGeneratedBy,
       '#attributes' => [
-        'id' => 'detectorstem_was_generated_by'
+        'id' => 'componentstem_was_generated_by'
       ],
-      '#disabled' => ($this->getDetectorStem()->wasGeneratedBy === Constant::WGB_ORIGINAL ? true:false)
+      '#disabled' => ($this->getComponentStem()->wasGeneratedBy === Constant::WGB_ORIGINAL ? true:false)
     ];
-    if ($this->getDetectorStem()->hasReviewNote !== NULL && $this->getDetectorStem()->hasStatus !== null) {
-      $form['detectorstem_hasreviewnote'] = [
+    if ($this->getComponentStem()->hasReviewNote !== NULL && $this->getComponentStem()->hasStatus !== null) {
+      $form['componentstem_hasreviewnote'] = [
         '#type' => 'textarea',
         '#title' => $this->t('Review Notes'),
-        '#default_value' => $this->getDetectorStem()->hasReviewNote,
+        '#default_value' => $this->getComponentStem()->hasReviewNote,
         '#disabled' => TRUE
       ];
-      $form['detectorstem_haseditoremail'] = [
+      $form['componentstem_haseditoremail'] = [
         '#type' => 'textfield',
         '#title' => $this->t('Reviewer Email'),
         '#default_value' => \Drupal::currentUser()->getEmail(),
@@ -227,31 +227,31 @@ class EditDetectorStemForm extends FormBase {
 
     // **** IMAGE ****
     // Retrieve the current image value.
-    // Retrieve the current detectorstem and its image.
-    $detectorstem = $this->getDetectorStem();
-    $detectorstem_uri = Utils::namespaceUri($this->getDetectorStemUri());
-    $detectorstem_image = $detectorstem->hasImageUri ?? '';
+    // Retrieve the current componentstem and its image.
+    $componentstem = $this->getComponentStem();
+    $componentstem_uri = Utils::namespaceUri($this->getComponentStemUri());
+    $componentstem_image = $componentstem->hasImageUri ?? '';
 
     // Determine if the existing web document is a URL or a file.
     $image_type = '';
-    if (!empty($detectorstem_image) && stripos(trim($detectorstem_image), 'http') === 0) {
+    if (!empty($componentstem_image) && stripos(trim($componentstem_image), 'http') === 0) {
       $image_type = 'url';
     }
-    elseif (!empty($detectorstem_image)) {
+    elseif (!empty($componentstem_image)) {
       $image_type = 'upload';
     }
 
     $modUri = '';
-    if (!empty($detectorstem_uri)) {
+    if (!empty($componentstem_uri)) {
       // Example of extracting part of the URI. Adjust or remove if not needed.
-      $parts = explode(':/', $detectorstem_uri);
+      $parts = explode(':/', $componentstem_uri);
       if (count($parts) > 1) {
         $modUri = $parts[1];
       }
     }
 
     // Image Type selector (URL or Upload).
-    $form['detectorstem_information']['detectorstem_image_type'] = [
+    $form['componentstem_information']['componentstem_image_type'] = [
       '#type' => 'select',
       '#title' => $this->t('Image Type'),
       '#options' => [
@@ -263,35 +263,35 @@ class EditDetectorStemForm extends FormBase {
     ];
 
     // Textfield for URL mode (only visible when type = 'url').
-    $form['detectorstem_information']['detectorstem_image_url'] = [
+    $form['componentstem_information']['componentstem_image_url'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Image'),
-      '#default_value' => ($image_type === 'url') ? $detectorstem_image : '',
+      '#default_value' => ($image_type === 'url') ? $componentstem_image : '',
       '#attributes' => [
         'placeholder' => 'http://',
       ],
       '#states' => [
         'visible' => [
-          ':input[name="detectorstem_image_type"]' => ['value' => 'url'],
+          ':input[name="componentstem_image_type"]' => ['value' => 'url'],
         ],
       ],
     ];
 
     // Container for the file upload elements (only visible when type = 'upload').
-    $form['detectorstem_information']['detectorstem_image_upload_wrapper'] = [
+    $form['componentstem_information']['componentstem_image_upload_wrapper'] = [
       '#type' => 'container',
       '#states' => [
         'visible' => [
-          ':input[name="detectorstem_image_type"]' => ['value' => 'upload'],
+          ':input[name="componentstem_image_type"]' => ['value' => 'upload'],
         ],
       ],
     ];
 
     // Attempt to load an existing file if the document is not a URL.
     $existing_image_fid = NULL;
-    if ($image_type === 'upload' && !empty($detectorstem_image)) {
+    if ($image_type === 'upload' && !empty($componentstem_image)) {
       // Build the expected file URI in the private filesystem.
-      $desired_uri = 'private://resources/' . $modUri . '/image/' . $detectorstem_image;
+      $desired_uri = 'private://resources/' . $modUri . '/image/' . $componentstem_image;
       $files = \Drupal::entityTypeManager()
         ->getStorage('file')
         ->loadByProperties(['uri' => $desired_uri]);
@@ -302,7 +302,7 @@ class EditDetectorStemForm extends FormBase {
     }
 
     // 5. Managed file element for uploading a new document.
-    $form['detectorstem_information']['detectorstem_image_upload_wrapper']['detectorstem_image_upload'] = [
+    $form['componentstem_information']['componentstem_image_upload_wrapper']['componentstem_image_upload'] = [
       '#type' => 'managed_file',
       '#title' => $this->t('Upload Image'),
       '#upload_location' => 'private://resources/' . $modUri . '/image',
@@ -316,19 +316,19 @@ class EditDetectorStemForm extends FormBase {
 
     // **** WEBDOCUMENT ****
     // Retrieve the current web document value.
-    $detectorstem_webdocument = $detectorstem->hasWebDocument ?? '';
+    $componentstem_webdocument = $componentstem->hasWebDocument ?? '';
 
     // Determine if the existing web document is a URL or a file.
     $webdocument_type = '';
-    if (!empty($detectorstem_webdocument) && stripos(trim($detectorstem_webdocument), 'http') === 0) {
+    if (!empty($componentstem_webdocument) && stripos(trim($componentstem_webdocument), 'http') === 0) {
       $webdocument_type = 'url';
     }
-    elseif (!empty($detectorstem_webdocument)) {
+    elseif (!empty($componentstem_webdocument)) {
       $webdocument_type = 'upload';
     }
 
     // Web Document Type selector (URL or Upload).
-    $form['detectorstem_information']['detectorstem_webdocument_type'] = [
+    $form['componentstem_information']['componentstem_webdocument_type'] = [
       '#type' => 'select',
       '#title' => $this->t('Web Document Type'),
       '#options' => [
@@ -340,35 +340,35 @@ class EditDetectorStemForm extends FormBase {
     ];
 
     // Textfield for URL mode (only visible when type = 'url').
-    $form['detectorstem_information']['detectorstem_webdocument_url'] = [
+    $form['componentstem_information']['componentstem_webdocument_url'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Web Document'),
-      '#default_value' => ($webdocument_type === 'url') ? $detectorstem_webdocument : '',
+      '#default_value' => ($webdocument_type === 'url') ? $componentstem_webdocument : '',
       '#attributes' => [
         'placeholder' => 'http://',
       ],
       '#states' => [
         'visible' => [
-          ':input[name="detectorstem_webdocument_type"]' => ['value' => 'url'],
+          ':input[name="componentstem_webdocument_type"]' => ['value' => 'url'],
         ],
       ],
     ];
 
     // Container for the file upload elements (only visible when type = 'upload').
-    $form['detectorstem_information']['detectorstem_webdocument_upload_wrapper'] = [
+    $form['componentstem_information']['componentstem_webdocument_upload_wrapper'] = [
       '#type' => 'container',
       '#states' => [
         'visible' => [
-          ':input[name="detectorstem_webdocument_type"]' => ['value' => 'upload'],
+          ':input[name="componentstem_webdocument_type"]' => ['value' => 'upload'],
         ],
       ],
     ];
 
     // Attempt to load an existing file if the document is not a URL.
     $existing_fid = NULL;
-    if ($webdocument_type === 'upload' && !empty($detectorstem_webdocument)) {
+    if ($webdocument_type === 'upload' && !empty($componentstem_webdocument)) {
       // Build the expected file URI in the private filesystem.
-      $desired_uri = 'private://resources/' . $modUri . '/webdoc/' . $detectorstem_webdocument;
+      $desired_uri = 'private://resources/' . $modUri . '/webdoc/' . $componentstem_webdocument;
       $files = \Drupal::entityTypeManager()
         ->getStorage('file')
         ->loadByProperties(['uri' => $desired_uri]);
@@ -379,7 +379,7 @@ class EditDetectorStemForm extends FormBase {
     }
 
     // 5. Managed file element for uploading a new document.
-    $form['detectorstem_information']['detectorstem_webdocument_upload_wrapper']['detectorstem_webdocument_upload'] = [
+    $form['componentstem_information']['componentstem_webdocument_upload_wrapper']['componentstem_webdocument_upload'] = [
       '#type' => 'managed_file',
       '#title' => $this->t('Upload Image'),
       '#upload_location' => 'private://resources/' . $modUri . '/image',
@@ -423,8 +423,8 @@ class EditDetectorStemForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name != 'back') {
-      if(strlen($form_state->getValue('detectorstem_content')) < 1) {
-        $form_state->setErrorByName('detectorstem_content', $this->t('Please enter a valid Name'));
+      if(strlen($form_state->getValue('componentstem_content')) < 1) {
+        $form_state->setErrorByName('componentstem_content', $this->t('Please enter a valid Name'));
       }
     }
   }
@@ -449,41 +449,41 @@ class EditDetectorStemForm extends FormBase {
       $useremail = \Drupal::currentUser()->getEmail();
 
       // CHECK if Status is CURRENT OR DEPRECATED FOR NEW CREATION
-      if ($this->getDetectorStem()->hasStatus === VSTOI::CURRENT || $this->getDetectorStem()->hasStatus === VSTOI::DEPRECATED) {
+      if ($this->getComponentStem()->hasStatus === VSTOI::CURRENT || $this->getComponentStem()->hasStatus === VSTOI::DEPRECATED) {
 
-        $detectorStemJson = '{"uri":"'.Utils::uriGen('detectorstem').'",'.
-          '"superUri":"'.Utils::uriFromAutocomplete($this->getDetectorStem()->superUri).'",'.
-          '"label":"'.$form_state->getValue('detectorstem_content').'",'.
-          '"hascoTypeUri":"'.VSTOI::DETECTOR_STEM.'",'.
+        $componentStemJson = '{"uri":"'.Utils::uriGen('componentstem').'",'.
+          '"superUri":"'.Utils::uriFromAutocomplete($this->getComponentStem()->superUri).'",'.
+          '"label":"'.$form_state->getValue('componentstem_content').'",'.
+          '"hascoTypeUri":"'.VSTOI::COMPONENT_STEM.'",'.
           '"hasStatus":"'.VSTOI::DRAFT.'",'.
-          '"hasContent":"'.$form_state->getValue('detectorstem_content').'",'.
-          '"hasLanguage":"'.$form_state->getValue('detectorstem_language').'",'.
-          '"hasVersion":"'.$form_state->getValue('detectorstem_version').'",'.
-          '"comment":"'.$form_state->getValue('detectorstem_description').'",'.
-          '"wasDerivedFrom":"'.$this->getDetectorStem()->uri.'",'. //Previous Version is the New Derivation Value
-          '"wasGeneratedBy":"'.$form_state->getValue('detectorstem_was_generated_by').'",'.
+          '"hasContent":"'.$form_state->getValue('componentstem_content').'",'.
+          '"hasLanguage":"'.$form_state->getValue('componentstem_language').'",'.
+          '"hasVersion":"'.$form_state->getValue('componentstem_version').'",'.
+          '"comment":"'.$form_state->getValue('componentstem_description').'",'.
+          '"wasDerivedFrom":"'.$this->getComponentStem()->uri.'",'. //Previous Version is the New Derivation Value
+          '"wasGeneratedBy":"'.$form_state->getValue('componentstem_was_generated_by').'",'.
           '"hasWebDocument":"",'.
           '"hasImageUri":"",' .
           '"hasSIRManagerEmail":"'.$useremail.'"}';
 
         // UPDATE BY DELETING AND CREATING
-        $api->detectorStemAdd($detectorStemJson);
-        \Drupal::messenger()->addMessage(t("New Version Detector Stem has been created successfully."));
+        $api->componentStemAdd($componentStemJson);
+        \Drupal::messenger()->addMessage(t("New Version Component Stem has been created successfully."));
 
       } else {
 
         // Determine the chosen document type.
-        $doc_type = $form_state->getValue('detectorstem_webdocument_type');
-        $detectorstem_webdocument = $this->getDetectorStem()->hasWebDocument;
+        $doc_type = $form_state->getValue('componentstem_webdocument_type');
+        $componentstem_webdocument = $this->getComponentStem()->hasWebDocument;
 
         // If user selected URL, use the textfield value.
         if ($doc_type === 'url') {
-          $detectorstem_webdocument = $form_state->getValue('detectorstem_webdocument_url');
+          $componentstem_webdocument = $form_state->getValue('componentstem_webdocument_url');
         }
         // If user selected Upload, load the file entity and get its filename.
         elseif ($doc_type === 'upload') {
           // Get the file IDs from the managed_file element.
-          $fids = $form_state->getValue('detectorstem_webdocument_upload');
+          $fids = $form_state->getValue('componentstem_webdocument_upload');
           if (!empty($fids)) {
             // Load the first file (file ID is returned, e.g. "374").
             $file = File::load(reset($fids));
@@ -492,25 +492,25 @@ class EditDetectorStemForm extends FormBase {
               $file->setPermanent();
               $file->save();
               // Optionally register file usage to prevent cleanup.
-              \Drupal::service('file.usage')->add($file, 'sir', 'detectorstem', 1);
+              \Drupal::service('file.usage')->add($file, 'sir', 'componentstem', 1);
               // Now get the filename from the file entity.
-              $detectorstem_webdocument = $file->getFilename();
+              $componentstem_webdocument = $file->getFilename();
             }
           }
         }
 
         // Determine the chosen image type.
-        $image_type = $form_state->getValue('detectorstem_image_type');
-        $detectorstem_image = $this->getDetectorStem()->hasImageUri;
+        $image_type = $form_state->getValue('componentstem_image_type');
+        $componentstem_image = $this->getComponentStem()->hasImageUri;
 
         // If user selected URL, use the textfield value.
         if ($image_type === 'url') {
-          $detectorstem_image = $form_state->getValue('detectorstem_image_url');
+          $componentstem_image = $form_state->getValue('componentstem_image_url');
         }
         // If user selected Upload, load the file entity and get its filename.
         elseif ($image_type === 'upload') {
           // Get the file IDs from the managed_file element.
-          $fids = $form_state->getValue('detectorstem_image_upload');
+          $fids = $form_state->getValue('componentstem_image_upload');
           if (!empty($fids)) {
             // Load the first file (file ID is returned, e.g. "374").
             $file = File::load(reset($fids));
@@ -519,67 +519,67 @@ class EditDetectorStemForm extends FormBase {
               $file->setPermanent();
               $file->save();
               // Optionally register file usage to prevent cleanup.
-              \Drupal::service('file.usage')->add($file, 'sir', 'detectorstem', 1);
+              \Drupal::service('file.usage')->add($file, 'sir', 'componentstem', 1);
               // Now get the filename from the file entity.
-              $detectorstem_image = $file->getFilename();
+              $componentstem_image = $file->getFilename();
             }
           }
         }
 
-        $detectorStemJson = '{"uri":"'.$this->getDetectorStem()->uri.'",'.
-        '"superUri":"'.Utils::uriFromAutocomplete($form_state->getValue('detectorstem_type')).'",'.
-        '"label":"'.$form_state->getValue('detectorstem_content').'",'.
-        '"hascoTypeUri":"'.VSTOI::DETECTOR_STEM.'",'.
-        '"hasStatus":"'.$this->getDetectorStem()->hasStatus.'",'.
-        '"hasContent":"'.$form_state->getValue('detectorstem_content').'",'.
-        '"hasLanguage":"'.$form_state->getValue('detectorstem_language').'",'.
-        '"hasVersion":"'.$form_state->getValue('detectorstem_version').'",'.
-        '"comment":"'.$form_state->getValue('detectorstem_description').'",'.
-        '"hasWebDocument":"' . $detectorstem_webdocument . '",' .
-        '"hasImageUri":"' . $detectorstem_image . '",' .
-        '"wasDerivedFrom":"'.$this->getDetectorStem()->wasDerivedFrom.'",'.
-        '"wasGeneratedBy":"'.$form_state->getValue('detectorstem_was_generated_by').'",'.
-        '"hasReviewNote":"'.($this->getDetectorStem()->hasStatus !== null ? $this->getDetectorStem()->hasReviewNote : '').'",'.
-        '"hasEditorEmail":"'.($this->getDetectorStem()->hasStatus !== null ? $this->getDetectorStem()->hasEditorEmail : '').'",'.
+        $componentStemJson = '{"uri":"'.$this->getComponentStem()->uri.'",'.
+        '"superUri":"'.Utils::uriFromAutocomplete($form_state->getValue('componentstem_type')).'",'.
+        '"label":"'.$form_state->getValue('componentstem_content').'",'.
+        '"hascoTypeUri":"'.VSTOI::COMPONENT_STEM.'",'.
+        '"hasStatus":"'.$this->getComponentStem()->hasStatus.'",'.
+        '"hasContent":"'.$form_state->getValue('componentstem_content').'",'.
+        '"hasLanguage":"'.$form_state->getValue('componentstem_language').'",'.
+        '"hasVersion":"'.$form_state->getValue('componentstem_version').'",'.
+        '"comment":"'.$form_state->getValue('componentstem_description').'",'.
+        '"hasWebDocument":"' . $componentstem_webdocument . '",' .
+        '"hasImageUri":"' . $componentstem_image . '",' .
+        '"wasDerivedFrom":"'.$this->getComponentStem()->wasDerivedFrom.'",'.
+        '"wasGeneratedBy":"'.$form_state->getValue('componentstem_was_generated_by').'",'.
+        '"hasReviewNote":"'.($this->getComponentStem()->hasStatus !== null ? $this->getComponentStem()->hasReviewNote : '').'",'.
+        '"hasEditorEmail":"'.($this->getComponentStem()->hasStatus !== null ? $this->getComponentStem()->hasEditorEmail : '').'",'.
         '"hasSIRManagerEmail":"'.$useremail.'"}';
 
-        $api->detectorStemDel($this->getDetectorStemUri());
-        $api->detectorStemAdd($detectorStemJson);
+        $api->componentStemDel($this->getComponentStemUri());
+        $api->componentStemAdd($componentStemJson);
 
         // UPLOAD IMAGE TO API
-        if ($image_type === 'upload' && $detectorstem_image !== $this->getDetectorStem()->hasImageUri) {
-          $fids = $form_state->getValue('detectorstem_image_upload');
-          $msg = $api->parseObjectResponse($api->uploadFile($this->getDetectorStemUri(), reset($fids)), 'uploadFile');
+        if ($image_type === 'upload' && $componentstem_image !== $this->getComponentStem()->hasImageUri) {
+          $fids = $form_state->getValue('componentstem_image_upload');
+          $msg = $api->parseObjectResponse($api->uploadFile($this->getComponentStemUri(), reset($fids)), 'uploadFile');
           if ($msg == NULL) {
             \Drupal::messenger()->addError(t("The Uploaded Image FAILED to be submited to API."));
           }
         }
 
         // UPLOAD DOCUMENT TO API
-        if ($doc_type === 'upload' && $detectorstem_webdocument !== $this->getDetectorStem()->hasWebDocument) {
-          $fids = $form_state->getValue('detectorstem_webdocument_upload');
-          $msg = $api->parseObjectResponse($api->uploadFile($this->getDetectorStemUri(), reset($fids)), 'uploadFile');
+        if ($doc_type === 'upload' && $componentstem_webdocument !== $this->getComponentStem()->hasWebDocument) {
+          $fids = $form_state->getValue('componentstem_webdocument_upload');
+          $msg = $api->parseObjectResponse($api->uploadFile($this->getComponentStemUri(), reset($fids)), 'uploadFile');
           if ($msg == NULL) {
             \Drupal::messenger()->addError(t("The Uploaded WebDocument FAILED to be submited to API."));
           }
         }
 
-        \Drupal::messenger()->addMessage(t("Detector Stem has been updated successfully."));
+        \Drupal::messenger()->addMessage(t("Component Stem has been updated successfully."));
       }
 
       self::backUrl();
       return;
 
     }catch(\Exception $e){
-      \Drupal::messenger()->addError(t("An error occurred while updating the Detector Stem: ".$e->getMessage()));
+      \Drupal::messenger()->addError(t("An error occurred while updating the Component Stem: ".$e->getMessage()));
       self::backUrl();
       return;
     }
   }
 
-  public function retrieveDetectorStem($detectorStemUri) {
+  public function retrieveComponentStem($componentStemUri) {
     $api = \Drupal::service('rep.api_connector');
-    $rawresponse = $api->getUri($detectorStemUri);
+    $rawresponse = $api->getUri($componentStemUri);
     $obj = json_decode($rawresponse);
     if ($obj->isSuccessful) {
       return $obj->body;

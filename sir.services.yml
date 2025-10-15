@@ -11,10 +11,10 @@ services:
     class: Drupal\sir\EventSubscriber\RouteSubscriber
     arguments: ['@config.factory']
     tags:
-        - { name: event_subscriber } 
-  sir.list_detectors_form:
-    class: Drupal\sir\Form\ListDetectorsForm
+        - { name: event_subscriber }
+  sir.list_components_form:
+    class: Drupal\sir\Form\ListComponentsForm
     arguments:
       - '@pager.manager'
     tags:
-      - { name: form, list_detectors_form:  }    
+      - { name: form, list_components_form:  }

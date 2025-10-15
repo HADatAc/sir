@@ -12,57 +12,57 @@ use Drupal\rep\Entity\Tables;
 use Drupal\rep\Vocabulary\VSTOI;
 use Drupal\file\Entity\File;
 
-class AddActuatorForm extends FormBase {
+class AddComponentForm extends FormBase {
 
   /**
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'add_actuator_form';
+    return 'add_component_form';
   }
 
-  protected $actuatorUri;
+  protected $sourceComponentUri;
 
-  public function setInstrumenUri() {
-    $this->actuatorUri = Utils::uriGen('actuator');
-  }
+  protected $sourceComponent;
 
-  public function getInstrumenUri() {
-    return $this->actuatorUri;
-  }
-
-  protected $sourceActuatorUri;
-
-  protected $sourceActuator;
-
-  protected $actuatorStem;
+  protected $componentStem;
 
   protected $containerslotUri;
 
   protected $containerslot;
 
-  public function getSourceActuatorUri() {
-    return $this->sourceActuatorUri;
+  protected $componentUri;
+
+  public function setComponentUri() {
+    $this->componentUri = Utils::uriGen('component');
   }
 
-  public function setSourceActuatorUri($uri) {
-    return $this->sourceActuatorUri = $uri;
+  public function getComponentUri() {
+    return $this->componentUri;
   }
 
-  public function getSourceActuator() {
-    return $this->sourceActuator;
+  public function getSourceComponentUri() {
+    return $this->sourceComponentUri;
   }
 
-  public function setSourceActuator($obj) {
-    return $this->sourceActuator = $obj;
+  public function setSourceComponentUri($uri) {
+    return $this->sourceComponentUri = $uri;
   }
 
-  public function getActuatorStem() {
-    return $this->actuatorStem;
+  public function getSourceComponent() {
+    return $this->sourceComponent;
   }
 
-  public function setActuatorStem($stem) {
-    return $this->actuatorStem = $stem;
+  public function setSourceComponent($obj) {
+    return $this->sourceComponent = $obj;
+  }
+
+  public function getComponentStem() {
+    return $this->componentStem;
+  }
+
+  public function setComponentStem($stem) {
+    return $this->componentStem = $stem;
   }
 
   public function getContainerSlotUri() {
@@ -84,20 +84,20 @@ class AddActuatorForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $sourceactuatoruri = NULL, $containersloturi = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, $sourcecomponenturi = NULL, $containersloturi = NULL) {
 
     // Does the repo have a social network?
     $socialEnabled = \Drupal::config('rep.settings')->get('social_conf');
 
-    // Check if the actuator URI already exists in the form state.
+    // Check if the component URI already exists in the form state.
     // If not, generate a new URI and store it in the form state.
-    if (!$form_state->has('actuator_uri')) {
-      $this->setInstrumenUri();
-      $form_state->set('actuator_uri', $this->getInstrumenUri());
+    if (!$form_state->has('component_uri')) {
+      $this->setComponentUri();
+      $form_state->set('component_uri', $this->getComponentUri());
     }
     else {
       // Retrieve the persisted URI from form state.
-      $this->actuatorUri = $form_state->get('actuator_uri');
+      $this->componentUri = $form_state->get('component_uri');
     }
 
     // MODAL
@@ -107,26 +107,26 @@ class AddActuatorForm extends FormBase {
     // ESTABLISH API SERVICE
     $api = \Drupal::service('rep.api_connector');
 
-    // HANDLE SOURCE DETECTOR,  IF ANY
-    $sourceuri=$sourceactuatoruri;
+    // HANDLE SOURCE COMPONENT,  IF ANY
+    $sourceuri=$sourcecomponenturi;
     if ($sourceuri === NULL || $sourceuri === 'EMPTY') {
-      $this->setSourceActuator(NULL);
-      $this->setSourceActuatorUri('');
+      $this->setSourceComponent(NULL);
+      $this->setSourceComponentUri('');
     } else {
       $sourceuri_decode=base64_decode($sourceuri);
-      $this->setSourceActuatorUri($sourceuri_decode);
-      $rawresponse = $api->getUri($this->getSourceActuatorUri());
+      $this->setSourceComponentUri($sourceuri_decode);
+      $rawresponse = $api->getUri($this->getSourceComponentUri());
       //dpm($rawresponse);
       $obj = json_decode($rawresponse);
       if ($obj->isSuccessful) {
-        $this->setSourceActuator($obj->body);
-        //dpm($this->getActuator());
+        $this->setSourceComponent($obj->body);
+        //dpm($this->getComponent());
       } else {
-        $this->setSourceActuator(NULL);
-        $this->setSourceActuatorUri('');
+        $this->setSourceComponent(NULL);
+        $this->setSourceComponentUri('');
       }
     }
-    $disabledDerivationOption = ($this->getSourceActuator() === NULL);
+    $disabledDerivationOption = ($this->getSourceComponent() === NULL);
 
     // HANDLE CONTAINER_SLOT, IF ANY
     $attachuri=$containersloturi;
@@ -150,39 +150,40 @@ class AddActuatorForm extends FormBase {
     $derivations = $tables->getGenerationActivities();
 
     $sourceContent = '';
-    if ($this->getSourceActuator() != NULL) {
-      $sourceContent = $this->getSourceActuator()->hasContent;
+    if ($this->getSourceComponent() != NULL) {
+      $sourceContent = $this->getSourceComponent()->hasContent;
     }
 
-    // $form['actuator_stem'] = [
+    // $form['component_stem'] = [
     //   '#type' => 'textfield',
     //   '#title' => \Drupal::moduleHandler()->moduleExists('pmsr') ?
     //     $this->t('Simulation Technique Stem') :
-    //     $this->t('Actuator Stem'),
-    //   '#autocomplete_route_name' => 'sir.actuator_stem_autocomplete',
+    //     $this->t('Component Stem'),
+    //   '#autocomplete_route_name' => 'sir.component_stem_autocomplete',
     // ];
-    $form['actuator_stem'] = [
+
+    $form['component_stem'] = [
       'top' => [
         '#type' => 'markup',
         '#markup' => '<div class="pt-3 col border border-white">',
       ],
       'main' => [
         '#type' => 'textfield',
-        '#title' => $this->t('Actuator Stem'),
-        '#name' => 'actuator_stem',
+        '#title' => $this->t('Component Stem'),
+        '#name' => 'component_stem',
         '#default_value' => '',
-        '#id' => 'actuator_stem',
-        '#parents' => ['actuator_stem'],
+        '#id' => 'component_stem',
+        '#parents' => ['component_stem'],
         '#attributes' => [
           'class' => ['open-tree-modal'],
           'data-dialog-type' => 'modal',
           'data-dialog-options' => json_encode(['width' => 800]),
           'data-url' => Url::fromRoute('rep.tree_form', [
             'mode' => 'modal',
-            'elementtype' => 'actuatorstem',
-          ], ['query' => ['field_id' => 'actuator_stem']])->toString(),
-          'data-field-id' => 'actuator_stem',
-          'data-elementtype' => 'actuatorstem',
+            'elementtype' => 'componentstem',
+          ], ['query' => ['field_id' => 'component_stem']])->toString(),
+          'data-field-id' => 'component_stem',
+          'data-elementtype' => 'componentstem',
           'autocomplete' => 'off',
         ],
       ],
@@ -191,16 +192,18 @@ class AddActuatorForm extends FormBase {
         '#markup' => '</div>',
       ],
     ];
-    $form['actuator_stem']['main'] += [
+
+    $form['component_stem']['main'] += [
       '#maxlength' => 999,
     ];
-    $form['actuator_codebook'] = [
+
+    $form['component_codebook'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Codebook'),
-      '#autocomplete_route_name' => 'sir.actuator_codebook_autocomplete',
+      '#autocomplete_route_name' => 'sir.component_codebook_autocomplete',
     ];
     if ($socialEnabled) {
-      $form['actuator_maker'] = [
+      $form['component_maker'] = [
         '#type' => 'textfield',
         '#title' => $this->t('Maker'),
         // '#required' => TRUE,
@@ -210,17 +213,17 @@ class AddActuatorForm extends FormBase {
         ],
       ];
     }
-    $form['actuator_version_hidden'] = [
+    $form['component_version_hidden'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Version'),
       '#default_value' => '1',
       '#disabled' => TRUE,
     ];
-    $form['actuator_version'] = [
+    $form['component_version'] = [
       '#type' => 'hidden',
       '#value' => '1',
     ];
-    $form['actuator_isAttributeOf'] = [
+    $form['component_isAttributeOf'] = [
       'top' => [
         '#type' => 'markup',
         '#markup' => '<div class="col border border-white">',
@@ -228,20 +231,20 @@ class AddActuatorForm extends FormBase {
       'main' => [
         '#type' => 'textfield',
         '#title' => $this->t('Attribute Of <small><i>(optional)</i></small>'),
-        '#name' => 'actuator_isAttributeOf',
+        '#name' => 'component_isAttributeOf',
         '#default_value' => '',
-        '#id' => 'actuator_isAttributeOf',
-        '#parents' => ['actuator_isAttributeOf'],
+        '#id' => 'component_isAttributeOf',
+        '#parents' => ['component_isAttributeOf'],
         '#attributes' => [
           'class' => ['open-tree-modal'],
           'data-dialog-type' => 'modal',
           'data-dialog-options' => json_encode(['width' => 800]),
           'data-url' => Url::fromRoute('rep.tree_form', [
             'mode' => 'modal',
-            'elementtype' => 'actuatorattribute',
-          ], ['query' => ['field_id' => 'actuator_isAttributeOf']])->toString(),
-          'data-field-id' => 'actuator_isAttributeOf',
-          'data-elementtype' => 'actuatorattribute',
+            'elementtype' => 'componentattribute',
+          ], ['query' => ['field_id' => 'component_isAttributeOf']])->toString(),
+          'data-field-id' => 'component_isAttributeOf',
+          'data-elementtype' => 'componentattribute',
           'autocomplete' => 'off',
         ],
       ],
@@ -251,14 +254,14 @@ class AddActuatorForm extends FormBase {
       ],
     ];
 
-    // Add a hidden field to persist the actuator URI between form rebuilds.
-    $form['actuator_uri'] = [
+    // Add a hidden field to persist the component URI between form rebuilds.
+    $form['component_uri'] = [
       '#type' => 'hidden',
-      '#value' => $this->actuatorUri,
+      '#value' => $this->componentUri,
     ];
 
     // Add a select box to choose between URL and Upload.
-    $form['actuator_image_type'] = [
+    $form['component_image_type'] = [
       '#type' => 'select',
       '#title' => $this->t('Image Type'),
       '#options' => [
@@ -271,7 +274,7 @@ class AddActuatorForm extends FormBase {
 
     // The textfield for entering a URL.
     // It is only visible when the select box value is 'url'.
-    $form['actuator_image_url'] = [
+    $form['component_image_url'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Image'),
       '#attributes' => [
@@ -279,22 +282,22 @@ class AddActuatorForm extends FormBase {
       ],
       '#states' => [
         'visible' => [
-          ':input[name="actuator_image_type"]' => ['value' => 'url'],
+          ':input[name="component_image_type"]' => ['value' => 'url'],
         ],
       ],
     ];
 
-    // Because File Upload Path (use the persisted actuator URI for file uploads)
-    $modUri = (explode(":/", utils::namespaceUri($this->actuatorUri)))[1];
-    $form['actuator_image_upload_wrapper'] = [
+    // Because File Upload Path (use the persisted component URI for file uploads)
+    $modUri = (explode(":/", utils::namespaceUri($this->componentUri)))[1];
+    $form['component_image_upload_wrapper'] = [
       '#type' => 'container',
       '#states' => [
         'visible' => [
-          ':input[name="actuator_image_type"]' => ['value' => 'upload'],
+          ':input[name="component_image_type"]' => ['value' => 'upload'],
         ],
       ],
     ];
-    $form['actuator_image_upload_wrapper']['actuator_image_upload'] = [
+    $form['component_image_upload_wrapper']['component_image_upload'] = [
       '#type' => 'managed_file',
       '#title' => $this->t('Upload Image'),
       '#upload_location' => 'private://resources/' . $modUri . '/image',
@@ -305,7 +308,7 @@ class AddActuatorForm extends FormBase {
     ];
 
     // Add a select box to choose between URL and Upload.
-    $form['actuator_webdocument_type'] = [
+    $form['component_webdocument_type'] = [
       '#type' => 'select',
       '#title' => $this->t('Web Document Type'),
       '#options' => [
@@ -318,7 +321,7 @@ class AddActuatorForm extends FormBase {
 
     // The textfield for entering a URL.
     // It is only visible when the select box value is 'url'.
-    $form['actuator_webdocument_url'] = [
+    $form['component_webdocument_url'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Web Document'),
       '#attributes' => [
@@ -326,21 +329,21 @@ class AddActuatorForm extends FormBase {
       ],
       '#states' => [
         'visible' => [
-          ':input[name="actuator_webdocument_type"]' => ['value' => 'url'],
+          ':input[name="component_webdocument_type"]' => ['value' => 'url'],
         ],
       ],
     ];
 
-    // Because File Upload Path (use the persisted actuator URI for file uploads)
-    $form['actuator_webdocument_upload_wrapper'] = [
+    // Because File Upload Path (use the persisted component URI for file uploads)
+    $form['component_webdocument_upload_wrapper'] = [
       '#type' => 'container',
       '#states' => [
         'visible' => [
-          ':input[name="actuator_webdocument_type"]' => ['value' => 'upload'],
+          ':input[name="component_webdocument_type"]' => ['value' => 'upload'],
         ],
       ],
     ];
-    $form['actuator_webdocument_upload_wrapper']['actuator_webdocument_upload'] = [
+    $form['component_webdocument_upload_wrapper']['component_webdocument_upload'] = [
       '#type' => 'managed_file',
       '#title' => $this->t('Upload Document'),
       '#upload_location' => 'private://resources/' . $modUri . '/webdoc',
@@ -384,16 +387,17 @@ class AddActuatorForm extends FormBase {
 
     if ($button_name != 'back') {
 
-      if ($form_state->getValue('actuator_stem') == NULL || $form_state->getValue('actuator_stem') == '') {
-        $form_state->setErrorByName('actuator_stem', $this->t('Actuator stem value is empty. Please enter a valid stem.'));
+      if ($form_state->getValue('component_stem') == NULL || $form_state->getValue('component_stem') == '') {
+        $form_state->setErrorByName('component_stem', $this->t('Component stem value is empty. Please enter a valid stem.'));
       }
-      if ($form_state->getValue('actuator_codebook') == NULL || $form_state->getValue('actuator_codebook') == '') {
-        $form_state->setErrorByName('actuator_codebook', $this->t('Codebook value is empty. Please enter a valid codebook.'));
-      }
-      // $stemUri = Utils::uriFromAutocomplete($form_state->getValue('actuator_stem'));
-      // $this->setActuatorStem($api->parseObjectResponse($api->getUri($stemUri),'getUri'));
-      // if($this->getActuatorStem() == NULL) {
-      //   $form_state->setErrorByName('actuator_stem', $this->t('Value for Actuator Stem is not valid. Please enter a valid stem.'));
+
+      // if (strlen($form_state->getValue('component_stem')) > 128) {
+      //   $form_state->setValue('component_stem', Utils::trimPreserveBracket($form_state->getValue('component_stem'), 127));
+      // }
+      // $stemUri = Utils::uriFromAutocomplete($form_state->getValue('component_stem'));
+      // $this->setComponentStem($api->parseObjectResponse($api->getUri($stemUri),'getUri'));
+      // if($this->getComponentStem() == NULL) {
+      //   $form_state->setErrorByName('component_stem', $this->t('Value for Component Stem is not valid. Please enter a valid stem.'));
       // }
     }
   }
@@ -417,73 +421,16 @@ class AddActuatorForm extends FormBase {
     try {
 
       $hasCodebook = '';
-      if ($form_state->getValue('actuator_codebook') !== NULL && $form_state->getValue('actuator_codebook') !== '') {
-        $hasCodebook = Utils::uriFromAutocomplete($form_state->getValue('actuator_codebook'));
+      if ($form_state->getValue('component_codebook') !== NULL && $form_state->getValue('component_codebook') !== '') {
+        $hasCodebook = Utils::uriFromAutocomplete($form_state->getValue('component_codebook'));
       } else {
         $hasCodebook = NULL;
       }
 
       $useremail = \Drupal::currentUser()->getEmail();
 
-      // $newInstrumentUri = Utils::uriGen('actuator');
-      $newActuatorUri = $form_state->getValue('actuator_uri');
-
-      // Determine the chosen document type.
-      $doc_type = $form_state->getValue('actuator_webdocument_type');
-      $actuator_webdocument = '';
-
-      // If user selected URL, use the textfield value.
-      if ($doc_type === 'url') {
-        $actuator_webdocument = $form_state->getValue('actuator_webdocument_url');
-      }
-      // If user selected Upload, load the file entity and get its filename.
-      elseif ($doc_type === 'upload') {
-        // Get the file IDs from the managed_file element.
-        $fids = $form_state->getValue('actuator_webdocument_upload');
-        if (!empty($fids)) {
-          // Load the first file (file ID is returned, e.g. "374").
-          $file = File::load(reset($fids));
-          if ($file) {
-            // Mark the file as permanent and save it.
-            $file->setPermanent();
-            $file->save();
-            // Optionally register file usage to prevent cleanup.
-            \Drupal::service('file.usage')->add($file, 'sir', 'actuator', 1);
-            // Now get the filename from the file entity.
-            $actuator_webdocument = $file->getFilename();
-          }
-        }
-      }
-
-      // Determine the chosen image type.
-      $image_type = $form_state->getValue('actuator_image_type');
-      $actuator_image = '';
-
-      // If user selected URL, use the textfield value.
-      if ($image_type === 'url') {
-        $actuator_image = $form_state->getValue('actuator_image_url');
-      }
-      // If user selected Upload, load the file entity and get its filename.
-      elseif ($image_type === 'upload') {
-        // Get the file IDs from the managed_file element.
-        $fids = $form_state->getValue('actuator_image_upload');
-        if (!empty($fids)) {
-          // Load the first file (file ID is returned, e.g. "374").
-          $file = File::load(reset($fids));
-          if ($file) {
-            // Mark the file as permanent and save it.
-            $file->setPermanent();
-            $file->save();
-            // Optionally register file usage to prevent cleanup.
-            \Drupal::service('file.usage')->add($file, 'sir', 'actuator', 1);
-            // Now get the filename from the file entity.
-            $actuator_image = $file->getFilename();
-          }
-        }
-      }
-
-      // GET THE DETECTOR STEM URI
-      $rawresponse = $api->getUri(Utils::uriFromAutocomplete($form_state->getValue('actuator_stem')));
+      // GET THE COMPONENT STEM URI
+      $rawresponse = $api->getUri(Utils::uriFromAutocomplete($form_state->getValue('component_stem')));
       $obj = json_decode($rawresponse);
       $result = $obj->body;
 
@@ -494,8 +441,8 @@ class AddActuatorForm extends FormBase {
         $label .= $result->label;
       }
 
-      if ($form_state->getValue('actuator_codebook') !== NULL && $form_state->getValue('actuator_codebook') != '') {
-        $codebook = Utils::uriFromAutocomplete($form_state->getValue('actuator_codebook'));
+      if ($form_state->getValue('component_codebook') !== NULL && $form_state->getValue('component_codebook') != '') {
+        $codebook = Utils::uriFromAutocomplete($form_state->getValue('component_codebook'));
         $rawresponseCB = $api->getUri($codebook);
         $objCB = json_decode($rawresponseCB);
         $resultCB = $objCB->body;
@@ -504,63 +451,121 @@ class AddActuatorForm extends FormBase {
         $label = $result->label . '  -- CB:EMPTY';
       }
 
-      // CREATE A NEW DETECTOR
-      $actuatorJson = '{"uri":"'.$newActuatorUri.'",'.
-        '"typeUri":"'.Utils::uriFromAutocomplete($form_state->getValue('actuator_stem')).'",'.
-        '"hascoTypeUri":"'.VSTOI::ACTUATOR.'",'.
-        '"hasActuatorStem":"'.Utils::uriFromAutocomplete($form_state->getValue('actuator_stem')).'",'.
+      // Get the current user email and generate a new component URI.
+      $useremail = \Drupal::currentUser()->getEmail();
+      // $newInstrumentUri = Utils::uriGen('component');
+      $newComponentUri = $form_state->getValue('component_uri');
+
+      // Determine the chosen document type.
+      $doc_type = $form_state->getValue('component_webdocument_type');
+      $component_webdocument = '';
+
+      // If user selected URL, use the textfield value.
+      if ($doc_type === 'url') {
+        $component_webdocument = $form_state->getValue('component_webdocument_url');
+      }
+      // If user selected Upload, load the file entity and get its filename.
+      elseif ($doc_type === 'upload') {
+        // Get the file IDs from the managed_file element.
+        $fids = $form_state->getValue('component_webdocument_upload');
+        if (!empty($fids)) {
+          // Load the first file (file ID is returned, e.g. "374").
+          $file = File::load(reset($fids));
+          if ($file) {
+            // Mark the file as permanent and save it.
+            $file->setPermanent();
+            $file->save();
+            // Optionally register file usage to prevent cleanup.
+            \Drupal::service('file.usage')->add($file, 'sir', 'component', 1);
+            // Now get the filename from the file entity.
+            $component_webdocument = $file->getFilename();
+          }
+        }
+      }
+
+      // Determine the chosen image type.
+      $image_type = $form_state->getValue('component_image_type');
+      $component_image = '';
+
+      // If user selected URL, use the textfield value.
+      if ($image_type === 'url') {
+        $component_image = $form_state->getValue('component_image_url');
+      }
+      // If user selected Upload, load the file entity and get its filename.
+      elseif ($image_type === 'upload') {
+        // Get the file IDs from the managed_file element.
+        $fids = $form_state->getValue('component_image_upload');
+        if (!empty($fids)) {
+          // Load the first file (file ID is returned, e.g. "374").
+          $file = File::load(reset($fids));
+          if ($file) {
+            // Mark the file as permanent and save it.
+            $file->setPermanent();
+            $file->save();
+            // Optionally register file usage to prevent cleanup.
+            \Drupal::service('file.usage')->add($file, 'sir', 'component', 1);
+            // Now get the filename from the file entity.
+            $component_image = $file->getFilename();
+          }
+        }
+      }
+
+      // CREATE A NEW COMPONENT
+      $componentJson = '{"uri":"'.$newComponentUri.'",'.
+        '"typeUri":"'.Utils::uriFromAutocomplete($form_state->getValue('component_stem')).'",'.
+        '"hascoTypeUri":"'.VSTOI::COMPONENT.'",'.
+        '"hasComponentStem":"'.Utils::uriFromAutocomplete($form_state->getValue('component_stem')).'",'.
         '"hasCodebook":"'.$hasCodebook.'",'.
         '"hasContent":"'.$label.'",'.
         '"hasSIRManagerEmail":"'.$useremail.'",'.
         '"label":"'.$label.'",'.
         '"hasVersion":"1",'.
-        '"isAttributeOf":"'.Utils::uriFromAutocomplete($form_state->getValue('actuator_isAttributeOf')).'",'.
-        '"hasMakerUri":"' . Utils::uriFromAutocomplete($form_state->getValue('actuator_maker')) . '",' .
-        '"hasWebDocument":"' . $actuator_webdocument . '",' .
-        '"hasImageUri":"' . $actuator_image . '",' .
+        '"isAttributeOf":"'.Utils::uriFromAutocomplete($form_state->getValue('component_isAttributeOf')).'",'.
+        '"hasMakerUri":"' . Utils::uriFromAutocomplete($form_state->getValue('component_maker')) . '",' .
+        '"hasWebDocument":"' . $component_webdocument . '",' .
+        '"hasImageUri":"' . $component_image . '",' .
         '"hasStatus":"'.VSTOI::DRAFT.'"}';
 
-      $api->elementAdd('actuator',$actuatorJson);
+      $api->componentAdd($componentJson);
 
-      // IF IN THE CONTEXT OF AN EXISTING CONTAINER_SLOT, ATTACH THE NEWLY CREATED DETECTOR TO THE CONTAINER_SLOT
+      // IF IN THE CONTEXT OF AN EXISTING CONTAINER_SLOT, ATTACH THE NEWLY CREATED COMPONENT TO THE CONTAINER_SLOT
       if ($this->getContainerSlot() != NULL) {
-        $api->actuatorAttach($newActuatorUri,$this->getContainerSlotUri());
-        \Drupal::messenger()->addMessage(t("Actuator [" . $newActuatorUri ."] has been added and attached to intrument [" . $this->getContainerSlot()->belongsTo . "] successfully."));
+        $api->componentAttach($newComponentUri,$this->getContainerSlotUri());
+        \Drupal::messenger()->addMessage(t("Component [" . $newComponentUri ."] has been added and attached to intrument [" . $this->getContainerSlot()->belongsTo . "] successfully."));
         $url = Url::fromRoute('sir.edit_containerslot');
         $url->setRouteParameter('containersloturi', base64_encode($this->getContainerSlotUri()));
         $form_state->setRedirectUrl($url);
         return;
       } else {
-
         // UPLOAD IMAGE TO API
         if ($image_type === 'upload') {
-          $fids = $form_state->getValue('actuator_image_upload');
-          $msg = $api->parseObjectResponse($api->uploadFile($newActuatorUri, reset($fids)), 'uploadFile');
+          $fids = $form_state->getValue('component_image_upload');
+          $msg = $api->parseObjectResponse($api->uploadFile($newComponentUri, reset($fids)), 'uploadFile');
           if ($msg == NULL) {
             \Drupal::messenger()->addError(t("The Uploaded Image FAILED to be submited to API."));
           }
         }
         // UPLOAD DOCUMENT TO API
         if ($doc_type === 'upload') {
-          $fids = $form_state->getValue('actuator_webdocument_upload');
-          $msg = $api->parseObjectResponse($api->uploadFile($newActuatorUri, reset($fids)), 'uploadFile');
+          $fids = $form_state->getValue('component_webdocument_upload');
+          $msg = $api->parseObjectResponse($api->uploadFile($newComponentUri, reset($fids)), 'uploadFile');
           if ($msg == NULL) {
             \Drupal::messenger()->addError(t("The Uploaded Document FAILED to be submited to API."));
           }
         }
 
-        \Drupal::messenger()->addMessage(t("Actuator has been added successfully."));
+        \Drupal::messenger()->addMessage(t("Component has been added successfully."));
         self::backUrl();
         return;
       }
     } catch(\Exception $e) {
       if ($this->getContainerSlot() != NULL) {
-        \Drupal::messenger()->addError(t("An error occurred while adding the Actuator: ".$e->getMessage()));
+        \Drupal::messenger()->addError(t("An error occurred while adding the Component: ".$e->getMessage()));
         $url = Url::fromRoute('sir.edit_containerslot');
         $url->setRouteParameter('containersloturi', base64_encode($this->getContainerSlotUri()));
         $form_state->setRedirectUrl($url);
       } else {
-        \Drupal::messenger()->addError(t("An error occurred while adding the Actuator: ".$e->getMessage()));
+        \Drupal::messenger()->addError(t("An error occurred while adding the Component: ".$e->getMessage()));
         self::backUrl();
         return;
       }
@@ -569,7 +574,7 @@ class AddActuatorForm extends FormBase {
 
   function backUrl() {
     $uid = \Drupal::currentUser()->id();
-    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.add_actuator');
+    $previousUrl = Utils::trackingGetPreviousUrl($uid, 'sir.add_component');
     if ($previousUrl) {
       $response = new RedirectResponse($previousUrl);
       $response->send();

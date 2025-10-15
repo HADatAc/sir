@@ -160,6 +160,8 @@ class SIRSearchForm extends FormBase {
 
     $element_types = [
       'instrument'      => ['label' => $this->t($preferred_instrument . 's'),          'image' => 'white/instrument_placeholder.png'],
+      'componentstem'   => ['label' => $this->t('Component Stems'),                    'image' => 'white/component_stem_placeholder.png'],
+      'component'       => ['label' => $this->t('Components'),                         'image' => 'white/component_placeholder.png'],
       'codebook'        => ['label' => $this->t('Codebooks'),                          'image' => 'white/codebook_placeholder.png'],
       'responseoption'  => ['label' => $this->t('Response Options'),                   'image' => 'white/responseoption_placeholder.png'],
       'annotationstem'  => ['label' => $this->t('Annotation Stems'),                   'image' => 'white/annotation_stem_placeholder.png'],

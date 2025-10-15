@@ -1,19 +1,19 @@
 (function ($, Drupal) {
-  Drupal.behaviors.actuatorstemForm = {
+  Drupal.behaviors.componentstemForm = {
     attach: function (context, settings) {
       setTimeout(function () {
         var previousValue = ''; // Store the previous value before any change
 
         $('#cancel_button').on('click', function () {
-          var $languageField = $('#actuatorstem_language');
+          var $languageField = $('#componentstem_language');
           $languageField.prop('required', false);
         });
 
-        $('#actuatorstem_was_generated_by').on('change', function () {
+        $('#componentstem_was_generated_by').on('change', function () {
           var selectedValue = $(this).val();
           var translation = 'http://hadatac.org/ont/vstoi#Translation';
-          var $languageField = $('#actuatorstem_language');
-          var $errorMessage = $('#actuatorstem_language_error');
+          var $languageField = $('#componentstem_language');
+          var $errorMessage = $('#componentstem_language_error');
 
           if (selectedValue === translation) {
             // Save the current value before resetting it
@@ -31,7 +31,7 @@
 
             // Display error message if it does not already exist
             if (!$errorMessage.length) {
-              $languageField.after('<div id="actuatorstem_language_error" style="color: red;">Must select a different Language.</div>');
+              $languageField.after('<div id="componentstem_language_error" style="color: red;">Must select a different Language.</div>');
             }
 
           } else {
@@ -47,7 +47,7 @@
             }
 
             // Remove the error message
-            $('#actuatorstem_language_error').remove();
+            $('#componentstem_language_error').remove();
           }
         });
       }, 1000);

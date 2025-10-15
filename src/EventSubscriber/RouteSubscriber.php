@@ -30,7 +30,7 @@ class RouteSubscriber extends RouteSubscriberBase {
     $config = $this->configFactory->get('sir.settings');
     $sir_home = $config->get('sir_home');
     $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument');
-    $preferred_detector = \Drupal::config('rep.settings')->get('preferred_detector');
+    $preferred_component = \Drupal::config('rep.settings')->get('preferred_component') ?? 'Component';
 
     if($sir_home == '1'){
       if ($route = $collection->get('view.frontpage.page_1')) {
@@ -44,20 +44,20 @@ class RouteSubscriber extends RouteSubscriberBase {
     if ($route = $collection->get('sir.edit_instrument')) {
       $route->setDefault('_title', 'Edit ' . $preferred_instrument);
     }
-    if ($route = $collection->get('sir.add_detectorstem')) {
-      $route->setDefault('_title', 'Add ' . $preferred_detector . ' Stem');
+    if ($route = $collection->get('sir.add_componentstem')) {
+      $route->setDefault('_title', 'Add ' . $preferred_component . ' Stem');
     }
-    if ($route = $collection->get('sir.edit_detectorstem')) {
-      $route->setDefault('_title', 'Edit ' . $preferred_detector . ' Stem');
+    if ($route = $collection->get('sir.edit_componentstem')) {
+      $route->setDefault('_title', 'Edit ' . $preferred_component . ' Stem');
     }
-    if ($route = $collection->get('sir.add_detector')) {
-      $route->setDefault('_title', 'Add ' . $preferred_detector);
+    if ($route = $collection->get('sir.add_component')) {
+      $route->setDefault('_title', 'Add ' . $preferred_component);
     }
-    if ($route = $collection->get('sir.edit_detector')) {
-      $route->setDefault('_title', 'Edit ' . $preferred_detector);
+    if ($route = $collection->get('sir.edit_component')) {
+      $route->setDefault('_title', 'Edit ' . $preferred_component);
     }
-    if ($route = $collection->get('sir.add_containerslot_detector')) {
-      $route->setDefault('_title', 'Add ' . $preferred_detector);
+    if ($route = $collection->get('sir.add_containerslot_component')) {
+      $route->setDefault('_title', 'Add ' . $preferred_component);
     }
   }
 
