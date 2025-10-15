@@ -44,12 +44,12 @@ sir.manage_instruments:
     _permission: 'access content'
     _role: 'authenticated'
 
-sir.manage_actuatorstems :
-  title: Manage Actuator Stems
-  description: Manage Actuator Stems
+sir.manage_componentstems :
+  title: Manage Component Stems
+  description: Manage Component Stems
   route_name: sir.select_element
   route_parameters:
-    elementtype: 'actuatorstem'
+    elementtype: 'componentstem'
     page: '1'
     pagesize: '9'
   parent: sir.manage_top_level
@@ -59,47 +59,17 @@ sir.manage_actuatorstems :
     _permission: 'access content'
     _role: 'authenticated'
 
-sir.manage_actuators :
-  title: Manage Actuator
-  description: Manage Actuator
+sir.manage_components :
+  title: Manage Component
+  description: Manage Component
   route_name: sir.select_element
   route_parameters:
-    elementtype: 'actuator'
+    elementtype: 'component'
     page: '1'
     pagesize: '9'
   parent: sir.manage_top_level
   menu_name: main
   weight: 3
-  requirements:
-    _permission: 'access content'
-    _role: 'authenticated'
-
-sir.manage_detectorstems :
-  title: Manage Detector Stems
-  description: Manage Detector Stems
-  route_name: sir.select_element
-  route_parameters:
-    elementtype: 'detectorstem'
-    page: '1'
-    pagesize: '9'
-  parent: sir.manage_top_level
-  menu_name: main
-  weight: 4
-  requirements:
-    _permission: 'access content'
-    _role: 'authenticated'
-
-sir.manage_detectors :
-  title: Manage Detectors
-  description: Manage Detectors
-  route_name: sir.select_element
-  route_parameters:
-    elementtype: 'detector'
-    page: '1'
-    pagesize: '9'
-  parent: sir.manage_top_level
-  menu_name: main
-  weight: 5
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
@@ -181,13 +151,13 @@ reviewer.instruments:
     _permission: 'access content'
     _role: 'content_editor'
 
-reviewer.detectorsstem:
-  title: Detector Stems
-  description: Manage Detectors Stem Reviews
+reviewer.componentsstem:
+  title: Component Stems
+  description: Manage Components Stem Reviews
   menu_name: main
   route_name: sir.select_review_element
   route_parameters:
-    elementtype: 'detectorstem'
+    elementtype: 'componentstem'
     page: '1'
     pagesize: '9'
   parent: reviewer.elements_review
@@ -196,47 +166,17 @@ reviewer.detectorsstem:
     _permission: 'access content'
     _role: 'content_editor'
 
-reviewer.detectors:
-  title: Detectors
-  description: Manage Detectors Reviews
+reviewer.components:
+  title: Components
+  description: Manage Components Reviews
   menu_name: main
   route_name: sir.select_review_element
   route_parameters:
-    elementtype: 'detector'
+    elementtype: 'component'
     page: '1'
     pagesize: '9'
   parent: reviewer.elements_review
   weight: 50
-  requirements:
-    _permission: 'access content'
-    _role: 'content_editor'
-
-reviewer.actuatorstem:
-  title: Actuator Stems
-  description: Manage Actuators Stem Reviews
-  menu_name: main
-  route_name: sir.select_review_element
-  route_parameters:
-    elementtype: 'actuatorstem'
-    page: '1'
-    pagesize: '9'
-  parent: reviewer.elements_review
-  weight: 60
-  requirements:
-    _permission: 'access content'
-    _role: 'content_editor'
-
-reviewer.actuators:
-  title: Actuators
-  description: Manage Actuators Reviews
-  menu_name: main
-  route_name: sir.select_review_element
-  route_parameters:
-    elementtype: 'actuator'
-    page: '1'
-    pagesize: '9'
-  parent: reviewer.elements_review
-  weight: 70
   requirements:
     _permission: 'access content'
     _role: 'content_editor'

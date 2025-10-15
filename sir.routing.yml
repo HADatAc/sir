@@ -150,138 +150,55 @@ sir.edit_containerslot:
   options:
     no_cache: 'TRUE'
 
-sir.containerslot_detector_autocomplete:
+sir.containerslot_component_autocomplete:
   path: '/sir/manage/containerslot/autocomplete'
   defaults:
-    _controller: '\Drupal\sir\Controller\JsonApiDetectorController::handleAutocomplete'
+    _controller: '\Drupal\sir\Controller\JsonApiComponentController::handleAutocomplete'
     _format: json
   requirements:
     _permission: 'access content'
 
-sir.containerslot_actuator_autocomplete:
-  path: '/sir/manage/containeractuatorslot/autocomplete'
-  defaults:
-    _controller: '\Drupal\sir\Controller\JsonApiActuatorController::handleAutocomplete'
-    _format: json
-  requirements:
-    _permission: 'access content'
+# Component Stem CRUD options
 
-# Actuator Stem CRUD options
-
-sir.add_actuatorstem:
-  path: 'sir/manage/addactuatorstem/{sourceactuatorstemuri}'
+sir.add_componentstem:
+  path: 'sir/manage/addcomponentstem/{sourcecomponentstemuri}'
   defaults:
-    _form: '\Drupal\sir\Form\AddActuatorStemForm'
-    _title: 'Add Actuator Stem'
+    _form: '\Drupal\sir\Form\AddComponentStemForm'
+    _title: 'Add Component Stem'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
-sir.edit_actuatorstem:
-  path: 'sir/manage/editactuatorstem/{actuatorstemuri}'
+sir.edit_componentstem:
+  path: 'sir/manage/editcomponentstem/{componentstemuri}'
   defaults:
-    _form: '\Drupal\sir\Form\EditActuatorStemForm'
-    _title: 'Edit Actuator Stem'
+    _form: '\Drupal\sir\Form\EditComponentStemForm'
+    _title: 'Edit Component Stem'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
-# Actuator CRUD options
+# Component CRUD options
 
-sir.add_actuator:
-  path: 'sir/manage/addactuator/{sourceactuatoruri}/{containersloturi}'
+sir.add_component:
+  path: 'sir/manage/addcomponent/{sourcecomponenturi}/{containersloturi}'
   defaults:
-    _form: '\Drupal\sir\Form\AddActuatorForm'
-    _title: 'Add Actuator'
+    _form: '\Drupal\sir\Form\AddComponentForm'
+    _title: 'Add Component'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
-sir.add_containerslot_actuator:
-  path: 'sir/manage/addattachactuator/{containersloturi}'
+sir.add_containerslot_component:
+  path: 'sir/manage/addattachcomponent/{containersloturi}'
   defaults:
-    _form: '\Drupal\sir\Form\AddContainerSlotActuatorForm'
-    _title: 'Add Container Slot'
-  requirements:
-    _permission: 'access content'
-    _custom_access_check: 'TRUE'
-  options:
-    no_cache: 'TRUE'
-
-sir.edit_actuator:
-  path: 'sir/manage/editactuator/{actuatoruri}'
-  defaults:
-    _form: '\Drupal\sir\Form\EditActuatorForm'
-    _title: 'Edit Actuator'
-  requirements:
-    _permission: 'access content'
-    _custom_access_check: 'TRUE'
-  options:
-    no_cache: 'TRUE'
-
-sir.actuator_stem_autocomplete:
-  path: '/sir/manage/actuator/stem/autocomplete'
-  defaults:
-    _controller: '\Drupal\sir\Controller\JsonApiActuatorStemController::handleAutocomplete'
-    _format: json
-  requirements:
-    _permission: 'access content'
-
-sir.actuator_codebook_autocomplete:
-  path: '/sir/manage/actuator/codebook/autocomplete'
-  defaults:
-    _controller: '\Drupal\sir\Controller\JsonApiActuatorCodebookController::handleAutocomplete'
-    _format: json
-  requirements:
-    _permission: 'access content'
-
-# Detector Stem CRUD options
-
-sir.add_detectorstem:
-  path: 'sir/manage/adddetectorstem/{sourcedetectorstemuri}'
-  defaults:
-    _form: '\Drupal\sir\Form\AddDetectorStemForm'
-    _title: 'Add Detector Stem'
-  requirements:
-    _permission: 'access content'
-    _custom_access_check: 'TRUE'
-  options:
-    no_cache: 'TRUE'
-
-sir.edit_detectorstem:
-  path: 'sir/manage/editdetectorstem/{detectorstemuri}'
-  defaults:
-    _form: '\Drupal\sir\Form\EditDetectorStemForm'
-    _title: 'Edit Detector Stem'
-  requirements:
-    _permission: 'access content'
-    _custom_access_check: 'TRUE'
-  options:
-    no_cache: 'TRUE'
-
-# Detector CRUD options
-
-sir.add_detector:
-  path: 'sir/manage/adddetector/{sourcedetectoruri}/{containersloturi}'
-  defaults:
-    _form: '\Drupal\sir\Form\AddDetectorForm'
-    _title: 'Add Detector'
-  requirements:
-    _permission: 'access content'
-    _custom_access_check: 'TRUE'
-  options:
-    no_cache: 'TRUE'
-
-sir.add_containerslot_detector:
-  path: 'sir/manage/addattachdetector/{containersloturi}'
-  defaults:
-    _form: '\Drupal\sir\Form\AddContainerSlotDetectorForm'
+    _form: '\Drupal\sir\Form\AddContainerSlotComponentForm'
     _title: 'Add Contaniner Slot'
   requirements:
     _permission: 'access content'
@@ -289,27 +206,27 @@ sir.add_containerslot_detector:
   options:
     no_cache: 'TRUE'
 
-sir.edit_detector:
-  path: 'sir/manage/editdetector/{detectoruri}'
+sir.edit_component:
+  path: 'sir/manage/editcomponent/{componenturi}'
   defaults:
-    _form: '\Drupal\sir\Form\EditDetectorForm'
-    _title: 'Edit Detector'
+    _form: '\Drupal\sir\Form\EditComponentForm'
+    _title: 'Edit Component'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'
   options:
     no_cache: 'TRUE'
 
-sir.detector_stem_autocomplete:
-  path: '/sir/manage/detector/stem/autocomplete'
+sir.component_stem_autocomplete:
+  path: '/sir/manage/component/stem/autocomplete'
   defaults:
     _controller: '\Drupal\sir\Controller\JsonApiStemController::handleAutocomplete'
     _format: json
   requirements:
     _permission: 'access content'
 
-sir.detector_codebook_autocomplete:
-  path: '/sir/manage/detector/codebook/autocomplete'
+sir.component_codebook_autocomplete:
+  path: '/sir/manage/component/codebook/autocomplete'
   defaults:
     _controller: '\Drupal\sir\Controller\JsonApiCodebookController::handleAutocomplete'
     _format: json
@@ -539,52 +456,26 @@ sir.review_codebook:
   options:
     no_cache: 'TRUE'
 
-## Detector
+## Component
 
-sir.review_detector:
-  path: 'sir/manage/reviewdetector/{detectoruri}'
+sir.review_component:
+  path: 'sir/manage/reviewcomponent/{componenturi}'
   defaults:
-    _form: '\Drupal\sir\Form\Review\ReviewDetectorForm'
-    _title: 'Review Detector'
+    _form: '\Drupal\sir\Form\Review\ReviewComponentForm'
+    _title: 'Review Component'
   requirements:
     # _permission: 'access reviewer menu'
     _role: 'content_editor'
   options:
     no_cache: 'TRUE'
 
-## Detector Stem
+## Component Stem
 
-sir.review_detectorstem:
-  path: 'sir/manage/reviewdetectorstem/{detectorstemuri}'
+sir.review_componentstem:
+  path: 'sir/manage/reviewcomponentstem/{componentstemuri}'
   defaults:
-    _form: '\Drupal\sir\Form\Review\ReviewDetectorStemForm'
-    _title: 'Review Detector Stem'
-  requirements:
-    # _permission: 'access reviewer menu'
-    _role: 'content_editor'
-  options:
-    no_cache: 'TRUE'
-
-# Actuator
-
-sir.review_actuator:
-  path: 'sir/manage/reviewactuator/{actuatoruri}'
-  defaults:
-    _form: '\Drupal\sir\Form\Review\ReviewActuatorForm'
-    _title: 'Review Actuator'
-  requirements:
-    # _permission: 'access reviewer menu'
-    _role: 'content_editor'
-  options:
-    no_cache: 'TRUE'
-
-## Actuator Stem
-
-sir.review_actuatorstem:
-  path: 'sir/manage/reviewactuatorstem/{actuatorstemuri}'
-  defaults:
-    _form: '\Drupal\sir\Form\Review\ReviewActuatorStemForm'
-    _title: 'Review Actuator Stem'
+    _form: '\Drupal\sir\Form\Review\ReviewComponentStemForm'
+    _title: 'Review Component Stem'
   requirements:
     # _permission: 'access reviewer menu'
     _role: 'content_editor'

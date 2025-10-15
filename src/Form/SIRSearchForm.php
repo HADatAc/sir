@@ -22,13 +22,9 @@ class SIRSearchForm extends FormBase {
   }
 
   protected $elementtype;
-
   protected $keyword;
-
   protected $language;
-
   protected $page;
-
   protected $pagesize;
 
   public function getElementType() {
@@ -71,22 +67,29 @@ class SIRSearchForm extends FormBase {
     return $this->pagesize = $pgsize;
   }
 
+  public function iconSubmitForm(array &$form, FormStateInterface $form_state) {
+    $clicked_button = $form_state->getTriggeringElement()['#name'] ?? null;
+    if ($clicked_button) {
+      $form_state->setValue('search_element_type', $clicked_button);
+    }
+    $form_state->setValue('search_keyword', '');
+  }
+
   /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
 
-    // MODAL
     $form['#attached']['library'][] = 'rep/webdoc_modal';
     $form['#attached']['library'][] = 'core/drupal.dialog';
-    $base_url = \Drupal::request()->getSchemeAndHttpHost() . \Drupal::request()->getBaseUrl();
+    $base_url = (\Drupal::request()->headers->get('x-forwarded-proto') === 'https' ? 'https://':'http://'). \Drupal::request()->getHost() . \Drupal::request()->getBaseUrl();
     $form['#attached']['drupalSettings']['webdoc_modal'] = [
       'baseUrl' => $base_url,
     ];
     $form['#attached']['library'][] = 'rep/pdfjs';
 
+    $form['#attached']['library'][] = 'sir/sir_icons';
 
-    // LOAD LANGUAGE TABLE
     $tables = new Tables;
     $tablesLanguages = $tables->getLanguages();
     $languages = [];
@@ -97,10 +100,10 @@ class SIRSearchForm extends FormBase {
       }
     }
 
-    // RETRIEVE PARAMETERS FROM HTML REQUEST
     $request = \Drupal::request();
     $pathInfo = $request->getPathInfo();
-    $pathElements = (explode('/',$pathInfo));
+    $pathElements = (explode('/', $pathInfo));
+
     $this->setElementType('instrument');
     $this->setKeyword('');
     $this->setLanguage('');
@@ -109,13 +112,11 @@ class SIRSearchForm extends FormBase {
 
     // IT IS A CLASS ELEMENT if size of path elements is equal 5
     if (sizeof($pathElements) == 5) {
-
       // ELEMENT TYPE
       $this->setElementType($pathElements[4]);
 
     // IT IS AN INSTANCE ELEMENT if size of path elements is equal 8
     } else if (sizeof($pathElements) >= 8) {
-
       // ELEMENT TYPE
       $this->setElementType($pathElements[3]);
 
@@ -134,42 +135,71 @@ class SIRSearchForm extends FormBase {
       }
 
       // PAGE
-      $this->setPage((int)$pathElements[6]);
+      $this->setPage((int) $pathElements[6]);
 
       // PAGESIZE
-      $this->setPageSize((int)$pathElements[7]);
+      $this->setPageSize((int) $pathElements[7]);
     }
 
     $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument');
-    $preferred_detector = \Drupal::config('rep.settings')->get('preferred_detector');
-    $preferred_actuator = \Drupal::config('rep.settings')->get('preferred_actuator') ?? 'Actuator';
 
     $form['search_element_type'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Element Type'),
-      '#required' => TRUE,
-      '#options' => [
-        'instrument' => $this->t($preferred_instrument . 's'),
-        'actuatorstem' => $this->t($preferred_actuator . ' Stems'),
-        'actuator' => $this->t($preferred_actuator . 's'),
-        'detectorstem' => $this->t($preferred_detector . ' Stems'),
-        'detector' => $this->t($preferred_detector . 's'),
-        'codebook' => $this->t('Codebooks'),
-        'responseoption' => $this->t('Response Options'),
-        'annotationstem' => $this->t('Annotation Stems'),
-        'annotation' => $this->t('Annotations'),
-      ],
-      '#default_value' => $this->getElementType(),
-      '#ajax' => [
-        'callback' => '::ajaxSubmitForm',
-      ],
-      '#attributes' => [
-        'class' => ['mt-1'],
-      ],
+      '#type' => 'hidden',
+      '#value' => $this->getElementType(),
     ];
+
+    $form['element_icons'] = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['element-icons-grid-wrapper']],
+    ];
+
+    $form['element_icons']['grid'] = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['element-icons-grid']],
+    ];
+
+    $element_types = [
+      'instrument'      => ['label' => $this->t($preferred_instrument . 's'),          'image' => 'white/instrument_placeholder.png'],
+      'componentstem'   => ['label' => $this->t('Component Stems'),                    'image' => 'white/component_stem_placeholder.png'],
+      'component'       => ['label' => $this->t('Components'),                         'image' => 'white/component_placeholder.png'],
+      'codebook'        => ['label' => $this->t('Codebooks'),                          'image' => 'white/codebook_placeholder.png'],
+      'responseoption'  => ['label' => $this->t('Response Options'),                   'image' => 'white/responseoption_placeholder.png'],
+      'annotationstem'  => ['label' => $this->t('Annotation Stems'),                   'image' => 'white/annotation_stem_placeholder.png'],
+      'annotation'      => ['label' => $this->t('Annotations'),                        'image' => 'white/annotation_placeholder.png'],
+    ];
+
+    $module_path = \Drupal::request()->getBaseUrl() . '/' . \Drupal::service('extension.list.module')->getPath('rep');
+
+    foreach ($element_types as $type => $info) {
+      $placeholder_image = $module_path . '/images/placeholders/' . $info['image'];
+
+      $button_classes = ['element-icon-button'];
+      if ($type === $this->getElementType()) {
+        $button_classes[] = 'selected';
+      }
+
+      $form['element_icons']['grid'][$type] = [
+        '#type' => 'submit',
+        '#value' => '',
+        '#attributes' => [
+          'class' => $button_classes,
+          'style' => "background-image: url('{$placeholder_image}');",
+          'title' => $info['label'],
+          'aria-label' => $info['label'],
+        ],
+        '#name' => $type,
+        '#submit' => ['::iconSubmitForm'],
+        '#limit_validation_errors' => [],
+        '#ajax' => [
+          'callback' => '::ajaxSubmitForm',
+          'progress' => ['type' => 'none'],
+        ],
+      ];
+    }
 
     $element = $this->getElementType();
     if (($element !== null && $element !== 'instrument')) {
+
       $form['search_language'] = [
         '#type' => 'select',
         '#title' => $this->t('Language'),
@@ -191,6 +221,7 @@ class SIRSearchForm extends FormBase {
           'class' => ['mt-1'],
         ],
       ];
+
       $form['search_submit'] = [
         '#type' => 'submit',
         '#value' => $this->t('Search'),
@@ -209,10 +240,9 @@ class SIRSearchForm extends FormBase {
       '#type' => 'container',
       '#text' => '',
       '#attributes' => [
-          'id' => 'node-comment-display',
-          'class' => ['mt-2', 'w-100'],
-          'style' => 'display:none;'
-          //'style' => 'float:left',
+        'id' => 'node-comment-display',
+        'class' => ['mt-2', 'w-100'],
+        'style' => 'display:none;',
       ],
     ];
 
@@ -237,7 +267,8 @@ class SIRSearchForm extends FormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-    if(strlen($form_state->getValue('search_element_type')) < 1) {
+    $elt = $form_state->getValue('search_element_type');
+    if (!is_string($elt) || strlen($elt) < 1) {
       $form_state->setErrorByName('search_element_type', $this->t('Please select an element type'));
     }
   }
@@ -257,9 +288,7 @@ class SIRSearchForm extends FormBase {
     }
 
     // IF ELEMENT TYPE IS CLASS
-    if (($form_state->getValue('search_element_type') == 'instrument') ||
-        ($form_state->getValue('search_element_type') == 'actuatorstem') ||
-        ($form_state->getValue('search_element_type') == 'detectorstem')) {
+    if (($form_state->getValue('search_element_type') == 'instrument')) {
       $url = Url::fromRoute('rep.browse_tree');
       $url->setRouteParameter('mode', 'browse');
       $url->setRouteParameter('elementtype', $form_state->getValue('search_element_type'));
@@ -286,7 +315,7 @@ class SIRSearchForm extends FormBase {
     $elementType = $form_state->getValue('search_element_type');
 
     // Build URL for the route 'sir.search' with parameters.
-    if ($elementType === 'instrument' || $elementType === 'detectorstem' || $elementType === 'actuatorstem'){
+    if ($elementType === 'instrument') {
       $url = Url::fromRoute('sir.search', [
         'mode' => 'browse',
         'elementtype' => $elementType,
@@ -306,5 +335,4 @@ class SIRSearchForm extends FormBase {
     $url = $this->redirectUrl($form_state);
     $form_state->setRedirectUrl($url);
   }
-
 }

@@ -10,7 +10,7 @@ class SlotElement {
   public static function generateHeader() {
 
     return $header = [
-      'element_detector' => t('Item(s)'),
+      'element_component' => t('Item(s)'),
       'element_position' => t('Position'),
     ];
 
@@ -30,22 +30,22 @@ class SlotElement {
       foreach ($list as $element) {
         $uri = "";
         $priority = "";
-        $detectorStr = "";
+        $componentStr = "";
         if ($element->uri != NULL) {
           $uri = $element->uri;
           $priority = $element->hasPriority;
           $uri = Utils::namespaceUri($uri);
-          if ($element->hasDetector != NULL && $element->hasDetector != "") {
-            $detector = $api->parseObjectResponse($api->getUri($element->hasDetector), 'getUri');
-            if ($detector != NULL) {
-              $nsUri = Utils::namespaceUri($detector->uri);
-              $detectorStr =  t('<a href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($detector->uri).'">'.$nsUri.'</a>');
+          if ($element->hasComponent != NULL && $element->hasComponent != "") {
+            $component = $api->parseObjectResponse($api->getUri($element->hasComponent), 'getUri');
+            if ($component != NULL) {
+              $nsUri = Utils::namespaceUri($component->uri);
+              $componentStr =  t('<a href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($component->uri).'">'.$nsUri.'</a>');
             }
           }
         }
         $output[$uri] = [
-          'element_detector' => $detectorStr,     
-          'element_position' => $priority,     
+          'element_component' => $componentStr,
+          'element_position' => $priority,
         ];
       }
     }

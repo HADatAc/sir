@@ -7,10 +7,10 @@ sir_js_css:
     - core/drupal
     - core/jquery.once
 
-sir_detectorstem:
+sir_componentstem:
   version: 1.x
   js:
-    js/sir_detectorstem.js: {}
+    js/sir_componentstem.js: {}
   dependencies:
     - core/jquery
     - core/drupal
@@ -25,3 +25,10 @@ sir_manageSlotsElementsForm:
   dependencies:
     - core/jquery
     - core/drupal
+
+sir_icons:
+  version: 1.x
+  css:
+    theme:
+      css/sir_icons.css: {}
+
