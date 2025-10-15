@@ -387,6 +387,9 @@ class AddActuatorForm extends FormBase {
       if ($form_state->getValue('actuator_stem') == NULL || $form_state->getValue('actuator_stem') == '') {
         $form_state->setErrorByName('actuator_stem', $this->t('Actuator stem value is empty. Please enter a valid stem.'));
       }
+      if ($form_state->getValue('actuator_codebook') == NULL || $form_state->getValue('actuator_codebook') == '') {
+        $form_state->setErrorByName('actuator_codebook', $this->t('Codebook value is empty. Please enter a valid codebook.'));
+      }
       // $stemUri = Utils::uriFromAutocomplete($form_state->getValue('actuator_stem'));
       // $this->setActuatorStem($api->parseObjectResponse($api->getUri($stemUri),'getUri'));
       // if($this->getActuatorStem() == NULL) {

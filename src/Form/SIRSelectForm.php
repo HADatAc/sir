@@ -672,16 +672,31 @@ class SIRSelectForm extends FormBase {
     $disabled_rows = $results['disabled_rows'];
 
     // Define Placeholder image
-
     switch ($this->element_type) {
+      case 'instrument':
+        $placeholder_image = base_path() . \Drupal::service('extension.list.module')->getPath('rep') . '/images/placeholders/instrument_placeholder.png';
+        break;
       case 'detector':
-        $placeholder_image = base_path() . \Drupal::service('extension.list.module')->getPath('rep') . '/images/icons/detector.png';
+        $placeholder_image = base_path() . \Drupal::service('extension.list.module')->getPath('rep') . '/images/placeholders/detector_placeholder.png';
+        break;
+      case 'detectorstem':
+        $placeholder_image = base_path() . \Drupal::service('extension.list.module')->getPath('rep') . '/images/placeholders/detector_stem_placeholder.png';
         break;
       case 'actuator':
-        $placeholder_image = base_path() . \Drupal::service('extension.list.module')->getPath('rep') . '/images/icons/actuator.png';
+        $placeholder_image = base_path() . \Drupal::service('extension.list.module')->getPath('rep') . '/images/placeholders/actuator_placeholder.png';
         break;
-      default:
-        $placeholder_image = base_path() . \Drupal::service('extension.list.module')->getPath('rep') . '/images/ins_placeholder.png';
+      case 'actuatorstem':
+        $placeholder_image = base_path() . \Drupal::service('extension.list.module')->getPath('rep') . '/images/placeholders/actuator_stem_placeholder.png';
+        break;
+      case 'codebook':
+        $placeholder_image = base_path() . \Drupal::service('extension.list.module')->getPath('rep') . '/images/placeholders/codebook_placeholder.png';
+        break;
+      case 'responseoption':
+        $placeholder_image = base_path() . \Drupal::service('extension.list.module')->getPath('rep') . '/images/placeholders/responseoption_placeholder.png';
+        break;
+      case 'annotationstem':
+        $placeholder_image = base_path() . \Drupal::service('extension.list.module')->getPath('rep') . '/images/placeholders/annotation_stem_placeholder.png';
+        break;
     }
 
     // Se não estiver adicionando mais, crie o wrapper principal
