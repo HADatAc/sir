@@ -10,10 +10,10 @@ use Drupal\rep\Utils;
 use Drupal\sir\Entity\AnnotationStem;
 use Drupal\sir\Entity\ComponentStem;
 use Drupal\sir\Entity\Component;
-use Drupal\sir\Entity\ProcessStem;
+use Drupal\std\Entity\WorkflowStem;
 use Drupal\sir\Entity\Codebook;
 use Drupal\sir\Entity\Instrument;
-use Drupal\sir\Entity\Process;
+use Drupal\std\Entity\Workflow;
 use Drupal\sir\Entity\ResponseOption;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -213,14 +213,14 @@ class SIRReviewForm extends FormBase {
         $this->plural_class_name = "Annotation Stems";
         break;
 
-      // PROCESS STEM
-      case "processstem":
+      // WORKFLOW STEM
+      case "workflowstem":
         $this->single_class_name = "Workflow Stem";
         $this->plural_class_name = "Workflow Stems";
         break;
 
-      // PROCESS
-      case "process":
+      // WORKFLOW
+      case "workflow":
         $this->single_class_name = "Workflow";
         $this->plural_class_name = "Workflows";
         break;
@@ -309,10 +309,10 @@ class SIRReviewForm extends FormBase {
         return ResponseOption::generateReviewHeader();
       case "annotationstem":
         return AnnotationStem::generateHeader();
-      case "processstem":
-        return ProcessStem::generateHeader();
-      case "process":
-        return Process::generateHeader();
+      case "workflowstem":
+        return WorkflowStem::generateHeader();
+      case "workflow":
+        return Workflow::generateHeader();
       default:
         return [];
     }
@@ -335,10 +335,10 @@ class SIRReviewForm extends FormBase {
         return ResponseOption::generateReviewOutput($this->getList());
       case "annotationstem":
         return AnnotationStem::generateOutput($this->getList());
-      case "processstem":
-        return ProcessStem::generateReviewOutput($this->getList());
-      case "process":
-        return Process::generateOutput($this->getList());
+      case "workflowstem":
+        return WorkflowStem::generateReviewOutput($this->getList());
+      case "workflow":
+        return Workflow::generateOutput($this->getList());
       default:
         return [];
     }
@@ -376,7 +376,7 @@ class SIRReviewForm extends FormBase {
         'codebook' => 'sir.edit_codebook',
         'responseoption' => 'sir.edit_response_option',
         'annotationstem' => 'sir.edit_annotationstem',
-        'processstem' => 'sir.edit_processstem',
+        'workflowstem' => 'sir.edit_workflowstem',
       ];
 
       // Verificar se o tipo de elemento possui uma rota definida
@@ -437,12 +437,12 @@ class SIRReviewForm extends FormBase {
   }
 
   /**
-   * Submit handler for deriving a process stem in card view.
+   * Submit handler for deriving a workflow stem in card view.
    */
-  public function deriveProcessStemSubmit(array &$form, FormStateInterface $form_state) {
+  public function deriveWorkflowStemSubmit(array &$form, FormStateInterface $form_state) {
     $triggering_element = $form_state->getTriggeringElement();
     $uri = $triggering_element['#element_uri'];
-    $this->performDeriveProcessStem($uri, $form_state);
+    $this->performDeriveWorkflowStem($uri, $form_state);
   }
 
   /**
@@ -481,9 +481,9 @@ class SIRReviewForm extends FormBase {
     } elseif (strpos($button_name, 'derive_componentstem_') === 0) {
       $uri = $triggering_element['#element_uri'];
       $this->performDeriveComponentStem($uri, $form_state);
-    } elseif (strpos($button_name, 'derive_processstem_') === 0) {
+    } elseif (strpos($button_name, 'derive_workflowstem_') === 0) {
       $uri = $triggering_element['#element_uri'];
-      $this->performDeriveProcessStem($uri, $form_state);
+      $this->performDeriveWorkflowStem($uri, $form_state);
     } elseif ($button_name === 'add_element') {
       $this->performAdd($form_state);
     } elseif ($button_name === 'edit_element') {
@@ -530,12 +530,12 @@ class SIRReviewForm extends FormBase {
       } else {
         \Drupal::messenger()->addWarning($this->t('Please select exactly one item stem to derive.'));
       }
-    } elseif ($button_name === 'derive_processstem') {
+    } elseif ($button_name === 'derive_workflowstem') {
       $selected_rows = array_filter($form_state->getValue('element_table'));
       if (count($selected_rows) == 1) {
         $selected_uris = array_keys($selected_rows);
         $uri = $selected_uris[0];
-        $this->performDeriveProcessStem($uri, $form_state);
+        $this->performDeriveWorkflowStem($uri, $form_state);
       } else {
         \Drupal::messenger()->addWarning($this->t('Please select exactly one item stem to derive.'));
       }
@@ -575,13 +575,13 @@ class SIRReviewForm extends FormBase {
       Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_annotationstem');
       $url = Url::fromRoute('sir.add_annotationstem');
       $url->setRouteParameter('sourceannotationstemuri', 'EMPTY');
-    } elseif ($this->element_type == 'processstem') {
-      Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_processstem');
-      $url = Url::fromRoute('sir.add_processstem');
-      $url->setRouteParameter('sourceprocessstemuri', 'EMPTY');
-    } elseif ($this->element_type == 'process') {
-      Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_process');
-      $url = Url::fromRoute('sir.add_process');
+    } elseif ($this->element_type == 'workflowstem') {
+      Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_workflowstem');
+      $url = Url::fromRoute('sir.add_workflowstem');
+      $url->setRouteParameter('sourceworkflowstemuri', 'EMPTY');
+    } elseif ($this->element_type == 'workflow') {
+      Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_workflow');
+      $url = Url::fromRoute('sir.add_workflow');
     }
     $form_state->setRedirectUrl($url);
   }
@@ -605,10 +605,10 @@ class SIRReviewForm extends FormBase {
       $url = Url::fromRoute('sir.review_response_option', ['responseoptionuri' => base64_encode($uri)]);
     } elseif ($this->element_type == 'annotationstem') {
       $url = Url::fromRoute('sir.review_annotationstem', ['annotationstemuri' => base64_encode($uri)]);
-    } elseif ($this->element_type == 'processstem') {
-      $url = Url::fromRoute('sir.review_processstem', ['processstemuri' => base64_encode($uri)]);
-    } elseif ($this->element_type == 'process') {
-      $url = Url::fromRoute('sir.review_process', ['processuri' => base64_encode($uri)]);
+    } elseif ($this->element_type == 'workflowstem') {
+      $url = Url::fromRoute('sir.review_workflowstem', ['workflowstemuri' => base64_encode($uri)]);
+    } elseif ($this->element_type == 'workflow') {
+      $url = Url::fromRoute('sir.review_workflow', ['workflowuri' => base64_encode($uri)]);
     } else {
       \Drupal::messenger()->addError($this->t('No review route found for this element type.'));
       return;
@@ -637,10 +637,10 @@ class SIRReviewForm extends FormBase {
         $api->responseOptionDel($uri);
       } elseif ($this->element_type == 'annotationstem') {
         $api->annotationStemDel($uri);
-      } elseif ($this->element_type == 'processstem') {
-        $api->processStemDel($uri);
-      } elseif ($this->element_type == 'process') {
-        $api->processDel($uri);
+      } elseif ($this->element_type == 'workflowstem') {
+        $api->workflowStemDel($uri);
+      } elseif ($this->element_type == 'workflow') {
+        $api->workflowDel($uri);
       }
     }
     \Drupal::messenger()->addMessage($this->t('Selected @elements have been deleted successfully.', ['@elements' => $this->plural_class_name]));
@@ -688,14 +688,14 @@ class SIRReviewForm extends FormBase {
   }
 
   /**
-   * Perform derive process stem action.
+   * Perform derive workflow stem action.
    */
-  protected function performDeriveProcessStem($uri, FormStateInterface $form_state) {
+  protected function performDeriveWorkflowStem($uri, FormStateInterface $form_state) {
     $uid = \Drupal::currentUser()->id();
     $previousUrl = \Drupal::request()->getRequestUri();
-    Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_processstem');
-    $url = Url::fromRoute('sir.add_processstem');
-    $url->setRouteParameter('sourceprocessstemuri', base64_encode($uri));
+    Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_workflowstem');
+    $url = Url::fromRoute('sir.add_workflowstem');
+    $url->setRouteParameter('sourceworkflowstemuri', base64_encode($uri));
     $form_state->setRedirectUrl($url);
   }
 

@@ -686,7 +686,7 @@ class SIRSelectForm extends FormBase {
       ];
     }
 
-    // Process each item to build the cards
+    // Workflow each item to build the cards
     foreach ($output as $key => $item) {
 
         // Get item variables
@@ -1649,14 +1649,14 @@ class SIRSelectForm extends FormBase {
         $api = \Drupal::service('rep.api_connector');
         $api->elementDel('componentstem', $result->uri);
         $api->elementAdd('componentstem', $componentStemJson);
-      // } elseif ($this->element_type == 'processstem') {
+      // } elseif ($this->element_type == 'workflowstem') {
       //   // CENARIO #1: CHECK IF IT HAS wasDerivedFrom property, means it is a derived element
       //   if ($result->wasDerivedFrom !== NULL
       //       && $this->checkDerivedElements($uri, $this->element_type)) {
       //       \Drupal::messenger()->addError($this->t('There is a previous version that has the same content.'), ['@elements' => $this->plural_class_name]);
       //       return false;
 
-      //   // CENARIO #2: CHECK IF THERE ARE ANY OTHER PROCESS WITH SAME CONTENT ALREADY IN REP, must have a new end-point for that
+      //   // CENARIO #2: CHECK IF THERE ARE ANY OTHER WORKFLOW WITH SAME CONTENT ALREADY IN REP, must have a new end-point for that
       //   }
       //   elseif ($result->wasDerivedFrom === NULL) {
       //     $response = $api->listByKeywordAndLanguage($this->element_type, $result->hasContent, $result->hasLanguage, 99999, 0);
@@ -1673,10 +1673,10 @@ class SIRSelectForm extends FormBase {
       //     }
       //   }
 
-      //   $processStemJson = '{"uri":"'.$result->uri.'",'.
+      //   $workflowStemJson = '{"uri":"'.$result->uri.'",'.
       //   '"superUri":"'.$result->superUri.'",'.
       //   '"label":"'.$result->label.'",'.
-      //   '"hascoTypeUri":"'.VSTOI::PROCESS_STEM.'",'.
+      //   '"hascoTypeUri":"'.VSTOI::WORKFLOW_STEM.'",'.
       //   '"hasStatus":"'.VSTOI::UNDER_REVIEW.'",'.
       //   '"hasContent":"'.$result->hasContent.'",'.
       //   '"hasLanguage":"'.$result->hasLanguage.'",'.
@@ -1692,12 +1692,12 @@ class SIRSelectForm extends FormBase {
 
       //   // UPDATE BY DELETING AND CREATING
       //   $api = \Drupal::service('rep.api_connector');
-      //   $api->elementDel('processstem', $result->uri);
-      //   $api->elementAdd('processstem', $processStemJson);
+      //   $api->elementDel('workflowstem', $result->uri);
+      //   $api->elementAdd('workflowstem', $workflowStemJson);
       }
 
       // } elseif ($this->element_type == 'annotationstem') {
-      // } elseif ($this->element_type == 'process') {
+      // } elseif ($this->element_type == 'workflow') {
     }
 
     $form_state->setRedirect('<current>');
