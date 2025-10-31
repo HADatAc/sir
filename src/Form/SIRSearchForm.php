@@ -198,7 +198,7 @@ class SIRSearchForm extends FormBase {
     }
 
     $element = $this->getElementType();
-    if (($element !== null && $element !== 'instrument')) {
+    if (($element !== null && $element !== 'instrument' && $element !== 'componentstem' && $element !== 'annotationstem')) {
 
       $form['search_language'] = [
         '#type' => 'select',
@@ -288,7 +288,6 @@ class SIRSearchForm extends FormBase {
     }
 
     // IF ELEMENT TYPE IS CLASS
-    dpm($form_state->getValue('search_element_type'));
     if (
       $form_state->getValue('search_element_type') == 'instrument' ||
       $form_state->getValue('search_element_type') == 'componentstem' ||
