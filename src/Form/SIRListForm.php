@@ -212,7 +212,7 @@ class SIRListForm extends FormBase {
 
       // ANNOTATION STEM
       case "annotationstem":
-        $class_name = "Annotaiton Stems";
+        $class_name = "Annotation Stems";
         $header = AnnotationStem::generateHeader();
         $output = AnnotationStem::generateOutput($this->getList());
         break;

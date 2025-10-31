@@ -288,7 +288,12 @@ class SIRSearchForm extends FormBase {
     }
 
     // IF ELEMENT TYPE IS CLASS
-    if (($form_state->getValue('search_element_type') == 'instrument')) {
+    dpm($form_state->getValue('search_element_type'));
+    if (
+      $form_state->getValue('search_element_type') == 'instrument' ||
+      $form_state->getValue('search_element_type') == 'componentstem' ||
+      $form_state->getValue('search_element_type') == 'annotationstem'
+    ) {
       $url = Url::fromRoute('rep.browse_tree');
       $url->setRouteParameter('mode', 'browse');
       $url->setRouteParameter('elementtype', $form_state->getValue('search_element_type'));
@@ -315,7 +320,9 @@ class SIRSearchForm extends FormBase {
     $elementType = $form_state->getValue('search_element_type');
 
     // Build URL for the route 'sir.search' with parameters.
-    if ($elementType === 'instrument') {
+    if ($elementType === 'instrument' ||
+        $elementType === 'componentstem' ||
+        $elementType === 'annotationstem') {
       $url = Url::fromRoute('sir.search', [
         'mode' => 'browse',
         'elementtype' => $elementType,
