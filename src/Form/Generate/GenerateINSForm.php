@@ -394,13 +394,13 @@ class GenerateInsForm extends FormBase {
         $context_label = 'INS export';
         switch ($selected) {
           case 'instrument':
-            $context_label = 'INS per instrument';
+            $context_label = 'Generated INS per instrument';
             break;
           case 'status':
-            $context_label = 'INS by status';
+            $context_label = 'Generated INS by status';
             break;
           case 'user_status':
-            $context_label = 'INS by user & status';
+            $context_label = 'Generated INS by user & status';
             break;
         }
 
@@ -408,7 +408,7 @@ class GenerateInsForm extends FormBase {
         $basename_no_ext = pathinfo($final_filename, PATHINFO_FILENAME);
 
         // Build label without extension
-        $label = $context_label . ' - ' . $basename_no_ext;
+        $label = $context_label . ' - ' . ucfirst($basename_no_ext);
 
         // 5) Create DATAFILE JSON entry.
         $newDataFileUri = Utils::uriGen('datafile');
