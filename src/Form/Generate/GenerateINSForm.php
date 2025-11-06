@@ -363,7 +363,6 @@ class GenerateInsForm extends FormBase {
     }
 
     // If the API returns a JSON envelope with an isSuccessful flag, proceed.
-    dpm(json_decode($result));
     $decoded = is_string($result) ? json_decode($result) : null;
     if ($decoded && isset($decoded->isSuccessful) && $decoded->isSuccessful === true) {
 
