@@ -202,6 +202,42 @@ class GenerateInsForm extends FormBase {
       }
     }
 
+    // Media folder name field.
+    $form['mediafolder'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Media Folder Name'),
+      '#description' => $this->t('Enter the media folder name for the generated KGR files.'),
+      '#states' => [
+        // Só visível se a opção for instrument OU user_status.
+        'visible' => [
+          [':input[name="option_select"]' => ['value' => 'instrument']],
+          'or',
+          [':input[name="option_select"]' => ['value' => 'user_status']],
+        ],
+        // Só obrigatório nesses casos.
+        'required' => [
+          [':input[name="option_select"]' => ['value' => 'instrument']],
+          'or',
+          [':input[name="option_select"]' => ['value' => 'user_status']],
+        ],
+      ],
+    ];
+
+    // Verify URI field (true/false)
+    $form['verifyuri'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Verify URI'),
+      '#description' => $this->t('Check this box to verify the URI of the selected element.'),
+      '#default_value' => FALSE,
+      '#states' => [
+        'visible' => [
+          [':input[name="option_select"]' => ['value' => 'instrument']],
+          'or',
+          [':input[name="option_select"]' => ['value' => 'user_status']],
+        ],
+      ],
+    ];
+
     // Actions container.
     $form['actions'] = [
       '#type' => 'actions',
@@ -292,6 +328,12 @@ class GenerateInsForm extends FormBase {
     $selected = $form_state->getValue('option_select');
     $filename = $form_state->getValue(['additional_fields', 'filename']);
 
+    // Retrieve the media folder name.
+    $mediafolder = $form_state->getValue('mediafolder');
+
+    // Retrieve the verify URI checkbox value.
+    $verifyuri = $form_state->getValue('verifyuri');
+
     // API service (custom connector).
     $api_service = \Drupal::service('rep.api_connector');
 
@@ -301,7 +343,7 @@ class GenerateInsForm extends FormBase {
     switch ($selected) {
       case 'instrument':
         $instrument = Utils::uriFromAutocomplete($form_state->getValue(['additional_fields', 'instrument', 'main']));
-        $result = $api_service->generateMTPerInstrument('ins', $instrument, $filename);
+        $result = $api_service->generateMTPerInstrument('ins', $instrument, $filename, $mediafolder, $verifyuri);
         break;
 
       case 'status':
@@ -312,7 +354,7 @@ class GenerateInsForm extends FormBase {
       case 'user_status':
         $status = $form_state->getValue(['additional_fields', 'status']);
         $user_email = $form_state->getValue(['additional_fields', 'user_email']);
-        $result = $api_service->generateMTPerUserStatus('ins', $user_email, $status, $filename);
+        $result = $api_service->generateMTPerUserStatus('ins', $user_email, $status, $filename, $mediafolder, $verifyuri);
         break;
 
       default:
@@ -321,6 +363,7 @@ class GenerateInsForm extends FormBase {
     }
 
     // If the API returns a JSON envelope with an isSuccessful flag, proceed.
+    dpm(json_decode($result));
     $decoded = is_string($result) ? json_decode($result) : null;
     if ($decoded && isset($decoded->isSuccessful) && $decoded->isSuccessful === true) {
 
