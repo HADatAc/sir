@@ -218,6 +218,8 @@ class GenerateInsForm extends FormBase {
         'required' => [
           [':input[name="option_select"]' => ['value' => 'instrument']],
           'or',
+          [':input[name="option_select"]' => ['value' => 'status']],
+          'or',
           [':input[name="option_select"]' => ['value' => 'user_status']],
         ],
       ],
@@ -232,6 +234,8 @@ class GenerateInsForm extends FormBase {
       '#states' => [
         'visible' => [
           [':input[name="option_select"]' => ['value' => 'instrument']],
+          'or',
+          [':input[name="option_select"]' => ['value' => 'status']],
           'or',
           [':input[name="option_select"]' => ['value' => 'user_status']],
         ],
@@ -348,7 +352,7 @@ class GenerateInsForm extends FormBase {
 
       case 'status':
         $status = $form_state->getValue(['additional_fields', 'status']);
-        $result = $api_service->generateMTPerStatus('ins', $status, $filename, '', '');
+        $result = $api_service->generateMTPerStatus('ins', $status, $filename, $mediafolder, $verifyuri);
         break;
 
       case 'user_status':
