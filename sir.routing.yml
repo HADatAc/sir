@@ -495,14 +495,16 @@ sir.review_instrument:
   options:
     no_cache: 'TRUE'
 
-# INS EDITOR
+# GENERATE MT's
 
-sir.generate_ins:
-  path: 'sir/manage/generateins'
+sir.generate:
+  path: '/sir/manage/generate/{elementtype}'
   defaults:
-    _form: '\Drupal\sir\Form\Generate\GenerateINSForm'
-    _title: 'Generate INS File'
+    _form: '\Drupal\sir\Form\Generate\GenerateForm'
+    _title_callback: '\Drupal\sir\Form\Generate\GenerateForm::pageTitle'
+    elementtype: 'instrument'
   requirements:
     _role: 'content_editor'
   options:
-    no_cache: 'TRUE'
+    no_cache: TRUE
+
