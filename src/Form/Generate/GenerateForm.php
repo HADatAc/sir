@@ -34,7 +34,7 @@ class GenerateForm extends FormBase {
    *
    * @var string
    */
-  protected $elementType = 'instrument';
+  protected $elementType = 'ins';
 
   /**
    * Canonical type URI for this MT element in HASCO vocabulary (if available).
@@ -67,7 +67,7 @@ class GenerateForm extends FormBase {
     switch ($slug) {
       case 'ins':
       case 'instrument':
-        $this->setElementType('instrument');
+        $this->setElementType('ins');
         $this->setElementName('INS');
         $this->setElementTypeUri($this->resolveHascoUri('INS'));
         break;
@@ -157,7 +157,7 @@ class GenerateForm extends FormBase {
     $element_label     = $this->getElementName();
     $selector_label    = $this->getSelectorLabelForType();
     $current_type_slug = $this->getElementType();
-    $is_instrument     = ($current_type_slug === 'instrument');
+    $is_instrument     = ($current_type_slug === 'ins');
 
     // Attach required libraries (modal and Drupal dialog).
     $form['#attached']['library'][] = 'rep/rep_modal';
@@ -368,24 +368,26 @@ class GenerateForm extends FormBase {
       ];
     }
 
+    // TODO: Remove when there are more
+    if ($is_instrument) {
+      // Actions.
+      $form['actions'] = ['#type' => 'actions'];
 
-    // Actions.
-    $form['actions'] = ['#type' => 'actions'];
+      $form['actions']['submit'] = [
+        '#type' => 'submit',
+        '#value' => $this->t('Request @element generation', ['@element' => $element_label]),
+        '#states' => $submit_states,
+      ];
 
-    $form['actions']['submit'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Request @element generation', ['@element' => $element_label]),
-      '#states' => $submit_states,
-    ];
-
-    $form['actions']['cancel'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Cancel'),
-      '#name' => 'cancel',
-      '#submit' => ['::cancelForm'],
-      '#limit_validation_errors' => [],
-      '#attributes' => ['class' => ['btn', 'btn-primary', 'cancel-button']],
-    ];
+      $form['actions']['cancel'] = [
+        '#type' => 'submit',
+        '#value' => $this->t('Cancel'),
+        '#name' => 'cancel',
+        '#submit' => ['::cancelForm'],
+        '#limit_validation_errors' => [],
+        '#attributes' => ['class' => ['btn', 'btn-primary', 'cancel-button']],
+      ];
+    }
 
     return $form;
   }
@@ -560,24 +562,24 @@ class GenerateForm extends FormBase {
         // API method name is historical; it accepts any $element_type.
         $generateResponse = $api->generateMTPerInstrument(
           $element_type,
+          $newMTUri,
           $selector_uri,
           $newMTUri,
           $newDataFileUri,
           $mediafolder,
-          $verifyuri,
-          $newMTUri
+          $verifyuri
         );
       }
       elseif ($selected === 'status') {
         $status = $form_state->getValue(['additional_fields', 'status']);
         $generateResponse = $api->generateMTPerStatus(
           $element_type,
+          $newMTUri,
           $status,
           $newMTUri,
           $newDataFileUri,
           $mediafolder,
-          $verifyuri,
-          $newMTUri
+          $verifyuri
         );
       }
       elseif ($selected === 'user_status') {
@@ -586,12 +588,12 @@ class GenerateForm extends FormBase {
         $generateResponse = $api->generateMTPerUserStatus(
           $element_type,
           $user_email,
+          $newMTUri,
           $status,
           $newMTUri,
           $newDataFileUri,
           $mediafolder,
-          $verifyuri,
-          $newMTUri
+          $verifyuri
         );
       }
 
