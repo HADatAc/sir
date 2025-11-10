@@ -412,29 +412,29 @@ class GenerateForm extends FormBase {
 
     $filename = $form_state->getValue(['additional_fields', 'filename']);
     if (empty($filename)) {
-      $form_state->setErrorByName('additional_fields][filename', $this->t('Logical filename is required.'));
+      $form_state->setErrorByName('additional_fields filename', $this->t('Logical filename is required.'));
     }
     elseif (strtolower(substr($filename, -5)) !== '.xlsx') {
-      $form_state->setErrorByName('additional_fields][filename', $this->t('The logical filename must end with .xlsx.'));
+      $form_state->setErrorByName('additional_fields filename', $this->t('The logical filename must end with .xlsx.'));
     }
 
     if ($selected === 'by_element') {
       $selector = $form_state->getValue(['additional_fields', 'selector', 'main']);
       if (empty($selector)) {
-        $form_state->setErrorByName('additional_fields][selector][main', $this->t('A valid selector is required.'));
+        $form_state->setErrorByName('additional_fields selector main', $this->t('A valid selector is required.'));
       }
     }
     elseif ($selected === 'status') {
       $status = $form_state->getValue(['additional_fields', 'status']);
       if (empty($status)) {
-        $form_state->setErrorByName('additional_fields][status', $this->t('Status is required.'));
+        $form_state->setErrorByName('additional_fields status', $this->t('Status is required.'));
       }
     }
     elseif ($selected === 'user_status') {
       $status = $form_state->getValue(['additional_fields', 'status']);
       $user   = $form_state->getValue(['additional_fields', 'user_email']);
       if (empty($status) || empty($user)) {
-        $form_state->setErrorByName('additional_fields][user_email', $this->t('Both status and user email are required.'));
+        $form_state->setErrorByName('additional_fields user_email', $this->t('Both status and user email are required.'));
       }
     }
   }
@@ -560,12 +560,11 @@ class GenerateForm extends FormBase {
           $form_state->getValue(['additional_fields', 'selector', 'main'])
         );
         // API method name is historical; it accepts any $element_type.
-        $generateResponse = $api->generateMTPerInstrument(
+        $generateResponse = $api->generateMTPerElement(
           $element_type,
-          $newMTUri,
-          $selector_uri,
-          $newMTUri,
           $newDataFileUri,
+          $selector_uri,
+          $safe_filename,
           $mediafolder,
           $verifyuri
         );
@@ -574,10 +573,9 @@ class GenerateForm extends FormBase {
         $status = $form_state->getValue(['additional_fields', 'status']);
         $generateResponse = $api->generateMTPerStatus(
           $element_type,
-          $newMTUri,
-          $status,
-          $newMTUri,
           $newDataFileUri,
+          $status,
+          $safe_filename,
           $mediafolder,
           $verifyuri
         );
@@ -587,11 +585,10 @@ class GenerateForm extends FormBase {
         $user_email = $form_state->getValue(['additional_fields', 'user_email']);
         $generateResponse = $api->generateMTPerUserStatus(
           $element_type,
-          $user_email,
-          $newMTUri,
-          $status,
-          $newMTUri,
           $newDataFileUri,
+          $user_email,
+          $status,
+          $safe_filename,
           $mediafolder,
           $verifyuri
         );
