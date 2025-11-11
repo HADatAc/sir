@@ -48,7 +48,7 @@ class GenerateForm extends FormBase {
    *
    * @var string
    */
-  protected $elementName = 'INS';
+  protected $elementName = 'Instrument';
 
   /**
    * Resolve a HASCO URI constant if it exists; otherwise return NULL.
@@ -62,13 +62,13 @@ class GenerateForm extends FormBase {
    * Initialize element definition from the route parameter.
    */
   private function initElementDefinition($elementTypeFromRoute = NULL) {
-    $slug = strtolower($elementTypeFromRoute ?: 'instrument');
+    $slug = strtolower($elementTypeFromRoute ?: 'Instrument');
 
     switch ($slug) {
       case 'ins':
       case 'instrument':
         $this->setElementType('ins');
-        $this->setElementName('INS');
+        $this->setElementName('Instrument');
         $this->setElementTypeUri($this->resolveHascoUri('INS'));
         break;
 
@@ -124,7 +124,7 @@ class GenerateForm extends FormBase {
    */
   private function getSelectorLabelForType() {
     switch ($this->getElementType()) {
-      case 'instrument': return 'instrument';
+      case 'instrument': return 'Instrument';
       case 'dsg':        return 'DSG';
       case 'dd':         return 'DD';
       case 'sdd':        return 'SDD';
@@ -144,8 +144,8 @@ class GenerateForm extends FormBase {
   /**
    * Dynamic page title based on the {elementtype} parameter.
    */
-  public static function pageTitle($elementtype = 'instrument') {
-    return t('Generate @element file', ['@element' => strtoupper($elementtype ?? 'instrument')]);
+  public static function pageTitle($elementName = 'Instrument') {
+    return t('Generate @element file', ['@element' => $elementName ?? 'Instrument']);
   }
 
   /**
@@ -178,9 +178,9 @@ class GenerateForm extends FormBase {
         '#type' => 'select',
         '#title' => $this->t('Select generation mode for @element', ['@element' => $element_label]),
         '#options' => [
-          'by_element'  => $this->t('@element per @selector', ['@element' => $element_label, '@selector' => $selector_label]),
-          'status'      => $this->t('@element by status', ['@element' => $element_label]),
-          'user_status' => $this->t('@element by user and by status', ['@element' => $element_label]),
+          'by_element'  => $this->t('By @selector', ['@selector' => $selector_label]),
+          'status'      => $this->t('By Status'),
+          'user_status' => $this->t('By User and by Status'),
         ],
         '#required' => TRUE,
         '#ajax' => [
@@ -228,10 +228,10 @@ class GenerateForm extends FormBase {
                   'data-dialog-options' => json_encode(['width' => 800]),
                   'data-url' => Url::fromRoute('rep.tree_form', [
                     'mode' => 'modal',
-                    'elementtype' => $current_type_slug,
+                    'elementtype' => strtolower($this->getElementName()),
                   ], ['query' => ['field_id' => 'selector_type']])->toString(),
                   'data-field-id' => 'selector_type',
-                  'data-elementtype' => $current_type_slug,
+                  'data-elementtype' => strtolower($this->getElementName()),
                   'autocomplete' => 'off',
                 ],
               ],
@@ -491,22 +491,24 @@ class GenerateForm extends FormBase {
       $file_id = $file_entity->id();
 
       // 2) Context-aware label.
-      switch ($selected) {
-        case 'by_element':
-          $context_label = $this->t('@element generation requested per selected entity', ['@element' => $element_label]);
-          break;
-        case 'status':
-          $context_label = $this->t('@element generation requested by status', ['@element' => $element_label]);
-          break;
-        case 'user_status':
-          $context_label = $this->t('@element generation requested by user & status', ['@element' => $element_label]);
-          break;
-        default:
-          $context_label = $this->t('@element generation request', ['@element' => $element_label]);
-      }
+      // switch ($selected) {
+      //   case 'by_element':
+      //     $context_label = $this->t('@element generation requested per selected entity', ['@element' => $element_label]);
+      //     break;
+      //   case 'status':
+      //     $context_label = $this->t('@element generation requested by status', ['@element' => $element_label]);
+      //     break;
+      //   case 'user_status':
+      //     $context_label = $this->t('@element generation requested by user & status', ['@element' => $element_label]);
+      //     break;
+      //   default:
+      //     $context_label = $this->t('@element generation request', ['@element' => $element_label]);
+      // }
 
       $basename_no_ext = pathinfo($safe_filename, PATHINFO_FILENAME);
-      $label = $context_label . ' - ' . ucfirst($basename_no_ext);
+      // $label = $context_label . ' - ' . ucfirst($basename_no_ext);
+
+      $label = ucfirst($basename_no_ext);
 
       // 3) DATAFILE JSON.
       $newDataFileUri = Utils::uriGen('datafile');
@@ -532,7 +534,7 @@ class GenerateForm extends FormBase {
         'hascoTypeUri' => $resolved_type_uri,
         'label' => $label,
         'hasDataFileUri' => $newDataFileUri,
-        'hasVersion' => '',
+        'hasVersion' => '1',
         'comment' => $element_label . ' generation requested via generic GenerateForm.',
         'hasSIRManagerEmail' => $useremail,
       ];
