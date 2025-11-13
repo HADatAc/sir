@@ -64,11 +64,13 @@ class GenerateForm extends FormBase {
   private function initElementDefinition($elementTypeFromRoute = NULL) {
     $slug = strtolower($elementTypeFromRoute ?: 'Instrument');
 
+    $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument') ?? 'instrument';
+
     switch ($slug) {
       case 'ins':
       case 'instrument':
         $this->setElementType('ins');
-        $this->setElementName('Instrument');
+        $this->setElementName(ucfirst($preferred_instrument));
         $this->setElementTypeUri($this->resolveHascoUri('INS'));
         break;
 
@@ -123,8 +125,9 @@ class GenerateForm extends FormBase {
    * Selector label to show in UI for the current element type.
    */
   private function getSelectorLabelForType() {
+    $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument') ?? 'instrument';
     switch ($this->getElementType()) {
-      case 'instrument': return 'Instrument';
+      case 'instrument': return ucfirst($preferred_instrument);
       case 'dsg':        return 'DSG';
       case 'dd':         return 'DD';
       case 'sdd':        return 'SDD';
@@ -145,7 +148,8 @@ class GenerateForm extends FormBase {
    * Dynamic page title based on the {elementtype} parameter.
    */
   public static function pageTitle($elementName = 'Instrument') {
-    return t('Generate @element file', ['@element' => $elementName ?? 'Instrument']);
+    $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument') ?? 'instrument';
+    return t('Generate @element file', ['@element' => $elementName ?? ucfirst($preferred_instrument)]);
   }
 
   /**

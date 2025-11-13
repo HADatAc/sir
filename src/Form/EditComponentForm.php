@@ -422,9 +422,11 @@ class EditComponentForm extends FormBase {
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
 
+    $preferred_component = \Drupal::config('rep.settings')->get('preferred_component') ?? 'component';
+
     if ($button_name != 'back') {
       if(strlen($form_state->getValue('component_stem')) < 1) {
-        $form_state->setErrorByName('component_stem', $this->t('Please enter a valid component stem'));
+        $form_state->setErrorByName('component_stem', $this->t('Please enter a valid '.lcfirst($preferred_component).' stem'));
       }
     }
   }
@@ -437,6 +439,8 @@ class EditComponentForm extends FormBase {
     $submitted_values = $form_state->cleanValues()->getValues();
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
+
+    $preferred_component = \Drupal::config('rep.settings')->get('preferred_component') ?? 'component';
 
     if ($button_name === 'back') {
       self::backUrl();
@@ -497,7 +501,7 @@ class EditComponentForm extends FormBase {
         '"hasStatus":"'.VSTOI::DRAFT.'"}';
 
         $api->elementAdd('component', $componentJson);
-        \Drupal::messenger()->addMessage(t("New Version component has been created successfully."));
+        \Drupal::messenger()->addMessage(t("New Version ".lcfirst($preferred_component)." has been created successfully."));
 
       } else {
 

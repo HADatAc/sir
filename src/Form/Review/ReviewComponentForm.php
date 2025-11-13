@@ -447,6 +447,8 @@ class ReviewComponentForm extends FormBase {
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
 
+    $preferred_component = \Drupal::config('rep.settings')->get('preferred_component') ?? 'component';
+
     if ($button_name != 'back') {
       // if ($button_name === 'review_reject') {
       //   if(strlen($form_state->getValue('component_hasreviewnote')) < 1) {
@@ -454,7 +456,7 @@ class ReviewComponentForm extends FormBase {
       //   }
       // }
       if(strlen($form_state->getValue('component_stem')) < 1) {
-        $form_state->setErrorByName('component_stem', $this->t('Please enter a valid component stem'));
+        $form_state->setErrorByName('component_stem', $this->t('Please enter a valid '.lcfirst($preferred_component).' stem'));
       }
     }
   }

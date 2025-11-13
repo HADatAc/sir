@@ -61,6 +61,8 @@ class EditInstrumentForm extends FormBase {
     // Does the repo have a social network?
     $socialEnabled = \Drupal::config('rep.settings')->get('social_conf');
 
+    $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument') ?? 'instrument';
+
     // ROOT URL
     $root_url = \Drupal::request()->getBaseUrl();
 
@@ -83,7 +85,7 @@ class EditInstrumentForm extends FormBase {
       $this->setInstrument($obj->body);
       //dpm($this->getInstrument());
     } else {
-      \Drupal::messenger()->addError(t("Failed to retrieve Instrument."));
+      \Drupal::messenger()->addError(t("Failed to retrieve ".ucfirst($preferred_instrument)."."));
       self::backUrl();
       return;
     }
@@ -497,6 +499,8 @@ class EditInstrumentForm extends FormBase {
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
 
+    $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument') ?? 'instrument';
+
     $api = \Drupal::service('rep.api_connector');
 
     if ($button_name === 'back') {
@@ -527,7 +531,7 @@ class EditInstrumentForm extends FormBase {
 
         // ADD NEW INSTRUMENT VERSION
         $api->elementAdd('instrument', $instrumentJson);
-        \Drupal::messenger()->addMessage(t("New Version instrument has been created successfully."));
+        \Drupal::messenger()->addMessage(t("New Version ".lcfirst($preferred_instrument)." has been created successfully."));
       } else {
 
         // Determine the chosen document type.
@@ -643,7 +647,7 @@ class EditInstrumentForm extends FormBase {
       return;
 
     }catch(\Exception $e){
-      \Drupal::messenger()->addError(t("An error occurred while updating the Instrument: ".$e->getMessage()));
+      \Drupal::messenger()->addError(t("An error occurred while updating the ".ucfirst($preferred_instrument).": ".$e->getMessage()));
       self::backUrl();
       return;
     }

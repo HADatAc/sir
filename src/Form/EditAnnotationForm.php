@@ -64,6 +64,8 @@ class EditAnnotationForm extends FormBase {
     $uri_full=Utils::plainUri($uri_decode);
     $this->setAnnotationUri($uri_full);
 
+    $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument') ?? 'instrument';
+
     // ESTABLISH API SERVICE
     $api = \Drupal::service('rep.api_connector');
 
@@ -88,7 +90,7 @@ class EditAnnotationForm extends FormBase {
 
     $form['annotation_container'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Instrument'),
+      '#title' => $this->t(ucfirst($preferred_instrument)),
       '#default_value' => $containerLabel,
       '#disabled' => TRUE,
     ];

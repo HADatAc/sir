@@ -267,9 +267,11 @@ class AddInstrumentForm extends FormBase {
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
 
+    $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument') ?? 'instrument';
+
     if ($button_name != 'back') {
       if(empty($form_state->getValue('instrument_type'))) {
-        $form_state->setErrorByName('instrument_type', $this->t('Please select a valid Instrument Parent type'));
+        $form_state->setErrorByName('instrument_type', $this->t('Please select a valid '.ucfirst($preferred_instrument).' Parent type'));
       }
       if(strlen($form_state->getValue('instrument_name')) < 1) {
         $form_state->setErrorByName('instrument_name', $this->t('Please enter a valid Name'));
@@ -290,6 +292,8 @@ class AddInstrumentForm extends FormBase {
     $submitted_values = $form_state->cleanValues()->getValues();
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
+
+    $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument') ?? 'instrument';
 
     if ($button_name === 'back') {
       self::backUrl();
@@ -377,7 +381,7 @@ class AddInstrumentForm extends FormBase {
       $api = \Drupal::service('rep.api_connector');
       $api->instrumentAdd($instrumentJson);
 
-      \Drupal::messenger()->addMessage($this->t("Instrument has been added successfully."));
+      \Drupal::messenger()->addMessage($this->t(ucfirst($preferred_instrument)." has been added successfully."));
 
       // UPLOAD IMAGE TO API
       if ($image_type === 'upload') {
@@ -400,7 +404,7 @@ class AddInstrumentForm extends FormBase {
       return;
 
     }catch(\Exception $e){
-      \Drupal::messenger()->addMessage(t("An error occurred while adding instrument: ".$e->getMessage()));
+      \Drupal::messenger()->addMessage(t("An error occurred while adding ".lcfirst($preferred_instrument).": ".$e->getMessage()));
       self::backUrl();
       return;
     }

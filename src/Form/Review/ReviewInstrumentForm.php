@@ -59,6 +59,8 @@ class ReviewInstrumentForm extends FormBase {
     // ROOT URL
     $root_url = \Drupal::request()->getBaseUrl();
 
+    $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument') ?? 'instrument';
+
     // MODAL
     $form['#attached']['library'][] = 'rep/rep_modal';
     $form['#attached']['library'][] = 'core/drupal.dialog';
@@ -78,7 +80,7 @@ class ReviewInstrumentForm extends FormBase {
       $this->setInstrument($obj->body);
       //dpm($this->getInstrument());
     } else {
-      \Drupal::messenger()->addError(t("Failed to retrieve Instrument."));
+      \Drupal::messenger()->addError(t("Failed to retrieve ".ucfirst($preferred_instrument)."."));
       self::backUrl();
       return;
     }
@@ -102,7 +104,7 @@ class ReviewInstrumentForm extends FormBase {
 
     $form['instrument_information'] = [
       '#type' => 'details',
-      '#title' => $this->t('Simulator Form'),
+      '#title' => $this->t(ucfirst($preferred_instrument).' Form'),
       '#group' => 'information',
       '#wrapper_attributes' => [
         'style' => 'max-width: 1280px;margin-bottom:15px!important;',
@@ -541,6 +543,8 @@ class ReviewInstrumentForm extends FormBase {
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
 
+    $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument') ?? 'instrument';
+
     if ($button_name === 'back') {
       self::backUrl();
       return;
@@ -559,7 +563,7 @@ class ReviewInstrumentForm extends FormBase {
         // Recursive APROVE os Instrument and Elements
         $api->reviewRecursive($this->getInstrumentUri(), VSTOI::CURRENT);
 
-        \Drupal::messenger()->addMessage(t("Instrument has been APPROVED successfully."));
+        \Drupal::messenger()->addMessage(t(ucfirst($preferred_instrument)." has been APPROVED successfully."));
         self::backUrl();
         return;
 
@@ -603,14 +607,14 @@ class ReviewInstrumentForm extends FormBase {
         // Instrument must be made diferently because review note field
         $api->reviewRecursive($this->getInstrumentUri(), VSTOI::DRAFT);
 
-        \Drupal::messenger()->addError(t("Instrument has been REJECTED."));
+        \Drupal::messenger()->addError(t(ucfirst($preferred_instrument)." has been REJECTED."));
           self::backUrl();
           return;
 
       }
 
     }catch(\Exception $e){
-      \Drupal::messenger()->addError(t("An error occurred while updating the Instrument: ".$e->getMessage()));
+      \Drupal::messenger()->addError(t("An error occurred while updating the ".ucfirst($preferred_instrument).": ".$e->getMessage()));
       self::backUrl();
       return;
     }
