@@ -25,7 +25,11 @@ use Drupal\Core\File\FileSystemInterface;
  *   4) Trigger the appropriate generateMT* call (async).
  *
  * Fields shown depend on the {elementtype} route param.
- * Supported types: instrument/ins, dsg, dd, sdd, dp2, str.
+ * Supported types: instrument/ins, dsg, dd, sdd, dp2, str, kgr.
+ *
+ * For KGR:
+ * - Specific modes are only shown if module "socialm" is enabled and
+ *   elementtype = "kgr".
  */
 class GenerateForm extends FormBase {
 
@@ -44,7 +48,7 @@ class GenerateForm extends FormBase {
   protected $elementTypeUri = NULL;
 
   /**
-   * Human-readable element name (for UI messages), e.g. "INS", "DSG".
+   * Human-readable element name (for UI messages), e.g. "INS", "DSG", "KGR".
    *
    * @var string
    */
@@ -68,7 +72,6 @@ class GenerateForm extends FormBase {
 
     switch ($slug) {
       case 'ins':
-      case 'instrument':
         $this->setElementType('ins');
         $this->setElementName(ucfirst($preferred_instrument));
         $this->setElementTypeUri($this->resolveHascoUri('INS'));
@@ -104,6 +107,14 @@ class GenerateForm extends FormBase {
         $this->setElementTypeUri($this->resolveHascoUri('STR'));
         break;
 
+      case 'kgr':
+        // KGR generic MT element. If HASCO::KGR exists, use it; otherwise
+        // it will fall back to HASCO::MT later on submit.
+        $this->setElementType('kgr');
+        $this->setElementName('KGR');
+        $this->setElementTypeUri($this->resolveHascoUri('KGR'));
+        break;
+
       default:
         $this->setElementType($slug);
         $this->setElementName(strtoupper($slug));
@@ -127,12 +138,13 @@ class GenerateForm extends FormBase {
   private function getSelectorLabelForType() {
     $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument') ?? 'instrument';
     switch ($this->getElementType()) {
-      case 'instrument': return ucfirst($preferred_instrument);
+      case 'ins':        return ucfirst($preferred_instrument);
       case 'dsg':        return 'DSG';
       case 'dd':         return 'DD';
       case 'sdd':        return 'SDD';
       case 'dp2':        return 'DP2';
       case 'str':        return 'STR';
+      case 'kgr':        return 'KGR';
       default:           return $this->getElementName();
     }
   }
@@ -147,9 +159,8 @@ class GenerateForm extends FormBase {
   /**
    * Dynamic page title based on the {elementtype} parameter.
    */
-  public static function pageTitle($elementName = 'Instrument') {
-    $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument') ?? 'instrument';
-    return t('Generate @element file', ['@element' => $elementName ?? ucfirst($preferred_instrument)]);
+  public static function pageTitle($elementtype) {
+    return t('Generate @element file', ['@element' => strtoupper($elementtype)]);
   }
 
   /**
@@ -162,6 +173,8 @@ class GenerateForm extends FormBase {
     $selector_label    = $this->getSelectorLabelForType();
     $current_type_slug = $this->getElementType();
     $is_instrument     = ($current_type_slug === 'ins');
+    // KGR is only “active” if the socialm module is enabled.
+    $is_kgr            = ($current_type_slug === 'kgr' && \Drupal::moduleHandler()->moduleExists('socialm'));
 
     // Attach required libraries (modal and Drupal dialog).
     $form['#attached']['library'][] = 'rep/rep_modal';
@@ -171,10 +184,17 @@ class GenerateForm extends FormBase {
     $form['#prefix'] = '<div class="row justify-content-center"><div class="col-4">';
     $form['#suffix'] = '</div><div class="col-8"></div></div>';
 
+    // Common submit states placeholder; will be defined by each element type
+    // that is actually submittable.
+    $submit_states = [];
+
     /**
      * SWITCH BY ELEMENT TYPE — control the exact fields rendered.
+     *
      * - INSTRUMENT: show the "option_select" with modes and dynamic extras.
-     * - OTHER TYPES: show a simpler set (selector + filename), no option_select.
+     * - KGR: show KGR-specific modes (funding scheme, project, org, etc.),
+     *        only if module "socialm" is present.
+     * - OTHER TYPES: show a simpler set (notice only), no actions.
      */
     if ($is_instrument) {
       // --- Instrument-specific: with mode select ---
@@ -290,7 +310,7 @@ class GenerateForm extends FormBase {
         }
       }
 
-      // Media folder (instrument: use conditional states aligned to mode).
+      // Media folder (instrument: visible in all modes).
       $form['mediafolder'] = [
         '#type' => 'textfield',
         '#title' => $this->t('Media folder name'),
@@ -353,9 +373,177 @@ class GenerateForm extends FormBase {
         ],
       ];
     }
+    elseif ($is_kgr) {
+      // --- KGR-specific: only if socialm module is enabled ---
+      $form['option_select'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Select KGR generation mode'),
+        '#options' => [
+          'fundingscheme' => $this->t('KGR per Funding Scheme'),
+          'project'       => $this->t('KGR per Project'),
+          'organization'  => $this->t('KGR per Organization'),
+          'status'        => $this->t('KGR by Status'),
+          'user_status'   => $this->t('KGR by User and by Status'),
+        ],
+        '#required' => TRUE,
+        '#ajax' => [
+          'callback' => '::updateForm',
+          'wrapper' => 'additional-fields-wrapper',
+          'event' => 'change',
+        ],
+        '#empty_option' => $this->t('- Select -'),
+      ];
+
+      // Additional dynamic fields.
+      $form['additional_fields'] = [
+        '#type' => 'container',
+        '#attributes' => ['id' => 'additional-fields-wrapper'],
+        '#tree' => TRUE,
+      ];
+
+      $selected = $form_state->getValue('option_select');
+
+      if (!empty($selected)) {
+        // Logical filename (no binary yet).
+        $form['additional_fields']['filename'] = [
+          '#type' => 'textfield',
+          '#title' => $this->t('Logical filename'),
+          '#description' => $this->t('Enter the logical filename for the KGR file (must end with .xlsx). The physical file will be created when the generator finishes.'),
+          '#required' => TRUE,
+        ];
+
+        switch ($selected) {
+          case 'fundingscheme':
+            $form['additional_fields']['fundingscheme'] = [
+              '#type' => 'textfield',
+              '#title' => $this->t('Select Funding Scheme'),
+              '#default_value' => '',
+              '#autocomplete_route_name' => 'social.autocomplete_fundingscheme',
+              '#required' => TRUE,
+            ];
+            break;
+
+          case 'project':
+            $form['additional_fields']['project'] = [
+              '#type' => 'textfield',
+              '#title' => $this->t('Select Project'),
+              '#default_value' => '',
+              '#autocomplete_route_name' => 'social.autocomplete_project',
+              '#required' => TRUE,
+            ];
+            break;
+
+          case 'organization':
+            $form['additional_fields']['organization'] = [
+              '#type' => 'textfield',
+              '#title' => $this->t('Select Organization'),
+              '#default_value' => '',
+              '#autocomplete_route_name' => 'social.autocomplete_organization',
+              '#required' => TRUE,
+            ];
+            break;
+
+          case 'status':
+            $form['additional_fields']['status'] = [
+              '#type' => 'select',
+              '#title' => $this->t('Status'),
+              '#options' => [
+                VSTOI::DRAFT        => $this->t('Draft'),
+                VSTOI::UNDER_REVIEW => $this->t('Under Review'),
+                VSTOI::CURRENT      => $this->t('Current'),
+                VSTOI::DEPRECATED   => $this->t('Deprecated'),
+              ],
+              '#required' => TRUE,
+            ];
+            break;
+
+          case 'user_status':
+            $form['additional_fields']['status'] = [
+              '#type' => 'select',
+              '#title' => $this->t('Status'),
+              '#options' => [
+                VSTOI::DRAFT        => $this->t('Draft'),
+                VSTOI::UNDER_REVIEW => $this->t('Under Review'),
+                VSTOI::CURRENT      => $this->t('Current'),
+                VSTOI::DEPRECATED   => $this->t('Deprecated'),
+              ],
+              '#required' => TRUE,
+            ];
+
+            // Active user emails.
+            $user_options = [];
+            $users = \Drupal::entityTypeManager()
+              ->getStorage('user')
+              ->loadByProperties(['status' => 1]);
+
+            foreach ($users as $user) {
+              $email = $user->getEmail();
+              if (!empty($email)) {
+                $user_options[$email] = $user->getDisplayName() . ' [' . $email . ']';
+              }
+            }
+
+            $form['additional_fields']['user_email'] = [
+              '#type' => 'select',
+              '#title' => $this->t('User email'),
+              '#options' => $user_options,
+              '#required' => TRUE,
+            ];
+            break;
+        }
+      }
+
+      // Media folder for KGR (always visible/required when elementtype = kgr).
+      $form['mediafolder'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Media folder name'),
+        '#description' => $this->t('Enter the logical media folder name associated with this KGR generation request.'),
+        '#required' => TRUE,
+      ];
+
+      $form['verifyuri'] = [
+        '#type' => 'checkbox',
+        '#title' => $this->t('Verify URI'),
+        '#description' => $this->t('Ask the backend to validate URI consistency for the selected elements.'),
+        '#default_value' => FALSE,
+      ];
+
+      // Submit states for KGR.
+      $submit_states = [
+        'enabled' => [
+          'or' => [
+            [
+              ':input[name="option_select"]' => ['value' => 'fundingscheme'],
+              ':input[name="additional_fields[fundingscheme]"]' => ['filled' => TRUE],
+              ':input[name="additional_fields[filename]"]' => ['filled' => TRUE],
+            ],
+            [
+              ':input[name="option_select"]' => ['value' => 'project'],
+              ':input[name="additional_fields[project]"]' => ['filled' => TRUE],
+              ':input[name="additional_fields[filename]"]' => ['filled' => TRUE],
+            ],
+            [
+              ':input[name="option_select"]' => ['value' => 'organization'],
+              ':input[name="additional_fields[organization]"]' => ['filled' => TRUE],
+              ':input[name="additional_fields[filename]"]' => ['filled' => TRUE],
+            ],
+            [
+              ':input[name="option_select"]' => ['value' => 'status'],
+              ':input[name="additional_fields[status]"]' => ['filled' => TRUE],
+              ':input[name="additional_fields[filename]"]' => ['filled' => TRUE],
+            ],
+            [
+              ':input[name="option_select"]' => ['value' => 'user_status'],
+              ':input[name="additional_fields[status]"]' => ['filled' => TRUE],
+              ':input[name="additional_fields[user_email]"]' => ['filled' => TRUE],
+              ':input[name="additional_fields[filename]"]' => ['filled' => TRUE],
+            ],
+          ],
+        ],
+      ];
+    }
     else {
-      // --- Other element types: simple, no option_select ---
-      // Keep "additional_fields" container for uniform handling in submit.
+      // --- Other element types: simple placeholder, no submit ---
       $form['additional_fields'] = [
         '#type' => 'container',
         '#attributes' => ['id' => 'additional-fields-wrapper'],
@@ -366,15 +554,15 @@ class GenerateForm extends FormBase {
         '#type' => 'markdown',
         '#markup' => $this->t('Element has not fields yet to be presented.'),
         '#attributes' => [
-          'class' => ['mb-5']
+          'class' => ['mb-5'],
         ],
         '#weight' => 10,
       ];
     }
 
-    // TODO: Remove when there are more
-    if ($is_instrument) {
-      // Actions.
+    // Build actions only for element types that are actually submittable
+    // (instrument and KGR).
+    if ($is_instrument || $is_kgr) {
       $form['actions'] = ['#type' => 'actions'];
 
       $form['actions']['submit'] = [
@@ -397,7 +585,7 @@ class GenerateForm extends FormBase {
   }
 
   /**
-   * AJAX callback used when option_select changes (instrument only).
+   * AJAX callback used when option_select changes.
    */
   public function updateForm(array &$form, FormStateInterface $form_state) {
     return $form['additional_fields'];
@@ -406,39 +594,92 @@ class GenerateForm extends FormBase {
   /**
    * {@inheritdoc}
    * Validates that the logical filename is present and ends with ".xlsx".
-   * Also tolerates the absence of "option_select" for non-instrument types.
+   * Instrument and KGR have their own mode-specific validations.
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     parent::validateForm($form, $form_state);
 
-    // If option_select is missing (non-instrument), assume 'by_element'.
-    $selected = $form_state->getValue('option_select') ?: 'by_element';
+    $element_type = $this->getElementType();
+    $selected = $form_state->getValue('option_select');
 
-    $filename = $form_state->getValue(['additional_fields', 'filename']);
-    if (empty($filename)) {
-      $form_state->setErrorByName('additional_fields filename', $this->t('Logical filename is required.'));
-    }
-    elseif (strtolower(substr($filename, -5)) !== '.xlsx') {
-      $form_state->setErrorByName('additional_fields filename', $this->t('The logical filename must end with .xlsx.'));
-    }
+    // INSTRUMENT VALIDATION.
+    if ($element_type === 'ins') {
+      // If option_select is missing (unexpected), assume 'by_element'.
+      $selected = $selected ?: 'by_element';
 
-    if ($selected === 'by_element') {
-      $selector = $form_state->getValue(['additional_fields', 'selector', 'main']);
-      if (empty($selector)) {
-        $form_state->setErrorByName('additional_fields selector main', $this->t('A valid selector is required.'));
+      $filename = $form_state->getValue(['additional_fields', 'filename']);
+      if (empty($filename)) {
+        $form_state->setErrorByName('additional_fields][filename', $this->t('Logical filename is required.'));
+      }
+      elseif (strtolower(substr($filename, -5)) !== '.xlsx') {
+        $form_state->setErrorByName('additional_fields][filename', $this->t('The logical filename must end with .xlsx.'));
+      }
+
+      if ($selected === 'by_element') {
+        $selector = $form_state->getValue(['additional_fields', 'selector', 'main']);
+        if (empty($selector)) {
+          $form_state->setErrorByName('additional_fields][selector][main', $this->t('A valid selector is required.'));
+        }
+      }
+      elseif ($selected === 'status') {
+        $status = $form_state->getValue(['additional_fields', 'status']);
+        if (empty($status)) {
+          $form_state->setErrorByName('additional_fields][status', $this->t('Status is required.'));
+        }
+      }
+      elseif ($selected === 'user_status') {
+        $status = $form_state->getValue(['additional_fields', 'status']);
+        $user   = $form_state->getValue(['additional_fields', 'user_email']);
+        if (empty($status) || empty($user)) {
+          $form_state->setErrorByName('additional_fields][user_email', $this->t('Both status and user email are required.'));
+        }
       }
     }
-    elseif ($selected === 'status') {
-      $status = $form_state->getValue(['additional_fields', 'status']);
-      if (empty($status)) {
-        $form_state->setErrorByName('additional_fields status', $this->t('Status is required.'));
+    // KGR VALIDATION (only when socialm is enabled).
+    elseif ($element_type === 'kgr' && \Drupal::moduleHandler()->moduleExists('socialm')) {
+      if (empty($selected)) {
+        $form_state->setErrorByName('option_select', $this->t('Please select a KGR generation mode.'));
+        return;
       }
-    }
-    elseif ($selected === 'user_status') {
-      $status = $form_state->getValue(['additional_fields', 'status']);
-      $user   = $form_state->getValue(['additional_fields', 'user_email']);
-      if (empty($status) || empty($user)) {
-        $form_state->setErrorByName('additional_fields user_email', $this->t('Both status and user email are required.'));
+
+      $filename = $form_state->getValue(['additional_fields', 'filename']);
+      if (empty($filename)) {
+        $form_state->setErrorByName('additional_fields][filename', $this->t('Logical filename is required.'));
+      }
+      elseif (strtolower(substr($filename, -5)) !== '.xlsx') {
+        $form_state->setErrorByName('additional_fields][filename', $this->t('The logical filename must end with .xlsx.'));
+      }
+
+      if ($selected === 'fundingscheme') {
+        $fs = $form_state->getValue(['additional_fields', 'fundingscheme']);
+        if (empty($fs)) {
+          $form_state->setErrorByName('additional_fields][fundingscheme', $this->t('Funding Scheme is required.'));
+        }
+      }
+      elseif ($selected === 'project') {
+        $proj = $form_state->getValue(['additional_fields', 'project']);
+        if (empty($proj)) {
+          $form_state->setErrorByName('additional_fields][project', $this->t('Project is required.'));
+        }
+      }
+      elseif ($selected === 'organization') {
+        $org = $form_state->getValue(['additional_fields', 'organization']);
+        if (empty($org)) {
+          $form_state->setErrorByName('additional_fields][organization', $this->t('Organization is required.'));
+        }
+      }
+      elseif ($selected === 'status') {
+        $status = $form_state->getValue(['additional_fields', 'status']);
+        if (empty($status)) {
+          $form_state->setErrorByName('additional_fields][status', $this->t('Status is required.'));
+        }
+      }
+      elseif ($selected === 'user_status') {
+        $status = $form_state->getValue(['additional_fields', 'status']);
+        $user   = $form_state->getValue(['additional_fields', 'user_email']);
+        if (empty($status) || empty($user)) {
+          $form_state->setErrorByName('additional_fields][user_email', $this->t('Both status and user email are required.'));
+        }
       }
     }
   }
@@ -448,25 +689,28 @@ class GenerateForm extends FormBase {
    * Creates placeholder entities and triggers the generation job.
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    // Handle cancel button immediately.
     if ($form_state->getTriggeringElement()['#name'] === 'cancel') {
+      $this->backUrl();
       return;
     }
 
-    $selected    = $form_state->getValue('option_select') ?: 'by_element';
-    $filename    = $form_state->getValue(['additional_fields', 'filename']);
-    $mediafolder = $form_state->getValue('mediafolder');
-    $verifyuri   = (bool) $form_state->getValue('verifyuri');
+    $element_type = $this->getElementType();
+    $selected     = $form_state->getValue('option_select') ?: 'by_element';
+    $filename     = $form_state->getValue(['additional_fields', 'filename']);
+    $mediafolder  = $form_state->getValue('mediafolder');
+    $verifyuri    = (bool) $form_state->getValue('verifyuri');
 
     if (empty($filename)) {
       \Drupal::messenger()->addError($this->t('A valid logical filename is required.'));
       return;
     }
 
-    $api             = \Drupal::service('rep.api_connector');
-    $element_type    = $this->getElementType();
-    $element_label   = $this->getElementName();
-    $element_type_uri= $this->getElementTypeUri();
-    $useremail       = \Drupal::currentUser()->getEmail();
+    /** @var \Drupal\rep\ApiConnectorServiceInterface $api */
+    $api              = \Drupal::service('rep.api_connector');
+    $element_label    = $this->getElementName();
+    $element_type_uri = $this->getElementTypeUri();
+    $useremail        = \Drupal::currentUser()->getEmail();
 
     try {
       // Normalize filename and ensure .xlsx extension.
@@ -475,7 +719,7 @@ class GenerateForm extends FormBase {
         $safe_filename .= '.xlsx';
       }
 
-      // Target directory based on element type.
+      // Target directory based on element type (e.g. private://ins, private://kgr).
       $destination_dir = 'private://' . $element_type;
 
       /** @var \Drupal\Core\File\FileSystemInterface $file_system */
@@ -494,24 +738,8 @@ class GenerateForm extends FormBase {
       $file_entity->save();
       $file_id = $file_entity->id();
 
-      // 2) Context-aware label.
-      // switch ($selected) {
-      //   case 'by_element':
-      //     $context_label = $this->t('@element generation requested per selected entity', ['@element' => $element_label]);
-      //     break;
-      //   case 'status':
-      //     $context_label = $this->t('@element generation requested by status', ['@element' => $element_label]);
-      //     break;
-      //   case 'user_status':
-      //     $context_label = $this->t('@element generation requested by user & status', ['@element' => $element_label]);
-      //     break;
-      //   default:
-      //     $context_label = $this->t('@element generation request', ['@element' => $element_label]);
-      // }
-
+      // 2) Simple label from filename (without extension).
       $basename_no_ext = pathinfo($safe_filename, PATHINFO_FILENAME);
-      // $label = $context_label . ' - ' . ucfirst($basename_no_ext);
-
       $label = ucfirst($basename_no_ext);
 
       // 3) DATAFILE JSON.
@@ -528,7 +756,7 @@ class GenerateForm extends FormBase {
         'id' => $file_id,
       ]);
 
-      // 4) MT element JSON.
+      // 4) MT element JSON (prefix depends on element type).
       $newMTUri = str_replace('DFL', Utils::elementPrefix($element_type), $newDataFileUri);
       $resolved_type_uri = $element_type_uri ?: HASCO::MT;
 
@@ -550,8 +778,7 @@ class GenerateForm extends FormBase {
 
       if ($msg_datafile === NULL || $msg_element === NULL) {
         $error = trim(($msg_datafile ?? '') . ' ' . ($msg_element ?? ''));
-        \Drupal::messenger()->addError($this->t('Failed to register the metadata (DATAFILE/@element). @err', [
-          '@element' => $element_label,
+        \Drupal::messenger()->addError($this->t('Failed to register the metadata (DATAFILE/element). @err', [
           '@err' => $error ?: 'No detailed error message returned.',
         ]));
         $this->backUrl();
@@ -561,42 +788,97 @@ class GenerateForm extends FormBase {
       // 6) Trigger generator (fire-and-forget).
       $generateResponse = NULL;
 
-      if ($selected === 'by_element') {
-        $selector_uri = Utils::uriFromAutocomplete(
-          $form_state->getValue(['additional_fields', 'selector', 'main'])
-        );
-        // API method name is historical; it accepts any $element_type.
+      // INSTRUMENT: keep previous behavior.
+      if ($element_type === 'ins') {
+        if ($selected === 'by_element') {
+          $selector_uri = Utils::uriFromAutocomplete(
+            $form_state->getValue(['additional_fields', 'selector', 'main'])
+          );
+          // API method name is historical; it accepts any $element_type.
+          $generateResponse = $api->generateMTPerElement(
+            $element_type,
+            $newDataFileUri,
+            $selector_uri,
+            $safe_filename,
+            $mediafolder,
+            $verifyuri
+          );
+        }
+        elseif ($selected === 'status') {
+          $status = $form_state->getValue(['additional_fields', 'status']);
+          $generateResponse = $api->generateMTPerStatus(
+            $element_type,
+            $newDataFileUri,
+            $status,
+            $safe_filename,
+            $mediafolder,
+            $verifyuri
+          );
+        }
+        elseif ($selected === 'user_status') {
+          $status = $form_state->getValue(['additional_fields', 'status']);
+          $user_email = $form_state->getValue(['additional_fields', 'user_email']);
+          $generateResponse = $api->generateMTPerUserStatus(
+            $element_type,
+            $newDataFileUri,
+            $user_email,
+            $status,
+            $safe_filename,
+            $mediafolder,
+            $verifyuri
+          );
+        }
+      }
+      // KGR: use the generic generateMTPerElement() with a filter value,
+      // only if socialm is enabled.
+      elseif ($element_type === 'kgr' && \Drupal::moduleHandler()->moduleExists('socialm')) {
+        $filterValue = NULL;
+
+        if ($selected === 'fundingscheme') {
+          $fundingscheme_uri = Utils::uriFromAutocomplete(
+            $form_state->getValue(['additional_fields', 'fundingscheme'])
+          );
+          $filterValue = $fundingscheme_uri;
+        }
+        elseif ($selected === 'project') {
+          $project_uri = Utils::uriFromAutocomplete(
+            $form_state->getValue(['additional_fields', 'project'])
+          );
+          $filterValue = $project_uri;
+        }
+        elseif ($selected === 'organization') {
+          $organization_uri = Utils::uriFromAutocomplete(
+            $form_state->getValue(['additional_fields', 'organization'])
+          );
+          $filterValue = $organization_uri;
+        }
+        elseif ($selected === 'status') {
+          $status = $form_state->getValue(['additional_fields', 'status']);
+          $filterValue = $status;
+        }
+        elseif ($selected === 'user_status') {
+          $status     = $form_state->getValue(['additional_fields', 'status']);
+          $user_email = $form_state->getValue(['additional_fields', 'user_email']);
+          // Encode both status and user in a single string; the backend
+          // must parse this convention.
+          $filterValue = 'status=' . $status . ';user=' . $user_email;
+        }
+
+        if ($filterValue === NULL) {
+          \Drupal::messenger()->addError($this->t('Unable to determine the filter value for KGR generation.'));
+          $this->backUrl();
+          return;
+        }
+
+        $verifyuri_value = $verifyuri ? 'true' : 'false';
+
         $generateResponse = $api->generateMTPerElement(
           $element_type,
           $newDataFileUri,
-          $selector_uri,
+          $filterValue,
           $safe_filename,
           $mediafolder,
-          $verifyuri
-        );
-      }
-      elseif ($selected === 'status') {
-        $status = $form_state->getValue(['additional_fields', 'status']);
-        $generateResponse = $api->generateMTPerStatus(
-          $element_type,
-          $newDataFileUri,
-          $status,
-          $safe_filename,
-          $mediafolder,
-          $verifyuri
-        );
-      }
-      elseif ($selected === 'user_status') {
-        $status = $form_state->getValue(['additional_fields', 'status']);
-        $user_email = $form_state->getValue(['additional_fields', 'user_email']);
-        $generateResponse = $api->generateMTPerUserStatus(
-          $element_type,
-          $newDataFileUri,
-          $user_email,
-          $status,
-          $safe_filename,
-          $mediafolder,
-          $verifyuri
+          $verifyuri_value
         );
       }
 
