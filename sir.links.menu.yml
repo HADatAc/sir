@@ -322,7 +322,7 @@ reviewer.generate.ins:
   description: 'INS file'
   route_name: sir.generate
   route_parameters:
-    elementtype: 'instrument'
+    elementtype: 'ins'
   parent: reviewer.generate_review
   menu_name: main
   weight: 10

@@ -9,9 +9,11 @@ class Annotation {
 
   public static function generateHeader() {
 
+    $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument') ?? 'instrument';
+
     return $header = [
       'element_uri' => t('URI'),
-      'element_container' => t('Instrument'),
+      'element_container' => t(ucfirst($preferred_instrument)),
       'element_position' => t('Position'),
       'element_annotationstem' => t('Content'),
     ];
