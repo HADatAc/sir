@@ -796,7 +796,7 @@ class GenerateForm extends FormBase {
           );
           // API method name is historical; it accepts any $element_type.
           $generateResponse = $api->generateMTPerElement(
-            $element_type,
+            'instrument',
             $newDataFileUri,
             $selector_uri,
             $safe_filename,
@@ -855,6 +855,14 @@ class GenerateForm extends FormBase {
         elseif ($selected === 'status') {
           $status = $form_state->getValue(['additional_fields', 'status']);
           $filterValue = $status;
+          $generateResponse = $api->generateMTPerStatus(
+            $element_type,
+            $newDataFileUri,
+            $status,
+            $safe_filename,
+            $mediafolder,
+            $verifyuri
+          );
         }
         elseif ($selected === 'user_status') {
           $status     = $form_state->getValue(['additional_fields', 'status']);
@@ -862,6 +870,15 @@ class GenerateForm extends FormBase {
           // Encode both status and user in a single string; the backend
           // must parse this convention.
           $filterValue = 'status=' . $status . ';user=' . $user_email;
+          $generateResponse = $api->generateMTPerUserStatus(
+            $element_type,
+            $newDataFileUri,
+            $user_email,
+            $status,
+            $safe_filename,
+            $mediafolder,
+            $verifyuri
+          );
         }
 
         if ($filterValue === NULL) {
