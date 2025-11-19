@@ -81,6 +81,8 @@ class EditContainerSlotForm extends FormBase {
         }
     }
 
+    // kint($this->getContainerSlot());
+
     $form['scope'] = [
       '#type' => 'item',
       '#title' => t('<h3>Editing Container Slot of Container ' . $path . '</h3>'),
@@ -104,35 +106,42 @@ class EditContainerSlotForm extends FormBase {
       '#disabled' => TRUE,
     ];
 
+    // $form['containerslot_component'] = [
+    //   'top' => [
+    //     '#type' => 'markup',
+    //     '#markup' => '<div class="pt-3 col border border-white">',
+    //   ],
+    //   'main' => [
+    //     '#type' => 'textfield',
+    //     '#title' => $this->t('Component'),
+    //     '#name' => 'containerslot_component',
+    //     '#default_value' => UTILS::fieldToAutocomplete($this->getContainerSlot()->hasComponent,$this->getContainerSlot()->component->label),
+    //     '#id' => 'containerslot_component',
+    //     '#parents' => ['containerslot_component'],
+    //     '#attributes' => [
+    //       'class' => ['open-tree-modal'],
+    //       'data-dialog-type' => 'modal',
+    //       'data-dialog-options' => json_encode(['width' => 800]),
+    //       'data-url' => Url::fromRoute('rep.tree_form', [
+    //         'mode' => 'modal',
+    //         'elementtype' => 'component',
+    //       ], ['query' => ['field_id' => 'containerslot_component']])->toString(),
+    //       'data-field-id' => 'containerslot_component',
+    //       'data-elementtype' => 'component',
+    //       'autocomplete' => 'off',
+    //     ],
+    //   ],
+    //   'bottom' => [
+    //     '#type' => 'markup',
+    //     '#markup' => '</div>',
+    //   ],
+    // ];
+
     $form['containerslot_component'] = [
-      'top' => [
-        '#type' => 'markup',
-        '#markup' => '<div class="pt-3 col border border-white">',
-      ],
-      'main' => [
-        '#type' => 'textfield',
-        '#title' => $this->t('Component'),
-        '#name' => 'containerslot_component',
-        '#default_value' => '',
-        '#id' => 'containerslot_component',
-        '#parents' => ['containerslot_component'],
-        '#attributes' => [
-          'class' => ['open-tree-modal'],
-          'data-dialog-type' => 'modal',
-          'data-dialog-options' => json_encode(['width' => 800]),
-          'data-url' => Url::fromRoute('rep.tree_form', [
-            'mode' => 'modal',
-            'elementtype' => 'component',
-          ], ['query' => ['field_id' => 'containerslot_component']])->toString(),
-          'data-field-id' => 'containerslot_component',
-          'data-elementtype' => 'component',
-          'autocomplete' => 'off',
-        ],
-      ],
-      'bottom' => [
-        '#type' => 'markup',
-        '#markup' => '</div>',
-      ],
+      '#type' => 'textfield',
+      '#title' => $this->t('Component'),
+      '#default_value' => UTILS::fieldToAutocomplete($this->getContainerSlot()->hasComponent,$this->getContainerSlot()->component->label),
+      '#autocomplete_route_name' => 'sir.containerslot_component_autocomplete',
     ];
 
     $form['new_component_submit'] = [
