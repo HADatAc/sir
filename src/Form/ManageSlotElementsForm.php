@@ -192,7 +192,7 @@ class ManageSlotElementsForm extends FormBase {
                 // $type = Utils::namespaceUri(VSTOI::COMPONENT);
                 // Ter em atenção que o componente agora vai ser um atributo que vai conter dentro qual é o tipo do atributo (component)
                 if ($component != NULL) {
-                  kint($component);
+                  // kint($component);
                   $type = Utils::namespaceUri($component->hascoTypeUri);
                   if (isset($component->uri)) {
                     // $componentUri = t('<b>'.$type.'</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($component->uri).'">' . $component->typeLabel . '</a>] ');
