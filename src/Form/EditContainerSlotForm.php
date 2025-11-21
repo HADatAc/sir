@@ -106,37 +106,7 @@ class EditContainerSlotForm extends FormBase {
       '#disabled' => TRUE,
     ];
 
-    // $form['containerslot_component'] = [
-    //   'top' => [
-    //     '#type' => 'markup',
-    //     '#markup' => '<div class="pt-3 col border border-white">',
-    //   ],
-    //   'main' => [
-    //     '#type' => 'textfield',
-    //     '#title' => $this->t('Component'),
-    //     '#name' => 'containerslot_component',
-    //     '#default_value' => UTILS::fieldToAutocomplete($this->getContainerSlot()->hasComponent,$this->getContainerSlot()->component->label),
-    //     '#id' => 'containerslot_component',
-    //     '#parents' => ['containerslot_component'],
-    //     '#attributes' => [
-    //       'class' => ['open-tree-modal'],
-    //       'data-dialog-type' => 'modal',
-    //       'data-dialog-options' => json_encode(['width' => 800]),
-    //       'data-url' => Url::fromRoute('rep.tree_form', [
-    //         'mode' => 'modal',
-    //         'elementtype' => 'component',
-    //       ], ['query' => ['field_id' => 'containerslot_component']])->toString(),
-    //       'data-field-id' => 'containerslot_component',
-    //       'data-elementtype' => 'component',
-    //       'autocomplete' => 'off',
-    //     ],
-    //   ],
-    //   'bottom' => [
-    //     '#type' => 'markup',
-    //     '#markup' => '</div>',
-    //   ],
-    // ];
-
+    // Autocomplete
     $form['containerslot_component'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Component'),
