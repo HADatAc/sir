@@ -758,7 +758,7 @@ class GenerateForm extends FormBase {
 
       // 4) MT element JSON (prefix depends on element type).
       $newMTUri = str_replace('DFL', Utils::elementPrefix($element_type), $newDataFileUri);
-      $resolved_type_uri = $element_type_uri ?: HASCO::MT;
+      $resolved_type_uri = $element_type_uri ?: HASCO::INSTRUMENT_CLASS_ENTRY_POINT;
 
       $mtData = [
         'uri' => $newMTUri,
