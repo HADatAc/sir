@@ -173,6 +173,8 @@ class GenerateForm extends FormBase {
     $selector_label    = $this->getSelectorLabelForType();
     $current_type_slug = $this->getElementType();
     $is_instrument     = ($current_type_slug === 'ins');
+    $is_DP2            = ($current_type_slug === 'dp2');
+    $is_DSG            = ($current_type_slug === 'dsg');
     // KGR is only “active” if the socialm module is enabled.
     $is_kgr            = ($current_type_slug === 'kgr' && \Drupal::moduleHandler()->moduleExists('socialm'));
 
@@ -196,7 +198,7 @@ class GenerateForm extends FormBase {
      *        only if module "socialm" is present.
      * - OTHER TYPES: show a simpler set (notice only), no actions.
      */
-    if ($is_instrument) {
+    if ($is_instrument || $is_DP2 || $is_DSG) {
       // --- Instrument-specific: with mode select ---
       $form['option_select'] = [
         '#type' => 'select',
@@ -562,7 +564,7 @@ class GenerateForm extends FormBase {
 
     // Build actions only for element types that are actually submittable
     // (instrument and KGR).
-    if ($is_instrument || $is_kgr) {
+    if ($is_instrument || $is_kgr || $is_DP2 || $is_DSG) {
       $form['actions'] = ['#type' => 'actions'];
 
       $form['actions']['submit'] = [
