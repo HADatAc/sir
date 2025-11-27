@@ -1649,6 +1649,7 @@ class SIRSelectForm extends FormBase {
         $api = \Drupal::service('rep.api_connector');
         $api->elementDel('componentstem', $result->uri);
         $api->elementAdd('componentstem', $componentStemJson);
+      }
     }
 
     $form_state->setRedirect('<current>');
