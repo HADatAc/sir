@@ -14,22 +14,21 @@ use Drupal\file\Entity\File;
 use Drupal\Core\File\FileSystemInterface;
 
 /**
- * Generic form for registering a Metadata Template (MT) generation request.
+ * Form that registers a Metadata Template (MT) generation request.
  *
- * New workflow:
- * - No immediate file download from the external API.
- * - On submit:
- *   1) Create a placeholder Drupal File entity (no physical XLSX yet).
- *   2) Create DATAFILE (DFL) referencing that File entity and filename.
- *   3) Create MT element referencing the DATAFILE.
- *   4) Trigger the appropriate generateMT* call (async).
+ * It renders different controls depending on the {elementtype} parameter
+ * (the instrument/ins flow shows mode selection with nested filename,
+ * selector/status/user filters, while other element types have simplified
+ * inputs or just informational text). On submission the form:
+ *   - Creates a placeholder File entity with the requested logical name.
+ *   - Persists the matching DATAFILE and MT entries via the REP API.
+ *   - Fires the async generateMT* method that keeps running jobs decoupled
+ *     from the Drupal request.
  *
- * Fields shown depend on the {elementtype} route param.
- * Supported types: instrument/ins, dsg, dd, sdd, dp2, str, kgr.
- *
- * For KGR:
- * - Specific modes are only shown if module "socialm" is enabled and
- *   elementtype = "kgr".
+ * The KGR pathway is rendered only when the socialm module exists; in that
+ * case additional filter modes (funding scheme, project, organization,
+ * status, user_status) appear together with the shared filename, media
+ * folder, and verify-URI inputs.
  */
 class GenerateForm extends FormBase {
 
@@ -38,7 +37,7 @@ class GenerateForm extends FormBase {
    *
    * @var string
    */
-  protected $elementType = 'ins';
+  protected $elementType = 'instrument';
 
   /**
    * Canonical type URI for this MT element in HASCO vocabulary (if available).
@@ -172,7 +171,7 @@ class GenerateForm extends FormBase {
     $element_label     = $this->getElementName();
     $selector_label    = $this->getSelectorLabelForType();
     $current_type_slug = $this->getElementType();
-    $is_instrument     = ($current_type_slug === 'ins');
+    $is_instrument     = in_array($current_type_slug, ['ins', 'dsg'], TRUE);
     // KGR is only “active” if the socialm module is enabled.
     $is_kgr            = ($current_type_slug === 'kgr' && \Drupal::moduleHandler()->moduleExists('socialm'));
 
@@ -601,9 +600,10 @@ class GenerateForm extends FormBase {
 
     $element_type = $this->getElementType();
     $selected = $form_state->getValue('option_select');
+    $instrument_types = ['ins', 'dsg'];
 
     // INSTRUMENT VALIDATION.
-    if ($element_type === 'ins') {
+    if (in_array($element_type, $instrument_types, TRUE)) {
       // If option_select is missing (unexpected), assume 'by_element'.
       $selected = $selected ?: 'by_element';
 
@@ -697,9 +697,14 @@ class GenerateForm extends FormBase {
 
     $element_type = $this->getElementType();
     $selected     = $form_state->getValue('option_select') ?: 'by_element';
+    $instrument_types = ['ins', 'dsg'];
     $filename     = $form_state->getValue(['additional_fields', 'filename']);
     $mediafolder  = $form_state->getValue('mediafolder');
-    $verifyuri    = (bool) $form_state->getValue('verifyuri');
+    $verifyuri    = $form_state->getValue('verifyuri');
+    if ($verifyuri === NULL) {
+      $verifyuri = FALSE;
+    }
+    $verifyuri = (bool) $verifyuri;
 
     if (empty($filename)) {
       \Drupal::messenger()->addError($this->t('A valid logical filename is required.'));
@@ -788,15 +793,19 @@ class GenerateForm extends FormBase {
       // 6) Trigger generator (fire-and-forget).
       $generateResponse = NULL;
 
+      $generatorMethod = NULL;
+      $generateResponse = NULL;
       // INSTRUMENT: keep previous behavior.
-      if ($element_type === 'ins') {
+      if (in_array($element_type, $instrument_types, TRUE)) {
         if ($selected === 'by_element') {
+          $generatorMethod = 'generateMTPerElement';
           $selector_uri = Utils::uriFromAutocomplete(
             $form_state->getValue(['additional_fields', 'selector', 'main'])
           );
           // API method name is historical; it accepts any $element_type.
+          $apiElementType = ($element_type === 'ins') ? 'instrument' : $element_type;
           $generateResponse = $api->generateMTPerElement(
-            'instrument',
+            $apiElementType,
             $newDataFileUri,
             $selector_uri,
             $safe_filename,
@@ -806,6 +815,7 @@ class GenerateForm extends FormBase {
         }
         elseif ($selected === 'status') {
           $status = $form_state->getValue(['additional_fields', 'status']);
+          $generatorMethod = 'generateMTPerStatus';
           $generateResponse = $api->generateMTPerStatus(
             $element_type,
             $newDataFileUri,
@@ -818,6 +828,7 @@ class GenerateForm extends FormBase {
         elseif ($selected === 'user_status') {
           $status = $form_state->getValue(['additional_fields', 'status']);
           $user_email = $form_state->getValue(['additional_fields', 'user_email']);
+          $generatorMethod = 'generateMTPerUserStatus';
           $generateResponse = $api->generateMTPerUserStatus(
             $element_type,
             $newDataFileUri,
@@ -855,6 +866,7 @@ class GenerateForm extends FormBase {
         elseif ($selected === 'status') {
           $status = $form_state->getValue(['additional_fields', 'status']);
           $filterValue = $status;
+          $generatorMethod = 'generateMTPerStatus';
           $generateResponse = $api->generateMTPerStatus(
             $element_type,
             $newDataFileUri,
@@ -870,6 +882,7 @@ class GenerateForm extends FormBase {
           // Encode both status and user in a single string; the backend
           // must parse this convention.
           $filterValue = 'status=' . $status . ';user=' . $user_email;
+          $generatorMethod = 'generateMTPerUserStatus';
           $generateResponse = $api->generateMTPerUserStatus(
             $element_type,
             $newDataFileUri,
@@ -899,11 +912,19 @@ class GenerateForm extends FormBase {
         );
       }
 
+      $generatorMethod = $generatorMethod ?? 'generateMT';
+      $generatorRaw = $this->stringifyApiResponse($generateResponse);
       if ($generateResponse) {
+        \Drupal::logger('sir')->debug('@method raw response: @resp', ['@method' => $generatorMethod, '@resp' => $generatorRaw]);
         \Drupal::messenger()->addMessage($this->t('@element generation request has been registered and sent to the generator service.', ['@element' => $element_label]));
       }
       else {
-        \Drupal::messenger()->addWarning($this->t('@element metadata was registered, but the generator service did not return a confirmation. Please verify the generator logs or configuration.', ['@element' => $element_label]));
+        $apiDetail = $api->getErrorMessage() ?: $generatorRaw;
+        \Drupal::logger('sir')->warning('@method failed: @detail', ['@method' => $generatorMethod, '@detail' => $apiDetail]);
+        \Drupal::messenger()->addWarning($this->t('@element metadata was registered, but the generator service did not return a confirmation. API output: @detail', [
+          '@element' => $element_label,
+          '@detail' => $this->truncateApiMessage($apiDetail),
+        ]));
       }
 
     } catch (\Exception $e) {
@@ -942,6 +963,38 @@ class GenerateForm extends FormBase {
 
     $response = $previousUrl ? new RedirectResponse($previousUrl) : new RedirectResponse(Url::fromRoute('rep.home')->toString());
     $response->send();
+  }
+
+  /**
+   * Normalize an API response value into a string suitable for logs.
+   */
+  private function stringifyApiResponse(mixed $response): string {
+    if (is_string($response)) {
+      return trim($response);
+    }
+    if (is_array($response) || is_object($response)) {
+      return json_encode($response, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    }
+    if ($response === NULL) {
+      return 'NULL';
+    }
+    return (string) $response;
+  }
+
+  /**
+   * Truncate API error text when showing it in the UI.
+   */
+  private function truncateApiMessage(string $message, int $maxLength = 200): string {
+    if (function_exists('mb_strlen')) {
+      if (mb_strlen($message) <= $maxLength) {
+        return $message;
+      }
+      return mb_substr($message, 0, $maxLength - 3) . '...';
+    }
+    if (strlen($message) <= $maxLength) {
+      return $message;
+    }
+    return substr($message, 0, $maxLength - 3) . '...';
   }
 
 }
