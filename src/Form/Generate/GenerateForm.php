@@ -171,11 +171,7 @@ class GenerateForm extends FormBase {
     $element_label     = $this->getElementName();
     $selector_label    = $this->getSelectorLabelForType();
     $current_type_slug = $this->getElementType();
-  // Element types that are currently supported by this UI/workflow.
-  // Historically only INS/DSG were wired; SDD/DP2/STR now follow the same
-  // workflow so they should render fields + submit actions.
-  $instrument_types  = ['ins', 'dsg', 'sdd', 'dp2', 'str'];
-  $is_instrument     = in_array($current_type_slug, $instrument_types, TRUE);
+    $is_instrument     = in_array($current_type_slug, ['ins', 'dsg', 'sdd', 'dp2', 'str'], TRUE);
     // KGR is only “active” if the socialm module is enabled.
     $is_kgr            = ($current_type_slug === 'kgr' && \Drupal::moduleHandler()->moduleExists('socialm'));
 
@@ -237,36 +233,61 @@ class GenerateForm extends FormBase {
 
         switch ($selected) {
           case 'by_element':
-            // Instrument selector with modal tree.
-            $form['additional_fields']['selector'] = [
-              'top' => [
-                '#type' => 'markup',
-                '#markup' => '<div class="col border border-white">',
-              ],
-              'main' => [
+            if ($current_type_slug === 'dsg') {
+              // DSG: Use autocomplete to select a Study from STD.
+              $form['additional_fields']['selector'] = [
+                '#type' => 'textfield',
+                '#title' => $this->t('Select Study'),
+                '#autocomplete_route_name' => 'std.study_autocomplete',
+                '#description' => $this->t('Start typing to search for a Study (data from STD).'),
+                '#required' => TRUE,
+              ];
+            }
+            elseif ($current_type_slug === 'sdd') {
+              // SDD: Use STD/SEM autocomplete (searching for semanticdatadictionary).
+              $form['additional_fields']['selector'] = [
                 '#type' => 'textfield',
                 '#title' => $this->t('Select @selector', ['@selector' => $selector_label]),
-                '#default_value' => '',
-                '#id' => 'selector_type',
+                '#autocomplete_route_name' => 'std.semanticdatadictionary_autocomplete',
+                '#description' => $this->t('Start typing to search for a SDD.'),
                 '#required' => TRUE,
-                '#attributes' => [
-                  'class' => ['open-tree-modal'],
-                  'data-dialog-type' => 'modal',
-                  'data-dialog-options' => json_encode(['width' => 800]),
-                  'data-url' => Url::fromRoute('rep.tree_form', [
-                    'mode' => 'modal',
-                    'elementtype' => strtolower($this->getElementName()),
-                  ], ['query' => ['field_id' => 'selector_type']])->toString(),
-                  'data-field-id' => 'selector_type',
-                  'data-elementtype' => strtolower($this->getElementName()),
-                  'autocomplete' => 'off',
+              ];
+            }
+            else {
+              // Other instruments (INS): Use modal tree selector.
+              // Ensure we use the canonical 'instrument' type for INS, regardless of UI label preferences.
+              $tree_elementtype = ($current_type_slug === 'ins') ? 'instrument' : strtolower($this->getElementName());
+
+              $form['additional_fields']['selector'] = [
+                'top' => [
+                  '#type' => 'markup',
+                  '#markup' => '<div class="col border border-white">',
                 ],
-              ],
-              'bottom' => [
-                '#type' => 'markup',
-                '#markup' => '</div>',
-              ],
-            ];
+                'main' => [
+                  '#type' => 'textfield',
+                  '#title' => $this->t('Select @selector', ['@selector' => $selector_label]),
+                  '#default_value' => '',
+                  '#id' => 'selector_type',
+                  '#required' => TRUE,
+                  '#attributes' => [
+                    'class' => ['open-tree-modal'],
+                    'data-dialog-type' => 'modal',
+                    'data-dialog-options' => json_encode(['width' => 800]),
+                    'data-url' => Url::fromRoute('sir.search', [
+                      'mode' => 'modal',
+                      'elementtype' => $tree_elementtype,
+                    ], ['query' => ['field_id' => 'selector_type']])->toString(),
+                    'data-field-id' => 'selector_type',
+                    'data-elementtype' => $tree_elementtype,
+                    'autocomplete' => 'off',
+                  ],
+                ],
+                'bottom' => [
+                  '#type' => 'markup',
+                  '#markup' => '</div>',
+                ],
+              ];
+            }
             break;
 
           case 'status':
@@ -604,7 +625,7 @@ class GenerateForm extends FormBase {
 
     $element_type = $this->getElementType();
     $selected = $form_state->getValue('option_select');
-  $instrument_types = ['ins', 'dsg', 'sdd', 'dp2', 'str'];
+    $instrument_types = ['ins', 'dsg', 'sdd', 'dp2', 'str'];
 
     // INSTRUMENT VALIDATION.
     if (in_array($element_type, $instrument_types, TRUE)) {
@@ -620,9 +641,38 @@ class GenerateForm extends FormBase {
       }
 
       if ($selected === 'by_element') {
-        $selector = $form_state->getValue(['additional_fields', 'selector', 'main']);
-        if (empty($selector)) {
-          $form_state->setErrorByName('additional_fields][selector][main', $this->t('A valid selector is required.'));
+        if ($element_type === 'dsg' || $element_type === 'sdd') {
+          // DSG/SDD validation (flat field).
+          $selector = $form_state->getValue(['additional_fields', 'selector']);
+          $label_req = ($element_type === 'dsg') ? 'Study' : 'SDD';
+          if (empty($selector)) {
+            $form_state->setErrorByName('additional_fields][selector', $this->t('A valid @label is required.', ['@label' => $label_req]));
+          }
+          else {
+            // Validate that we can extract a URI from the autocomplete string.
+            // Parse URI manually/safely: expecting "Label [URI]".
+            $uri = NULL;
+            // Allow trailing whitespace.
+            if (preg_match('/\[([^\]]+)\]\s*$/', (string) $selector, $matches)) {
+              $uri = $matches[1];
+            }
+            elseif (!empty($selector)) {
+              // Fallback: Use the selector value itself if no bracketed URI is found.
+              // This covers cases where autocomplete returns just the ID/URI (e.g. "STD-EOL-AVL-SNL").
+              $uri = trim($selector);
+            }
+
+            if (empty($uri)) {
+              $form_state->setErrorByName('additional_fields][selector', $this->t('Please select a valid @label from the list. (Received: @val)', ['@label' => $label_req, '@val' => $selector]));
+            }
+          }
+        }
+        else {
+          // INS validation (nested 'main').
+          $selector = $form_state->getValue(['additional_fields', 'selector', 'main']);
+          if (empty($selector)) {
+            $form_state->setErrorByName('additional_fields][selector][main', $this->t('A valid selector is required.'));
+          }
         }
       }
       elseif ($selected === 'status') {
@@ -701,7 +751,7 @@ class GenerateForm extends FormBase {
 
     $element_type = $this->getElementType();
     $selected     = $form_state->getValue('option_select') ?: 'by_element';
-  $instrument_types = ['ins', 'dsg', 'sdd', 'dp2', 'str'];
+    $instrument_types = ['ins', 'dsg', 'sdd', 'dp2', 'str'];
     $filename     = $form_state->getValue(['additional_fields', 'filename']);
     $mediafolder  = $form_state->getValue('mediafolder');
     $verifyuri    = $form_state->getValue('verifyuri');
@@ -803,9 +853,26 @@ class GenerateForm extends FormBase {
       if (in_array($element_type, $instrument_types, TRUE)) {
         if ($selected === 'by_element') {
           $generatorMethod = 'generateMTPerElement';
-          $selector_uri = Utils::uriFromAutocomplete(
-            $form_state->getValue(['additional_fields', 'selector', 'main'])
-          );
+          
+          if ($element_type === 'dsg' || $element_type === 'sdd') {
+            // Retrieve from flat field for DSG/SDD.
+            $selector_raw = $form_state->getValue(['additional_fields', 'selector']);
+            // Parse URI manually/safely.
+            $selector_uri = NULL;
+            if (preg_match('/\[([^\]]+)\]\s*$/', (string) $selector_raw, $matches)) {
+              $selector_uri = $matches[1];
+            }
+            elseif (!empty($selector_raw)) {
+              // Fallback: Use the selector value itself if no bracketed URI is found.
+              $selector_uri = trim($selector_raw);
+            }
+          }
+          else {
+            // Retrieve from nested 'main' for INS.
+            $selector_raw = $form_state->getValue(['additional_fields', 'selector', 'main']);
+            $selector_uri = Utils::uriFromAutocomplete($selector_raw);
+          }
+
           // API method name is historical; it accepts any $element_type.
           $apiElementType = ($element_type === 'ins') ? 'instrument' : $element_type;
           $generateResponse = $api->generateMTPerElement(
