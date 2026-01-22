@@ -8,7 +8,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\Core\Url;
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\VSTOI;
-use Drupal\rep\Vocabulary\Hasco as HASCO;
+use Drupal\rep\Vocabulary\HASCO;
 use Drupal\rep\Constant;
 use Drupal\file\Entity\File;
 use Drupal\Core\File\FileSystemInterface;
@@ -171,7 +171,11 @@ class GenerateForm extends FormBase {
     $element_label     = $this->getElementName();
     $selector_label    = $this->getSelectorLabelForType();
     $current_type_slug = $this->getElementType();
-    $is_instrument     = in_array($current_type_slug, ['ins', 'dsg'], TRUE);
+  // Element types that are currently supported by this UI/workflow.
+  // Historically only INS/DSG were wired; SDD/DP2/STR now follow the same
+  // workflow so they should render fields + submit actions.
+  $instrument_types  = ['ins', 'dsg', 'sdd', 'dp2', 'str'];
+  $is_instrument     = in_array($current_type_slug, $instrument_types, TRUE);
     // KGR is only “active” if the socialm module is enabled.
     $is_kgr            = ($current_type_slug === 'kgr' && \Drupal::moduleHandler()->moduleExists('socialm'));
 
@@ -600,7 +604,7 @@ class GenerateForm extends FormBase {
 
     $element_type = $this->getElementType();
     $selected = $form_state->getValue('option_select');
-    $instrument_types = ['ins', 'dsg'];
+  $instrument_types = ['ins', 'dsg', 'sdd', 'dp2', 'str'];
 
     // INSTRUMENT VALIDATION.
     if (in_array($element_type, $instrument_types, TRUE)) {
@@ -697,7 +701,7 @@ class GenerateForm extends FormBase {
 
     $element_type = $this->getElementType();
     $selected     = $form_state->getValue('option_select') ?: 'by_element';
-    $instrument_types = ['ins', 'dsg'];
+  $instrument_types = ['ins', 'dsg', 'sdd', 'dp2', 'str'];
     $filename     = $form_state->getValue(['additional_fields', 'filename']);
     $mediafolder  = $form_state->getValue('mediafolder');
     $verifyuri    = $form_state->getValue('verifyuri');
