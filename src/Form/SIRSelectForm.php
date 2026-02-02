@@ -1006,7 +1006,6 @@ class SIRSelectForm extends FormBase {
    * Generate output based on element type.
    */
   protected function generateOutput() {
-    // kint($this->getList());
     switch ($this->element_type) {
       case "instrument":
         return Instrument::generateOutput($this->getList());

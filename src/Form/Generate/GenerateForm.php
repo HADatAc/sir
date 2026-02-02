@@ -8,7 +8,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\Core\Url;
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\VSTOI;
-use Drupal\rep\Vocabulary\HASCO;
+use Drupal\rep\Vocabulary\Hasco as HASCO;
 use Drupal\rep\Constant;
 use Drupal\file\Entity\File;
 use Drupal\Core\File\FileSystemInterface;
@@ -173,8 +173,7 @@ class GenerateForm extends FormBase {
     $selector_label    = $this->getSelectorLabelForType();
     $current_type_slug = $this->getElementType();
     $is_instrument     = ($current_type_slug === 'ins');
-    $is_DP2            = ($current_type_slug === 'dp2');
-    $is_DSG            = ($current_type_slug === 'dsg');
+
     // KGR is only “active” if the socialm module is enabled.
     $is_kgr            = ($current_type_slug === 'kgr' && \Drupal::moduleHandler()->moduleExists('socialm'));
 
@@ -198,7 +197,7 @@ class GenerateForm extends FormBase {
      *        only if module "socialm" is present.
      * - OTHER TYPES: show a simpler set (notice only), no actions.
      */
-    if ($is_instrument || $is_DP2 || $is_DSG) {
+    if ($is_instrument) {
       // --- Instrument-specific: with mode select ---
       $form['option_select'] = [
         '#type' => 'select',
@@ -564,7 +563,7 @@ class GenerateForm extends FormBase {
 
     // Build actions only for element types that are actually submittable
     // (instrument and KGR).
-    if ($is_instrument || $is_kgr || $is_DP2 || $is_DSG) {
+    if ($is_instrument || $is_kgr) {
       $form['actions'] = ['#type' => 'actions'];
 
       $form['actions']['submit'] = [
@@ -760,7 +759,7 @@ class GenerateForm extends FormBase {
 
       // 4) MT element JSON (prefix depends on element type).
       $newMTUri = str_replace('DFL', Utils::elementPrefix($element_type), $newDataFileUri);
-      $resolved_type_uri = $element_type_uri ?: HASCO::INSTRUMENT_CLASS_ENTRY_POINT;
+      $resolved_type_uri = $element_type_uri ?: HASCO::MT;
 
       $mtData = [
         'uri' => $newMTUri,

@@ -27,7 +27,7 @@ class JsonApiComponentController extends ControllerBase{
     }
     $input = Xss::filter($input);
     $api = \Drupal::service('rep.api_connector');
-    $component_list = $api->listByKeyword('component',$input,100,0);
+    $component_list = $api->listByKeyword('component',$input,10,0);
     $obj = json_decode($component_list);
     $components = [];
     if ($obj->isSuccessful) {
