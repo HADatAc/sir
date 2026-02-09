@@ -281,6 +281,23 @@ std.manage_sdd_template:
     _permission: 'access content'
     _role: 'content_editor'
 
+std.manage_wkf_template:
+  title: WKF Templates
+  description: Manage WKF Templates
+  route_name: rep.select_mt_element
+  route_parameters:
+    elementtype: 'wkf'
+    mode: 'table'
+    page: '1'
+    pagesize: '9'
+    studyuri: 'none'
+  parent: reviewer.uploadingest_review
+  menu_name: main
+  weight: 15
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'
+
 reviewer.manage_ins_files_dp2:
   title: DP2 Templates
   description: Manage DP2 Templates
