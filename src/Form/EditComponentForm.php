@@ -69,6 +69,13 @@ class EditComponentForm extends FormBase {
     $form['#attached']['library'][] = 'rep/rep_modal';
     $form['#attached']['library'][] = 'core/drupal.dialog';
 
+    // Media viewer modal (images + PDFs).
+    $form['#attached']['library'][] = 'rep/pdfjs';
+    $form['#attached']['library'][] = 'rep/webdoc_modal';
+    $form['#attached']['drupalSettings']['webdoc_modal'] = [
+      'baseUrl' => \Drupal::request()->getSchemeAndHttpHost() . \Drupal::request()->getBaseUrl(),
+    ];
+
 
     $uri=$componenturi;
     $uri_decode=base64_decode($uri);
@@ -270,18 +277,10 @@ class EditComponentForm extends FormBase {
       ],
     ];
 
-    // Attempt to load an existing file if the document is not a URL.
+    // Attempt to load an existing file if the image is not a URL.
     $existing_image_fid = NULL;
     if ($image_type === 'upload' && !empty($component_image)) {
-      // Build the expected file URI in the private filesystem.
-      $desired_uri = 'private://resources/' . $modUri . '/image/' . $component_image;
-      $files = \Drupal::entityTypeManager()
-        ->getStorage('file')
-        ->loadByProperties(['uri' => $desired_uri]);
-      $file = reset($files);
-      if ($file) {
-        $existing_image_fid = $file->id();
-      }
+      $existing_image_fid = Utils::resolvePrivateResourceFid($modUri, 'image', $component_image);
     }
 
     // 5. Managed file element for uploading a new document.
@@ -289,6 +288,7 @@ class EditComponentForm extends FormBase {
       '#type' => 'managed_file',
       '#title' => $this->t('Upload Image'),
       '#upload_location' => 'private://resources/' . $modUri . '/image',
+      '#default_value' => $existing_image_fid ? [$existing_image_fid] : NULL,
       '#upload_validators' => [
         'file_validate_extensions' => ['png jpg jpeg'], // Allowed file extensions.
         'file_validate_size' => [2097152], // Maximum file size (in bytes).
@@ -296,6 +296,30 @@ class EditComponentForm extends FormBase {
       // Description in red: allowed file types and a warning that choosing a new image will remove the previous one.
       '#description' => Markup::create('<span style="color: red;">Allowed file types: png, jpg, jpeg. Selecting a new image will remove the previous one.</span>'),
     ];
+
+    // Existing image preview (thumbnail + modal viewer).
+    if (!empty($component_image)) {
+      $image_view_url = '';
+      if ($image_type === 'url') {
+        $image_view_url = $component_image;
+      }
+      elseif (!empty($modUri)) {
+        $image_file_uri = 'private://resources/' . $modUri . '/image/' . $component_image;
+        $image_view_url = \Drupal::service('file_url_generator')->generateAbsoluteString($image_file_uri);
+      }
+
+      if ($image_view_url !== '') {
+        $form['component_information']['component_image_preview'] = [
+          '#type' => 'markup',
+          '#markup' => Markup::create(
+            '<div class="mt-2">'
+            . '<div class="mb-2"><img src="' . $image_view_url . '" alt="' . htmlspecialchars($component_image, ENT_QUOTES) . '" style="max-width: 180px; height: auto; border: 1px solid #ddd; padding: 2px;" /></div>'
+            . '<a href="#" class="view-media-button btn btn-primary" data-view-url="' . $image_view_url . '">' . $this->t('View Image') . '</a>'
+            . '</div>'
+          ),
+        ];
+      }
+    }
 
     // **** WEBDOCUMENT ****
     // Retrieve the current web document value.
@@ -350,22 +374,15 @@ class EditComponentForm extends FormBase {
     // Attempt to load an existing file if the document is not a URL.
     $existing_fid = NULL;
     if ($webdocument_type === 'upload' && !empty($component_webdocument)) {
-      // Build the expected file URI in the private filesystem.
-      $desired_uri = 'private://resources/' . $modUri . '/webdoc/' . $component_webdocument;
-      $files = \Drupal::entityTypeManager()
-        ->getStorage('file')
-        ->loadByProperties(['uri' => $desired_uri]);
-      $file = reset($files);
-      if ($file) {
-        $existing_fid = $file->id();
-      }
+      $existing_fid = Utils::resolvePrivateResourceFid($modUri, 'webdoc', $component_webdocument, ['webdocument', 'image']);
     }
 
     // 5. Managed file element for uploading a new document.
     $form['component_information']['component_webdocument_upload_wrapper']['component_webdocument_upload'] = [
       '#type' => 'managed_file',
-      '#title' => $this->t('Upload Image'),
-      '#upload_location' => 'private://resources/' . $modUri . '/image',
+      '#title' => $this->t('Upload Web Document'),
+      '#upload_location' => 'private://resources/' . $modUri . '/webdoc',
+      '#default_value' => $existing_fid ? [$existing_fid] : NULL,
       '#upload_validators' => [
         'file_validate_extensions' => ['pdf doc docx txt xls xlsx'],
         'file_validate_size' => [2097152], // Maximum file size (in bytes).
@@ -373,6 +390,30 @@ class EditComponentForm extends FormBase {
       // Description in red: allowed file types and a warning that choosing a new image will remove the previous one.
       '#description' => Markup::create('<span style="color: red;">Allowed file types: pdf, doc, docx, txt, xls, xlsx. Selecting a new document will remove the previous one.</span>'),
     ];
+
+    // Existing web document preview (filename + modal viewer).
+    if (!empty($component_webdocument)) {
+      $webdoc_view_url = '';
+      if ($webdocument_type === 'url') {
+        $webdoc_view_url = $component_webdocument;
+      }
+      elseif (!empty($modUri)) {
+        $webdoc_file_uri = 'private://resources/' . $modUri . '/webdoc/' . $component_webdocument;
+        $webdoc_view_url = \Drupal::service('file_url_generator')->generateAbsoluteString($webdoc_file_uri);
+      }
+
+      if ($webdoc_view_url !== '') {
+        $form['component_information']['component_webdocument_preview'] = [
+          '#type' => 'markup',
+          '#markup' => Markup::create(
+            '<div class="mt-2">'
+            . '<div class="mb-2"><strong>' . $this->t('Current document:') . '</strong> ' . htmlspecialchars($component_webdocument, ENT_QUOTES) . '</div>'
+            . '<a href="#" class="view-media-button btn btn-primary" data-view-url="' . $webdoc_view_url . '">' . $this->t('View Document') . '</a>'
+            . '</div>'
+          ),
+        ];
+      }
+    }
 
     if ($this->getComponent()->hasReviewNote !== NULL && $this->getComponent()->hasSatus !== null) {
       $form['component_hasreviewnote'] = [
@@ -581,24 +622,6 @@ class EditComponentForm extends FormBase {
         $api = \Drupal::service('rep.api_connector');
         $api->elementDel('component', $this->getComponentUri());
         $api->elementAdd('component', $componentJson);
-
-        // UPLOAD IMAGE TO API
-        if ($image_type === 'upload' && $component_image !== $this->getComponent()->hasImageUri) {
-          $fids = $form_state->getValue('component_image_upload');
-          $msg = $api->parseObjectResponse($api->uploadFile($this->getComponentUri(), reset($fids)), 'uploadFile');
-          if ($msg == NULL) {
-            \Drupal::messenger()->addError(t("The Uploaded Image FAILED to be submited to API."));
-          }
-        }
-
-        // UPLOAD DOCUMENT TO API
-        if ($doc_type === 'upload' && $component_webdocument !== $this->getComponent()->hasWebDocument) {
-          $fids = $form_state->getValue('component_webdocument_upload');
-          $msg = $api->parseObjectResponse($api->uploadFile($this->getComponentUri(), reset($fids)), 'uploadFile');
-          if ($msg == NULL) {
-            \Drupal::messenger()->addError(t("The Uploaded WebDocument FAILED to be submited to API."));
-          }
-        }
 
         \Drupal::messenger()->addMessage(t("Component has been updated successfully."));
       }

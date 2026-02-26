@@ -384,6 +384,16 @@ reviewer.generate.dp2:
   menu_name: main
   weight: 50
 
+reviewer.generate.wkf:
+  title: 'WKF file'
+  description: 'WKF file'
+  route_name: sir.generate
+  route_parameters:
+    elementtype: 'wkf'
+  parent: reviewer.generate_review
+  menu_name: main
+  weight: 55
+
 reviewer.generate.str:
   title: 'STR file'
   description: 'STR file'

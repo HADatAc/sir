@@ -4,6 +4,7 @@ namespace Drupal\sir\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\Utils;
@@ -49,6 +50,13 @@ class AddCodebookForm extends FormBase {
     // MODAL
     $form['#attached']['library'][] = 'rep/rep_modal';
     $form['#attached']['library'][] = 'core/drupal.dialog';
+
+    // Media viewer modal (images + PDFs).
+    $form['#attached']['library'][] = 'rep/pdfjs';
+    $form['#attached']['library'][] = 'rep/webdoc_modal';
+    $form['#attached']['drupalSettings']['webdoc_modal'] = [
+      'baseUrl' => \Drupal::request()->getSchemeAndHttpHost() . \Drupal::request()->getBaseUrl(),
+    ];
 
     $tables = new Tables;
     $languages = $tables->getLanguages();
@@ -121,11 +129,39 @@ class AddCodebookForm extends FormBase {
       '#type' => 'managed_file',
       '#title' => $this->t('Upload Image'),
       '#upload_location' => 'private://resources/' . $modUri . '/image',
+      '#default_value' => $form_state->getValue('codebook_image_upload') ?: NULL,
       '#upload_validators' => [
         'file_validate_extensions' => ['png jpg jpeg'], // Adjust allowed extensions as needed.
         'file_validate_size' => [2097152],
       ],
     ];
+
+    // Image preview (URL or uploaded file on rebuild).
+    $image_view_url = '';
+    $image_type = $form_state->getValue('codebook_image_type');
+    if ($image_type === 'url') {
+      $image_view_url = (string) $form_state->getValue('codebook_image_url');
+    }
+    elseif ($image_type === 'upload') {
+      $fids = $form_state->getValue('codebook_image_upload') ?: [];
+      if (!empty($fids)) {
+        $file = File::load(reset($fids));
+        if ($file) {
+          $image_view_url = \Drupal::service('file_url_generator')->generateAbsoluteString($file->getFileUri());
+        }
+      }
+    }
+    if ($image_view_url !== '') {
+      $form['codebook_image_preview'] = [
+        '#type' => 'markup',
+        '#markup' => Markup::create(
+          '<div class="mt-2">'
+          . '<div class="mb-2"><img src="' . $image_view_url . '" alt="" style="max-width: 180px; height: auto; border: 1px solid #ddd; padding: 2px;" /></div>'
+          . '<a href="#" class="view-media-button btn btn-primary" data-view-url="' . $image_view_url . '">' . $this->t('View Image') . '</a>'
+          . '</div>'
+        ),
+      ];
+    }
 
     // Add a select box to choose between URL and Upload.
     $form['codebook_webdocument_type'] = [
@@ -167,11 +203,38 @@ class AddCodebookForm extends FormBase {
       '#type' => 'managed_file',
       '#title' => $this->t('Upload Document'),
       '#upload_location' => 'private://resources/' . $modUri . '/webdoc',
+      '#default_value' => $form_state->getValue('codebook_webdocument_upload') ?: NULL,
       '#upload_validators' => [
         'file_validate_extensions' => ['pdf doc docx txt xls xlsx'], // Adjust allowed extensions as needed.
         'file_validate_size' => [2097152],
       ],
     ];
+
+    // Web document preview (URL or uploaded file on rebuild).
+    $webdoc_view_url = '';
+    $webdoc_type = $form_state->getValue('codebook_webdocument_type');
+    if ($webdoc_type === 'url') {
+      $webdoc_view_url = (string) $form_state->getValue('codebook_webdocument_url');
+    }
+    elseif ($webdoc_type === 'upload') {
+      $fids = $form_state->getValue('codebook_webdocument_upload') ?: [];
+      if (!empty($fids)) {
+        $file = File::load(reset($fids));
+        if ($file) {
+          $webdoc_view_url = \Drupal::service('file_url_generator')->generateAbsoluteString($file->getFileUri());
+        }
+      }
+    }
+    if ($webdoc_view_url !== '') {
+      $form['codebook_webdocument_preview'] = [
+        '#type' => 'markup',
+        '#markup' => Markup::create(
+          '<div class="mt-2">'
+          . '<a href="#" class="view-media-button btn btn-primary" data-view-url="' . $webdoc_view_url . '">' . $this->t('View Document') . '</a>'
+          . '</div>'
+        ),
+      ];
+    }
 
     $form['save_submit'] = [
       '#type' => 'submit',
@@ -299,23 +362,6 @@ class AddCodebookForm extends FormBase {
 
       $api = \Drupal::service('rep.api_connector');
       $api->elementAdd('codebook', $codebookJSON);
-
-      // UPLOAD IMAGE TO API
-      if ($image_type === 'upload') {
-        $fids = $form_state->getValue('codebook_image_upload');
-        $msg = $api->parseObjectResponse($api->uploadFile($newCodebookUri, reset($fids)), 'uploadFile');
-        if ($msg == NULL) {
-          \Drupal::messenger()->addError(t("The Uploaded Image FAILED to be submited to API."));
-        }
-      }
-      // UPLOAD DOCUMENT TO API
-      if ($doc_type === 'upload') {
-        $fids = $form_state->getValue('codebook_webdocument_upload');
-        $msg = $api->parseObjectResponse($api->uploadFile($newCodebookUri, reset($fids)), 'uploadFile');
-        if ($msg == NULL) {
-          \Drupal::messenger()->addError(t("The Uploaded Document FAILED to be submited to API."));
-        }
-      }
 
       \Drupal::messenger()->addMessage(t("Codebook has been added successfully."));
       self::backUrl();

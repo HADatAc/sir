@@ -115,6 +115,12 @@ class GenerateForm extends FormBase {
         $this->setElementTypeUri($this->resolveHascoUri('KGR'));
         break;
 
+      case 'wkf':
+        $this->setElementType('wkf');
+        $this->setElementName('WKF');
+        $this->setElementTypeUri($this->resolveHascoUri('WKF'));
+        break;
+
       default:
         $this->setElementType($slug);
         $this->setElementName(strtoupper($slug));
@@ -137,8 +143,10 @@ class GenerateForm extends FormBase {
    */
   private function getSelectorLabelForType() {
     $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument') ?? 'instrument';
+    $preferred_process = \Drupal::config('rep.settings')->get('preferred_process') ?? 'workflow';
     switch ($this->getElementType()) {
       case 'ins':        return ucfirst($preferred_instrument);
+      case 'wkf':        return ucfirst($preferred_process) . ' Stem';
       case 'dsg':        return 'DSG';
       case 'dd':         return 'DD';
       case 'sdd':        return 'SDD';
@@ -173,6 +181,7 @@ class GenerateForm extends FormBase {
     $selector_label    = $this->getSelectorLabelForType();
     $current_type_slug = $this->getElementType();
     $is_instrument     = ($current_type_slug === 'ins');
+    $is_wkf            = ($current_type_slug === 'wkf');
 
     // KGR is only “active” if the socialm module is enabled.
     $is_kgr            = ($current_type_slug === 'kgr' && \Drupal::moduleHandler()->moduleExists('socialm'));
@@ -197,7 +206,7 @@ class GenerateForm extends FormBase {
      *        only if module "socialm" is present.
      * - OTHER TYPES: show a simpler set (notice only), no actions.
      */
-    if ($is_instrument) {
+    if ($is_instrument || $is_wkf) {
       // --- Instrument-specific: with mode select ---
       $form['option_select'] = [
         '#type' => 'select',
@@ -235,6 +244,7 @@ class GenerateForm extends FormBase {
 
         switch ($selected) {
           case 'by_element':
+            $tree_elementtype = $is_wkf ? 'workflowstem' : strtolower($this->getElementName());
             // Instrument selector with modal tree.
             $form['additional_fields']['selector'] = [
               'top' => [
@@ -253,10 +263,10 @@ class GenerateForm extends FormBase {
                   'data-dialog-options' => json_encode(['width' => 800]),
                   'data-url' => Url::fromRoute('rep.tree_form', [
                     'mode' => 'modal',
-                    'elementtype' => strtolower($this->getElementName()),
+                    'elementtype' => $tree_elementtype,
                   ], ['query' => ['field_id' => 'selector_type']])->toString(),
                   'data-field-id' => 'selector_type',
-                  'data-elementtype' => strtolower($this->getElementName()),
+                  'data-elementtype' => $tree_elementtype,
                   'autocomplete' => 'off',
                 ],
               ],
@@ -311,7 +321,7 @@ class GenerateForm extends FormBase {
         }
       }
 
-      // Media folder (instrument: visible in all modes).
+      // Media folder (instrument/WKF: visible in all modes).
       $form['mediafolder'] = [
         '#type' => 'textfield',
         '#title' => $this->t('Media folder name'),
@@ -350,7 +360,7 @@ class GenerateForm extends FormBase {
         ],
       ];
 
-      // Submit button states for instrument.
+      // Submit button states for instrument/WKF.
       $submit_states = [
         'enabled' => [
           'or' => [
@@ -561,9 +571,8 @@ class GenerateForm extends FormBase {
       ];
     }
 
-    // Build actions only for element types that are actually submittable
-    // (instrument and KGR).
-    if ($is_instrument || $is_kgr) {
+    // Build actions only for element types that are actually submittable.
+    if ($is_instrument || $is_wkf || $is_kgr) {
       $form['actions'] = ['#type' => 'actions'];
 
       $form['actions']['submit'] = [
@@ -603,8 +612,8 @@ class GenerateForm extends FormBase {
     $element_type = $this->getElementType();
     $selected = $form_state->getValue('option_select');
 
-    // INSTRUMENT VALIDATION.
-    if ($element_type === 'ins') {
+    // INSTRUMENT/WKF VALIDATION.
+    if ($element_type === 'ins' || $element_type === 'wkf') {
       // If option_select is missing (unexpected), assume 'by_element'.
       $selected = $selected ?: 'by_element';
 
@@ -774,11 +783,23 @@ class GenerateForm extends FormBase {
       $mtJSON = json_encode($mtData);
 
       // 5) Persist metadata.
-      $msg_datafile = $api->parseObjectResponse($api->datafileAdd($datafileJSON), 'datafileAdd');
-      $msg_element  = $api->parseObjectResponse($api->elementAdd($element_type, $mtJSON), 'elementAdd');
+      $raw_datafile = $api->datafileAdd($datafileJSON);
+      $msg_datafile = $api->parseObjectResponse($raw_datafile, 'datafileAdd');
+      $err_datafile = trim((string) $api->getErrorMessage());
+
+      $raw_element = $api->elementAdd($element_type, $mtJSON);
+      $msg_element = $api->parseObjectResponse($raw_element, 'elementAdd');
+      $err_element = trim((string) $api->getErrorMessage());
 
       if ($msg_datafile === NULL || $msg_element === NULL) {
-        $error = trim(($msg_datafile ?? '') . ' ' . ($msg_element ?? ''));
+        $error_parts = [];
+        if ($msg_datafile === NULL) {
+          $error_parts[] = 'datafileAdd failed' . ($err_datafile ? (': ' . $err_datafile) : '');
+        }
+        if ($msg_element === NULL) {
+          $error_parts[] = 'elementAdd(' . $element_type . ') failed' . ($err_element ? (': ' . $err_element) : '');
+        }
+        $error = trim(implode(' | ', $error_parts));
         \Drupal::messenger()->addError($this->t('Failed to register the metadata (DATAFILE/element). @err', [
           '@err' => $error ?: 'No detailed error message returned.',
         ]));
@@ -798,6 +819,46 @@ class GenerateForm extends FormBase {
           // API method name is historical; it accepts any $element_type.
           $generateResponse = $api->generateMTPerElement(
             'instrument',
+            $newDataFileUri,
+            $selector_uri,
+            $safe_filename,
+            $mediafolder,
+            $verifyuri
+          );
+        }
+        elseif ($selected === 'status') {
+          $status = $form_state->getValue(['additional_fields', 'status']);
+          $generateResponse = $api->generateMTPerStatus(
+            $element_type,
+            $newDataFileUri,
+            $status,
+            $safe_filename,
+            $mediafolder,
+            $verifyuri
+          );
+        }
+        elseif ($selected === 'user_status') {
+          $status = $form_state->getValue(['additional_fields', 'status']);
+          $user_email = $form_state->getValue(['additional_fields', 'user_email']);
+          $generateResponse = $api->generateMTPerUserStatus(
+            $element_type,
+            $newDataFileUri,
+            $user_email,
+            $status,
+            $safe_filename,
+            $mediafolder,
+            $verifyuri
+          );
+        }
+      }
+      // WKF: same modes as INS, but selector comes from workflow stems.
+      elseif ($element_type === 'wkf') {
+        if ($selected === 'by_element') {
+          $selector_uri = Utils::uriFromAutocomplete(
+            $form_state->getValue(['additional_fields', 'selector', 'main'])
+          );
+          $generateResponse = $api->generateMTPerElement(
+            $element_type,
             $newDataFileUri,
             $selector_uri,
             $safe_filename,
