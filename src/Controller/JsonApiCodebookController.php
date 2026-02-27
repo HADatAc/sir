@@ -6,6 +6,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Drupal\Component\Utility\Xss;
+use Drupal\rep\Utils;
 
 /**
  * Class JsonApiCodebookController
@@ -32,7 +33,7 @@ class JsonApiCodebookController extends ControllerBase{
     }
     foreach ($codebooks as $codebook) {
       $results[] = [
-        'value' => $codebook->label . ' [' . $codebook->uri . ']',
+        'value' => Utils::trimPreserveBracket(Utils::fieldToAutocomplete($codebook->uri, $codebook->label), 127),
         'label' => $codebook->label,
       ];
     }

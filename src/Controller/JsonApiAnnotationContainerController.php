@@ -6,6 +6,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Drupal\Component\Utility\Xss;
+use Drupal\rep\Utils;
 
 /**
  * Class JsonApiAnnotationContainerController
@@ -34,7 +35,7 @@ class JsonApiAnnotationContainerController extends ControllerBase{
     //dpm($containers);
     foreach ($containers as $container) {
       $results[] = [
-        'value' => $container->label . ' [' . $container->uri . ']',
+        'value' => Utils::trimPreserveBracket(Utils::fieldToAutocomplete($container->uri, $container->label), 127),
         'label' => $container->label . ' [' . $container->uri . ']',
       ];
     }
