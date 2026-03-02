@@ -91,8 +91,8 @@ class ReviewComponentStemForm extends FormBase {
       $wasGeneratedBy = $this->getComponentStem()->wasGeneratedBy;
       if ($this->getComponentStem()->wasDerivedFrom != NULL) {
         $this->setSourceComponentStem($this->retrieveComponentStem($this->getComponentStem()->wasDerivedFrom));
-        if ($this->getSourceComponentStem() != NULL && $this->getSourceComponentStem()->hasContent != NULL) {
-          $sourceContent = Utils::fieldToAutocomplete($this->getSourceComponentStem()->uri,$this->getSourceComponentStem()->hasContent);
+        if ($this->getSourceComponentStem() != NULL && ($this->getSourceComponentStem()->hasContent ?? NULL) != NULL) {
+          $sourceContent = Utils::fieldToAutocomplete($this->getSourceComponentStem()->uri, (string) ($this->getSourceComponentStem()->hasContent ?? ''));
         }
       }
     }
@@ -148,7 +148,7 @@ class ReviewComponentStemForm extends FormBase {
     $form['componentstem_wrapper']['componentstem_content'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name'),
-      '#default_value' => $this->getComponentStem()->hasContent,
+      '#default_value' => (string) ($this->getComponentStem()->hasContent ?? ''),
       '#disabled' => TRUE,
     ];
     $form['componentstem_wrapper']['componentstem_language'] = [
@@ -516,7 +516,7 @@ class ReviewComponentStemForm extends FormBase {
           '"label":"'.$this->getComponentStem()->label.'",'.
           '"hascoTypeUri":"'.VSTOI::COMPONENT_STEM.'",'.
           '"hasStatus":"'.VSTOI::CURRENT.'",'.
-          '"hasContent":"'.$this->getComponentStem()->hasContent.'",'.
+          '"hasContent":"'.($this->getComponentStem()->hasContent ?? '').'",'.
           '"hasLanguage":"'.$this->getComponentStem()->hasLanguage.'",'.
           '"hasVersion":"'.$this->getComponentStem()->hasVersion.'",'.
           '"comment":"'.$this->getComponentStem()->comment.'",'.
@@ -544,7 +544,7 @@ class ReviewComponentStemForm extends FormBase {
           '"label":"'.$resultParent->label.'",'.
           '"hascoTypeUri":"'.VSTOI::COMPONENT_STEM.'",'.
           '"hasStatus":"'.VSTOI::DEPRECATED.'",'.
-          '"hasContent":"'.$resultParent->hasContent.'",'.
+          '"hasContent":"'.($resultParent->hasContent ?? '').'",'.
           '"hasLanguage":"'.$resultParent->hasLanguage.'",'.
           '"hasVersion":"'.$resultParent->hasVersion.'",'.
           '"comment":"'.$resultParent->comment.'",'.
@@ -570,7 +570,7 @@ class ReviewComponentStemForm extends FormBase {
           '"label":"'.$this->getComponentStem()->label.'",'.
           '"hascoTypeUri":"'.VSTOI::COMPONENT_STEM.'",'.
           '"hasStatus":"'.VSTOI::DRAFT.'",'.
-          '"hasContent":"'.$this->getComponentStem()->hasContent.'",'.
+          '"hasContent":"'.($this->getComponentStem()->hasContent ?? '').'",'.
           '"hasLanguage":"'.$this->getComponentStem()->hasLanguage.'",'.
           '"hasVersion":"'.$this->getComponentStem()->hasVersion.'",'.
           '"comment":"'.$this->getComponentStem()->comment.'",'.

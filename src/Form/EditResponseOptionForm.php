@@ -84,13 +84,13 @@ class EditResponseOptionForm extends FormBase {
     $form['responseoption_content'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Content'),
-      '#default_value' => $this->getResponseOption()->hasContent,
+      '#default_value' => (string) ($this->getResponseOption()->hasContent ?? ''),
     ];
     $form['responseoption_language'] = [
       '#type' => 'select',
       '#title' => $this->t('Language'),
       '#options' => $languages,
-      '#default_value' => $this->getResponseOption()->hasLanguage,
+      '#default_value' => (string) ($this->getResponseOption()->hasLanguage ?? ''),
     ];
     $form['responseoption_version'] = [
       '#type' => 'textfield',

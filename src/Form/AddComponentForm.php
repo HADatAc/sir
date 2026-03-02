@@ -159,7 +159,7 @@ class AddComponentForm extends FormBase {
 
     $sourceContent = '';
     if ($this->getSourceComponent() != NULL) {
-      $sourceContent = $this->getSourceComponent()->hasContent;
+      $sourceContent = (string) ($this->getSourceComponent()->hasContent ?? '');
     }
 
     // $form['component_stem'] = [

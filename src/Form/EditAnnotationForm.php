@@ -83,8 +83,9 @@ class EditAnnotationForm extends FormBase {
     }
     $stemLabel = "";
     if ($this->getAnnotation()->annotationStem != NULL) {
-      $stemLabel = $this->getAnnotation()->annotationStem->hasContent . ' [' . $this->getAnnotation()->annotationStem->uri . ']';
-      //$stemLabel = Utils::trimAutoCompleteString($this->getAnnotation()->annotationStem->hasContent, $this->getAnnotation()->annotationStem->uri);
+      $stemObj = $this->getAnnotation()->annotationStem;
+      $stemText = (string) (($stemObj->hasContent ?? '') !== '' ? ($stemObj->hasContent ?? '') : ($stemObj->label ?? ''));
+      $stemLabel = $stemText . ' [' . ($stemObj->uri ?? '') . ']';
     }
 
 
@@ -109,7 +110,7 @@ class EditAnnotationForm extends FormBase {
     $form['annotation_style'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Content w/Style (HTML)'),
-      '#default_value' => html_entity_decode($this->getAnnotation()->hasContentWithStyle),
+      '#default_value' => html_entity_decode((string) ($this->getAnnotation()->hasContentWithStyle ?? '')),
     ];
     $form['annotation_description'] = [
       '#type' => 'textarea',

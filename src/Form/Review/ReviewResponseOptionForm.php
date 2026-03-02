@@ -92,7 +92,7 @@ class ReviewResponseOptionForm extends FormBase {
     $form['responseoption_wrapper']['responseoption_content'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Content'),
-      '#default_value' => $this->getResponseOption()->hasContent,
+      '#default_value' => (string) ($this->getResponseOption()->hasContent ?? ''),
       '#attributes' => [
         'disabled' => 'disabled',
       ],
@@ -101,7 +101,7 @@ class ReviewResponseOptionForm extends FormBase {
       '#type' => 'select',
       '#title' => $this->t('Language'),
       '#options' => $languages,
-      '#default_value' => $this->getResponseOption()->hasLanguage,
+      '#default_value' => (string) ($this->getResponseOption()->hasLanguage ?? ''),
       '#attributes' => [
         'disabled' => 'disabled',
       ],

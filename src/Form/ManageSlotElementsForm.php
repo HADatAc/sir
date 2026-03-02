@@ -1042,12 +1042,16 @@ class ManageSlotElementsForm extends FormBase {
 
     //dpm($annotation);
 
+    $stemObj = (is_object($annotation) && isset($annotation->annotationStem) && is_object($annotation->annotationStem))
+      ? $annotation->annotationStem
+      : NULL;
+    $stemContent = is_object($stemObj) ? (string) ($stemObj->hasContent ?? '') : '';
+
     if ($annotation == NULL ||
         $annotation->uri == NULL ||
         $annotation->uri == "" ||
-        $annotation->annotationStem == NULL ||
-        $annotation->annotationStem->hasContent == NULL ||
-        $annotation->annotationStem->hasContent == ""
+        $stemObj == NULL ||
+        $stemContent == ""
       ){
       return "";
     }

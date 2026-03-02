@@ -87,7 +87,15 @@ class ReviewComponentForm extends FormBase {
       return;
     } else {
       if ($this->getComponent()->componentStem != NULL) {
-        $stemLabel = $this->getComponent()->componentStem->hasContent . ' [' . $this->getComponent()->componentStem->uri . ']';
+        $stemObj = $this->getComponent()->componentStem;
+        $stemText = '';
+        if (is_object($stemObj) && ($stemObj->hasContent ?? '') !== '') {
+          $stemText = (string) ($stemObj->hasContent ?? '');
+        }
+        elseif (is_object($stemObj) && ($stemObj->label ?? '') !== '') {
+          $stemText = (string) ($stemObj->label ?? '');
+        }
+        $stemLabel = $stemText . ' [' . ($stemObj->uri ?? '') . ']';
       }
       if ($this->getComponent()->codebook != NULL) {
         $codebookLabel = $this->getComponent()->codebook->label . ' [' . $this->getComponent()->codebook->uri . ']';

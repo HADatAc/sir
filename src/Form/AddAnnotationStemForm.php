@@ -77,7 +77,7 @@ class AddAnnotationStemForm extends FormBase {
 
     $sourceContent = '';
     if ($this->getSourceAnnotationStem() != NULL) {
-      $sourceContent = $this->getSourceAnnotationStem()->hasContent;
+      $sourceContent = (string) ($this->getSourceAnnotationStem()->hasContent ?? '');
     }
 
     // $form['annotationstem_type'] = [

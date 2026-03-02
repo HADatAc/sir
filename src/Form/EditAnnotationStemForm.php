@@ -74,8 +74,8 @@ class EditAnnotationStemForm extends FormBase {
       $wasGeneratedBy = $this->getAnnotationStem()->wasGeneratedBy;
       if ($this->getAnnotationStem()->wasDerivedFrom != NULL) {
         $this->setSourceAnnotationStem($this->retrieveAnnotationStem($this->getAnnotationStem()->wasDerivedFrom));
-        if ($this->getSourceAnnotationStem() != NULL && $this->getSourceAnnotationStem()->hasContent != NULL) {
-          $sourceContent = $this->getSourceAnnotationStem()->hasContent;
+        if ($this->getSourceAnnotationStem() != NULL && ($this->getSourceAnnotationStem()->hasContent ?? NULL) != NULL) {
+          $sourceContent = (string) ($this->getSourceAnnotationStem()->hasContent ?? '');
         }
       }
     }
@@ -85,7 +85,7 @@ class EditAnnotationStemForm extends FormBase {
     $form['annotationstem_content'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Content'),
-      '#default_value' => html_entity_decode($this->getAnnotationStem()->hasContent),
+      '#default_value' => html_entity_decode((string) ($this->getAnnotationStem()->hasContent ?? '')),
     ];
     $form['annotationstem_language'] = [
       '#type' => 'select',

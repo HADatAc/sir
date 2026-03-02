@@ -1422,7 +1422,7 @@ class SIRSelectForm extends FormBase {
 
         // CENARIO #2: CHECK IF THERE ARE ANY OTHER R.O. WITH SAME CONTENT ALREADY IN REP
         } elseif ($result->wasDerivedFrom === NULL) {
-          $response = $api->listByKeywordAndLanguage($this->element_type, $result->hasContent, $result->hasLanguage, 99999, 0);
+          $response = $api->listByKeywordAndLanguage($this->element_type, ($result->hasContent ?? ''), ($result->hasLanguage ?? ''), 99999, 0);
           $json_string = (string) $response;
           $decoded_response = json_decode($json_string, true);
 
@@ -1535,8 +1535,8 @@ class SIRSelectForm extends FormBase {
                   '"label": "'.$slot->responseOption->label.'",'.
                   '"comment": "'.$slot->responseOption->comment.'",'.
                   '"hasStatus": "'.($slot->responseOption->hasStatus === VSTOI::DRAFT ? VSTOI::UNDER_REVIEW : $slot->responseOption->hasStatus).'",'.
-                  '"hasContent": "'.$slot->responseOption->hasContent.'",'.
-                  '"hasLanguage": "'.$slot->responseOption->hasLanguage.'",'.
+                  '"hasContent": "'.($slot->responseOption->hasContent ?? '').'",'.
+                  '"hasLanguage": "'.($slot->responseOption->hasLanguage ?? '').'",'.
                   '"hasVersion": "'.$slot->responseOption->hasVersion.'",'.
                   '"wasDerivedFrom": "'.($slot->responseOption->wasDerivedFrom ?? NULL).'",'.
                   '"hasSIRManagerEmail": "'.$slot->responseOption->hasSIRManagerEmail.'",'.
@@ -1589,7 +1589,7 @@ class SIRSelectForm extends FormBase {
           '"hascoTypeUri":"'.VSTOI::COMPONENT.'",'.
           '"hasComponentStem":"'.$result->hasComponentStem.'",'.
           '"hasCodebook":"'.$result->hasCodebook.'",'.
-          '"hasContent":"'.$result->hasContent.'",'.
+          '"hasContent":"'.($result->hasContent ?? '').'",'.
           '"hasSIRManagerEmail":"'.$result->hasSIRManagerEmail.'",'.
           '"label":"'.$result->label.'",'.
           '"hasVersion":"'.$result->hasVersion.'",'.
@@ -1616,7 +1616,7 @@ class SIRSelectForm extends FormBase {
         // CENARIO #2: CHECK IF THERE ARE ANY OTHER COMPONENT WITH SAME CONTENT ALREADY IN REP, must have a new end-point for that
         }
         elseif ($result->wasDerivedFrom === NULL) {
-          $response = $api->listByKeywordAndLanguage($this->element_type, $result->hasContent, $result->hasLanguage, 99999, 0);
+          $response = $api->listByKeywordAndLanguage($this->element_type, ($result->hasContent ?? ''), ($result->hasLanguage ?? ''), 99999, 0);
           $json_string = (string) $response;
 
           $decoded_response = json_decode($json_string, true);
@@ -1635,8 +1635,8 @@ class SIRSelectForm extends FormBase {
         '"label":"'.$result->label.'",'.
         '"hascoTypeUri":"'.VSTOI::COMPONENT_STEM.'",'.
         '"hasStatus":"'.VSTOI::UNDER_REVIEW.'",'.
-        '"hasContent":"'.$result->hasContent.'",'.
-        '"hasLanguage":"'.$result->hasLanguage.'",'.
+        '"hasContent":"'.($result->hasContent ?? '').'",'.
+        '"hasLanguage":"'.($result->hasLanguage ?? '').'",'.
         '"hasVersion":"'.$result->hasVersion.'",'.
         '"comment":"'.$result->comment.'",'.
         '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.

@@ -120,7 +120,9 @@ class AddComponentStemForm extends FormBase {
 
     $sourceContent = '';
     if ($this->getSourceComponentStem() != NULL) {
-      $sourceContent = Utils::fieldToAutocomplete($this->getSourceComponentStem()->uri,$this->getSourceComponentStem()->hasContent);
+      $stemObj = $this->getSourceComponentStem();
+      $stemText = (string) (($stemObj->hasContent ?? '') !== '' ? ($stemObj->hasContent ?? '') : ($stemObj->label ?? ''));
+      $sourceContent = Utils::fieldToAutocomplete($stemObj->uri, $stemText);
     }
 
     $form['componentstem_type'] = [

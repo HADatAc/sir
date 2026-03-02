@@ -53,7 +53,9 @@ class EditCodebookSlotForm extends FormBase {
     if ($obj->isSuccessful) {
       $this->setCodebookSlot($obj->body);
       if ($this->getCodebookSlot()->responseOption != NULL) {
-        $content = $this->getCodebookSlot()->responseOption->hasContent . ' [' . $this->getCodebookSlot()->hasResponseOption . ']';
+        $ro = $this->getCodebookSlot()->responseOption;
+        $roText = is_object($ro) ? (string) (($ro->hasContent ?? '') !== '' ? ($ro->hasContent ?? '') : ($ro->label ?? '')) : '';
+        $content = $roText . ' [' . $this->getCodebookSlot()->hasResponseOption . ']';
       }
     } else {
       \Drupal::messenger()->addMessage(t("Failed to retrieve Response Option Slot."));
