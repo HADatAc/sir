@@ -495,23 +495,33 @@ class AddComponentForm extends FormBase {
       // GET THE COMPONENT STEM URI
       $rawresponse = $api->getUri(Utils::uriFromAutocomplete($form_state->getValue('component_stem')));
       $obj = json_decode($rawresponse);
-      $result = $obj->body;
+      $result = $obj->body ?? NULL;
 
-      $label = "";
-      if ($result->hasContent !== NULL) {
-        $label .= $result->hasContent;
-      } else {
-        $label .= $result->label;
+      $stemContent = (is_object($result) && property_exists($result, 'hasContent')) ? $result->hasContent : NULL;
+      $stemLabel = (is_object($result) && property_exists($result, 'label')) ? $result->label : '';
+
+      $label = '';
+      if ($stemContent !== NULL && $stemContent !== '') {
+        $label = (string) $stemContent;
+      }
+      elseif ($stemLabel !== NULL && $stemLabel !== '') {
+        $label = (string) $stemLabel;
+      }
+
+      // Fallback: avoid empty label/content (and avoid accessing undefined properties).
+      if ($label === '') {
+        $label = (string) Utils::uriFromAutocomplete($form_state->getValue('component_stem'));
       }
 
       if ($form_state->getValue('component_codebook') !== NULL && $form_state->getValue('component_codebook') != '') {
         $codebook = Utils::uriFromAutocomplete($form_state->getValue('component_codebook'));
         $rawresponseCB = $api->getUri($codebook);
         $objCB = json_decode($rawresponseCB);
-        $resultCB = $objCB->body;
-        $label .= '  -- CB:'.$resultCB->label;
+        $resultCB = $objCB->body ?? NULL;
+        $codebookLabel = (is_object($resultCB) && property_exists($resultCB, 'label')) ? $resultCB->label : '';
+        $label .= '  -- CB:' . (string) $codebookLabel;
       } else {
-        $label = $result->label . '  -- CB:EMPTY';
+        $label = (string) $label . '  -- CB:EMPTY';
       }
 
       // Get the current user email and generate a new component URI.

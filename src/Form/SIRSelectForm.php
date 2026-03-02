@@ -557,13 +557,15 @@ class SIRSelectForm extends FormBase {
     ];
 
     foreach ($output as $key => $row) {
-        $row_status = strtolower($row['element_hasStatus']);
-        $row_language = strtolower($row['element_hasLanguage']);
+        $row_status = strtolower((string) ($row['element_hasStatus'] ?? ''));
+        $row_language = strtolower((string) ($row['element_hasLanguage'] ?? ''));
 
         if ($this->element_type == 'instrument' || $this->element_type == 'codebook')
-          $row_label = strtolower($row['element_name']);
+          $row_label = strtolower((string) ($row['element_name'] ?? ''));
         else if ($this->element_type == 'component' || $this->element_type == 'componentstem' || $this->element_type == 'responseoption')
-          $row_label = strtolower($row['element_content']);
+          $row_label = strtolower((string) ($row['element_content'] ?? ''));
+        else
+          $row_label = '';
 
         // if ($status_filter !== 'all' && $row_status !== $status_filter) {
         //     continue;
