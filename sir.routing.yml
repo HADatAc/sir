@@ -504,7 +504,7 @@ sir.generate:
     _title_callback: '\Drupal\sir\Form\Generate\GenerateForm::pageTitle'
     elementtype: 'instrument'
   requirements:
-    _role: 'content_editor'
+    _permission: 'administer semantic ontologies'
   options:
     no_cache: TRUE
 
