@@ -199,7 +199,7 @@ class GenerateForm extends FormBase {
     $submit_states = [];
 
     /**
-     * SWITCH BY ELEMENT TYPE — control the exact fields rendered.
+     * SWITCH BY ELEMENT TYPE - control the exact fields rendered.
      *
      * - INSTRUMENT: show the "option_select" with modes and dynamic extras.
      * - KGR: show KGR-specific modes (funding scheme, project, org, etc.),

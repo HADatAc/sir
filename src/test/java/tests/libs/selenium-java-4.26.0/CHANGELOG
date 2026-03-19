@@ -1151,7 +1151,7 @@ v4.0.0-alpha-4
 * [grid] Added file upload endpoint to the new grid
 * [grid] Adding ability to discover and start Edge (both
   chromium-based and legacy)
-* [grid] Only allow CORS when using a —allow-cors flag
+* [grid] Only allow CORS when using a -allow-cors flag
 * [docker] Re-enable existing docker functionality for Grid Nodes
 * Checking for changes in frozen preferences in XPI-based
   FirefoxDriver only
@@ -1178,7 +1178,7 @@ v4.0.0-alpha-3
   Fixes #6649
 * Back out OpenCensus support: OpenTracing and OpenCensus are merging, so
   settle on one for now.
-* Only allow CORS when using a —allow-cors flag in the Grid server
+* Only allow CORS when using a -allow-cors flag in the Grid server
 * If you're using the Java Platform Module System, all modules
   associated with the project are generated as "open" modules. This
   will change in a future release.
