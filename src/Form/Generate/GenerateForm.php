@@ -710,6 +710,9 @@ class GenerateForm extends FormBase {
     $filename     = $form_state->getValue(['additional_fields', 'filename']);
     $mediafolder  = $form_state->getValue('mediafolder');
     $verifyuri    = (bool) $form_state->getValue('verifyuri');
+    
+    // Convert boolean to string for API endpoints that expect 'true'/'false'.
+    $verifyuri_value = $verifyuri ? 'true' : 'false';
 
     if (empty($filename)) {
       \Drupal::messenger()->addError($this->t('A valid logical filename is required.'));
@@ -823,7 +826,7 @@ class GenerateForm extends FormBase {
             $selector_uri,
             $safe_filename,
             $mediafolder,
-            $verifyuri
+            $verifyuri_value
           );
         }
         elseif ($selected === 'status') {
@@ -834,7 +837,7 @@ class GenerateForm extends FormBase {
             $status,
             $safe_filename,
             $mediafolder,
-            $verifyuri
+            $verifyuri_value
           );
         }
         elseif ($selected === 'user_status') {
@@ -847,7 +850,7 @@ class GenerateForm extends FormBase {
             $status,
             $safe_filename,
             $mediafolder,
-            $verifyuri
+            $verifyuri_value
           );
         }
       }
@@ -863,7 +866,7 @@ class GenerateForm extends FormBase {
             $selector_uri,
             $safe_filename,
             $mediafolder,
-            $verifyuri
+            $verifyuri_value
           );
         }
         elseif ($selected === 'status') {
@@ -874,7 +877,7 @@ class GenerateForm extends FormBase {
             $status,
             $safe_filename,
             $mediafolder,
-            $verifyuri
+            $verifyuri_value
           );
         }
         elseif ($selected === 'user_status') {
@@ -887,7 +890,7 @@ class GenerateForm extends FormBase {
             $status,
             $safe_filename,
             $mediafolder,
-            $verifyuri
+            $verifyuri_value
           );
         }
       }
@@ -923,7 +926,7 @@ class GenerateForm extends FormBase {
             $status,
             $safe_filename,
             $mediafolder,
-            $verifyuri
+            $verifyuri_value
           );
         }
         elseif ($selected === 'user_status') {
@@ -939,7 +942,7 @@ class GenerateForm extends FormBase {
             $status,
             $safe_filename,
             $mediafolder,
-            $verifyuri
+            $verifyuri_value
           );
         }
 
@@ -948,8 +951,6 @@ class GenerateForm extends FormBase {
           $this->backUrl();
           return;
         }
-
-        $verifyuri_value = $verifyuri ? 'true' : 'false';
 
         $generateResponse = $api->generateMTPerElement(
           $element_type,
@@ -961,8 +962,23 @@ class GenerateForm extends FormBase {
         );
       }
 
+      // Log the generation response for debugging.
+      \Drupal::logger('sir.generate')->info('Generation API called for @type: response=@resp', [
+        '@type' => $element_type,
+        '@resp' => print_r($generateResponse, TRUE),
+      ]);
+
       if ($generateResponse) {
-        \Drupal::messenger()->addMessage($this->t('@element generation request has been registered and sent to the generator service.', ['@element' => $element_label]));
+        // Parse and check if the API returned success.
+        $parsed = $api->parseObjectResponse($generateResponse, 'generateMT');
+        if ($parsed && isset($parsed->isSuccessful) && $parsed->isSuccessful) {
+          \Drupal::messenger()->addMessage($this->t('@element generation request has been registered and sent to the generator service.', ['@element' => $element_label]));
+        } else {
+          \Drupal::messenger()->addWarning($this->t('@element metadata was registered, but the generator service returned an error or unexpected response.', ['@element' => $element_label]));
+          \Drupal::logger('sir.generate')->warning('Generation response not successful: @resp', [
+            '@resp' => print_r($parsed, TRUE),
+          ]);
+        }
       }
       else {
         \Drupal::messenger()->addWarning($this->t('@element metadata was registered, but the generator service did not return a confirmation. Please verify the generator logs or configuration.', ['@element' => $element_label]));
