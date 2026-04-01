@@ -182,6 +182,7 @@ class GenerateForm extends FormBase {
     $current_type_slug = $this->getElementType();
     $is_instrument     = ($current_type_slug === 'ins');
     $is_wkf            = ($current_type_slug === 'wkf');
+    $is_dsg            = ($current_type_slug === 'dsg');
 
     // KGR is only “active” if the socialm module is enabled.
     $is_kgr            = ($current_type_slug === 'kgr' && \Drupal::moduleHandler()->moduleExists('socialm'));
@@ -553,6 +554,49 @@ class GenerateForm extends FormBase {
         ],
       ];
     }
+    elseif ($is_dsg) {
+      // --- DSG: minimal generation request (no selector/modes yet) ---
+      $form['additional_fields'] = [
+        '#type' => 'container',
+        '#attributes' => ['id' => 'additional-fields-wrapper'],
+        '#tree' => TRUE,
+      ];
+
+      $form['additional_fields']['filename'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Logical filename'),
+        '#description' => $this->t('Enter the desired logical filename for the DSG file (must end with .xlsx). The physical file will be created later when the generation job is processed.'),
+        '#required' => TRUE,
+      ];
+
+      $form['additional_fields']['append_da_file'] = [
+        '#type' => 'checkbox',
+        '#title' => $this->t('Append DA file'),
+        '#default_value' => FALSE,
+      ];
+
+      $form['mediafolder'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Media folder name'),
+        '#description' => $this->t('Enter the logical media folder name associated with this generation request.'),
+        '#required' => TRUE,
+      ];
+
+      $form['verifyuri'] = [
+        '#type' => 'checkbox',
+        '#title' => $this->t('Verify URI'),
+        '#description' => $this->t('Ask the backend to validate URI consistency for the selected elements.'),
+        '#default_value' => FALSE,
+      ];
+
+      // Submit button enabled when required fields are filled.
+      $submit_states = [
+        'enabled' => [
+          ':input[name="additional_fields[filename]"]' => ['filled' => TRUE],
+          ':input[name="mediafolder"]' => ['filled' => TRUE],
+        ],
+      ];
+    }
     else {
       // --- Other element types: simple placeholder, no submit ---
       $form['additional_fields'] = [
@@ -572,7 +616,7 @@ class GenerateForm extends FormBase {
     }
 
     // Build actions only for element types that are actually submittable.
-    if ($is_instrument || $is_wkf || $is_kgr) {
+    if ($is_instrument || $is_wkf || $is_kgr || $is_dsg) {
       $form['actions'] = ['#type' => 'actions'];
 
       $form['actions']['submit'] = [
@@ -690,6 +734,21 @@ class GenerateForm extends FormBase {
         if (empty($status) || empty($user)) {
           $form_state->setErrorByName('additional_fields][user_email', $this->t('Both status and user email are required.'));
         }
+      }
+    }
+    // DSG VALIDATION.
+    elseif ($element_type === 'dsg') {
+      $filename = $form_state->getValue(['additional_fields', 'filename']);
+      if (empty($filename)) {
+        $form_state->setErrorByName('additional_fields][filename', $this->t('Logical filename is required.'));
+      }
+      elseif (strtolower(substr($filename, -5)) !== '.xlsx') {
+        $form_state->setErrorByName('additional_fields][filename', $this->t('The logical filename must end with .xlsx.'));
+      }
+
+      $mediafolder = $form_state->getValue('mediafolder');
+      if (empty($mediafolder)) {
+        $form_state->setErrorByName('mediafolder', $this->t('Media folder name is required.'));
       }
     }
   }
@@ -894,6 +953,26 @@ class GenerateForm extends FormBase {
           );
         }
       }
+      // DSG: minimal generation (status fixed for now).
+      elseif ($element_type === 'dsg') {
+        $append_da_file = (bool) $form_state->getValue(['additional_fields', 'append_da_file']);
+
+        // For now we do not pass this flag to the API (contract unchanged).
+        \Drupal::logger('sir.generate')->info('DSG generation requested. append_da_file=@v', [
+          '@v' => $append_da_file ? 'true' : 'false',
+        ]);
+
+        // Use CURRENT as a safe default filter until a dedicated DSG mode/flag
+        // is agreed.
+        $generateResponse = $api->generateMTPerStatus(
+          $element_type,
+          $newDataFileUri,
+          VSTOI::CURRENT,
+          $safe_filename,
+          $mediafolder,
+          $verifyuri_value
+        );
+      }
       // KGR: use the generic generateMTPerElement() with a filter value,
       // only if socialm is enabled.
       elseif ($element_type === 'kgr' && \Drupal::moduleHandler()->moduleExists('socialm')) {
@@ -920,14 +999,6 @@ class GenerateForm extends FormBase {
         elseif ($selected === 'status') {
           $status = $form_state->getValue(['additional_fields', 'status']);
           $filterValue = $status;
-          $generateResponse = $api->generateMTPerStatus(
-            $element_type,
-            $newDataFileUri,
-            $status,
-            $safe_filename,
-            $mediafolder,
-            $verifyuri_value
-          );
         }
         elseif ($selected === 'user_status') {
           $status     = $form_state->getValue(['additional_fields', 'status']);
@@ -935,15 +1006,6 @@ class GenerateForm extends FormBase {
           // Encode both status and user in a single string; the backend
           // must parse this convention.
           $filterValue = 'status=' . $status . ';user=' . $user_email;
-          $generateResponse = $api->generateMTPerUserStatus(
-            $element_type,
-            $newDataFileUri,
-            $user_email,
-            $status,
-            $safe_filename,
-            $mediafolder,
-            $verifyuri_value
-          );
         }
 
         if ($filterValue === NULL) {
@@ -969,14 +1031,16 @@ class GenerateForm extends FormBase {
       ]);
 
       if ($generateResponse) {
-        // Parse and check if the API returned success.
+        // parseObjectResponse() returns the *body* on success, and NULL on
+        // failure (while also surfacing an UI error message).
         $parsed = $api->parseObjectResponse($generateResponse, 'generateMT');
-        if ($parsed && isset($parsed->isSuccessful) && $parsed->isSuccessful) {
+        if ($parsed !== NULL) {
           \Drupal::messenger()->addMessage($this->t('@element generation request has been registered and sent to the generator service.', ['@element' => $element_label]));
-        } else {
-          \Drupal::messenger()->addWarning($this->t('@element metadata was registered, but the generator service returned an error or unexpected response.', ['@element' => $element_label]));
-          \Drupal::logger('sir.generate')->warning('Generation response not successful: @resp', [
-            '@resp' => print_r($parsed, TRUE),
+        }
+        else {
+          \Drupal::messenger()->addWarning($this->t('@element metadata was registered, but the generator service returned an error or an unexpected response.', ['@element' => $element_label]));
+          \Drupal::logger('sir.generate')->warning('Generation parse failed: @resp', [
+            '@resp' => print_r($generateResponse, TRUE),
           ]);
         }
       }

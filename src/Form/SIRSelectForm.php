@@ -140,11 +140,14 @@ class SIRSelectForm extends FormBase {
     $form['#attached']['drupalSettings']['sir_select_form']['elementtype'] = $elementtype;
 
     // Get value `pagesize` (default 9)
-    if ($form_state->get('page_size')) {
-      $pagesize = $form_state->get('page_size');
-    } else {
-      $pagesize = $session->get('sir_select_form_pagesize', 9);
-      $form_state->set('page_size', $pagesize);
+    // Only override in CARD view (used by infinite scroll / "Load more").
+    if ($view_type == 'card') {
+      if ($form_state->get('page_size')) {
+        $pagesize = $form_state->get('page_size');
+      } else {
+        $pagesize = $session->get('sir_select_form_pagesize', 9);
+        $form_state->set('page_size', $pagesize);
+      }
     }
 
     // PUT FORM TOGETHER
