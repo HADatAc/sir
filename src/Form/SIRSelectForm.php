@@ -125,6 +125,8 @@ class SIRSelectForm extends FormBase {
     $session = \Drupal::request()->getSession();
     $view_type = $session->get('sir_select_view_type', 'table');
     $form_state->set('view_type', $view_type);
+    $table_active_class = ($view_type === 'table') ? ['selected-button'] : [];
+    $card_active_class = ($view_type === 'card') ? ['selected-button'] : [];
 
     // Attach necessary libraries
     $form['#attached']['library'][] = 'core/drupal.bootstrap';
@@ -134,6 +136,11 @@ class SIRSelectForm extends FormBase {
     $form['#attached']['library'][] = 'core/drupal';
     $form['#attached']['library'][] = 'core/drupalSettings';
     $form['#attached']['library'][] = 'sir/sir_js_css';
+
+    // Card view lazyload/infinite-scroll.
+    if ($view_type == 'card') {
+      $form['#attached']['library'][] = 'rep/infinitescroll';
+    }
 
 
     $form['#attached']['drupalSettings']['sir_select_form']['base_url'] = (\Drupal::request()->headers->get('x-forwarded-proto') === 'https' ? 'https://':'http://'). \Drupal::request()->getHost() . \Drupal::request()->getBaseUrl();
@@ -178,7 +185,7 @@ class SIRSelectForm extends FormBase {
       '#name' => 'view_table',
       '#attributes' => [
         'style' => 'padding: 20px;',
-        'class' => ['table-view-button', 'fa-xl', 'mx-1'],
+        'class' => array_merge(['table-view-button', 'fa-xl', 'mx-1'], $table_active_class),
         'title' => $this->t('Table View'),
       ],
       '#submit' => ['::viewTableSubmit'],
@@ -191,7 +198,7 @@ class SIRSelectForm extends FormBase {
       '#name' => 'view_card',
       '#attributes' => [
         'style' => 'padding: 20px;',
-        'class' => ['card-view-button', 'fa-xl'],
+        'class' => array_merge(['card-view-button', 'fa-xl'], $card_active_class),
         'title' => $this->t('Card View'),
       ],
       '#submit' => ['::viewCardSubmit'],
@@ -427,7 +434,46 @@ class SIRSelectForm extends FormBase {
     if ($view_type == 'table') {
       $this->buildTableView($form, $form_state, $page, $pagesize);
     } elseif ($view_type == 'card') {
-      $this->buildCardView($form, $form_state, $page, $pagesize);
+      $form['cards_lazy_wrapper'] = [
+        '#type' => 'container',
+        '#attributes' => [
+          'id' => 'cards-lazy-wrapper',
+        ],
+      ];
+
+      $this->buildCardView($form['cards_lazy_wrapper'], $form_state, $page, $pagesize);
+
+      // Load-more controls (used by infinite scroll).
+      $total_items = $this->getListSize();
+      $current_page_size = $form_state->get('page_size') ?? 9;
+
+      if (is_numeric($total_items) && (int) $total_items > (int) $current_page_size) {
+        $form['cards_lazy_wrapper']['load_more_button'] = [
+          '#type' => 'submit',
+          '#value' => $this->t('Load More'),
+          '#name' => 'load_more_button',
+          '#attributes' => [
+            'id' => 'load-more-button',
+            'class' => ['btn', 'btn-primary', 'load-more-button'],
+            'style' => 'display: none;',
+          ],
+          '#submit' => ['::loadMoreSubmit'],
+          '#ajax' => [
+            'callback' => '::ajaxReloadCards',
+            'wrapper' => 'cards-lazy-wrapper',
+            'event' => 'click',
+          ],
+          '#limit_validation_errors' => [],
+        ];
+
+        $form['cards_lazy_wrapper']['list_state'] = [
+          '#type' => 'hidden',
+          '#value' => 1,
+          '#attributes' => [
+            'id' => 'list_state',
+          ],
+        ];
+      }
     }
 
     $form['space_0'] = [
@@ -630,6 +676,14 @@ class SIRSelectForm extends FormBase {
    */
   public function ajaxReloadTable(array &$form, FormStateInterface $form_state) {
       return $form['element_table_wrapper'];
+  }
+
+  /**
+   * AJAX callback to reload card view when loading more.
+   */
+  public function ajaxReloadCards(array &$form, FormStateInterface $form_state) {
+    $form_state->setRebuild(TRUE);
+    return $form['cards_lazy_wrapper'];
   }
 
 
@@ -928,37 +982,6 @@ class SIRSelectForm extends FormBase {
 
         // Add card to wrapper container
         $form['cards_wrapper']['card_' . $uri] = $card;
-
-        //get total items
-        $total_items = $this->getListSize();
-
-        //Pagesize
-        $current_page_size = $form_state->get('page_size') ?? 9;
-
-        //Prevent infinite scroll without new data
-        if ($total_items > $current_page_size) {
-          $form['load_more_button'] = [
-            '#type' => 'submit',
-            '#value' => $this->t('Load More'),
-            '#name' => 'load_more_button',
-            '#attributes' => [
-              'id' => 'load-more-button',
-              'class' => ['btn', 'btn-primary', 'load-more-button'],
-              'style' => 'display: none;',
-            ],
-            '#submit' => ['::loadMoreSubmit'],
-            '#limit_validation_errors' => [],
-          ];
-
-          $form['list_state'] = [
-            '#type' => 'hidden',
-            '#value' => ($total_items > $current_page_size ? 1:0),
-            "#name" => 'list_state',
-            '#attributes' => [
-              'id' => 'list_state',
-            ]
-          ];
-        }
     }
 
     // Final Form Debbug

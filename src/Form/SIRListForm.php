@@ -5,6 +5,7 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\rep\ListKeywordLanguagePage;
+use Drupal\rep\Vocabulary\VSTOI;
 use Drupal\sir\Entity\AnnotationStem;
 use Drupal\sir\Entity\Annotation;
 use Drupal\sir\Entity\ComponentStem;
@@ -48,54 +49,90 @@ class SIRListForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $elementtype=NULL, $keyword=NULL, $language=NULL, $type=NULL, $manageremail=NULL, $status=NULL, $page=NULL, $pagesize=NULL) {
 
+    // Normalize route params
+    $page = $page ?? 1;
+    $pagesize = $pagesize ?? 12;
+
+    $session = \Drupal::request()->getSession();
+
+    // Filter values (AJAX) with sensible defaults from the route.
+    $status_filter_key = 'sir_list_status_filter.' . (string) $elementtype;
+    $status_filter = $form_state->getValue('status_filter');
+    if ($status_filter === NULL) {
+      $status_filter = $session->get($status_filter_key, '_');
+    }
+    else {
+      $session->set($status_filter_key, $status_filter);
+    }
+
+    $language_filter = $form_state->getValue('language_filter');
+    if ($language_filter === NULL) {
+      $language_filter = ($language !== NULL && $language !== '') ? $language : '_';
+    }
+
+    $text_filter = $form_state->getValue('text_filter');
+    if ($text_filter === NULL) {
+      $text_filter = ($keyword !== NULL && $keyword !== '_' ? $keyword : '');
+    }
+
+    // Params passed to the API.
+    $keyword_param = ($text_filter === NULL || $text_filter === '') ? '_' : $text_filter;
+    $language_param = ($language_filter === NULL || $language_filter === '') ? '_' : $language_filter;
+    $type_param = ($type === NULL || $type === '') ? '_' : $type;
+    $manageremail_param = ($manageremail === NULL || $manageremail === '') ? '_' : $manageremail;
+    $status_param = ($status_filter === NULL || $status_filter === '') ? '_' : $status_filter;
+
     // GET TOTAL NUMBER OF ELEMENTS AND TOTAL NUMBER OF PAGES
     $this->setListSize(-1);
     if ($elementtype != NULL) {
-      $this->setListSize(ListKeywordLanguagePage::total($elementtype, $keyword, $language, $type, $manageremail, $status));
+      $this->setListSize(ListKeywordLanguagePage::total($elementtype, $keyword_param, $language_param, $type_param, $manageremail_param, $status_param));
     }
-    if (gettype($this->list_size) == 'string') {
-      $total_pages = "0";
-    } else {
-      if ($this->list_size % $pagesize == 0) {
-        $total_pages = $this->list_size / $pagesize;
-      } else {
-        $total_pages = floor($this->list_size / $pagesize) + 1;
+
+    $total_pages = 1;
+    if (is_numeric($this->list_size) && $pagesize > 0) {
+      $size = (int) $this->list_size;
+      if ($size > 0) {
+        $total_pages = (int) ceil($size / $pagesize);
       }
     }
+
+    // Clamp current page
+    $page = max(1, min((int) $page, (int) $total_pages));
 
     // CREATE LINK FOR NEXT PAGE AND PREVIOUS PAGE
     if ($page < $total_pages) {
       $next_page = $page + 1;
-      $next_page_link = ListKeywordLanguagePage::link($elementtype, $keyword, $language, $type, $manageremail, $status, $next_page, $pagesize);
+      $next_page_link = ListKeywordLanguagePage::link($elementtype, $keyword_param, $language_param, $type_param, $manageremail_param, $status_param, $next_page, $pagesize);
     } else {
       $next_page_link = '';
     }
     if ($page > 1) {
       $previous_page = $page - 1;
-      $previous_page_link = ListKeywordLanguagePage::link($elementtype, $keyword, $language, $type, $manageremail, $status, $previous_page, $pagesize);
+      $previous_page_link = ListKeywordLanguagePage::link($elementtype, $keyword_param, $language_param, $type_param, $manageremail_param, $status_param, $previous_page, $pagesize);
     } else {
       $previous_page_link = '';
     }
 
-    // Gets Filter Values
-    $status_filter = $form_state->getValue('status_filter') ?? 'all';
-    $language_filter = $form_state->getValue('language_filter') ?? 'all';
-    $text_filter = ($form_state->getValue('text_filter') != '' && $form_state->getValue('text_filter') != '_') ? $form_state->getValue('text_filter') : $keyword;
-    // Convert the text filter to lowercase for case-insensitive comparison
-    $text_filter = strtolower($text_filter);
-
-    // RETRIEVE ELEMENTS
-    $this->setList(ListKeywordLanguagePage::exec($elementtype, $keyword, $language, $type, $manageremail, $status, $page, $pagesize));
+    // RETRIEVE ELEMENTS (API-backed filters)
+    $this->setList(ListKeywordLanguagePage::exec($elementtype, $keyword_param, $language_param, $type_param, $manageremail_param, $status_param, $page, $pagesize));
 
     $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument');
     $preferred_component = \Drupal::config('rep.settings')->get('preferred_component') ?? 'Component';
 
     $status_options = [
-      'all' => $this->t('All Status'),
-      'draft' => $this->t('Draft'),
-      'underreview' => $this->t('Under Review'),
-      'current' => $this->t('Current'),
-      'deprecated' => $this->t('Deprecated'),
+      '_' => $this->t('All Status'),
+      VSTOI::DRAFT => $this->t('Draft'),
+      VSTOI::UNDER_REVIEW => $this->t('Under Review'),
+      VSTOI::CURRENT => $this->t('Current'),
+      VSTOI::DEPRECATED => $this->t('Deprecated'),
+    ];
+
+    $form['actions_wrapper'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['d-flex', 'align-items-center', 'justify-content-end', 'mb-0'],
+        'style' => 'margin-bottom:0!important;'
+      ],
     ];
 
     $form['actions_wrapper']['filter_container'] = [
@@ -136,7 +173,7 @@ class SIRListForm extends FormBase {
       $tables = new Tables;
       $languages = $tables->getLanguages();
       if ($languages)
-        $languages = ['all' => $this->t('All Languages')] + $languages;
+        $languages = ['_' => $this->t('All Languages')] + $languages;
       $form['actions_wrapper']['filter_container']['language_filter'] = [
         '#type' => 'select',
         '#options' => $languages,
@@ -322,8 +359,8 @@ class SIRListForm extends FormBase {
       '#theme' => 'list-page',
       '#items' => [
         'page' => strval($page),
-        'first' => ListKeywordLanguagePage::link($elementtype, $keyword, $language, $type, $manageremail, $status, 1, $pagesize),
-        'last' => ListKeywordLanguagePage::link($elementtype, $keyword, $language,  $type, $manageremail, $status, $total_pages, $pagesize),
+        'first' => ListKeywordLanguagePage::link($elementtype, $keyword_param, $language_param, $type_param, $manageremail_param, $status_param, 1, $pagesize),
+        'last' => ListKeywordLanguagePage::link($elementtype, $keyword_param, $language_param, $type_param, $manageremail_param, $status_param, $total_pages, $pagesize),
         'previous' => $previous_page_link,
         'next' => $next_page_link,
         'last_page' => strval($total_pages),
