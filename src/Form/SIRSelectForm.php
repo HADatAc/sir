@@ -218,7 +218,10 @@ class SIRSelectForm extends FormBase {
 
       $form['actions_wrapper']['buttons_container'] = [
         '#type' => 'container',
-        '#attributes' => ['class' => ['d-flex', 'gap-2']],
+        '#attributes' => [
+          'class' => ['d-flex', 'gap-2', 'flex-nowrap'],
+          'style' => 'flex-wrap:nowrap;overflow-x:auto;'
+        ],
       ];
 
       $form['actions_wrapper']['buttons_container']['add_element'] = [
