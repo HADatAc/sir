@@ -74,9 +74,9 @@ class Component {
           if (preg_match('/\[(.*?)\]/', $element->isAttributeOf, $links)) {
             $link = $links[1];
           }
-            $attributeOf = t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode(Utils::namespaceUri($link)).'">'.$matches[1].'</a>');
+            $attributeOf = Markup::create(Utils::describeAnchor((string) $link, (string) $matches[1]));
         } else {
-          $attributeOf = t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode(Utils::namespaceUri($element->isAttributeOf)).'">'.Utils::namespaceUri($element->isAttributeOf).'</a>');
+          $attributeOf = Markup::create(Utils::describeAnchor((string) $element->isAttributeOf, (string) Utils::namespaceUri($element->isAttributeOf)));
         }
       }
       $status = ' ';
@@ -101,10 +101,12 @@ class Component {
 
       }
       $output[$row_key] = [
-        'element_uri' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),
+        'element_uri' => Markup::create(Utils::describeAnchor((string) ($element->uri ?? ''), (string) $uri)),
         'element_content' => $content,
         'element_version' => $version,
-        'element_codebook' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($element->codebook->uri).'">'.$codebookLabel.'</a>'),
+        'element_codebook' => !empty($element->codebook->uri)
+          ? Markup::create(Utils::describeAnchor((string) $element->codebook->uri, (string) $codebookLabel))
+          : $codebookLabel,
         'element_attribute_of' => $attributeOf,
         'element_status' => $status,
         'element_hasStatus' => parse_url($element->hasStatus, PHP_URL_FRAGMENT),
