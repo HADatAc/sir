@@ -118,8 +118,8 @@ class Instrument {
 
       }
       $output[$row_key] = [
-        'element_uri' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),
-        'element_type' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($type).'">'.$type.'</a>'),
+          'element_uri' => Markup::create(Utils::describeAnchor((string) ($element->uri ?? ''), (string) $uri)),
+          'element_type' => Markup::create(Utils::describeAnchor((string) ($element->typeUri ?? $type), (string) $type)),
         'element_abbreviation' => $shortName,
         'element_name' => t($label . $version),
         'element_language' => $lang,
@@ -216,8 +216,8 @@ class Instrument {
         $owner = $element->hasSIRManagerEmail;
       }
       $output[$row_key] = [
-        'element_uri' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),
-        'element_type' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($type).'">'.$type.'</a>'),
+          'element_uri' => Markup::create(Utils::describeAnchor((string) ($element->uri ?? ''), (string) $uri)),
+          'element_type' => Markup::create(Utils::describeAnchor((string) ($element->typeUri ?? $type), (string) $type)),
         'element_abbreviation' => $shortName,
         'element_name' => t($label . $version),
         'element_language' => $lang,

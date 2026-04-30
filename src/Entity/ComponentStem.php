@@ -179,21 +179,20 @@ class ComponentStem {
       $owner = ' ';
       if ($element->hasSIRManagerEmail != NULL) {
         $owner = $element->hasSIRManagerEmail;
-      }
-      $output[$element->uri] = [
-        'element_uri' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),
-        'element_type' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($type).'">'.$type.'</a>'),
-        'element_derived_from' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($derived).'">'.$derived.'</a>'),
-        'element_content' => $content,
-        'element_language' => $lang,
-        'element_version' => $version,
-        'element_generated_by' => $derivationVal,
-        'element_owner' => $owner,
-        'element_status' => $status,
-        'element_hasStatus' => parse_url($element->hasStatus, PHP_URL_FRAGMENT),
-        'element_hasLanguage' => $element->hasLanguage,
-        'element_hasImageUri' => $element->hasImageUri,
-      ];
+        $output[$element->uri] = [
+          'element_uri' => Markup::create(Utils::describeAnchor((string) ($element->uri ?? ''), (string) $uri)),
+          'element_type' => Markup::create(Utils::describeAnchor((string) ($element->typeUri ?? $type), (string) $type)),
+          'element_derived_from' => Markup::create(Utils::describeAnchor((string) ($element->isDerivedFrom ?? $derived), (string) $derived)),
+          'element_content' => $content,
+          'element_language' => $lang,
+          'element_version' => $version,
+          'element_generated_by' => $derivationVal,
+          'element_owner' => $owner,
+          'element_status' => $status,
+          'element_hasStatus' => parse_url($element->hasStatus, PHP_URL_FRAGMENT),
+          'element_hasLanguage' => $element->hasLanguage,
+          'element_hasImageUri' => $element->hasImageUri,
+        ];
     }
 
     return $output;
