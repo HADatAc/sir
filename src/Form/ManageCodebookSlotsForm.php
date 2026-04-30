@@ -101,7 +101,7 @@ class ManageCodebookSlotsForm extends FormBase {
       }
       $responseOptionUriStr = "";
       if ($slot->hasResponseOption != NULL && $slot->hasResponseOption != '') {
-        $responseOptionUriStr = t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($slot->hasResponseOption).'">' . Utils::namespaceUri($slot->hasResponseOption) . '</a>');
+        $responseOptionUriStr = Markup::create(Utils::describeAnchor((string) $slot->hasResponseOption, (string) Utils::namespaceUri($slot->hasResponseOption)));
       }
       $output[$slot->uri] = [
         'slot_priority' => $slot->hasPriority,

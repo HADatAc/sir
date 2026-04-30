@@ -132,7 +132,7 @@ class EditInstrumentForm extends FormBase {
     $form['instrument_information']['instrument_parent_wrapper']['instrument_uri'] = [
       '#type' => 'item',
       '#title' => $this->t('URI: '),
-      '#markup' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($this->getInstrumentUri()).'">'.$this->getInstrumentUri().'</a>'),
+      '#markup' => Markup::create(Utils::describeAnchor((string) $this->getInstrumentUri(), (string) $this->getInstrumentUri())),
     ];
 
     $form['instrument_information']['instrument_parent_wrapper']['instrument_type'] = [

@@ -79,7 +79,7 @@ class EditCodebookForm extends FormBase {
     $form['codebook_uri'] = [
       '#type' => 'item',
       '#title' => $this->t('URI: '),
-      '#markup' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($this->getCodebookUri()).'">'.$this->getCodebookUri().'</a>'),
+      '#markup' => Markup::create(Utils::describeAnchor((string) $this->getCodebookUri(), (string) $this->getCodebookUri())),
     ];
     $form['codebook_name'] = [
       '#type' => 'textfield',

@@ -79,7 +79,7 @@ class EditResponseOptionForm extends FormBase {
     $form['responseoption_uri'] = [
       '#type' => 'item',
       '#title' => $this->t('URI: '),
-      '#markup' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($this->getResponseOptionUri()).'">'.$this->getResponseOptionUri().'</a>'),
+      '#markup' => Markup::create(Utils::describeAnchor((string) $this->getResponseOptionUri(), (string) $this->getResponseOptionUri())),
     ];
     $form['responseoption_content'] = [
       '#type' => 'textarea',

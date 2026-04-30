@@ -129,7 +129,7 @@ class ReviewInstrumentForm extends FormBase {
     $form['instrument_information']['instrument_uri_container']['instrument_uri'] = [
       '#type' => 'item',
       '#title' => $this->t('URI: '),
-      '#markup' => t('<a target="_new" href="' . $root_url . REPGUI::DESCRIBE_PAGE . base64_encode($this->getInstrumentUri()) . '">' . $this->getInstrumentUri() . '</a>'),
+      '#markup' => Markup::create(Utils::describeAnchor((string) $this->getInstrumentUri(), (string) $this->getInstrumentUri())),
     ];
 
     $form['instrument_information']['instrument_parent_wrapper'] = [
@@ -181,7 +181,7 @@ class ReviewInstrumentForm extends FormBase {
     // Botão para abrir nova janela
     $form['instrument_information']['instrument_parent_wrapper']['instrument_parent_wrapper_button'] = [
       '#type' => 'markup',
-      '#markup' => '<a href="' . $url . '" target="_blank" class="btn btn-primary text-nowrap" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
+      '#markup' => '<a href="' . $url . '" class="btn btn-primary text-nowrap" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
     ];
 
     $form['instrument_information']['instrument_name'] = [

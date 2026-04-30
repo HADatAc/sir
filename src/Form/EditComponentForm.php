@@ -111,7 +111,7 @@ class EditComponentForm extends FormBase {
     $form['component_uri'] = [
       '#type' => 'item',
       '#title' => $this->t('URI: '),
-      '#markup' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($this->getComponentUri()).'">'.$this->getComponentUri().'</a>'),
+      '#markup' => Markup::create(Utils::describeAnchor((string) $this->getComponentUri(), (string) $this->getComponentUri())),
     ];
 
     $form['component_stem'] = [

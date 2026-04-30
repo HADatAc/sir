@@ -86,7 +86,7 @@ class ReviewResponseOptionForm extends FormBase {
     $form['responseoption_wrapper']['responseoption_uri'] = [
       '#type' => 'item',
       '#title' => $this->t('URI: '),
-      '#markup' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($this->getResponseOptionUri()).'">'.$this->getResponseOptionUri().'</a>'),
+      '#markup' => Markup::create(Utils::describeAnchor((string) $this->getResponseOptionUri(), (string) $this->getResponseOptionUri())),
     ];
 
     $form['responseoption_wrapper']['responseoption_content'] = [
@@ -152,7 +152,7 @@ class ReviewResponseOptionForm extends FormBase {
       // Botão para abrir nova janela - agora corrigido
       $form['responseoption_df_wrapper']['responseoption_wasderivedfrom_button'] = [
         '#type' => 'markup',
-        '#markup' => '<a href="' . $url . '" target="_blank" class="btn btn-success text-nowrap mt-2" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
+        '#markup' => '<a href="' . $url . '" class="btn btn-success text-nowrap mt-2" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
       ];
     }
 

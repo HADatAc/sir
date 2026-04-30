@@ -90,7 +90,7 @@ class ReviewCodebookForm extends FormBase {
     $form['codebook_information']['codebook_uri'] = [
       '#type' => 'item',
       '#title' => $this->t('URI: '),
-      '#markup' => t('<a class="pt-3" target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($this->getCodebookUri()).'">'.$this->getCodebookUri().'</a>'),
+      '#markup' => Markup::create('<span class="pt-3">' . Utils::describeAnchor((string) $this->getCodebookUri(), (string) $this->getCodebookUri()) . '</span>'),
     ];
 
     $form['codebook_information']['codebook_name'] = [
@@ -150,7 +150,7 @@ class ReviewCodebookForm extends FormBase {
       // Botão para abrir nova janela
       $form['codebook_information']['codebook_wasderivedfrom_wrapper']['codebook_wasderivedfrom_button'] = [
         '#type' => 'markup',
-        '#markup' => '<a href="' . $url . '" target="_blank" class="btn btn-success text-nowrap" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
+        '#markup' => '<a href="' . $url . '" class="btn btn-success text-nowrap" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
       ];
 
     }

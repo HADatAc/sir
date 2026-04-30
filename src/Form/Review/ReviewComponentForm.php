@@ -114,7 +114,7 @@ class ReviewComponentForm extends FormBase {
     $form['component_wrapper']['component_uri'] = [
       '#type' => 'item',
       '#title' => $this->t('URI: '),
-      '#markup' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($this->getComponentUri()).'">'.$this->getComponentUri().'</a>'),
+      '#markup' => Markup::create(Utils::describeAnchor((string) $this->getComponentUri(), (string) $this->getComponentUri())),
     ];
 
     $form['component_wrapper']['component_stem'] = [
@@ -222,7 +222,7 @@ class ReviewComponentForm extends FormBase {
 
       $form['component_wrapper']['component_df_wrapper']['component_wasderivedfrom_button'] = [
         '#type' => 'markup',
-        '#markup' => '<a href="' . $url . '" target="_blank" class="btn btn-success text-nowrap mt-2" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
+        '#markup' => '<a href="' . $url . '" class="btn btn-success text-nowrap mt-2" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
       ];
     }
     $form['component_wrapper']['component_owner'] = [
