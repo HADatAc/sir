@@ -11,6 +11,7 @@ use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\VSTOI;
 use Drupal\rep\Vocabulary\REPGUI;
 use Drupal\Component\Serialization\Json;
+use Drupal\Core\Render\Markup;
 
 class ManageSlotElementsForm extends FormBase {
 

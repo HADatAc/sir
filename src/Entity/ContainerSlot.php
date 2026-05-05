@@ -4,6 +4,7 @@ namespace Drupal\sir\Entity;
 
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\REPGUI;
+use Drupal\Core\Render\Markup;
 
 class ContainerSlot {
 
