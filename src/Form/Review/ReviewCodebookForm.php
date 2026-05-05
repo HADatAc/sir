@@ -144,8 +144,7 @@ class ReviewCodebookForm extends FormBase {
 
       // Construção da URL
       $elementUri = Utils::namespaceUri($this->getCodebook()->wasDerivedFrom);
-      $elementUriEncoded = base64_encode($elementUri);
-      $url = Url::fromRoute('rep.describe_element', ['elementuri' => $elementUriEncoded], ['absolute' => TRUE])->toString();
+      $url = Utils::describeUrl((string) $elementUri, [], FALSE)->setAbsolute()->toString();
 
       // Botão para abrir nova janela
       $form['codebook_information']['codebook_wasderivedfrom_wrapper']['codebook_wasderivedfrom_button'] = [

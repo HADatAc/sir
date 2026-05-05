@@ -175,8 +175,7 @@ class ReviewInstrumentForm extends FormBase {
 
     // Construção da URL
     $elementUri = Utils::namespaceUri($this->getInstrument()->superUri);
-    $elementUriEncoded = base64_encode($elementUri);
-    $url = Url::fromRoute('rep.describe_element', ['elementuri' => $elementUriEncoded], ['absolute' => TRUE])->toString();
+    $url = Utils::describeUrl((string) $elementUri, [], FALSE)->setAbsolute()->toString();
 
     // Botão para abrir nova janela
     $form['instrument_information']['instrument_parent_wrapper']['instrument_parent_wrapper_button'] = [

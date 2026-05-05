@@ -197,8 +197,7 @@ class EditComponentStemForm extends FormBase {
       }
 
       $elementUri = Utils::namespaceUri($this->getComponentStem()->wasDerivedFrom);
-      $elementUriEncoded = base64_encode($elementUri);
-      $url = Url::fromRoute('rep.describe_element', ['elementuri' => $elementUriEncoded], ['absolute' => TRUE])->toString();
+      $url = Utils::describeUrl((string) $elementUri, [], FALSE)->setAbsolute()->toString();
 
       $form['componentstem_df_wrapper']['componentstem_wasderivedfrom_button'] = [
         '#type' => 'markup',

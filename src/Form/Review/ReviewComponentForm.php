@@ -217,8 +217,7 @@ class ReviewComponentForm extends FormBase {
       ];
 
       $elementUri = Utils::namespaceUri($this->getComponent()->wasDerivedFrom);
-      $elementUriEncoded = base64_encode($elementUri);
-      $url = Url::fromRoute('rep.describe_element', ['elementuri' => $elementUriEncoded], ['absolute' => TRUE])->toString();
+      $url = Utils::describeUrl((string) $elementUri, [], FALSE)->setAbsolute()->toString();
 
       $form['component_wrapper']['component_df_wrapper']['component_wasderivedfrom_button'] = [
         '#type' => 'markup',

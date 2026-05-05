@@ -146,8 +146,7 @@ class ReviewResponseOptionForm extends FormBase {
 
       // Construção da URL
       $elementUri = Utils::namespaceUri($this->getResponseOption()->wasDerivedFrom);
-      $elementUriEncoded = base64_encode($elementUri);
-      $url = Url::fromRoute('rep.describe_element', ['elementuri' => $elementUriEncoded], ['absolute' => TRUE])->toString();
+      $url = Utils::describeUrl((string) $elementUri, [], FALSE)->setAbsolute()->toString();
 
       // Botão para abrir nova janela - agora corrigido
       $form['responseoption_df_wrapper']['responseoption_wasderivedfrom_button'] = [
