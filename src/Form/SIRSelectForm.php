@@ -470,7 +470,7 @@ class SIRSelectForm extends FormBase {
           ],
           '#attributes' => [
             'class' => ['form-control'],
-            'placeholder' => $this->t('User email (Draft/Under Review)'),
+            'placeholder' => $this->t('User email (owner filter)'),
           ],
         ];
       }
