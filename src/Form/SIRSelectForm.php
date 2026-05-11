@@ -69,6 +69,10 @@ class SIRSelectForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $elementtype = NULL, $page = 1, $pagesize = 10) {
 
+    // This form is used for filtering/selecting records and does not persist
+    // partial edits, so URI navigation should not be blocked by dirty guards.
+    $form['#attributes']['data-rep-nav-guard-ignore'] = '1';
+
     // GET manager EMAIL
     $this->manager_email = \Drupal::currentUser()->getEmail();
     $uid = \Drupal::currentUser()->id();
@@ -259,16 +263,14 @@ class SIRSelectForm extends FormBase {
       $form['actions_wrapper'] = [
         '#type' => 'container',
         '#attributes' => [
-            'class' => ['d-flex', 'align-items-center', 'justify-content-between', 'mb-0'],
-            'style' => 'margin-bottom:0!important;'
+            'class' => ['sir-manage-toolbar', 'mb-3'],
         ],
       ];
 
       $form['actions_wrapper']['buttons_container'] = [
         '#type' => 'container',
         '#attributes' => [
-          'class' => ['d-flex', 'gap-2', 'flex-nowrap'],
-          'style' => 'flex-wrap:nowrap;overflow-x:auto;'
+          'class' => ['d-flex', 'flex-wrap', 'gap-2', 'align-items-stretch', 'sir-manage-buttons'],
         ],
       ];
 
@@ -392,30 +394,29 @@ class SIRSelectForm extends FormBase {
       $form['actions_wrapper']['filter_container'] = [
         '#type' => 'container',
         '#attributes' => [
-          'class' => ['d-flex', 'ms-auto', 'mb-0'],
-          'style' => 'margin-bottom:0!important;'
+          'class' => ['row', 'g-2', 'align-items-end', 'sir-manage-filters'],
         ],
       ];
 
       $form['actions_wrapper']['filter_container']['filter_label'] = [
-        '#type' => 'label',
-        '#title' => $this->t('Filter(s): '),
-        '#attributes' => [
-          'class' => ['pt-3', 'me-2', 'fw-bold'],
-        ]
+        '#type' => 'markup',
+        '#markup' => '<div class="col-12"><strong>' . $this->t('Filter(s):') . '</strong></div>',
       ];
 
       $form['actions_wrapper']['filter_container']['text_filter'] = [
         '#type' => 'textfield',
+        '#title' => $this->t('Keyword'),
+        '#title_display' => 'invisible',
         '#default_value' => $text_filter,
+        '#prefix' => '<div class="col-12 col-lg-4">',
+        '#suffix' => '</div>',
         '#ajax' => [
             'callback' => '::ajaxReloadTable',
             'wrapper' => 'element-table-wrapper',
             'event' => 'change',
         ],
         '#attributes' => [
-            'class' => ['form-select', 'w-auto', 'mt-2', 'me-1'],
-            'style' => 'max-width:230px;margin-bottom:0!important;float:right;',
+            'class' => ['form-control'],
             'placeholder' => 'Type in your search criteria',
             'onkeydown' => 'if (event.keyCode == 13) { event.preventDefault(); this.blur(); }',
         ],
@@ -428,17 +429,19 @@ class SIRSelectForm extends FormBase {
           $languages = ['_' => $this->t('All Languages')] + $languages;
         $form['actions_wrapper']['filter_container']['language_filter'] = [
           '#type' => 'select',
+          '#title' => $this->t('Language'),
+          '#title_display' => 'invisible',
           '#options' => $languages,
           '#default_value' => $language_filter,
+          '#prefix' => '<div class="col-12 col-md-4 col-lg-2">',
+          '#suffix' => '</div>',
           '#ajax' => [
               'callback' => '::ajaxReloadTable',
               'wrapper' => 'element-table-wrapper',
               'event' => 'change',
           ],
           '#attributes' => [
-              'class' => ['form-select', 'w-auto', 'mt-2', 'me-1'],
-              'style' => 'margin-bottom:0!important;float:right;'
-              // 'style' => 'float:right;margin-top:10px!important;'
+              'class' => ['form-select'],
           ],
         ];
       }
@@ -449,14 +452,15 @@ class SIRSelectForm extends FormBase {
           '#title' => $this->t('User'),
           '#title_display' => 'invisible',
           '#default_value' => $manager_filter,
+          '#prefix' => '<div class="col-12 col-md-8 col-lg-4">',
+          '#suffix' => '</div>',
           '#ajax' => [
             'callback' => '::ajaxReloadTable',
             'wrapper' => 'element-table-wrapper',
             'event' => 'change',
           ],
           '#attributes' => [
-            'class' => ['form-control', 'w-auto', 'mt-2', 'me-1'],
-            'style' => 'min-width:240px;margin-bottom:0!important;float:right;',
+            'class' => ['form-control'],
             'placeholder' => $this->t('User email (Draft/Under Review)'),
           ],
         ];
@@ -464,18 +468,32 @@ class SIRSelectForm extends FormBase {
 
       $form['actions_wrapper']['filter_container']['status_filter'] = [
           '#type' => 'select',
+          '#title' => $this->t('Status'),
+          '#title_display' => 'invisible',
           '#options' => $status_options,
           '#default_value' => $status_filter,
+          '#prefix' => '<div class="col-12 col-md-4 col-lg-2">',
+          '#suffix' => '</div>',
           '#ajax' => [
               'callback' => '::ajaxReloadTable',
               'wrapper' => 'element-table-wrapper',
               'event' => 'change',
           ],
           '#attributes' => [
-              'class' => ['form-select', 'w-auto', 'mt-2'],
-              'style' => 'margin-bottom:0!important;float:right;'
-              // 'style' => 'float:right;margin-top:10px!important;'
+              'class' => ['form-select'],
           ],
+      ];
+
+      $form['actions_wrapper']['filter_container']['clear_filters'] = [
+        '#type' => 'submit',
+        '#value' => $this->t('Clear Filters'),
+        '#name' => 'clear_filters',
+        '#limit_validation_errors' => [],
+        '#prefix' => '<div class="col-12 col-md-4 col-lg-2 d-grid">',
+        '#suffix' => '</div>',
+        '#attributes' => [
+          'class' => ['btn', 'btn-outline-secondary'],
+        ],
       ];
 
     } else {
@@ -754,6 +772,28 @@ class SIRSelectForm extends FormBase {
   public function ajaxReloadCards(array &$form, FormStateInterface $form_state) {
     $form_state->setRebuild(TRUE);
     return $form['cards_lazy_wrapper'];
+  }
+
+  /**
+   * Clear persisted table filters for the current element type.
+   */
+  protected function clearSavedFilters(FormStateInterface $form_state): void {
+    $session = \Drupal::request()->getSession();
+    $suffix = (string) $this->element_type;
+
+    foreach (['status', 'language', 'text', 'manager'] as $key) {
+      $session->remove('sir_select_' . $key . '_filter.' . $suffix);
+    }
+
+    $input = $form_state->getUserInput();
+    unset($input['text_filter'], $input['language_filter'], $input['manager_filter'], $input['status_filter']);
+    $form_state->setUserInput($input);
+
+    $form_state->setValue('text_filter', '');
+    $form_state->setValue('language_filter', '_');
+    $form_state->setValue('manager_filter', '');
+    $form_state->setValue('status_filter', '_');
+    $form_state->setRebuild(TRUE);
   }
 
 
@@ -1245,6 +1285,11 @@ class SIRSelectForm extends FormBase {
     // RETRIEVE TRIGGERING BUTTON
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
+
+    if ($button_name === 'clear_filters') {
+      $this->clearSavedFilters($form_state);
+      return;
+    }
 
     // SET USER ID AND PREVIOUS URL FOR TRACKING STORE URLS
     $uid = \Drupal::currentUser()->id();

@@ -135,23 +135,13 @@ class EditContainerSlotForm extends FormBase {
       ],
     ];
 
-    $form['new_component_submit'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('New Item'),
-      '#name' => 'new_component',
+    $form['primary_actions'] = [
+      '#type' => 'container',
       '#attributes' => [
-        'class' => ['btn', 'btn-primary', 'add-element-button'],
+        'class' => ['d-flex', 'flex-wrap', 'gap-2', 'mb-2'],
       ],
     ];
-    $form['reset_component_submit'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Reset this Item'),
-      '#name' => 'reset_component',
-      '#attributes' => [
-        'class' => ['btn', 'btn-primary', 'reset-button'],
-      ],
-    ];
-    $form['update_submit'] = [
+    $form['primary_actions']['update_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Update'),
       '#name' => 'save',
@@ -168,12 +158,35 @@ class EditContainerSlotForm extends FormBase {
       ],
     ];
 
-    $form['cancel_submit'] = [
+    $form['primary_actions']['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
       '#attributes' => [
         'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
+    ];
+
+    $form['secondary_actions'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['d-flex', 'flex-wrap', 'gap-2'],
+      ],
+    ];
+    $form['secondary_actions']['new_component_submit'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('New Item'),
+      '#name' => 'new_component',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'add-element-button'],
+      ],
+    ];
+    $form['secondary_actions']['reset_component_submit'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Reset this Item'),
+      '#name' => 'reset_component',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'reset-button'],
       ],
     ];
     $form['bottom_space'] = [

@@ -81,23 +81,13 @@ class EditCodebookSlotForm extends FormBase {
       '#default_value' => $content,
       '#autocomplete_route_name' => 'sir.codebookslot_response_option_autocomplete',
     ];
-    $form['new_responseoption_submit'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('New Response Option'),
-      '#name' => 'new_response_option',
+    $form['primary_actions'] = [
+      '#type' => 'container',
       '#attributes' => [
-        'class' => ['btn', 'btn-primary', 'add-element-button'],
+        'class' => ['d-flex', 'flex-wrap', 'gap-2', 'mb-2'],
       ],
     ];
-    $form['reset_responseoption_submit'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Reset Response Option Slot'),
-      '#name' => 'reset_response_option',
-      '#attributes' => [
-        'class' => ['btn', 'btn-primary', 'reset-button'],
-      ],
-    ];
-    $form['update_submit'] = [
+    $form['primary_actions']['update_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Update'),
       '#name' => 'save',
@@ -105,12 +95,35 @@ class EditCodebookSlotForm extends FormBase {
         'class' => ['btn', 'btn-primary', 'save-button'],
       ],
     ];
-    $form['cancel_submit'] = [
+    $form['primary_actions']['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
       '#attributes' => [
         'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
+    ];
+
+    $form['secondary_actions'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['d-flex', 'flex-wrap', 'gap-2'],
+      ],
+    ];
+    $form['secondary_actions']['new_responseoption_submit'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('New Response Option'),
+      '#name' => 'new_response_option',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'add-element-button'],
+      ],
+    ];
+    $form['secondary_actions']['reset_responseoption_submit'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Reset Response Option Slot'),
+      '#name' => 'reset_response_option',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'reset-button'],
       ],
     ];
     $form['bottom_space'] = [
