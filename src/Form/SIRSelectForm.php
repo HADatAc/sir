@@ -17,6 +17,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Drupal\Core\Render\Markup;
 use Drupal\rep\Vocabulary\VSTOI;
 use Drupal\rep\Entity\Tables;
+use Drupal\rep\ManageOwnerFilter;
 use Drupal\rep\ListKeywordPage;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\ListKeywordLanguagePage;
@@ -85,19 +86,57 @@ class SIRSelectForm extends FormBase {
       return new RedirectResponse($url);
     }
 
+    $session = \Drupal::request()->getSession();
+
     // Search values filter
-    $status_filter = $form_state->getValue('status_filter') ?? '_';
-    $language_filter = $form_state->getValue('language_filter') ?? '_';
-    $text_filter = $form_state->getValue('text_filter') ?? '';
+    $status_filter_key = 'sir_select_status_filter.' . (string) $this->element_type;
+    $status_filter = $form_state->getValue('status_filter');
+    if ($status_filter === NULL) {
+      $status_filter = $session->get($status_filter_key, '_');
+    }
+    else {
+      $session->set($status_filter_key, $status_filter);
+    }
+
+    $language_filter_key = 'sir_select_language_filter.' . (string) $this->element_type;
+    $language_filter = $form_state->getValue('language_filter');
+    if ($language_filter === NULL) {
+      $language_filter = $session->get($language_filter_key, '_');
+    }
+    else {
+      $session->set($language_filter_key, $language_filter);
+    }
+
+    $text_filter_key = 'sir_select_text_filter.' . (string) $this->element_type;
+    $text_filter = $form_state->getValue('text_filter');
+    if ($text_filter === NULL) {
+      $text_filter = $session->get($text_filter_key, '');
+    }
+    else {
+      $session->set($text_filter_key, $text_filter);
+    }
+
+    $is_admin = ManageOwnerFilter::isAdmin();
+    $manager_filter_key = 'sir_select_manager_filter.' . (string) $this->element_type;
+    $manager_filter = $form_state->getValue('manager_filter');
+    if ($manager_filter === NULL) {
+      $manager_filter = $session->get($manager_filter_key, '');
+    }
+    else {
+      $manager_filter = ManageOwnerFilter::normalizeSelectedEmail($manager_filter);
+      $session->set($manager_filter_key, $manager_filter);
+    }
+
     $type = NULL;
-    $manager_email = $this->manager_email;
+    $manager_email = ManageOwnerFilter::resolveEffectiveOwner($this->manager_email, $manager_filter, $status_filter);
+    $form_state->set('effective_manager_email', $manager_email);
     $status = $status_filter;
 
     // Get elements based on status
     // dpm($text_filter.'='.strlen($text_filter).'|'.$language_filter.'='.strlen($language_filter));
     if (strlen($text_filter) === 0 && $language_filter === '_' && $status_filter === '_') {
-      $this->setList(ListManagerEmailPage::exec($this->element_type, $this->manager_email, $page, $pagesize));
-      $this->setListSize(ListManagerEmailPage::total($this->element_type, $this->manager_email));
+      $this->setList(ListManagerEmailPage::exec($this->element_type, $manager_email, $page, $pagesize));
+      $this->setListSize(ListManagerEmailPage::total($this->element_type, $manager_email));
     // } else if (strlen($text_filter) > 0 && $language_filter !== 'all') {
     //   $this->setList(ListKeywordLanguagePage::exec($this->element_type,$text_filter, $language_filter, $type, $manager_email, $status, $page, 9999));
     //   $this->setListSize(ListKeywordLanguagePage::total($this->element_type, $text_filter, $language_filter, $type, $manager_email, $status, ));
@@ -122,7 +161,6 @@ class SIRSelectForm extends FormBase {
     // }
 
     // Retrieve or set default view type
-    $session = \Drupal::request()->getSession();
     $view_type = $session->get('sir_select_view_type', 'table');
     $form_state->set('view_type', $view_type);
     $table_active_class = ($view_type === 'table') ? ['selected-button'] : [];
@@ -172,6 +210,16 @@ class SIRSelectForm extends FormBase {
         '@manager_email' => $this->manager_email,
       ]),
     ];
+
+    $show_owner_indicator = $is_admin && $manager_filter !== '' && strcasecmp($manager_email, $manager_filter) === 0;
+    if ($show_owner_indicator) {
+      $form['owner_indicator'] = [
+        '#type' => 'item',
+        '#markup' => $this->t('<div class="alert alert-info py-2 mb-3"><strong>A visualizar owner:</strong> @owner</div>', [
+          '@owner' => $manager_email,
+        ]),
+      ];
+    }
 
     // Add view toggle icons
     $form['view_toggle'] = [
@@ -391,6 +439,25 @@ class SIRSelectForm extends FormBase {
               'class' => ['form-select', 'w-auto', 'mt-2', 'me-1'],
               'style' => 'margin-bottom:0!important;float:right;'
               // 'style' => 'float:right;margin-top:10px!important;'
+          ],
+        ];
+      }
+
+      if ($is_admin) {
+        $form['actions_wrapper']['filter_container']['manager_filter'] = [
+          '#type' => 'textfield',
+          '#title' => $this->t('User'),
+          '#title_display' => 'invisible',
+          '#default_value' => $manager_filter,
+          '#ajax' => [
+            'callback' => '::ajaxReloadTable',
+            'wrapper' => 'element-table-wrapper',
+            'event' => 'change',
+          ],
+          '#attributes' => [
+            'class' => ['form-control', 'w-auto', 'mt-2', 'me-1'],
+            'style' => 'min-width:240px;margin-bottom:0!important;float:right;',
+            'placeholder' => $this->t('User email (Draft/Under Review)'),
           ],
         ];
       }
@@ -695,7 +762,8 @@ class SIRSelectForm extends FormBase {
    */
   protected function buildCardView(array &$form, FormStateInterface $form_state, $page, $pagesize, $addMore = false) {
     // Remove paginação na visualização de cartões
-    $this->setList(ListManagerEmailPage::exec($this->element_type, $this->manager_email, $page, $pagesize));
+    $effective_manager_email = $form_state->get('effective_manager_email') ?? $this->manager_email;
+    $this->setList(ListManagerEmailPage::exec($this->element_type, $effective_manager_email, $page, $pagesize));
 
     // Generate header and output
     $header = $this->generateHeader();
@@ -1451,7 +1519,7 @@ class SIRSelectForm extends FormBase {
 
         // CENARIO #2: CHECK IF THERE ARE ANY OTHER R.O. WITH SAME CONTENT ALREADY IN REP
         } elseif ($result->wasDerivedFrom === NULL) {
-          $response = $api->listByKeywordAndLanguage($this->element_type, ($result->hasContent ?? ''), ($result->hasLanguage ?? ''), 99999, 0);
+          $response = $api->listByKeywordAndLanguage($this->element_type, ($result->hasContent ?? ''), ($result->hasLanguage ?? ''), '_', '_', '_', 99999, 0);
           $json_string = (string) $response;
           $decoded_response = json_decode($json_string, true);
 
@@ -1507,7 +1575,7 @@ class SIRSelectForm extends FormBase {
 
         // CENARIO #2: CHECK IF THERE ARE ANY OTHER R.O. WITH SAME CONTENT ALREADY IN REP
         } elseif ($result->wasDerivedFrom === NULL) {
-          $response = $api->listByKeywordAndLanguage($this->element_type, $result->label, $result->hasLanguage, 99999, 0);
+          $response = $api->listByKeywordAndLanguage($this->element_type, $result->label, $result->hasLanguage, '_', '_', '_', 99999, 0);
           $json_string = (string) $response;
 
           $decoded_response = json_decode($json_string, true);
@@ -1645,7 +1713,7 @@ class SIRSelectForm extends FormBase {
         // CENARIO #2: CHECK IF THERE ARE ANY OTHER COMPONENT WITH SAME CONTENT ALREADY IN REP, must have a new end-point for that
         }
         elseif ($result->wasDerivedFrom === NULL) {
-          $response = $api->listByKeywordAndLanguage($this->element_type, ($result->hasContent ?? ''), ($result->hasLanguage ?? ''), 99999, 0);
+          $response = $api->listByKeywordAndLanguage($this->element_type, ($result->hasContent ?? ''), ($result->hasLanguage ?? ''), '_', '_', '_', 99999, 0);
           $json_string = (string) $response;
 
           $decoded_response = json_decode($json_string, true);
