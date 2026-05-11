@@ -391,19 +391,28 @@ class SIRSelectForm extends FormBase {
         VSTOI::DEPRECATED => $this->t('Deprecated'),
       ];
 
-      $form['actions_wrapper']['filter_container'] = [
+      $has_active_filters = trim((string) $text_filter) !== ''
+        || $language_filter !== '_'
+        || $status_filter !== '_'
+        || ($is_admin && trim((string) $manager_filter) !== '');
+
+      $form['actions_wrapper']['filters_panel'] = [
+        '#type' => 'details',
+        '#title' => $this->t('Filter(s)'),
+        '#open' => $has_active_filters,
+        '#attributes' => [
+          'class' => ['sir-manage-filters-panel'],
+        ],
+      ];
+
+      $form['actions_wrapper']['filters_panel']['filter_container'] = [
         '#type' => 'container',
         '#attributes' => [
           'class' => ['row', 'g-2', 'align-items-end', 'sir-manage-filters'],
         ],
       ];
 
-      $form['actions_wrapper']['filter_container']['filter_label'] = [
-        '#type' => 'markup',
-        '#markup' => '<div class="col-12"><strong>' . $this->t('Filter(s):') . '</strong></div>',
-      ];
-
-      $form['actions_wrapper']['filter_container']['text_filter'] = [
+      $form['actions_wrapper']['filters_panel']['filter_container']['text_filter'] = [
         '#type' => 'textfield',
         '#title' => $this->t('Keyword'),
         '#title_display' => 'invisible',
@@ -427,7 +436,7 @@ class SIRSelectForm extends FormBase {
         $languages = $tables->getLanguages();
         if ($languages)
           $languages = ['_' => $this->t('All Languages')] + $languages;
-        $form['actions_wrapper']['filter_container']['language_filter'] = [
+        $form['actions_wrapper']['filters_panel']['filter_container']['language_filter'] = [
           '#type' => 'select',
           '#title' => $this->t('Language'),
           '#title_display' => 'invisible',
@@ -447,7 +456,7 @@ class SIRSelectForm extends FormBase {
       }
 
       if ($is_admin) {
-        $form['actions_wrapper']['filter_container']['manager_filter'] = [
+        $form['actions_wrapper']['filters_panel']['filter_container']['manager_filter'] = [
           '#type' => 'textfield',
           '#title' => $this->t('User'),
           '#title_display' => 'invisible',
@@ -466,7 +475,7 @@ class SIRSelectForm extends FormBase {
         ];
       }
 
-      $form['actions_wrapper']['filter_container']['status_filter'] = [
+      $form['actions_wrapper']['filters_panel']['filter_container']['status_filter'] = [
           '#type' => 'select',
           '#title' => $this->t('Status'),
           '#title_display' => 'invisible',
@@ -484,7 +493,7 @@ class SIRSelectForm extends FormBase {
           ],
       ];
 
-      $form['actions_wrapper']['filter_container']['clear_filters'] = [
+      $form['actions_wrapper']['filters_panel']['filter_container']['clear_filters'] = [
         '#type' => 'submit',
         '#value' => $this->t('Clear Filters'),
         '#name' => 'clear_filters',

@@ -54,6 +54,33 @@ div.vertical-tabs__panes {
   max-width: none;
 }
 
+.sir-manage-filters-panel {
+  margin-top: 0.25rem;
+  border: 1px solid #d7dce2;
+  border-radius: 0.5rem;
+  background: #fff;
+}
+
+.sir-manage-filters-panel > summary {
+  cursor: pointer;
+  padding: 0.65rem 0.9rem;
+  font-weight: 600;
+  color: #1f2d3d;
+}
+
+.sir-manage-filters-panel > summary:hover {
+  color: #0b5ed7;
+}
+
+.sir-manage-filters-panel[open] > summary {
+  border-bottom: 1px solid #e6eaef;
+  margin-bottom: 0.5rem;
+}
+
+.sir-manage-filters-panel .sir-manage-filters {
+  padding: 0 0.85rem 0.85rem;
+}
+
 @media (max-width: 991.98px) {
   .sir-manage-buttons .btn {
     min-height: 50px;
