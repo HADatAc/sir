@@ -8,7 +8,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\Core\Url;
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\VSTOI;
-use Drupal\rep\Vocabulary\Hasco as HASCO;
+use Drupal\rep\Vocabulary\HASCO;
 use Drupal\rep\Constant;
 use Drupal\file\Entity\File;
 use Drupal\Core\File\FileSystemInterface;
