@@ -74,6 +74,21 @@ sir.manage_components :
     _permission: 'access content'
     _role: 'authenticated'
 
+sir.manage_commands :
+  title: Manage Commands
+  description: Manage Commands
+  route_name: sir.select_element
+  route_parameters:
+    elementtype: 'command'
+    page: '1'
+    pagesize: '9'
+  parent: sir.manage_top_level
+  menu_name: main
+  weight: 4
+  requirements:
+    _permission: 'access content'
+    _role: 'authenticated'
+
 sir.manage_codebooks :
   title: Manage Codebooks
   description: Manage codebooks and their corresponding Response Options

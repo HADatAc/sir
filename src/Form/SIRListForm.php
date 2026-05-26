@@ -11,6 +11,7 @@ use Drupal\sir\Entity\Annotation;
 use Drupal\sir\Entity\ComponentStem;
 use Drupal\sir\Entity\Component;
 use Drupal\sir\Entity\Codebook;
+use Drupal\sir\Entity\Command;
 use Drupal\sir\Entity\Instrument;
 use Drupal\sir\Entity\ResponseOption;
 use Drupal\rep\Entity\Tables;
@@ -116,8 +117,9 @@ class SIRListForm extends FormBase {
     // RETRIEVE ELEMENTS (API-backed filters)
     $this->setList(ListKeywordLanguagePage::exec($elementtype, $keyword_param, $language_param, $type_param, $manageremail_param, $status_param, $page, $pagesize));
 
-    $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument');
+    $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument') ?? 'Instrument';
     $preferred_component = \Drupal::config('rep.settings')->get('preferred_component') ?? 'Component';
+    $preferred_command = \Drupal::config('rep.settings')->get('preferred_command') ?? 'Command';
 
     $status_options = [
       '_' => $this->t('All Status'),
@@ -231,6 +233,13 @@ class SIRListForm extends FormBase {
         $class_name = $preferred_component . "s";
         $header = Component::generateHeader();
         $output = Component::generateOutput($this->getList());
+        break;
+
+      // COMMAND
+      case "command":
+        $class_name = $preferred_command . "s";
+        $header = Command::generateHeader();
+        $output = Command::generateOutput($this->getList());
         break;
 
       // CODEBOOK

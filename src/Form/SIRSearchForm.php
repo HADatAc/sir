@@ -141,7 +141,8 @@ class SIRSearchForm extends FormBase {
       $this->setPageSize((int) $pathElements[7]);
     }
 
-    $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument');
+    $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument') ?? 'Instrument';
+    $preferred_command = \Drupal::config('rep.settings')->get('preferred_command') ?? 'Command';
 
     $form['search_element_type'] = [
       '#type' => 'hidden',
@@ -162,6 +163,7 @@ class SIRSearchForm extends FormBase {
       'instrument'      => ['label' => $this->t($preferred_instrument . 's'),          'image' => 'white/instrument_placeholder.png'],
       'componentstem'   => ['label' => $this->t('Component Stems'),                    'image' => 'white/component_stem_placeholder.png'],
       'component'       => ['label' => $this->t('Components'),                         'image' => 'white/component_placeholder.png'],
+      'command'         => ['label' => $this->t($preferred_command . 's'),             'image' => 'white/process_placeholder.png'],
       'codebook'        => ['label' => $this->t('Codebooks'),                          'image' => 'white/codebook_placeholder.png'],
       'responseoption'  => ['label' => $this->t('Response Options'),                   'image' => 'white/responseoption_placeholder.png'],
       'annotationstem'  => ['label' => $this->t('Annotation Stems'),                   'image' => 'white/annotation_stem_placeholder.png'],

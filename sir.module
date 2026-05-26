@@ -49,6 +49,7 @@ function sir_menu_links_discovered_alter(&$links) {
 
     $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument');
     $preferred_component = \Drupal::config('rep.settings')->get('preferred_component') ?? 'Component';
+    $preferred_command = \Drupal::config('rep.settings')->get('preferred_command') ?? 'Command';
 
     if (isset($links['sir.top_level'])) {
       $links['sir.top_level']['title'] = $preferred_instrument . ' Elements';
@@ -64,6 +65,9 @@ function sir_menu_links_discovered_alter(&$links) {
     }
     if (isset($links['sir.manage_components'])) {
         $links['sir.manage_components']['title'] = 'Manage ' . $preferred_component . 's';
+    }
+    if (isset($links['sir.manage_commands'])) {
+        $links['sir.manage_commands']['title'] = 'Manage ' . $preferred_command . 's';
     }
 }
 

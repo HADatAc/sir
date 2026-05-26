@@ -348,6 +348,30 @@ sir.edit_annotationstem:
   options:
     no_cache: 'TRUE'
 
+# Command CRUD options
+
+sir.add_command:
+  path: 'sir/manage/addcommand'
+  defaults:
+    _form: '\Drupal\sir\Form\AddCommandForm'
+    _title: 'Add Command'
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+sir.edit_command:
+  path: 'sir/manage/editcommand/{commanduri}'
+  defaults:
+    _form: '\Drupal\sir\Form\EditCommandForm'
+    _title: 'Edit Command'
+  requirements:
+    _permission: 'access content'
+    _custom_access_check: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
 sir.annotation_container_autocomplete:
   path: '/sir/manage/annotation/container/autocomplete'
   defaults:

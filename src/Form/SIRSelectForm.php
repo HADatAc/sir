@@ -15,6 +15,7 @@ use Drupal\sir\Entity\AnnotationStem;
 use Drupal\sir\Entity\ComponentStem;
 use Drupal\sir\Entity\Component;
 use Drupal\sir\Entity\Codebook;
+use Drupal\sir\Entity\Command;
 use Drupal\sir\Entity\Instrument;
 use Drupal\sir\Entity\ResponseOption;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -607,8 +608,9 @@ class SIRSelectForm extends FormBase {
    * Prepare element names based on element type.
    */
   protected function prepareElementNames() {
-    $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument');
+    $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument') ?? 'Instrument';
     $preferred_component = \Drupal::config('rep.settings')->get('preferred_component') ?? 'Component';
+    $preferred_command = \Drupal::config('rep.settings')->get('preferred_command') ?? 'Command';
     switch ($this->element_type) {
 
       // INSTRUMENT
@@ -627,6 +629,12 @@ class SIRSelectForm extends FormBase {
       case "component":
         $this->single_class_name = $preferred_component;
         $this->plural_class_name = $preferred_component . "s";
+        break;
+
+      // COMMAND
+      case "command":
+        $this->single_class_name = $preferred_command;
+        $this->plural_class_name = $preferred_command . "s";
         break;
 
       // CODEBOOK
@@ -1043,6 +1051,12 @@ class SIRSelectForm extends FormBase {
       case 'annotationstem':
         $placeholder_image = base_path() . \Drupal::service('extension.list.module')->getPath('rep') . '/images/placeholders/annotation_stem_placeholder.png';
         break;
+      case 'command':
+        $placeholder_image = base_path() . \Drupal::service('extension.list.module')->getPath('rep') . '/images/placeholders/process_placeholder.png';
+        break;
+      default:
+        $placeholder_image = base_path() . \Drupal::service('extension.list.module')->getPath('rep') . '/images/placeholders/instrument_placeholder.png';
+        break;
     }
 
     // Se não estiver adicionando mais, crie o wrapper principal
@@ -1356,6 +1370,8 @@ class SIRSelectForm extends FormBase {
         return ComponentStem::generateHeader();
       case "component":
         return Component::generateHeader();
+      case "command":
+        return Command::generateHeader();
       case "codebook":
         return Codebook::generateHeader();
       case "responseoption":
@@ -1380,6 +1396,8 @@ class SIRSelectForm extends FormBase {
         return ComponentStem::generateOutput($this->getList());
       case "component":
         return Component::generateOutput($this->getList());
+      case "command":
+        return Command::generateOutput($this->getList());
       case "codebook":
         return Codebook::generateOutput($this->getList());
       case "responseoption":
@@ -1446,6 +1464,7 @@ class SIRSelectForm extends FormBase {
         'instrument' => 'sir.edit_instrument',
         'componentstem' => 'sir.edit_componentstem',
         'component' => 'sir.edit_component',
+        'command' => 'sir.edit_command',
         'codebook' => 'sir.edit_codebook',
         'responseoption' => 'sir.edit_response_option',
         'annotationstem' => 'sir.edit_annotationstem',
@@ -1678,6 +1697,9 @@ class SIRSelectForm extends FormBase {
       $url = Url::fromRoute('sir.add_component');
       $url->setRouteParameter('sourcecomponenturi', 'EMPTY');
       $url->setRouteParameter('containersloturi', 'EMPTY');
+    } elseif ($this->element_type == 'command') {
+      Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_command');
+      $url = Url::fromRoute('sir.add_command');
     } elseif ($this->element_type == 'codebook') {
       Utils::trackingStoreUrls($uid, $previousUrl, 'sir.add_codebook');
       $url = Url::fromRoute('sir.add_codebook');
@@ -1706,6 +1728,8 @@ class SIRSelectForm extends FormBase {
       $url = Url::fromRoute('sir.edit_componentstem', ['componentstemuri' => base64_encode($uri)]);
     } elseif ($this->element_type == 'component') {
       $url = Url::fromRoute('sir.edit_component', ['componenturi' => base64_encode($uri)]);
+    } elseif ($this->element_type == 'command') {
+      $url = Url::fromRoute('sir.edit_command', ['commanduri' => base64_encode($uri)]);
     } elseif ($this->element_type == 'codebook') {
       $url = Url::fromRoute('sir.edit_codebook', ['codebookuri' => base64_encode($uri)]);
     } elseif ($this->element_type == 'responseoption') {
@@ -2034,6 +2058,26 @@ class SIRSelectForm extends FormBase {
         $api = \Drupal::service('rep.api_connector');
         $api->elementDel('componentstem', $result->uri);
         $api->elementAdd('componentstem', $componentStemJson);
+      } elseif ($this->element_type == 'command') {
+
+        $commandPayload = [
+          'uri' => $result->uri,
+          'typeUri' => $result->typeUri ?? VSTOI::COMMAND,
+          'hascoTypeUri' => VSTOI::COMMAND,
+          'hasStatus' => VSTOI::UNDER_REVIEW,
+          'hasContent' => $result->hasContent ?? '',
+          'hasLanguage' => $result->hasLanguage ?? '',
+          'hasVersion' => $result->hasVersion ?? '1',
+          'comment' => $result->comment ?? '',
+          'hasWebDocument' => $result->hasWebDocument ?? '',
+          'hasReviewNote' => $result->hasReviewNote ?? '',
+          'hasImageUri' => $result->hasImageUri ?? '',
+          'hasEditorEmail' => $useremail,
+          'hasSIRManagerEmail' => $result->hasSIRManagerEmail ?? $useremail,
+        ];
+
+        $api->elementDel('command', $result->uri);
+        $api->elementAdd('command', json_encode($commandPayload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
       // } elseif ($this->element_type == 'processstem') {
       //   // CENARIO #1: CHECK IF IT HAS wasDerivedFrom property, means it is a derived element
       //   if ($result->wasDerivedFrom !== NULL
