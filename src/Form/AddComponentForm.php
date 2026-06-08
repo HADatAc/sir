@@ -599,7 +599,16 @@ class AddComponentForm extends FormBase {
         '"hasImageUri":"' . $component_image . '",' .
         '"hasStatus":"'.VSTOI::DRAFT.'"}';
 
-      $api->componentAdd($componentJson);
+      $addResponse = $api->componentAdd($componentJson);
+      $created = $api->parseObjectResponse($addResponse, 'componentAdd');
+      if ($created === NULL) {
+        throw new \RuntimeException('API rejected component creation payload.');
+      }
+
+      $verify = $api->parseObjectResponse($api->getUri($newComponentUri), 'getUri');
+      if ($verify === NULL) {
+        throw new \RuntimeException('Component was not persisted after create call.');
+      }
 
       // IF IN THE CONTEXT OF AN EXISTING CONTAINER_SLOT, ATTACH THE NEWLY CREATED COMPONENT TO THE CONTAINER_SLOT
       if ($this->getContainerSlot() != NULL) {

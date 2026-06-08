@@ -486,7 +486,11 @@ class AddComponentStemForm extends FormBase {
           '"wasGeneratedBy":"'.$form_state->getValue('componentstem_was_generated_by').'",'.
           '"hasSIRManagerEmail":"'.$useremail.'"}';
 
-        $api->elementAdd('componentstem', $componentStemJson);
+        $addResponse = $api->elementAdd('componentstem', $componentStemJson);
+        $created = $api->parseObjectResponse($addResponse, 'elementAdd');
+        if ($created === NULL) {
+          throw new \RuntimeException('API rejected component stem creation payload.');
+        }
 
       } else {
         // #2 CENARIO - ADD COMPONENT THAT WAS DERIVED FROM
@@ -521,13 +525,22 @@ class AddComponentStemForm extends FormBase {
             '"wasGeneratedBy":"'.$form_state->getValue('componentstem_was_generated_by').'",'.
             '"hasSIRManagerEmail":"'.$useremail.'"}';
 
-          $api->elementAdd('componentstem', $componentStemJson);
+          $addResponse = $api->elementAdd('componentstem', $componentStemJson);
+          $created = $api->parseObjectResponse($addResponse, 'elementAdd');
+          if ($created === NULL) {
+            throw new \RuntimeException('API rejected component stem creation payload.');
+          }
 
         } else {
           \Drupal::messenger()->addError(t("An error occurred while getting Derived From element"));
           self::backUrl();
           return;
         }
+      }
+
+      $verify = $api->parseObjectResponse($api->getUri($newComponentStemUri), 'getUri');
+      if ($verify === NULL) {
+        throw new \RuntimeException('Component Stem was not persisted after create call.');
       }
 
       \Drupal::messenger()->addMessage(t("Added a new Component Stem with URI: ".$newComponentStemUri));

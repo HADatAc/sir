@@ -361,7 +361,16 @@ class AddCodebookForm extends FormBase {
         '"hasSIRManagerEmail":"' . $uemail . '"}';
 
       $api = \Drupal::service('rep.api_connector');
-      $api->elementAdd('codebook', $codebookJSON);
+      $addResponse = $api->elementAdd('codebook', $codebookJSON);
+      $created = $api->parseObjectResponse($addResponse, 'elementAdd');
+      if ($created === NULL) {
+        throw new \RuntimeException('API rejected codebook creation payload.');
+      }
+
+      $verify = $api->parseObjectResponse($api->getUri($newCodebookUri), 'getUri');
+      if ($verify === NULL) {
+        throw new \RuntimeException('Codebook was not persisted after create call.');
+      }
 
       \Drupal::messenger()->addMessage(t("Codebook has been added successfully."));
       self::backUrl();

@@ -418,7 +418,17 @@ class AddResponseOptionForm extends FormBase {
         '"hasSIRManagerEmail":"'.$useremail.'"}';
 
       $api = \Drupal::service('rep.api_connector');
-      $api->responseOptionAdd($responseOptionJSON);
+      $addResponse = $api->responseOptionAdd($responseOptionJSON);
+      $created = $api->parseObjectResponse($addResponse, 'responseOptionAdd');
+      if ($created === NULL) {
+        throw new \RuntimeException('API rejected response option creation payload.');
+      }
+
+      $verify = $api->parseObjectResponse($api->getUri($newResponseOptionUri), 'getUri');
+      if ($verify === NULL) {
+        throw new \RuntimeException('Response option was not persisted after create call.');
+      }
+
       if ($this->getCodebookSlotUri() != NULL && $this->getCodebookSlot() != NULL && $this->getCodebookSlot()->belongsTo != NULL) {
         $api->responseOptionAttach($newResponseOptionUri,$this->getCodebookSlotUri());
       }

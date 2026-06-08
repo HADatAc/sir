@@ -442,7 +442,16 @@ class AddInstrumentForm extends FormBase {
 
       // Call the API connector service with the JSON.
       $api = \Drupal::service('rep.api_connector');
-      $api->instrumentAdd($instrumentJson);
+      $addResponse = $api->instrumentAdd($instrumentJson);
+      $created = $api->parseObjectResponse($addResponse, 'instrumentAdd');
+      if ($created === NULL) {
+        throw new \RuntimeException('API rejected instrument creation payload.');
+      }
+
+      $verify = $api->parseObjectResponse($api->getUri($newInstrumentUri), 'getUri');
+      if ($verify === NULL) {
+        throw new \RuntimeException('Instrument was not persisted after create call.');
+      }
 
       \Drupal::messenger()->addMessage($this->t(ucfirst($preferred_instrument)." has been added successfully."));
 

@@ -144,10 +144,18 @@ class AddSubcontainerForm extends FormBase {
         '"hasSIRManagerEmail":"'.$useremail.'"}';
 
       $api = \Drupal::service('rep.api_connector');
-      $message = $api->parseObjectResponse($api->subcontainerAdd($subcontainerJson),'subcontainerAdd');
-      if ($message != null) {
-        \Drupal::messenger()->addMessage(t("Subcontainer has been added successfully."));
+      $addResponse = $api->subcontainerAdd($subcontainerJson);
+      $created = $api->parseObjectResponse($addResponse, 'subcontainerAdd');
+      if ($created === NULL) {
+        throw new \RuntimeException('API rejected subcontainer creation payload.');
       }
+
+      $verify = $api->parseObjectResponse($api->getUri($newSubcontainerUri), 'getUri');
+      if ($verify === NULL) {
+        throw new \RuntimeException('Subcontainer was not persisted after create call.');
+      }
+
+      \Drupal::messenger()->addMessage(t("Subcontainer has been added successfully."));
       $this->backToSlotElement($form_state);
     }catch(\Exception $e){
       \Drupal::messenger()->addMessage(t("An error occurred while adding the ContainerSlot: ".$e->getMessage()));
