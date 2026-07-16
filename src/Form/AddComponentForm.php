@@ -4,6 +4,7 @@ namespace Drupal\sir\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\Constant;
@@ -104,6 +105,13 @@ class AddComponentForm extends FormBase {
     $form['#attached']['library'][] = 'rep/rep_modal';
     $form['#attached']['library'][] = 'core/drupal.dialog';
 
+    // Media viewer modal (images + PDFs).
+    $form['#attached']['library'][] = 'rep/pdfjs';
+    $form['#attached']['library'][] = 'rep/webdoc_modal';
+    $form['#attached']['drupalSettings']['webdoc_modal'] = [
+      'baseUrl' => \Drupal::request()->getSchemeAndHttpHost() . \Drupal::request()->getBaseUrl(),
+    ];
+
     // ESTABLISH API SERVICE
     $api = \Drupal::service('rep.api_connector');
 
@@ -151,7 +159,7 @@ class AddComponentForm extends FormBase {
 
     $sourceContent = '';
     if ($this->getSourceComponent() != NULL) {
-      $sourceContent = $this->getSourceComponent()->hasContent;
+      $sourceContent = (string) ($this->getSourceComponent()->hasContent ?? '');
     }
 
     // $form['component_stem'] = [
@@ -301,11 +309,39 @@ class AddComponentForm extends FormBase {
       '#type' => 'managed_file',
       '#title' => $this->t('Upload Image'),
       '#upload_location' => 'private://resources/' . $modUri . '/image',
+      '#default_value' => $form_state->getValue('component_image_upload') ?: NULL,
       '#upload_validators' => [
         'file_validate_extensions' => ['png jpg jpeg'], // Adjust allowed extensions as needed.
         'file_validate_size' => [2097152],
       ],
     ];
+
+    // Image preview (URL or uploaded file on rebuild).
+    $image_view_url = '';
+    $image_type = $form_state->getValue('component_image_type');
+    if ($image_type === 'url') {
+      $image_view_url = (string) $form_state->getValue('component_image_url');
+    }
+    elseif ($image_type === 'upload') {
+      $fids = $form_state->getValue('component_image_upload') ?: [];
+      if (!empty($fids)) {
+        $file = File::load(reset($fids));
+        if ($file) {
+          $image_view_url = \Drupal::service('file_url_generator')->generateAbsoluteString($file->getFileUri());
+        }
+      }
+    }
+    if ($image_view_url !== '') {
+      $form['component_image_preview'] = [
+        '#type' => 'markup',
+        '#markup' => Markup::create(
+          '<div class="mt-2">'
+          . '<div class="mb-2"><img src="' . $image_view_url . '" alt="" style="max-width: 180px; height: auto; border: 1px solid #ddd; padding: 2px;" /></div>'
+          . '<a href="#" class="view-media-button btn btn-primary" data-view-url="' . $image_view_url . '">' . $this->t('View Image') . '</a>'
+          . '</div>'
+        ),
+      ];
+    }
 
     // Add a select box to choose between URL and Upload.
     $form['component_webdocument_type'] = [
@@ -347,11 +383,38 @@ class AddComponentForm extends FormBase {
       '#type' => 'managed_file',
       '#title' => $this->t('Upload Document'),
       '#upload_location' => 'private://resources/' . $modUri . '/webdoc',
+      '#default_value' => $form_state->getValue('component_webdocument_upload') ?: NULL,
       '#upload_validators' => [
         'file_validate_extensions' => ['pdf doc docx txt xls xlsx'], // Adjust allowed extensions as needed.
         'file_validate_size' => [2097152],
       ],
     ];
+
+    // Web document preview (URL or uploaded file on rebuild).
+    $webdoc_view_url = '';
+    $webdoc_type = $form_state->getValue('component_webdocument_type');
+    if ($webdoc_type === 'url') {
+      $webdoc_view_url = (string) $form_state->getValue('component_webdocument_url');
+    }
+    elseif ($webdoc_type === 'upload') {
+      $fids = $form_state->getValue('component_webdocument_upload') ?: [];
+      if (!empty($fids)) {
+        $file = File::load(reset($fids));
+        if ($file) {
+          $webdoc_view_url = \Drupal::service('file_url_generator')->generateAbsoluteString($file->getFileUri());
+        }
+      }
+    }
+    if ($webdoc_view_url !== '') {
+      $form['component_webdocument_preview'] = [
+        '#type' => 'markup',
+        '#markup' => Markup::create(
+          '<div class="mt-2">'
+          . '<a href="#" class="view-media-button btn btn-primary" data-view-url="' . $webdoc_view_url . '">' . $this->t('View Document') . '</a>'
+          . '</div>'
+        ),
+      ];
+    }
 
     $form['save_submit'] = [
       '#type' => 'submit',
@@ -432,23 +495,33 @@ class AddComponentForm extends FormBase {
       // GET THE COMPONENT STEM URI
       $rawresponse = $api->getUri(Utils::uriFromAutocomplete($form_state->getValue('component_stem')));
       $obj = json_decode($rawresponse);
-      $result = $obj->body;
+      $result = $obj->body ?? NULL;
 
-      $label = "";
-      if ($result->hasContent !== NULL) {
-        $label .= $result->hasContent;
-      } else {
-        $label .= $result->label;
+      $stemContent = (is_object($result) && property_exists($result, 'hasContent')) ? $result->hasContent : NULL;
+      $stemLabel = (is_object($result) && property_exists($result, 'label')) ? $result->label : '';
+
+      $label = '';
+      if ($stemContent !== NULL && $stemContent !== '') {
+        $label = (string) $stemContent;
+      }
+      elseif ($stemLabel !== NULL && $stemLabel !== '') {
+        $label = (string) $stemLabel;
+      }
+
+      // Fallback: avoid empty label/content (and avoid accessing undefined properties).
+      if ($label === '') {
+        $label = (string) Utils::uriFromAutocomplete($form_state->getValue('component_stem'));
       }
 
       if ($form_state->getValue('component_codebook') !== NULL && $form_state->getValue('component_codebook') != '') {
         $codebook = Utils::uriFromAutocomplete($form_state->getValue('component_codebook'));
         $rawresponseCB = $api->getUri($codebook);
         $objCB = json_decode($rawresponseCB);
-        $resultCB = $objCB->body;
-        $label .= '  -- CB:'.$resultCB->label;
+        $resultCB = $objCB->body ?? NULL;
+        $codebookLabel = (is_object($resultCB) && property_exists($resultCB, 'label')) ? $resultCB->label : '';
+        $label .= '  -- CB:' . (string) $codebookLabel;
       } else {
-        $label = $result->label . '  -- CB:EMPTY';
+        $label = (string) $label . '  -- CB:EMPTY';
       }
 
       // Get the current user email and generate a new component URI.
@@ -526,7 +599,16 @@ class AddComponentForm extends FormBase {
         '"hasImageUri":"' . $component_image . '",' .
         '"hasStatus":"'.VSTOI::DRAFT.'"}';
 
-      $api->componentAdd($componentJson);
+      $addResponse = $api->componentAdd($componentJson);
+      $created = $api->parseObjectResponse($addResponse, 'componentAdd');
+      if ($created === NULL) {
+        throw new \RuntimeException('API rejected component creation payload.');
+      }
+
+      $verify = $api->parseObjectResponse($api->getUri($newComponentUri), 'getUri');
+      if ($verify === NULL) {
+        throw new \RuntimeException('Component was not persisted after create call.');
+      }
 
       // IF IN THE CONTEXT OF AN EXISTING CONTAINER_SLOT, ATTACH THE NEWLY CREATED COMPONENT TO THE CONTAINER_SLOT
       if ($this->getContainerSlot() != NULL) {
@@ -537,23 +619,6 @@ class AddComponentForm extends FormBase {
         $form_state->setRedirectUrl($url);
         return;
       } else {
-        // UPLOAD IMAGE TO API
-        if ($image_type === 'upload') {
-          $fids = $form_state->getValue('component_image_upload');
-          $msg = $api->parseObjectResponse($api->uploadFile($newComponentUri, reset($fids)), 'uploadFile');
-          if ($msg == NULL) {
-            \Drupal::messenger()->addError(t("The Uploaded Image FAILED to be submited to API."));
-          }
-        }
-        // UPLOAD DOCUMENT TO API
-        if ($doc_type === 'upload') {
-          $fids = $form_state->getValue('component_webdocument_upload');
-          $msg = $api->parseObjectResponse($api->uploadFile($newComponentUri, reset($fids)), 'uploadFile');
-          if ($msg == NULL) {
-            \Drupal::messenger()->addError(t("The Uploaded Document FAILED to be submited to API."));
-          }
-        }
-
         \Drupal::messenger()->addMessage(t("Component has been added successfully."));
         self::backUrl();
         return;

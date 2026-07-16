@@ -1,5 +1,8 @@
 sir_js_css:
   version: 1.x
+  css:
+    theme:
+      css/sir.css: {}
   js:
     js/sir.js: {}
   dependencies:

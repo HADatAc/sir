@@ -43,6 +43,14 @@ class SIRReviewForm extends FormBase {
 
   protected $list_size;
 
+  protected function reviewListLink($elementtype, $page, $pagesize) {
+    $root_url = \Drupal::request()->getBaseUrl();
+    if ($elementtype != NULL && $page > 0 && $pagesize > 0) {
+      return $root_url . '/sir/review/' . $elementtype . '/' . strval($page) . '/' . strval($pagesize);
+    }
+    return '';
+  }
+
   public function getList() {
     return $this->list;
   }
@@ -84,10 +92,10 @@ class SIRReviewForm extends FormBase {
     $user = \Drupal\user\Entity\User::load($uid);
     $this->manager_name = $user->name->value;
 
-    // GET TOTAL NUMBER OF ELEMENTS
+    // GET TOTAL NUMBER OF ELEMENTS (UNDER REVIEW)
     $this->element_type = $elementtype;
     if ($this->element_type != NULL) {
-      $this->setListSize(ListManagerEmailPage::total($this->element_type, $this->manager_email));
+      $this->setListSize(ListManagerEmailPage::totalByReviewStatus($this->element_type, VSTOI::UNDER_REVIEW));
     }
 
     // Retrieve or set default view type
@@ -235,27 +243,28 @@ class SIRReviewForm extends FormBase {
    * Build the table view.
    */
   protected function buildTableView(array &$form, FormStateInterface $form_state, $page, $pagesize) {
-    // GET TOTAL NUMBER OF PAGES
-    if (gettype($this->list_size) == 'string') {
-      $total_pages = "0";
-    } else {
-      if ($this->list_size % $pagesize == 0) {
-        $total_pages = $this->list_size / $pagesize;
-      } else {
-        $total_pages = floor($this->list_size / $pagesize) + 1;
+    // GET TOTAL NUMBER OF PAGES (always at least 1 for UX consistency)
+    $total_pages = 1;
+    if (is_numeric($this->list_size) && $pagesize > 0) {
+      $size = (int) $this->list_size;
+      if ($size > 0) {
+        $total_pages = (int) ceil($size / $pagesize);
       }
     }
+
+    // Clamp current page to valid range.
+    $page = max(1, min((int) $page, (int) $total_pages));
 
     // CREATE LINK FOR NEXT PAGE AND PREVIOUS PAGE
     if ($page < $total_pages) {
       $next_page = $page + 1;
-      $next_page_link = ListManagerEmailPage::link($this->element_type, $next_page, $pagesize);
+      $next_page_link = $this->reviewListLink($this->element_type, $next_page, $pagesize);
     } else {
       $next_page_link = '';
     }
     if ($page > 1) {
       $previous_page = $page - 1;
-      $previous_page_link = ListManagerEmailPage::link($this->element_type, $previous_page, $pagesize);
+      $previous_page_link = $this->reviewListLink($this->element_type, $previous_page, $pagesize);
     } else {
       $previous_page_link = '';
     }
@@ -281,8 +290,8 @@ class SIRReviewForm extends FormBase {
       '#theme' => 'list-page',
       '#items' => [
         'page' => strval($page),
-        'first' => ListManagerEmailPage::link($this->element_type, 1, $pagesize),
-        'last' => ListManagerEmailPage::link($this->element_type, $total_pages, $pagesize),
+        'first' => $this->reviewListLink($this->element_type, 1, $pagesize),
+        'last' => $this->reviewListLink($this->element_type, $total_pages, $pagesize),
         'previous' => $previous_page_link,
         'next' => $next_page_link,
         'last_page' => strval($total_pages),

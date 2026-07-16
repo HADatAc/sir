@@ -4,6 +4,7 @@ namespace Drupal\sir\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\Constant;
@@ -73,6 +74,13 @@ class AddComponentStemForm extends FormBase {
 
     $form['#attached']['library'][] = 'sir/sir_componentstem';
 
+    // Media viewer modal (images + PDFs).
+    $form['#attached']['library'][] = 'rep/pdfjs';
+    $form['#attached']['library'][] = 'rep/webdoc_modal';
+    $form['#attached']['drupalSettings']['webdoc_modal'] = [
+      'baseUrl' => \Drupal::request()->getSchemeAndHttpHost() . \Drupal::request()->getBaseUrl(),
+    ];
+
     // ESTABLISH API SERVICE
     $api = \Drupal::service('rep.api_connector');
 
@@ -112,7 +120,9 @@ class AddComponentStemForm extends FormBase {
 
     $sourceContent = '';
     if ($this->getSourceComponentStem() != NULL) {
-      $sourceContent = Utils::fieldToAutocomplete($this->getSourceComponentStem()->uri,$this->getSourceComponentStem()->hasContent);
+      $stemObj = $this->getSourceComponentStem();
+      $stemText = (string) (($stemObj->hasContent ?? '') !== '' ? ($stemObj->hasContent ?? '') : ($stemObj->label ?? ''));
+      $sourceContent = Utils::fieldToAutocomplete($stemObj->uri, $stemText);
     }
 
     $form['componentstem_type'] = [
@@ -235,11 +245,39 @@ class AddComponentStemForm extends FormBase {
       '#type' => 'managed_file',
       '#title' => $this->t('Upload Image'),
       '#upload_location' => 'private://resources/' . $modUri . '/image',
+      '#default_value' => $form_state->getValue('componentstem_image_upload') ?: NULL,
       '#upload_validators' => [
         'file_validate_extensions' => ['png jpg jpeg'], // Adjust allowed extensions as needed.
         'file_validate_size' => [2097152],
       ],
     ];
+
+    // Image preview (URL or uploaded file on rebuild).
+    $image_view_url = '';
+    $image_type = $form_state->getValue('componentstem_image_type');
+    if ($image_type === 'url') {
+      $image_view_url = (string) $form_state->getValue('componentstem_image_url');
+    }
+    elseif ($image_type === 'upload') {
+      $fids = $form_state->getValue('componentstem_image_upload') ?: [];
+      if (!empty($fids)) {
+        $file = File::load(reset($fids));
+        if ($file) {
+          $image_view_url = \Drupal::service('file_url_generator')->generateAbsoluteString($file->getFileUri());
+        }
+      }
+    }
+    if ($image_view_url !== '') {
+      $form['componentstem_image_preview'] = [
+        '#type' => 'markup',
+        '#markup' => Markup::create(
+          '<div class="mt-2">'
+          . '<div class="mb-2"><img src="' . $image_view_url . '" alt="" style="max-width: 180px; height: auto; border: 1px solid #ddd; padding: 2px;" /></div>'
+          . '<a href="#" class="view-media-button btn btn-primary" data-view-url="' . $image_view_url . '">' . $this->t('View Image') . '</a>'
+          . '</div>'
+        ),
+      ];
+    }
 
     // Add a select box to choose between URL and Upload.
     $form['componentstem_webdocument_type'] = [
@@ -281,11 +319,38 @@ class AddComponentStemForm extends FormBase {
       '#type' => 'managed_file',
       '#title' => $this->t('Upload Document'),
       '#upload_location' => 'private://resources/' . $modUri . '/webdoc',
+      '#default_value' => $form_state->getValue('componentstem_webdocument_upload') ?: NULL,
       '#upload_validators' => [
         'file_validate_extensions' => ['pdf doc docx txt xls xlsx'], // Adjust allowed extensions as needed.
         'file_validate_size' => [2097152],
       ],
     ];
+
+    // Web document preview (URL or uploaded file on rebuild).
+    $webdoc_view_url = '';
+    $webdoc_type = $form_state->getValue('componentstem_webdocument_type');
+    if ($webdoc_type === 'url') {
+      $webdoc_view_url = (string) $form_state->getValue('componentstem_webdocument_url');
+    }
+    elseif ($webdoc_type === 'upload') {
+      $fids = $form_state->getValue('componentstem_webdocument_upload') ?: [];
+      if (!empty($fids)) {
+        $file = File::load(reset($fids));
+        if ($file) {
+          $webdoc_view_url = \Drupal::service('file_url_generator')->generateAbsoluteString($file->getFileUri());
+        }
+      }
+    }
+    if ($webdoc_view_url !== '') {
+      $form['componentstem_webdocument_preview'] = [
+        '#type' => 'markup',
+        '#markup' => Markup::create(
+          '<div class="mt-2">'
+          . '<a href="#" class="view-media-button btn btn-primary" data-view-url="' . $webdoc_view_url . '">' . $this->t('View Document') . '</a>'
+          . '</div>'
+        ),
+      ];
+    }
 
     $form['save_submit'] = [
       '#type' => 'submit',
@@ -421,7 +486,11 @@ class AddComponentStemForm extends FormBase {
           '"wasGeneratedBy":"'.$form_state->getValue('componentstem_was_generated_by').'",'.
           '"hasSIRManagerEmail":"'.$useremail.'"}';
 
-        $api->elementAdd('componentstem', $componentStemJson);
+        $addResponse = $api->elementAdd('componentstem', $componentStemJson);
+        $created = $api->parseObjectResponse($addResponse, 'elementAdd');
+        if ($created === NULL) {
+          throw new \RuntimeException('API rejected component stem creation payload.');
+        }
 
       } else {
         // #2 CENARIO - ADD COMPONENT THAT WAS DERIVED FROM
@@ -456,7 +525,11 @@ class AddComponentStemForm extends FormBase {
             '"wasGeneratedBy":"'.$form_state->getValue('componentstem_was_generated_by').'",'.
             '"hasSIRManagerEmail":"'.$useremail.'"}';
 
-          $api->elementAdd('componentstem', $componentStemJson);
+          $addResponse = $api->elementAdd('componentstem', $componentStemJson);
+          $created = $api->parseObjectResponse($addResponse, 'elementAdd');
+          if ($created === NULL) {
+            throw new \RuntimeException('API rejected component stem creation payload.');
+          }
 
         } else {
           \Drupal::messenger()->addError(t("An error occurred while getting Derived From element"));
@@ -465,21 +538,9 @@ class AddComponentStemForm extends FormBase {
         }
       }
 
-      // UPLOAD IMAGE TO API
-      if ($image_type === 'upload') {
-        $fids = $form_state->getValue('componentstem_image_upload');
-        $msg = $api->parseObjectResponse($api->uploadFile($newComponentStemUri, reset($fids)), 'uploadFile');
-        if ($msg == NULL) {
-          \Drupal::messenger()->addError(t("The Uploaded Image FAILED to be submited to API."));
-        }
-      }
-      // UPLOAD DOCUMENT TO API
-      if ($doc_type === 'upload') {
-        $fids = $form_state->getValue('componentstem_webdocument_upload');
-        $msg = $api->parseObjectResponse($api->uploadFile($newComponentStemUri, reset($fids)), 'uploadFile');
-        if ($msg == NULL) {
-          \Drupal::messenger()->addError(t("The Uploaded Document FAILED to be submited to API."));
-        }
+      $verify = $api->parseObjectResponse($api->getUri($newComponentStemUri), 'getUri');
+      if ($verify === NULL) {
+        throw new \RuntimeException('Component Stem was not persisted after create call.');
       }
 
       \Drupal::messenger()->addMessage(t("Added a new Component Stem with URI: ".$newComponentStemUri));

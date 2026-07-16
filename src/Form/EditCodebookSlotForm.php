@@ -31,6 +31,82 @@ class EditCodebookSlotForm extends FormBase {
   }
 
   /**
+   * Derive Codebook URI from a Codebook Slot URI.
+   */
+  private function deriveCodebookUriFromSlotUri(string $slotUri): string {
+    $slotUri = trim($slotUri);
+    if ($slotUri === '') {
+      return '';
+    }
+
+    return preg_replace('~/CBS/[^/]+$~', '', $slotUri);
+  }
+
+  /**
+   * Derive priority from a Codebook Slot URI (e.g. .../CBS/1 => 1).
+   */
+  private function derivePriorityFromSlotUri(string $slotUri): string {
+    if (preg_match('~/CBS/([^/]+)$~', $slotUri, $matches) === 1) {
+      return trim((string) $matches[1]);
+    }
+
+    return '';
+  }
+
+  /**
+   * Resolve a codebook URI for redirect flows.
+   */
+  private function resolveCodebookUri(): string {
+    if ($this->getCodebookSlot() != NULL && isset($this->getCodebookSlot()->belongsTo)) {
+      $belongsTo = trim((string) $this->getCodebookSlot()->belongsTo);
+      if ($belongsTo !== '') {
+        return $belongsTo;
+      }
+    }
+
+    return $this->deriveCodebookUriFromSlotUri((string) $this->getCodebookSlotUri());
+  }
+
+  /**
+   * Build the safest redirect URL back to codebook context.
+   */
+  private function buildBackUrl(): Url {
+    $codebookUri = $this->resolveCodebookUri();
+    if ($codebookUri !== '') {
+      $url = Url::fromRoute('sir.manage_codebook_slots');
+      $url->setRouteParameter('codebookuri', base64_encode($codebookUri));
+      return $url;
+    }
+
+    // Fallback to generic codebook list if no slot context is available.
+    return Url::fromRoute('sir.select_element', [
+      'elementtype' => 'codebook',
+      'page' => '1',
+      'pagesize' => '9',
+    ]);
+  }
+
+  /**
+   * Resolve a priority value for submit flow.
+   *
+   * The priority field is display-only in this form, so it may not be posted.
+   */
+  private function resolvePriority(FormStateInterface $form_state): string {
+    $priority = trim((string) $form_state->getValue('codebook_slot_priority_value', ''));
+
+    if ($priority === '' && $this->getCodebookSlot() != NULL && isset($this->getCodebookSlot()->hasPriority)) {
+      $priority = trim((string) $this->getCodebookSlot()->hasPriority);
+    }
+
+    if ($priority === '') {
+      $priority = $this->derivePriorityFromSlotUri((string) $this->getCodebookSlotUri());
+    }
+
+    // Keep a valid fallback so submit does not fail on disabled input.
+    return $priority !== '' ? $priority : '1';
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getFormId() {
@@ -47,18 +123,22 @@ class EditCodebookSlotForm extends FormBase {
 
     $api = \Drupal::service('rep.api_connector');
     $rawresponse = $api->getUri($this->getCodebookSlotUri());
-    $obj = json_decode($rawresponse);
+    $obj = is_string($rawresponse) ? json_decode($rawresponse) : NULL;
 
     $content = "";
-    if ($obj->isSuccessful) {
+    $priority = $this->derivePriorityFromSlotUri((string) $this->getCodebookSlotUri());
+    if (is_object($obj) && !empty($obj->isSuccessful) && isset($obj->body) && is_object($obj->body)) {
       $this->setCodebookSlot($obj->body);
+      if (isset($this->getCodebookSlot()->hasPriority) && trim((string) $this->getCodebookSlot()->hasPriority) !== '') {
+        $priority = (string) $this->getCodebookSlot()->hasPriority;
+      }
       if ($this->getCodebookSlot()->responseOption != NULL) {
-        $content = $this->getCodebookSlot()->responseOption->hasContent . ' [' . $this->getCodebookSlot()->hasResponseOption . ']';
+        $ro = $this->getCodebookSlot()->responseOption;
+        $roText = is_object($ro) ? (string) (($ro->hasContent ?? '') !== '' ? ($ro->hasContent ?? '') : ($ro->label ?? '')) : '';
+        $content = $roText . ' [' . $this->getCodebookSlot()->hasResponseOption . ']';
       }
     } else {
-      \Drupal::messenger()->addMessage(t("Failed to retrieve Response Option Slot."));
-      $url = Url::fromRoute('sir.manage_codebooks');
-      $form_state->setRedirectUrl($url);
+      \Drupal::messenger()->addWarning(t('Failed to retrieve Response Option Slot details. Using URI fallback values.'));
     }
 
     $form['codebook_slot_uri'] = [
@@ -70,8 +150,12 @@ class EditCodebookSlotForm extends FormBase {
     $form['codebook_slot_priority'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Priority'),
-      '#default_value' => $this->getCodebookSlot()->hasPriority,
+      '#default_value' => $priority,
       '#disabled' => TRUE,
+    ];
+    $form['codebook_slot_priority_value'] = [
+      '#type' => 'hidden',
+      '#value' => $priority,
     ];
     $form['codebook_slot_response_option'] = [
       '#type' => 'textfield',
@@ -79,23 +163,13 @@ class EditCodebookSlotForm extends FormBase {
       '#default_value' => $content,
       '#autocomplete_route_name' => 'sir.codebookslot_response_option_autocomplete',
     ];
-    $form['new_responseoption_submit'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('New Response Option'),
-      '#name' => 'new_response_option',
+    $form['primary_actions'] = [
+      '#type' => 'container',
       '#attributes' => [
-        'class' => ['btn', 'btn-primary', 'add-element-button'],
+        'class' => ['d-flex', 'flex-wrap', 'gap-2', 'mb-3'],
       ],
     ];
-    $form['reset_responseoption_submit'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Reset Response Option Slot'),
-      '#name' => 'reset_response_option',
-      '#attributes' => [
-        'class' => ['btn', 'btn-primary', 'reset-button'],
-      ],
-    ];
-    $form['update_submit'] = [
+    $form['primary_actions']['update_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Update'),
       '#name' => 'save',
@@ -103,12 +177,35 @@ class EditCodebookSlotForm extends FormBase {
         'class' => ['btn', 'btn-primary', 'save-button'],
       ],
     ];
-    $form['cancel_submit'] = [
+    $form['primary_actions']['cancel_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Cancel'),
       '#name' => 'back',
       '#attributes' => [
         'class' => ['btn', 'btn-primary', 'cancel-button'],
+      ],
+    ];
+
+    $form['secondary_actions'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['d-flex', 'flex-wrap', 'gap-2', 'mt-2'],
+      ],
+    ];
+    $form['secondary_actions']['new_responseoption_submit'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('New Response Option'),
+      '#name' => 'new_response_option',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'add-element-button'],
+      ],
+    ];
+    $form['secondary_actions']['reset_responseoption_submit'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Reset Response Option Slot'),
+      '#name' => 'reset_response_option',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'reset-button'],
       ],
     ];
     $form['bottom_space'] = [
@@ -124,9 +221,7 @@ class EditCodebookSlotForm extends FormBase {
     $button_name = $triggering_element['#name'];
 
     if ($button_name != 'back') {
-      if(strlen($form_state->getValue('codebook_slot_priority')) < 1) {
-        $form_state->setErrorByName('codebook_slot_priority', $this->t('Please enter a valid priority value'));
-      }
+      $form_state->setValue('codebook_slot_priority_value', $this->resolvePriority($form_state));
     }
   }
 
@@ -143,8 +238,7 @@ class EditCodebookSlotForm extends FormBase {
     $previousUrl = \Drupal::request()->getRequestUri();
 
     if ($button_name === 'back') {
-      $url = Url::fromRoute('sir.manage_codebook_slots');
-      $url->setRouteParameter('codebookuri', base64_encode($this->getCodebookSlot()->belongsTo));
+      $url = $this->buildBackUrl();
       $form_state->setRedirectUrl($url);
       return;
     }
@@ -164,8 +258,7 @@ class EditCodebookSlotForm extends FormBase {
         $api->codebookSlotReset($this->getCodebookSlotUri());
       }
 
-      $url = Url::fromRoute('sir.manage_codebook_slots');
-      $url->setRouteParameter('codebookuri', base64_encode($this->getCodebookSlot()->belongsTo));
+      $url = $this->buildBackUrl();
       $form_state->setRedirectUrl($url);
       return;
     }
@@ -178,14 +271,12 @@ class EditCodebookSlotForm extends FormBase {
       }
 
       \Drupal::messenger()->addMessage(t("Response Option Slot has been updated successfully."));
-      $url = Url::fromRoute('sir.manage_codebook_slots');
-      $url->setRouteParameter('codebookuri', base64_encode($this->getCodebookSlot()->belongsTo));
+      $url = $this->buildBackUrl();
       $form_state->setRedirectUrl($url);
 
     } catch(\Exception $e) {
       \Drupal::messenger()->addMessage(t("An error occurred while updating the Response Option Slot: ".$e->getMessage()));
-      $url = Url::fromRoute('sir.manage_codebook_slots');
-      $url->setRouteParameter('codebookuri', base64_encode($this->getCodebookSlot()->belongsTo));
+      $url = $this->buildBackUrl();
       $form_state->setRedirectUrl($url);
     }
 

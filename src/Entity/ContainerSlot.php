@@ -4,6 +4,7 @@ namespace Drupal\sir\Entity;
 
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\REPGUI;
+use Drupal\Core\Render\Markup;
 
 class ContainerSlot {
 
@@ -39,7 +40,7 @@ class ContainerSlot {
             $component = $api->parseObjectResponse($api->getUri($element->hasComponent), 'getUri');
             if ($component != NULL) {
               $nsUri = Utils::namespaceUri($component->uri);
-              $componentStr =  t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($component->uri).'">'.$nsUri.'</a>');
+              $componentStr = Markup::create(Utils::describeAnchor((string) $component->uri, (string) $nsUri));
             }
           }
         }

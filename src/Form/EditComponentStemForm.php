@@ -66,6 +66,13 @@ class EditComponentStemForm extends FormBase {
     $form['#attached']['library'][] = 'rep/rep_modal';
     $form['#attached']['library'][] = 'core/drupal.dialog';
 
+    // Media viewer modal (images + PDFs).
+    $form['#attached']['library'][] = 'rep/pdfjs';
+    $form['#attached']['library'][] = 'rep/webdoc_modal';
+    $form['#attached']['drupalSettings']['webdoc_modal'] = [
+      'baseUrl' => \Drupal::request()->getSchemeAndHttpHost() . \Drupal::request()->getBaseUrl(),
+    ];
+
     $form['#attached']['library'][] = 'sir/sir_componentstem';
 
     $uri=$componentstemuri;
@@ -94,7 +101,7 @@ class EditComponentStemForm extends FormBase {
     $form['componentstem_uri'] = [
       '#type' => 'item',
       '#title' => $this->t('URI: '),
-      '#markup' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($this->getComponentStemUri()).'">'.$this->getComponentStemUri().'</a>'),
+      '#markup' => Markup::create(Utils::describeAnchor((string) $this->getComponentStemUri(), (string) $this->getComponentStemUri())),
     ];
 
     // dpm($this->getComponentStem());
@@ -190,12 +197,11 @@ class EditComponentStemForm extends FormBase {
       }
 
       $elementUri = Utils::namespaceUri($this->getComponentStem()->wasDerivedFrom);
-      $elementUriEncoded = base64_encode($elementUri);
-      $url = Url::fromRoute('rep.describe_element', ['elementuri' => $elementUriEncoded], ['absolute' => TRUE])->toString();
+      $url = Utils::describeUrl((string) $elementUri, [], FALSE)->setAbsolute()->toString();
 
       $form['componentstem_df_wrapper']['componentstem_wasderivedfrom_button'] = [
         '#type' => 'markup',
-        '#markup' => '<a href="' . $url . '" target="_blank" class="btn btn-primary text-nowrap mt-2" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
+        '#markup' => '<a href="' . $url . '" class="btn btn-primary text-nowrap mt-2" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
       ];
     }
     $form['componentstem_was_generated_by'] = [
@@ -287,18 +293,10 @@ class EditComponentStemForm extends FormBase {
       ],
     ];
 
-    // Attempt to load an existing file if the document is not a URL.
+    // Attempt to load an existing file if the image is not a URL.
     $existing_image_fid = NULL;
     if ($image_type === 'upload' && !empty($componentstem_image)) {
-      // Build the expected file URI in the private filesystem.
-      $desired_uri = 'private://resources/' . $modUri . '/image/' . $componentstem_image;
-      $files = \Drupal::entityTypeManager()
-        ->getStorage('file')
-        ->loadByProperties(['uri' => $desired_uri]);
-      $file = reset($files);
-      if ($file) {
-        $existing_image_fid = $file->id();
-      }
+      $existing_image_fid = Utils::resolvePrivateResourceFid($modUri, 'image', $componentstem_image);
     }
 
     // 5. Managed file element for uploading a new document.
@@ -306,6 +304,7 @@ class EditComponentStemForm extends FormBase {
       '#type' => 'managed_file',
       '#title' => $this->t('Upload Image'),
       '#upload_location' => 'private://resources/' . $modUri . '/image',
+      '#default_value' => $existing_image_fid ? [$existing_image_fid] : NULL,
       '#upload_validators' => [
         'file_validate_extensions' => ['png jpg jpeg'], // Allowed file extensions.
         'file_validate_size' => [2097152], // Maximum file size (in bytes).
@@ -313,6 +312,30 @@ class EditComponentStemForm extends FormBase {
       // Description in red: allowed file types and a warning that choosing a new image will remove the previous one.
       '#description' => Markup::create('<span style="color: red;">Allowed file types: png, jpg, jpeg. Selecting a new image will remove the previous one.</span>'),
     ];
+
+    // Existing image preview (thumbnail + modal viewer).
+    if (!empty($componentstem_image)) {
+      $image_view_url = '';
+      if ($image_type === 'url') {
+        $image_view_url = $componentstem_image;
+      }
+      elseif (!empty($modUri)) {
+        $image_file_uri = 'private://resources/' . $modUri . '/image/' . $componentstem_image;
+        $image_view_url = \Drupal::service('file_url_generator')->generateAbsoluteString($image_file_uri);
+      }
+
+      if ($image_view_url !== '') {
+        $form['componentstem_information']['componentstem_image_preview'] = [
+          '#type' => 'markup',
+          '#markup' => Markup::create(
+            '<div class="mt-2">'
+            . '<div class="mb-2"><img src="' . $image_view_url . '" alt="' . htmlspecialchars($componentstem_image, ENT_QUOTES) . '" style="max-width: 180px; height: auto; border: 1px solid #ddd; padding: 2px;" /></div>'
+            . '<a href="#" class="view-media-button btn btn-primary" data-view-url="' . $image_view_url . '">' . $this->t('View Image') . '</a>'
+            . '</div>'
+          ),
+        ];
+      }
+    }
 
     // **** WEBDOCUMENT ****
     // Retrieve the current web document value.
@@ -367,22 +390,15 @@ class EditComponentStemForm extends FormBase {
     // Attempt to load an existing file if the document is not a URL.
     $existing_fid = NULL;
     if ($webdocument_type === 'upload' && !empty($componentstem_webdocument)) {
-      // Build the expected file URI in the private filesystem.
-      $desired_uri = 'private://resources/' . $modUri . '/webdoc/' . $componentstem_webdocument;
-      $files = \Drupal::entityTypeManager()
-        ->getStorage('file')
-        ->loadByProperties(['uri' => $desired_uri]);
-      $file = reset($files);
-      if ($file) {
-        $existing_fid = $file->id();
-      }
+      $existing_fid = Utils::resolvePrivateResourceFid($modUri, 'webdoc', $componentstem_webdocument, ['webdocument', 'image']);
     }
 
     // 5. Managed file element for uploading a new document.
     $form['componentstem_information']['componentstem_webdocument_upload_wrapper']['componentstem_webdocument_upload'] = [
       '#type' => 'managed_file',
-      '#title' => $this->t('Upload Image'),
-      '#upload_location' => 'private://resources/' . $modUri . '/image',
+      '#title' => $this->t('Upload Web Document'),
+      '#upload_location' => 'private://resources/' . $modUri . '/webdoc',
+      '#default_value' => $existing_fid ? [$existing_fid] : NULL,
       '#upload_validators' => [
         'file_validate_extensions' => ['pdf doc docx txt xls xlsx'],
         'file_validate_size' => [2097152], // Maximum file size (in bytes).
@@ -390,6 +406,30 @@ class EditComponentStemForm extends FormBase {
       // Description in red: allowed file types and a warning that choosing a new image will remove the previous one.
       '#description' => Markup::create('<span style="color: red;">Allowed file types: pdf, doc, docx, txt, xls, xlsx. Selecting a new document will remove the previous one.</span>'),
     ];
+
+    // Existing web document preview (filename + modal viewer).
+    if (!empty($componentstem_webdocument)) {
+      $webdoc_view_url = '';
+      if ($webdocument_type === 'url') {
+        $webdoc_view_url = $componentstem_webdocument;
+      }
+      elseif (!empty($modUri)) {
+        $webdoc_file_uri = 'private://resources/' . $modUri . '/webdoc/' . $componentstem_webdocument;
+        $webdoc_view_url = \Drupal::service('file_url_generator')->generateAbsoluteString($webdoc_file_uri);
+      }
+
+      if ($webdoc_view_url !== '') {
+        $form['componentstem_information']['componentstem_webdocument_preview'] = [
+          '#type' => 'markup',
+          '#markup' => Markup::create(
+            '<div class="mt-2">'
+            . '<div class="mb-2"><strong>' . $this->t('Current document:') . '</strong> ' . htmlspecialchars($componentstem_webdocument, ENT_QUOTES) . '</div>'
+            . '<a href="#" class="view-media-button btn btn-primary" data-view-url="' . $webdoc_view_url . '">' . $this->t('View Document') . '</a>'
+            . '</div>'
+          ),
+        ];
+      }
+    }
 
     $form['update_submit'] = [
       '#type' => 'submit',
@@ -545,24 +585,6 @@ class EditComponentStemForm extends FormBase {
 
         $api->componentStemDel($this->getComponentStemUri());
         $api->componentStemAdd($componentStemJson);
-
-        // UPLOAD IMAGE TO API
-        if ($image_type === 'upload' && $componentstem_image !== $this->getComponentStem()->hasImageUri) {
-          $fids = $form_state->getValue('componentstem_image_upload');
-          $msg = $api->parseObjectResponse($api->uploadFile($this->getComponentStemUri(), reset($fids)), 'uploadFile');
-          if ($msg == NULL) {
-            \Drupal::messenger()->addError(t("The Uploaded Image FAILED to be submited to API."));
-          }
-        }
-
-        // UPLOAD DOCUMENT TO API
-        if ($doc_type === 'upload' && $componentstem_webdocument !== $this->getComponentStem()->hasWebDocument) {
-          $fids = $form_state->getValue('componentstem_webdocument_upload');
-          $msg = $api->parseObjectResponse($api->uploadFile($this->getComponentStemUri(), reset($fids)), 'uploadFile');
-          if ($msg == NULL) {
-            \Drupal::messenger()->addError(t("The Uploaded WebDocument FAILED to be submited to API."));
-          }
-        }
 
         \Drupal::messenger()->addMessage(t("Component Stem has been updated successfully."));
       }

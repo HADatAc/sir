@@ -4,22 +4,41 @@ th {
     font-weight: bold;
   }
 
-#loading-overlay {
+#sir-loading-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 20%;
-  height: 20%;
-  background: rgba(255, 255, 255, 0.8); /* Fundo semitransparente */
+  inset: 0;
+  background: rgba(14, 18, 27, 0.5);
+  backdrop-filter: blur(1px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999; /* Certifique-se que está sobre todos os elementos */
+  pointer-events: all;
+  z-index: 10050;
 }
 
-.spinner-border {
-  width: 3rem;
-  height: 3rem;
+#sir-loading-overlay .sir-loading-overlay__panel {
+  min-width: 290px;
+  max-width: 92vw;
+  padding: 1rem 1.2rem;
+  border-radius: 0.75rem;
+  background: rgba(33, 37, 41, 0.94);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+#sir-loading-overlay .sir-loading-overlay__spinner {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+.sir-loading-overlay__text {
+  color: #fff;
+  font-size: 1rem;
+  line-height: 1.2;
+  font-weight: 600;
 }
 
 .disabled-row {
@@ -34,4 +53,61 @@ th {
 
 div.vertical-tabs__panes {
   border-left: 1px solid #ccc !important;
+}
+
+.sir-manage-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sir-manage-buttons .btn {
+  white-space: normal;
+  min-height: 58px;
+  line-height: 1.2;
+}
+
+.sir-manage-filters .form-control,
+.sir-manage-filters .form-select {
+  width: 100%;
+  max-width: none;
+}
+
+.sir-manage-filters-panel {
+  margin-top: 0.25rem;
+  border: 1px solid #d7dce2;
+  border-radius: 0.5rem;
+  background: #fff;
+}
+
+.sir-manage-filters-panel > summary {
+  cursor: pointer;
+  padding: 0.65rem 0.9rem;
+  font-weight: 600;
+  color: #1f2d3d;
+}
+
+.sir-manage-filters-panel > summary:hover {
+  color: #0b5ed7;
+}
+
+.sir-manage-filters-panel[open] > summary {
+  border-bottom: 1px solid #e6eaef;
+  margin-bottom: 0.5rem;
+}
+
+.sir-manage-filters-panel .sir-manage-filters {
+  padding: 0 0.85rem 0.85rem;
+}
+
+#cards-lazy-wrapper #load-more-button,
+#cards-lazy-wrapper #edit-load-more-button {
+  display: block;
+  margin: 1.5rem auto 2rem;
+}
+
+@media (max-width: 991.98px) {
+  .sir-manage-buttons .btn {
+    min-height: 50px;
+  }
 }

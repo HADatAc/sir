@@ -5,6 +5,10 @@ namespace Drupal\sir\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\AppendCommand;
+use Drupal\Core\Ajax\InvokeCommand;
+use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\rep\ListManagerEmailPage;
 use Drupal\rep\Utils;
 use Drupal\sir\Entity\AnnotationStem;
@@ -17,6 +21,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Drupal\Core\Render\Markup;
 use Drupal\rep\Vocabulary\VSTOI;
 use Drupal\rep\Entity\Tables;
+use Drupal\rep\ManageOwnerFilter;
 use Drupal\rep\ListKeywordPage;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\ListKeywordLanguagePage;
@@ -25,6 +30,17 @@ use Drupal\sir\Entity\Task;
 use function Termwind\style;
 
 class SIRSelectForm extends FormBase {
+
+  /**
+   * Filter trigger element names.
+   */
+  private const FILTER_TRIGGER_NAMES = [
+    'text_filter',
+    'language_filter',
+    'manager_filter',
+    'status_filter',
+    'clear_filters',
+  ];
 
   /**
    * {@inheritdoc}
@@ -68,6 +84,16 @@ class SIRSelectForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $elementtype = NULL, $page = 1, $pagesize = 10) {
 
+    // This form is used for filtering/selecting records and does not persist
+    // partial edits, so URI navigation should not be blocked by dirty guards.
+    $form['#attributes']['data-rep-nav-guard-ignore'] = '1';
+
+    // Normalize route params.
+    $page = max(1, (int) ($page ?? 1));
+    $pagesize = max(1, (int) ($pagesize ?? 9));
+    $route_page = $page;
+    $route_pagesize = $pagesize;
+
     // GET manager EMAIL
     $this->manager_email = \Drupal::currentUser()->getEmail();
     $uid = \Drupal::currentUser()->id();
@@ -76,6 +102,16 @@ class SIRSelectForm extends FormBase {
 
     // GET TOTAL NUMBER OF ELEMENTS
     $this->element_type = $elementtype;
+    $pagesize_session_key = 'sir_select_form_pagesize.' . (string) $this->element_type;
+    $view_type_session_key = 'sir_select_view_type.' . (string) $this->element_type;
+
+    // Extra safety: avoid reusing page-size state when element type changes.
+    $page_size_owner = (string) ($form_state->get('page_size_owner') ?? '');
+    if ($page_size_owner !== (string) $this->element_type) {
+      $form_state->set('page_size', NULL);
+      $form_state->set('previous_page_size', NULL);
+      $form_state->set('page_size_owner', (string) $this->element_type);
+    }
 
     // PREVENT THE ACCESS TO COMON USERS
     $has_content_editor_role = in_array('content_editor', \Drupal::currentUser()->getRoles());
@@ -85,36 +121,88 @@ class SIRSelectForm extends FormBase {
       return new RedirectResponse($url);
     }
 
+    $session = \Drupal::request()->getSession();
+
     // Search values filter
-    $status_filter = $form_state->getValue('status_filter') ?? '_';
-    $language_filter = $form_state->getValue('language_filter') ?? '_';
-    $text_filter = $form_state->getValue('text_filter') ?? '';
+    $status_filter_key = 'sir_select_status_filter.' . (string) $this->element_type;
+    $status_filter = $form_state->getValue('status_filter');
+    if ($status_filter === NULL) {
+      $status_filter = $session->get($status_filter_key, '_');
+    }
+    else {
+      $session->set($status_filter_key, $status_filter);
+    }
+
+    $language_filter_key = 'sir_select_language_filter.' . (string) $this->element_type;
+    $language_filter = $form_state->getValue('language_filter');
+    if ($language_filter === NULL) {
+      $language_filter = $session->get($language_filter_key, '_');
+    }
+    else {
+      $session->set($language_filter_key, $language_filter);
+    }
+
+    $text_filter_key = 'sir_select_text_filter.' . (string) $this->element_type;
+    $text_filter = $form_state->getValue('text_filter');
+    if ($text_filter === NULL) {
+      $text_filter = $session->get($text_filter_key, '');
+    }
+    else {
+      $session->set($text_filter_key, $text_filter);
+    }
+
+    $is_admin = ManageOwnerFilter::isAdmin();
+    $manager_filter_key = 'sir_select_manager_filter.' . (string) $this->element_type;
+    $manager_filter = $form_state->getValue('manager_filter');
+    if ($manager_filter === NULL) {
+      $manager_filter = $session->get($manager_filter_key, '');
+    }
+    else {
+      $manager_filter = ManageOwnerFilter::normalizeSelectedEmail($manager_filter);
+      $session->set($manager_filter_key, $manager_filter);
+    }
+
     $type = NULL;
-    $manager_email = $this->manager_email;
+    $manager_email = ManageOwnerFilter::resolveEffectiveOwner($this->manager_email, $manager_filter, $status_filter);
+    $form_state->set('effective_manager_email', $manager_email);
+    $form_state->set('sir_select_filters', [
+      'text_filter' => (string) $text_filter,
+      'language_filter' => (string) $language_filter,
+      'status_filter' => (string) $status_filter,
+      'manager_email' => (string) $manager_email,
+    ]);
     $status = $status_filter;
 
-    // Get elements based on status
-    // dpm($text_filter.'='.strlen($text_filter).'|'.$language_filter.'='.strlen($language_filter));
-    if (strlen($text_filter) === 0 && $language_filter === '_' && $status_filter === '_') {
-      $this->setList(ListManagerEmailPage::exec($this->element_type, $this->manager_email, $page, $pagesize));
-      $this->setListSize(ListManagerEmailPage::total($this->element_type, $this->manager_email));
-    // } else if (strlen($text_filter) > 0 && $language_filter !== 'all') {
-    //   $this->setList(ListKeywordLanguagePage::exec($this->element_type,$text_filter, $language_filter, $type, $manager_email, $status, $page, 9999));
-    //   $this->setListSize(ListKeywordLanguagePage::total($this->element_type, $text_filter, $language_filter, $type, $manager_email, $status, ));
-    //   $pagesize = 9999;
-    // } else if (strlen($text_filter) === 0 && $language_filter !== 'all' && $status_filter !== 'all') {
-    //   $text_filter = '_';
-    //   $this->setList(ListKeywordLanguagePage::exec($this->element_type,$text_filter, $language_filter, $type, $manager_email, $status, $page, 9999));
-    //   $this->setListSize(ListKeywordLanguagePage::total($this->element_type, $text_filter, $language_filter, $type, $manager_email, $status, ));
-    //   $pagesize = 9999;
-    } else {
-      // $text_filter = '_';
-      $this->setList(ListKeywordLanguagePage::exec($this->element_type,$text_filter, $language_filter, $type, $manager_email, $status, $page, 9999));
+    // Get elements respecting pagination even when filters are applied.
+    // (Historically this forced pagesize=9999 when filtering, which broke pagination.)
+    $has_text_filter = trim((string) $text_filter) !== '';
+    $has_language_filter = !($language_filter === '_' || $language_filter === '' || $language_filter === NULL);
+    $has_status_filter = !($status_filter === '_' || $status_filter === '' || $status_filter === NULL);
+    $using_owner_only_filters = (!$has_text_filter && !$has_language_filter && !$has_status_filter);
+    $using_status_only_filter = ($has_status_filter && !$has_text_filter && !$has_language_filter);
+
+    if ($using_owner_only_filters) {
+      $this->setListSize(ListManagerEmailPage::total($this->element_type, $manager_email));
+    }
+    elseif ($using_status_only_filter) {
+      $this->setListSize(ListManagerEmailPage::totalByStatusManagerEmail($this->element_type, $status_filter, $manager_email, FALSE));
+    }
+    else {
       $this->setListSize(ListKeywordLanguagePage::total($this->element_type, $text_filter, $language_filter, $type, $manager_email, $status));
-      $pagesize = 9999;
-      // $this->setList(ListKeywordPage::exec($this->element_type, $text_filter, $page, 9999));
-      // $this->setListSize(ListKeywordPage::total($this->element_type, $text_filter));
-      // $pagesize = 9999;
+    }
+
+    $size = (is_numeric($this->getListSize()) ? (int) $this->getListSize() : -1);
+    $total_pages = ($size > 0 && $pagesize > 0) ? (int) ceil($size / $pagesize) : 1;
+    $page = max(1, min($page, max(1, $total_pages)));
+
+    if ($using_owner_only_filters) {
+      $this->setList(ListManagerEmailPage::exec($this->element_type, $manager_email, $page, $pagesize));
+    }
+    elseif ($using_status_only_filter) {
+      $this->setList(ListManagerEmailPage::execByStatusManagerEmail($this->element_type, $status_filter, $manager_email, FALSE, $page, $pagesize));
+    }
+    else {
+      $this->setList(ListKeywordLanguagePage::exec($this->element_type, $text_filter, $language_filter, $type, $manager_email, $status, $page, $pagesize));
     }
 
     // if ($this->element_type != NULL) {
@@ -122,9 +210,13 @@ class SIRSelectForm extends FormBase {
     // }
 
     // Retrieve or set default view type
-    $session = \Drupal::request()->getSession();
-    $view_type = $session->get('sir_select_view_type', 'table');
+    $view_type = $form_state->get('view_type');
+    if ($view_type === NULL) {
+      $view_type = $session->get($view_type_session_key, 'table');
+    }
     $form_state->set('view_type', $view_type);
+    $table_active_class = ($view_type === 'table') ? ['selected-button'] : [];
+    $card_active_class = ($view_type === 'card') ? ['selected-button'] : [];
 
     // Attach necessary libraries
     $form['#attached']['library'][] = 'core/drupal.bootstrap';
@@ -132,19 +224,64 @@ class SIRSelectForm extends FormBase {
     $form['#attached']['library'][] = 'core/jquery';
     $form['#attached']['library'][] = 'core/jquery.once';
     $form['#attached']['library'][] = 'core/drupal';
+    $form['#attached']['library'][] = 'core/drupal.ajax';
     $form['#attached']['library'][] = 'core/drupalSettings';
     $form['#attached']['library'][] = 'sir/sir_js_css';
+
+    // Card view lazyload/infinite-scroll.
+    if ($view_type == 'card') {
+      $form['#attached']['library'][] = 'rep/infinitescroll';
+    }
 
 
     $form['#attached']['drupalSettings']['sir_select_form']['base_url'] = (\Drupal::request()->headers->get('x-forwarded-proto') === 'https' ? 'https://':'http://'). \Drupal::request()->getHost() . \Drupal::request()->getBaseUrl();
     $form['#attached']['drupalSettings']['sir_select_form']['elementtype'] = $elementtype;
+    $form['#attached']['drupalSettings']['sir_select_form']['disable_auto_scroll'] = ($view_type == 'card');
 
     // Get value `pagesize` (default 9)
-    if ($form_state->get('page_size')) {
-      $pagesize = $form_state->get('page_size');
-    } else {
-      $pagesize = $session->get('sir_select_form_pagesize', 9);
-      $form_state->set('page_size', $pagesize);
+    // Only override in CARD view (used by infinite scroll / "Load more").
+    if ($view_type == 'card') {
+      $triggering_element = $form_state->getTriggeringElement();
+      $trigger_name = (string) ($triggering_element['#name'] ?? '');
+      $is_filter_trigger = in_array($trigger_name, self::FILTER_TRIGGER_NAMES, TRUE);
+
+      if ($is_filter_trigger) {
+        $form_state->set('page_size', NULL);
+        $form_state->set('previous_page_size', NULL);
+        $session->remove($pagesize_session_key);
+      }
+
+      $card_page_size = $form_state->get('page_size');
+      if ($card_page_size === NULL) {
+        $session_page_size = $session->get($pagesize_session_key);
+        if (is_numeric($session_page_size) && (int) $session_page_size > 0) {
+          $card_page_size = (int) $session_page_size;
+        }
+        else {
+          // When entering card view from table page N, preload N * pageSize cards.
+          $card_page_size = $route_page * $route_pagesize;
+        }
+        $form_state->set('page_size', (int) $card_page_size);
+      }
+
+      // Same strategy used in stable card modules: increase page size based on
+      // the triggering element, independent of submit callback ordering.
+      $is_load_more_trigger = $triggering_element && (($triggering_element['#name'] ?? '') === 'load_more_button');
+      if ($is_load_more_trigger) {
+        $card_page_size = max(1, (int) $card_page_size);
+        $form_state->set('previous_page_size', $card_page_size);
+        $card_page_size += 9;
+        $form_state->set('page_size', (int) $card_page_size);
+      }
+      else {
+        $form_state->set('previous_page_size', NULL);
+      }
+
+      $pagesize = max(1, (int) $card_page_size);
+      $session->set($pagesize_session_key, $pagesize);
+
+      // Card mode is cumulative, so always query from the first page.
+      $page = 1;
     }
 
     // PUT FORM TOGETHER
@@ -163,6 +300,16 @@ class SIRSelectForm extends FormBase {
       ]),
     ];
 
+    $show_owner_indicator = $is_admin && $manager_filter !== '' && strcasecmp($manager_email, $manager_filter) === 0;
+    if ($show_owner_indicator) {
+      $form['owner_indicator'] = [
+        '#type' => 'item',
+        '#markup' => $this->t('<div class="alert alert-info py-2 mb-3"><strong>A visualizar owner:</strong> @owner</div>', [
+          '@owner' => $manager_email,
+        ]),
+      ];
+    }
+
     // Add view toggle icons
     $form['view_toggle'] = [
       '#type' => 'container',
@@ -175,7 +322,7 @@ class SIRSelectForm extends FormBase {
       '#name' => 'view_table',
       '#attributes' => [
         'style' => 'padding: 20px;',
-        'class' => ['table-view-button', 'fa-xl', 'mx-1'],
+        'class' => array_merge(['table-view-button', 'fa-xl', 'mx-1'], $table_active_class),
         'title' => $this->t('Table View'),
       ],
       '#submit' => ['::viewTableSubmit'],
@@ -188,7 +335,7 @@ class SIRSelectForm extends FormBase {
       '#name' => 'view_card',
       '#attributes' => [
         'style' => 'padding: 20px;',
-        'class' => ['card-view-button', 'fa-xl'],
+        'class' => array_merge(['card-view-button', 'fa-xl'], $card_active_class),
         'title' => $this->t('Card View'),
       ],
       '#submit' => ['::viewCardSubmit'],
@@ -201,14 +348,15 @@ class SIRSelectForm extends FormBase {
       $form['actions_wrapper'] = [
         '#type' => 'container',
         '#attributes' => [
-            'class' => ['d-flex', 'align-items-center', 'justify-content-between', 'mb-0'],
-            'style' => 'margin-bottom:0!important;'
+            'class' => ['sir-manage-toolbar', 'mb-3'],
         ],
       ];
 
       $form['actions_wrapper']['buttons_container'] = [
         '#type' => 'container',
-        '#attributes' => ['class' => ['d-flex', 'gap-2']],
+        '#attributes' => [
+          'class' => ['d-flex', 'flex-wrap', 'gap-2', 'align-items-stretch', 'sir-manage-buttons'],
+        ],
       ];
 
       $form['actions_wrapper']['buttons_container']['add_element'] = [
@@ -320,85 +468,23 @@ class SIRSelectForm extends FormBase {
         ];
       }
 
-      $status_options = [
-        '_' => $this->t('All Status'),
-        VSTOI::DRAFT => $this->t('Draft'),
-        VSTOI::UNDER_REVIEW => $this->t('Under Review'),
-        VSTOI::CURRENT => $this->t('Current'),
-        VSTOI::DEPRECATED => $this->t('Deprecated'),
-      ];
-
-      $form['actions_wrapper']['filter_container'] = [
-        '#type' => 'container',
-        '#attributes' => [
-          'class' => ['d-flex', 'ms-auto', 'mb-0'],
-          'style' => 'margin-bottom:0!important;'
-        ],
-      ];
-
-      $form['actions_wrapper']['filter_container']['filter_label'] = [
-        '#type' => 'label',
-        '#title' => $this->t('Filter(s): '),
-        '#attributes' => [
-          'class' => ['pt-3', 'me-2', 'fw-bold'],
-        ]
-      ];
-
-      $form['actions_wrapper']['filter_container']['text_filter'] = [
-        '#type' => 'textfield',
-        '#default_value' => $text_filter,
-        '#ajax' => [
-            'callback' => '::ajaxReloadTable',
-            'wrapper' => 'element-table-wrapper',
-            'event' => 'change',
-        ],
-        '#attributes' => [
-            'class' => ['form-select', 'w-auto', 'mt-2', 'me-1'],
-            'style' => 'max-width:230px;margin-bottom:0!important;float:right;',
-            'placeholder' => 'Type in your search criteria',
-            'onkeydown' => 'if (event.keyCode == 13) { event.preventDefault(); this.blur(); }',
-        ],
-      ];
-
-      If ($this->element_type !== 'component'){
-        $tables = new Tables;
-        $languages = $tables->getLanguages();
-        if ($languages)
-          $languages = ['_' => $this->t('All Languages')] + $languages;
-        $form['actions_wrapper']['filter_container']['language_filter'] = [
-          '#type' => 'select',
-          '#options' => $languages,
-          '#default_value' => $language_filter,
-          '#ajax' => [
-              'callback' => '::ajaxReloadTable',
-              'wrapper' => 'element-table-wrapper',
-              'event' => 'change',
-          ],
-          '#attributes' => [
-              'class' => ['form-select', 'w-auto', 'mt-2', 'me-1'],
-              'style' => 'margin-bottom:0!important;float:right;'
-              // 'style' => 'float:right;margin-top:10px!important;'
-          ],
-        ];
-      }
-
-      $form['actions_wrapper']['filter_container']['status_filter'] = [
-          '#type' => 'select',
-          '#options' => $status_options,
-          '#default_value' => $status_filter,
-          '#ajax' => [
-              'callback' => '::ajaxReloadTable',
-              'wrapper' => 'element-table-wrapper',
-              'event' => 'change',
-          ],
-          '#attributes' => [
-              'class' => ['form-select', 'w-auto', 'mt-2'],
-              'style' => 'margin-bottom:0!important;float:right;'
-              // 'style' => 'float:right;margin-top:10px!important;'
-          ],
-      ];
+      $this->buildFiltersPanel($form, $view_type, $is_admin, (string) $text_filter, (string) $language_filter, (string) $manager_filter, (string) $status_filter);
 
     } else {
+      $form['actions_wrapper'] = [
+        '#type' => 'container',
+        '#attributes' => [
+            'class' => ['sir-manage-toolbar', 'mb-3'],
+        ],
+      ];
+
+      $form['actions_wrapper']['buttons_container'] = [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['d-flex', 'flex-wrap', 'gap-2', 'align-items-stretch', 'sir-manage-buttons'],
+        ],
+      ];
+
       // In card view, add 'Add New' button at the top
       $form['actions_wrapper']['buttons_container']['add_element'] = [
         '#type' => 'submit',
@@ -418,13 +504,67 @@ class SIRSelectForm extends FormBase {
           ],
         ];
       }
+
+      $this->buildFiltersPanel($form, $view_type, $is_admin, (string) $text_filter, (string) $language_filter, (string) $manager_filter, (string) $status_filter);
     }
 
     // Render output based on view type
     if ($view_type == 'table') {
       $this->buildTableView($form, $form_state, $page, $pagesize);
     } elseif ($view_type == 'card') {
-      $this->buildCardView($form, $form_state, $page, $pagesize);
+      $form['cards_lazy_wrapper'] = [
+        '#type' => 'container',
+        '#attributes' => [
+          'id' => 'cards-lazy-wrapper',
+        ],
+      ];
+
+      $this->buildCardView($form['cards_lazy_wrapper'], $form_state, $page, $pagesize);
+
+      $form['cards_lazy_wrapper']['records_count'] = [
+        '#type' => 'item',
+        '#markup' => $this->t('<div id="count-cards" style="font-weight:bold; margin-top:10px; padding-right:2rem;">Currently viewing @count of @total @class</div>', [
+          '@count' => count($this->getList()),
+          '@total' => (int) $this->getListSize(),
+          '@class' => $this->plural_class_name,
+        ]),
+      ];
+
+      // Load-more controls (used by infinite scroll).
+      $total_items = $this->getListSize();
+      $current_page_size = $form_state->get('page_size') ?? 9;
+
+      if (is_numeric($total_items) && (int) $total_items > (int) $current_page_size) {
+        $form['cards_lazy_wrapper']['load_more_button'] = [
+          '#type' => 'submit',
+          '#value' => $this->t('Load More'),
+          '#name' => 'load_more_button',
+          '#executes_submit_callback' => TRUE,
+          '#attributes' => [
+            'class' => ['btn', 'btn-primary', 'load-more-button'],
+            'style' => 'display:block;margin:1.5rem auto 2rem;',
+          ],
+          '#submit' => ['::loadMoreSubmit'],
+          '#ajax' => [
+            'callback' => '::ajaxReloadCards',
+            'wrapper' => 'cards-lazy-wrapper',
+            'event' => 'click',
+            'disable-refocus' => TRUE,
+            'progress' => [
+              'type' => 'none',
+            ],
+          ],
+          '#limit_validation_errors' => [],
+        ];
+
+        $form['cards_lazy_wrapper']['list_state'] = [
+          '#type' => 'hidden',
+          '#value' => 1,
+          '#attributes' => [
+            'id' => 'list_state',
+          ],
+        ];
+      }
     }
 
     $form['space_0'] = [
@@ -557,13 +697,15 @@ class SIRSelectForm extends FormBase {
     ];
 
     foreach ($output as $key => $row) {
-        $row_status = strtolower($row['element_hasStatus']);
-        $row_language = strtolower($row['element_hasLanguage']);
+        $row_status = strtolower((string) ($row['element_hasStatus'] ?? ''));
+        $row_language = strtolower((string) ($row['element_hasLanguage'] ?? ''));
 
         if ($this->element_type == 'instrument' || $this->element_type == 'codebook')
-          $row_label = strtolower($row['element_name']);
+          $row_label = strtolower((string) ($row['element_name'] ?? ''));
         else if ($this->element_type == 'component' || $this->element_type == 'componentstem' || $this->element_type == 'responseoption')
-          $row_label = strtolower($row['element_content']);
+          $row_label = strtolower((string) ($row['element_content'] ?? ''));
+        else
+          $row_label = '';
 
         // if ($status_filter !== 'all' && $row_status !== $status_filter) {
         //     continue;
@@ -624,7 +766,228 @@ class SIRSelectForm extends FormBase {
    * Callback AJAX para recarregar a tabela quando um filtro for aplicado.
    */
   public function ajaxReloadTable(array &$form, FormStateInterface $form_state) {
+      $form_state->setRebuild(TRUE);
       return $form['element_table_wrapper'];
+  }
+
+  /**
+   * AJAX callback to reload card view when loading more.
+   */
+  public function ajaxReloadCards(array &$form, FormStateInterface $form_state) {
+    $form_state->setRebuild(TRUE);
+
+    $triggering_element = $form_state->getTriggeringElement();
+    $trigger_name = (string) ($triggering_element['#name'] ?? '');
+
+    if ($trigger_name === 'load_more_button') {
+      $response = new AjaxResponse();
+
+      $previous = (int) ($form_state->get('previous_page_size') ?? 0);
+      $cards_container = $form['cards_lazy_wrapper']['cards_wrapper'] ?? [];
+
+      $card_keys = [];
+      if (is_array($cards_container)) {
+        foreach (array_keys($cards_container) as $key) {
+          if (is_string($key) && strpos($key, 'card_') === 0) {
+            $card_keys[] = $key;
+          }
+        }
+      }
+
+      $previous = max(0, min($previous, count($card_keys)));
+      $new_keys = array_slice($card_keys, $previous);
+      $append_build = [];
+      foreach ($new_keys as $k) {
+        $append_build[$k] = $cards_container[$k];
+      }
+
+      if (!empty($append_build)) {
+        $rendered = (string) \Drupal::service('renderer')->renderPlain($append_build);
+        if (trim($rendered) !== '') {
+          $response->addCommand(new AppendCommand('#cards-wrapper', $rendered));
+        }
+      }
+
+      $loaded = count($card_keys);
+      $total = (int) ($this->getListSize() ?? 0);
+      $has_more = $total > $loaded;
+
+      $count_markup = '<div id="count-cards" style="font-weight:bold; margin-top:10px; padding-right:2rem;">'
+        . $this->t('Currently viewing @count of @total @class', [
+          '@count' => $loaded,
+          '@total' => $total,
+          '@class' => $this->plural_class_name,
+        ])
+        . '</div>';
+      $response->addCommand(new ReplaceCommand('#count-cards', $count_markup));
+
+      $response->addCommand(new InvokeCommand('#list_state', 'val', [$has_more ? 1 : 0]));
+      if (!$has_more) {
+        $response->addCommand(new InvokeCommand('#load-more-button, #edit-load-more-button', 'hide', []));
+      }
+
+      return $response;
+    }
+
+    return $form['cards_lazy_wrapper'];
+  }
+
+  /**
+   * Build the reusable filters panel for table and card views.
+   */
+  protected function buildFiltersPanel(array &$form, string $view_type, bool $is_admin, string $text_filter, string $language_filter, string $manager_filter, string $status_filter): void {
+    if (!isset($form['actions_wrapper'])) {
+      return;
+    }
+
+    $ajax_callback = ($view_type === 'card') ? '::ajaxReloadCards' : '::ajaxReloadTable';
+    $ajax_wrapper = ($view_type === 'card') ? 'cards-lazy-wrapper' : 'element-table-wrapper';
+
+    $status_options = [
+      '_' => $this->t('All Status'),
+      VSTOI::DRAFT => $this->t('Draft'),
+      VSTOI::UNDER_REVIEW => $this->t('Under Review'),
+      VSTOI::CURRENT => $this->t('Current'),
+      VSTOI::DEPRECATED => $this->t('Deprecated'),
+    ];
+
+    $has_active_filters = trim((string) $text_filter) !== ''
+      || $language_filter !== '_'
+      || $status_filter !== '_'
+      || ($is_admin && trim((string) $manager_filter) !== '');
+
+    $form['actions_wrapper']['filters_panel'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Filter(s)'),
+      '#open' => $has_active_filters,
+      '#attributes' => [
+        'class' => ['sir-manage-filters-panel'],
+      ],
+    ];
+
+    $form['actions_wrapper']['filters_panel']['filter_container'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['row', 'g-2', 'align-items-end', 'sir-manage-filters'],
+      ],
+    ];
+
+    $form['actions_wrapper']['filters_panel']['filter_container']['text_filter'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Keyword'),
+      '#title_display' => 'invisible',
+      '#default_value' => $text_filter,
+      '#prefix' => '<div class="col-12 col-lg-4">',
+      '#suffix' => '</div>',
+      '#ajax' => [
+        'callback' => $ajax_callback,
+        'wrapper' => $ajax_wrapper,
+        'event' => 'change',
+      ],
+      '#attributes' => [
+        'class' => ['form-control'],
+        'placeholder' => 'Type in your search criteria',
+        'onkeydown' => 'if (event.keyCode == 13) { event.preventDefault(); this.blur(); }',
+      ],
+    ];
+
+    if ($this->element_type !== 'component') {
+      $tables = new Tables;
+      $languages = $tables->getLanguages();
+      if ($languages) {
+        $languages = ['_' => $this->t('All Languages')] + $languages;
+      }
+
+      $form['actions_wrapper']['filters_panel']['filter_container']['language_filter'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Language'),
+        '#title_display' => 'invisible',
+        '#options' => $languages,
+        '#default_value' => $language_filter,
+        '#prefix' => '<div class="col-12 col-md-4 col-lg-2">',
+        '#suffix' => '</div>',
+        '#ajax' => [
+          'callback' => $ajax_callback,
+          'wrapper' => $ajax_wrapper,
+          'event' => 'change',
+        ],
+        '#attributes' => [
+          'class' => ['form-select'],
+        ],
+      ];
+    }
+
+    if ($is_admin) {
+      $form['actions_wrapper']['filters_panel']['filter_container']['manager_filter'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('User'),
+        '#title_display' => 'invisible',
+        '#default_value' => $manager_filter,
+        '#prefix' => '<div class="col-12 col-md-8 col-lg-4">',
+        '#suffix' => '</div>',
+        '#ajax' => [
+          'callback' => $ajax_callback,
+          'wrapper' => $ajax_wrapper,
+          'event' => 'change',
+        ],
+        '#attributes' => [
+          'class' => ['form-control'],
+          'placeholder' => $this->t('User email (owner filter)'),
+        ],
+      ];
+    }
+
+    $form['actions_wrapper']['filters_panel']['filter_container']['status_filter'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Status'),
+      '#title_display' => 'invisible',
+      '#options' => $status_options,
+      '#default_value' => $status_filter,
+      '#prefix' => '<div class="col-12 col-md-4 col-lg-2">',
+      '#suffix' => '</div>',
+      '#ajax' => [
+        'callback' => $ajax_callback,
+        'wrapper' => $ajax_wrapper,
+        'event' => 'change',
+      ],
+      '#attributes' => [
+        'class' => ['form-select'],
+      ],
+    ];
+
+    $form['actions_wrapper']['filters_panel']['filter_container']['clear_filters'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Clear Filters'),
+      '#name' => 'clear_filters',
+      '#limit_validation_errors' => [],
+      '#prefix' => '<div class="col-12 col-md-4 col-lg-2 d-grid">',
+      '#suffix' => '</div>',
+      '#attributes' => [
+        'class' => ['btn', 'btn-outline-secondary'],
+      ],
+    ];
+  }
+
+  /**
+   * Clear persisted table filters for the current element type.
+   */
+  protected function clearSavedFilters(FormStateInterface $form_state): void {
+    $session = \Drupal::request()->getSession();
+    $suffix = (string) $this->element_type;
+
+    foreach (['status', 'language', 'text', 'manager'] as $key) {
+      $session->remove('sir_select_' . $key . '_filter.' . $suffix);
+    }
+
+    $input = $form_state->getUserInput();
+    unset($input['text_filter'], $input['language_filter'], $input['manager_filter'], $input['status_filter']);
+    $form_state->setUserInput($input);
+
+    $form_state->setValue('text_filter', '');
+    $form_state->setValue('language_filter', '_');
+    $form_state->setValue('manager_filter', '');
+    $form_state->setValue('status_filter', '_');
+    $form_state->setRebuild(TRUE);
   }
 
 
@@ -632,8 +995,26 @@ class SIRSelectForm extends FormBase {
    * Build the card view.
    */
   protected function buildCardView(array &$form, FormStateInterface $form_state, $page, $pagesize, $addMore = false) {
-    // Remove paginação na visualização de cartões
-    $this->setList(ListManagerEmailPage::exec($this->element_type, $this->manager_email, $page, $pagesize));
+    // Card mode must honor active filters exactly like table mode.
+    $filters = $form_state->get('sir_select_filters') ?? [];
+    $effective_manager_email = (string) ($filters['manager_email'] ?? ($form_state->get('effective_manager_email') ?? $this->manager_email));
+    $text_filter = (string) ($filters['text_filter'] ?? '');
+    $language_filter = (string) ($filters['language_filter'] ?? '_');
+    $status_filter = (string) ($filters['status_filter'] ?? '_');
+
+    $has_text_filter = trim((string) $text_filter) !== '';
+    $has_language_filter = !($language_filter === '_' || $language_filter === '');
+    $has_status_filter = !($status_filter === '_' || $status_filter === '');
+
+    if (!$has_text_filter && !$has_language_filter && !$has_status_filter) {
+      $this->setList(ListManagerEmailPage::exec($this->element_type, $effective_manager_email, $page, $pagesize));
+    }
+    elseif ($has_status_filter && !$has_text_filter && !$has_language_filter) {
+      $this->setList(ListManagerEmailPage::execByStatusManagerEmail($this->element_type, $status_filter, $effective_manager_email, FALSE, $page, $pagesize));
+    }
+    else {
+      $this->setList(ListKeywordLanguagePage::exec($this->element_type, $text_filter, $language_filter, '_', $effective_manager_email, $status_filter, $page, $pagesize));
+    }
 
     // Generate header and output
     $header = $this->generateHeader();
@@ -670,11 +1051,11 @@ class SIRSelectForm extends FormBase {
       $form['loading_overlay'] = [
         '#type' => 'container',
         '#attributes' => [
-          'id' => 'loading-overlay',
-          'class' => ['loading-overlay'],
-          'style' => 'display: none;', // Inicialmente escondido
+          'id' => 'sir-loading-overlay',
+          'class' => ['sir-loading-overlay'],
+          'style' => 'display: none;',
         ],
-        '#markup' => '<div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div>',
+        '#markup' => '<div class="sir-loading-overlay__panel" role="status" aria-live="polite" aria-busy="true"><div class="spinner-border text-light sir-loading-overlay__spinner" aria-hidden="true"></div><span class="sir-loading-overlay__text">' . $this->t('Loading more results...') . '</span></div>',
       ];
 
       $form['cards_wrapper'] = [
@@ -684,6 +1065,19 @@ class SIRSelectForm extends FormBase {
               'class' => ['row'],
           ],
       ];
+    }
+
+    if (empty($output)) {
+      $form['cards_wrapper']['no_results'] = [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['col-12', 'mt-3']],
+        'message' => [
+          '#markup' => '<div class="alert alert-info mb-0">'
+            . $this->t('No @items found for the current filters.', ['@items' => $this->plural_class_name])
+            . '</div>',
+        ],
+      ];
+      return;
     }
 
     // Process each item to build the cards
@@ -923,37 +1317,6 @@ class SIRSelectForm extends FormBase {
 
         // Add card to wrapper container
         $form['cards_wrapper']['card_' . $uri] = $card;
-
-        //get total items
-        $total_items = $this->getListSize();
-
-        //Pagesize
-        $current_page_size = $form_state->get('page_size') ?? 9;
-
-        //Prevent infinite scroll without new data
-        if ($total_items > $current_page_size) {
-          $form['load_more_button'] = [
-            '#type' => 'submit',
-            '#value' => $this->t('Load More'),
-            '#name' => 'load_more_button',
-            '#attributes' => [
-              'id' => 'load-more-button',
-              'class' => ['btn', 'btn-primary', 'load-more-button'],
-              'style' => 'display: none;',
-            ],
-            '#submit' => ['::loadMoreSubmit'],
-            '#limit_validation_errors' => [],
-          ];
-
-          $form['list_state'] = [
-            '#type' => 'hidden',
-            '#value' => ($total_items > $current_page_size ? 1:0),
-            "#name" => 'list_state',
-            '#attributes' => [
-              'id' => 'list_state',
-            ]
-          ];
-        }
     }
 
     // Final Form Debbug
@@ -964,17 +1327,21 @@ class SIRSelectForm extends FormBase {
    * Submit handler for the Load More button.
    */
   public function loadMoreSubmit(array &$form, FormStateInterface $form_state) {
+    // Safety fallback: if buildForm did not detect the triggering element,
+    // increment page_size here to guarantee Load More progression.
+    $current_page_size = (int) ($form_state->get('page_size') ?? 9);
+    $previous_page_size = (int) ($form_state->get('previous_page_size') ?? 0);
 
-    //Pagesize
-    $current_page_size = $form_state->get('page_size') ?? 9;
+    if ($previous_page_size < 1 || $previous_page_size >= $current_page_size) {
+      $form_state->set('previous_page_size', $current_page_size);
+      $current_page_size += 9;
+      $form_state->set('page_size', $current_page_size);
 
-    $new_page_size = $current_page_size + 9;
-    $form_state->set('page_size', $new_page_size);
+      $session = \Drupal::request()->getSession();
+      $pagesize_session_key = 'sir_select_form_pagesize.' . (string) $this->element_type;
+      $session->set($pagesize_session_key, $current_page_size);
+    }
 
-    // Atualiza o valor de 'page_size' no estado do formulário e na sessão
-    $form_state->set('page_size', $new_page_size);
-
-    // Força a reconstrução do formulário para carregar mais elementos
     $form_state->setRebuild();
   }
 
@@ -1033,7 +1400,13 @@ class SIRSelectForm extends FormBase {
     $form_state->set('view_type', 'table');
     // Update the view type in the session
     $session = \Drupal::request()->getSession();
+    $view_type_session_key = 'sir_select_view_type.' . (string) $this->element_type;
+    $pagesize_session_key = 'sir_select_form_pagesize.' . (string) $this->element_type;
+    $session->set($view_type_session_key, 'table');
     $session->set('sir_select_view_type', 'table');
+    $session->remove($pagesize_session_key);
+    $form_state->set('page_size', NULL);
+    $form_state->set('previous_page_size', NULL);
     $form_state->setRebuild();
   }
 
@@ -1044,7 +1417,14 @@ class SIRSelectForm extends FormBase {
     $form_state->set('view_type', 'card');
     // Update the view type in the session
     $session = \Drupal::request()->getSession();
+    $view_type_session_key = 'sir_select_view_type.' . (string) $this->element_type;
+    $pagesize_session_key = 'sir_select_form_pagesize.' . (string) $this->element_type;
+    $session->set($view_type_session_key, 'card');
     $session->set('sir_select_view_type', 'card');
+    // Force a clean card initialization from current route page/pageSize.
+    $session->remove($pagesize_session_key);
+    $form_state->set('page_size', NULL);
+    $form_state->set('previous_page_size', NULL);
     $form_state->setRebuild();
   }
 
@@ -1146,6 +1526,11 @@ class SIRSelectForm extends FormBase {
     // RETRIEVE TRIGGERING BUTTON
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
+
+    if ($button_name === 'clear_filters') {
+      $this->clearSavedFilters($form_state);
+      return;
+    }
 
     // SET USER ID AND PREVIOUS URL FOR TRACKING STORE URLS
     $uid = \Drupal::currentUser()->id();
@@ -1420,7 +1805,7 @@ class SIRSelectForm extends FormBase {
 
         // CENARIO #2: CHECK IF THERE ARE ANY OTHER R.O. WITH SAME CONTENT ALREADY IN REP
         } elseif ($result->wasDerivedFrom === NULL) {
-          $response = $api->listByKeywordAndLanguage($this->element_type, $result->hasContent, $result->hasLanguage, 99999, 0);
+          $response = $api->listByKeywordAndLanguage($this->element_type, ($result->hasContent ?? ''), ($result->hasLanguage ?? ''), '_', '_', '_', 99999, 0);
           $json_string = (string) $response;
           $decoded_response = json_decode($json_string, true);
 
@@ -1476,7 +1861,7 @@ class SIRSelectForm extends FormBase {
 
         // CENARIO #2: CHECK IF THERE ARE ANY OTHER R.O. WITH SAME CONTENT ALREADY IN REP
         } elseif ($result->wasDerivedFrom === NULL) {
-          $response = $api->listByKeywordAndLanguage($this->element_type, $result->label, $result->hasLanguage, 99999, 0);
+          $response = $api->listByKeywordAndLanguage($this->element_type, $result->label, $result->hasLanguage, '_', '_', '_', 99999, 0);
           $json_string = (string) $response;
 
           $decoded_response = json_decode($json_string, true);
@@ -1533,8 +1918,8 @@ class SIRSelectForm extends FormBase {
                   '"label": "'.$slot->responseOption->label.'",'.
                   '"comment": "'.$slot->responseOption->comment.'",'.
                   '"hasStatus": "'.($slot->responseOption->hasStatus === VSTOI::DRAFT ? VSTOI::UNDER_REVIEW : $slot->responseOption->hasStatus).'",'.
-                  '"hasContent": "'.$slot->responseOption->hasContent.'",'.
-                  '"hasLanguage": "'.$slot->responseOption->hasLanguage.'",'.
+                  '"hasContent": "'.($slot->responseOption->hasContent ?? '').'",'.
+                  '"hasLanguage": "'.($slot->responseOption->hasLanguage ?? '').'",'.
                   '"hasVersion": "'.$slot->responseOption->hasVersion.'",'.
                   '"wasDerivedFrom": "'.($slot->responseOption->wasDerivedFrom ?? NULL).'",'.
                   '"hasSIRManagerEmail": "'.$slot->responseOption->hasSIRManagerEmail.'",'.
@@ -1587,7 +1972,7 @@ class SIRSelectForm extends FormBase {
           '"hascoTypeUri":"'.VSTOI::COMPONENT.'",'.
           '"hasComponentStem":"'.$result->hasComponentStem.'",'.
           '"hasCodebook":"'.$result->hasCodebook.'",'.
-          '"hasContent":"'.$result->hasContent.'",'.
+          '"hasContent":"'.($result->hasContent ?? '').'",'.
           '"hasSIRManagerEmail":"'.$result->hasSIRManagerEmail.'",'.
           '"label":"'.$result->label.'",'.
           '"hasVersion":"'.$result->hasVersion.'",'.
@@ -1614,7 +1999,7 @@ class SIRSelectForm extends FormBase {
         // CENARIO #2: CHECK IF THERE ARE ANY OTHER COMPONENT WITH SAME CONTENT ALREADY IN REP, must have a new end-point for that
         }
         elseif ($result->wasDerivedFrom === NULL) {
-          $response = $api->listByKeywordAndLanguage($this->element_type, $result->hasContent, $result->hasLanguage, 99999, 0);
+          $response = $api->listByKeywordAndLanguage($this->element_type, ($result->hasContent ?? ''), ($result->hasLanguage ?? ''), '_', '_', '_', 99999, 0);
           $json_string = (string) $response;
 
           $decoded_response = json_decode($json_string, true);
@@ -1633,8 +2018,8 @@ class SIRSelectForm extends FormBase {
         '"label":"'.$result->label.'",'.
         '"hascoTypeUri":"'.VSTOI::COMPONENT_STEM.'",'.
         '"hasStatus":"'.VSTOI::UNDER_REVIEW.'",'.
-        '"hasContent":"'.$result->hasContent.'",'.
-        '"hasLanguage":"'.$result->hasLanguage.'",'.
+        '"hasContent":"'.($result->hasContent ?? '').'",'.
+        '"hasLanguage":"'.($result->hasLanguage ?? '').'",'.
         '"hasVersion":"'.$result->hasVersion.'",'.
         '"comment":"'.$result->comment.'",'.
         '"wasDerivedFrom":"'.$result->wasDerivedFrom.'",'.

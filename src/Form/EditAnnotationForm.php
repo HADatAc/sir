@@ -64,6 +64,8 @@ class EditAnnotationForm extends FormBase {
     $uri_full=Utils::plainUri($uri_decode);
     $this->setAnnotationUri($uri_full);
 
+    $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument') ?? 'instrument';
+
     // ESTABLISH API SERVICE
     $api = \Drupal::service('rep.api_connector');
 
@@ -81,14 +83,15 @@ class EditAnnotationForm extends FormBase {
     }
     $stemLabel = "";
     if ($this->getAnnotation()->annotationStem != NULL) {
-      $stemLabel = $this->getAnnotation()->annotationStem->hasContent . ' [' . $this->getAnnotation()->annotationStem->uri . ']';
-      //$stemLabel = Utils::trimAutoCompleteString($this->getAnnotation()->annotationStem->hasContent, $this->getAnnotation()->annotationStem->uri);
+      $stemObj = $this->getAnnotation()->annotationStem;
+      $stemText = (string) (($stemObj->hasContent ?? '') !== '' ? ($stemObj->hasContent ?? '') : ($stemObj->label ?? ''));
+      $stemLabel = $stemText . ' [' . ($stemObj->uri ?? '') . ']';
     }
 
 
     $form['annotation_container'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Instrument'),
+      '#title' => $this->t(ucfirst($preferred_instrument)),
       '#default_value' => $containerLabel,
       '#disabled' => TRUE,
     ];
@@ -107,7 +110,7 @@ class EditAnnotationForm extends FormBase {
     $form['annotation_style'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Content w/Style (HTML)'),
-      '#default_value' => html_entity_decode($this->getAnnotation()->hasContentWithStyle),
+      '#default_value' => html_entity_decode((string) ($this->getAnnotation()->hasContentWithStyle ?? '')),
     ];
     $form['annotation_description'] = [
       '#type' => 'textarea',

@@ -6,6 +6,7 @@ use Drupal\rep\Entity\Tables;
 use Drupal\rep\Vocabulary\VSTOI;
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\REPGUI;
+use Drupal\Core\Render\Markup;
 
 class ComponentStem {
 
@@ -82,9 +83,9 @@ class ComponentStem {
 
       }
       $output[$element->uri] = [
-        'element_uri' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),
-        'element_type' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($type).'">'.$type.'</a>'),
-        'element_derived_from' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($derived).'">'.$derived.'</a>'),
+        'element_uri' => Markup::create(Utils::describeAnchor((string) ($element->uri ?? ''), (string) $uri)),
+        'element_type' => Markup::create(Utils::describeAnchor((string) ($element->superUri ?? $type), (string) $type)),
+        'element_derived_from' => Markup::create(Utils::describeAnchor((string) ($element->wasDerivedFrom ?? $derived), (string) $derived)),
         'element_content' => $content,
         'element_language' => $lang,
         'element_version' => $version,
@@ -180,10 +181,11 @@ class ComponentStem {
       if ($element->hasSIRManagerEmail != NULL) {
         $owner = $element->hasSIRManagerEmail;
       }
+
       $output[$element->uri] = [
-        'element_uri' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),
-        'element_type' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($type).'">'.$type.'</a>'),
-        'element_derived_from' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($derived).'">'.$derived.'</a>'),
+        'element_uri' => Markup::create(Utils::describeAnchor((string) ($element->uri ?? ''), (string) $uri)),
+        'element_type' => Markup::create(Utils::describeAnchor((string) ($element->superUri ?? $type), (string) $type)),
+        'element_derived_from' => Markup::create(Utils::describeAnchor((string) ($element->wasDerivedFrom ?? $derived), (string) $derived)),
         'element_content' => $content,
         'element_language' => $lang,
         'element_version' => $version,

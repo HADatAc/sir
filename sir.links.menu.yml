@@ -281,6 +281,23 @@ std.manage_sdd_template:
     _permission: 'access content'
     _role: 'content_editor'
 
+std.manage_wkf_template:
+  title: WKF Templates
+  description: Manage WKF Templates
+  route_name: rep.select_mt_element
+  route_parameters:
+    elementtype: 'wkf'
+    mode: 'table'
+    page: '1'
+    pagesize: '9'
+    studyuri: 'none'
+  parent: reviewer.uploadingest_review
+  menu_name: main
+  weight: 15
+  requirements:
+    _permission: 'access content'
+    _role: 'content_editor'
+
 reviewer.manage_ins_files_dp2:
   title: DP2 Templates
   description: Manage DP2 Templates
@@ -317,13 +334,72 @@ reviewer.manage_ins_files_str:
 
 
 # OPTION 3
-reviewer.generate_ins_file:
-  title: INS
-  description: Generate INS File
-  route_name: sir.generate_ins
+reviewer.generate.ins:
+  title: 'INS file'
+  description: 'INS file'
+  route_name: sir.generate
+  route_parameters:
+    elementtype: 'ins'
   parent: reviewer.generate_review
   menu_name: main
   weight: 10
-  requirements:
-    _permission: 'access content'
-    _role: 'content_editor'
+
+reviewer.generate.dsg:
+  title: 'DSG file'
+  description: 'DSG file'
+  route_name: sir.generate
+  route_parameters:
+    elementtype: 'dsg'
+  parent: reviewer.generate_review
+  menu_name: main
+  weight: 20
+
+reviewer.generate.dd:
+  title: 'DD file'
+  description: 'DD file'
+  route_name: sir.generate
+  route_parameters:
+    elementtype: 'dd'
+  parent: reviewer.generate_review
+  menu_name: main
+  weight: 30
+
+reviewer.generate.sdd:
+  title: 'SDD file'
+  description: 'SDD file'
+  route_name: sir.generate
+  route_parameters:
+    elementtype: 'sdd'
+  parent: reviewer.generate_review
+  menu_name: main
+  weight: 40
+
+reviewer.generate.dp2:
+  title: 'DP2 file'
+  description: 'DP2 file'
+  route_name: sir.generate
+  route_parameters:
+    elementtype: 'dp2'
+  parent: reviewer.generate_review
+  menu_name: main
+  weight: 50
+
+reviewer.generate.wkf:
+  title: 'WKF file'
+  description: 'WKF file'
+  route_name: sir.generate
+  route_parameters:
+    elementtype: 'wkf'
+  parent: reviewer.generate_review
+  menu_name: main
+  weight: 55
+
+reviewer.generate.str:
+  title: 'STR file'
+  description: 'STR file'
+  route_name: sir.generate
+  route_parameters:
+    elementtype: 'str'
+  parent: reviewer.generate_review
+  menu_name: main
+  weight: 60

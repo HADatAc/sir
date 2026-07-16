@@ -12,6 +12,7 @@ use Drupal\rep\Constant;
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\VSTOI;
 use Drupal\rep\Vocabulary\REPGUI;
+use Drupal\Core\Render\Markup;
 
 class ReviewComponentForm extends FormBase {
 
@@ -64,6 +65,13 @@ class ReviewComponentForm extends FormBase {
     $form['#attached']['library'][] = 'rep/rep_modal';
     $form['#attached']['library'][] = 'core/drupal.dialog';
 
+    // Media viewer modal (images + PDFs).
+    $form['#attached']['library'][] = 'rep/pdfjs';
+    $form['#attached']['library'][] = 'rep/webdoc_modal';
+    $form['#attached']['drupalSettings']['webdoc_modal'] = [
+      'baseUrl' => \Drupal::request()->getSchemeAndHttpHost() . \Drupal::request()->getBaseUrl(),
+    ];
+
 
     $uri=$componenturi;
     $uri_decode=base64_decode($uri);
@@ -79,7 +87,15 @@ class ReviewComponentForm extends FormBase {
       return;
     } else {
       if ($this->getComponent()->componentStem != NULL) {
-        $stemLabel = $this->getComponent()->componentStem->hasContent . ' [' . $this->getComponent()->componentStem->uri . ']';
+        $stemObj = $this->getComponent()->componentStem;
+        $stemText = '';
+        if (is_object($stemObj) && ($stemObj->hasContent ?? '') !== '') {
+          $stemText = (string) ($stemObj->hasContent ?? '');
+        }
+        elseif (is_object($stemObj) && ($stemObj->label ?? '') !== '') {
+          $stemText = (string) ($stemObj->label ?? '');
+        }
+        $stemLabel = $stemText . ' [' . ($stemObj->uri ?? '') . ']';
       }
       if ($this->getComponent()->codebook != NULL) {
         $codebookLabel = $this->getComponent()->codebook->label . ' [' . $this->getComponent()->codebook->uri . ']';
@@ -98,7 +114,7 @@ class ReviewComponentForm extends FormBase {
     $form['component_wrapper']['component_uri'] = [
       '#type' => 'item',
       '#title' => $this->t('URI: '),
-      '#markup' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($this->getComponentUri()).'">'.$this->getComponentUri().'</a>'),
+      '#markup' => Markup::create(Utils::describeAnchor((string) $this->getComponentUri(), (string) $this->getComponentUri())),
     ];
 
     $form['component_wrapper']['component_stem'] = [
@@ -201,12 +217,11 @@ class ReviewComponentForm extends FormBase {
       ];
 
       $elementUri = Utils::namespaceUri($this->getComponent()->wasDerivedFrom);
-      $elementUriEncoded = base64_encode($elementUri);
-      $url = Url::fromRoute('rep.describe_element', ['elementuri' => $elementUriEncoded], ['absolute' => TRUE])->toString();
+      $url = Utils::describeUrl((string) $elementUri, [], FALSE)->setAbsolute()->toString();
 
       $form['component_wrapper']['component_df_wrapper']['component_wasderivedfrom_button'] = [
         '#type' => 'markup',
-        '#markup' => '<a href="' . $url . '" target="_blank" class="btn btn-success text-nowrap mt-2" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
+        '#markup' => '<a href="' . $url . '" class="btn btn-success text-nowrap mt-2" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
       ];
     }
     $form['component_wrapper']['component_owner'] = [
@@ -283,18 +298,10 @@ class ReviewComponentForm extends FormBase {
       ],
     ];
 
-    // Attempt to load an existing file if the document is not a URL.
+    // Attempt to load an existing file if the image is not a URL.
     $existing_image_fid = NULL;
     if ($image_type === 'upload' && !empty($component_image)) {
-      // Build the expected file URI in the private filesystem.
-      $desired_uri = 'private://resources/' . $modUri . '/image/' . $component_image;
-      $files = \Drupal::entityTypeManager()
-        ->getStorage('file')
-        ->loadByProperties(['uri' => $desired_uri]);
-      $file = reset($files);
-      if ($file) {
-        $existing_image_fid = $file->id();
-      }
+      $existing_image_fid = Utils::resolvePrivateResourceFid($modUri, 'image', $component_image);
     }
 
     // 5. Managed file element for uploading a new document.
@@ -310,6 +317,21 @@ class ReviewComponentForm extends FormBase {
       // If a file already exists, pass its ID so Drupal can display it.
       '#default_value' => $existing_image_fid ? [$existing_image_fid] : NULL,
     ];
+
+    // Existing image preview (thumbnail + modal viewer) for uploaded/private files.
+    if ($image_type === 'upload' && !empty($component_image) && !empty($modUri)) {
+      $image_file_uri = 'private://resources/' . $modUri . '/image/' . $component_image;
+      $image_view_url = \Drupal::service('file_url_generator')->generateAbsoluteString($image_file_uri);
+      $form['component_wrapper']['component_information']['component_image_preview'] = [
+        '#type' => 'markup',
+        '#markup' => Markup::create(
+          '<div class="mt-2">'
+          . '<div class="mb-2"><img src="' . $image_view_url . '" alt="' . htmlspecialchars($component_image, ENT_QUOTES) . '" style="max-width: 180px; height: auto; border: 1px solid #ddd; padding: 2px;" /></div>'
+          . '<a href="#" class="view-media-button btn btn-primary" data-view-url="' . $image_view_url . '">' . $this->t('View Image') . '</a>'
+          . '</div>'
+        ),
+      ];
+    }
 
     // **** WEBDOCUMENT ****
     // Retrieve the current web document value.
@@ -367,15 +389,7 @@ class ReviewComponentForm extends FormBase {
     // Attempt to load an existing file if the document is not a URL.
     $existing_fid = NULL;
     if ($webdocument_type === 'upload' && !empty($component_webdocument)) {
-      // Build the expected file URI in the private filesystem.
-      $desired_uri = 'private://resources/' . $modUri . '/webdoc/' . $component_webdocument;
-      $files = \Drupal::entityTypeManager()
-        ->getStorage('file')
-        ->loadByProperties(['uri' => $desired_uri]);
-      $file = reset($files);
-      if ($file) {
-        $existing_fid = $file->id();
-      }
+      $existing_fid = Utils::resolvePrivateResourceFid($modUri, 'webdoc', $component_webdocument, ['webdocument', 'image']);
     }
 
     // 5. Managed file element for uploading a new document.
@@ -390,6 +404,21 @@ class ReviewComponentForm extends FormBase {
       // If a file already exists, pass its ID so Drupal can display it.
       '#default_value' => $existing_fid ? [$existing_fid] : NULL,
     ];
+
+    // Existing web document preview (filename + modal viewer) for uploaded/private files.
+    if ($webdocument_type === 'upload' && !empty($component_webdocument) && !empty($modUri)) {
+      $webdoc_file_uri = 'private://resources/' . $modUri . '/webdoc/' . $component_webdocument;
+      $webdoc_view_url = \Drupal::service('file_url_generator')->generateAbsoluteString($webdoc_file_uri);
+      $form['component_wrapper']['component_information']['component_webdocument_preview'] = [
+        '#type' => 'markup',
+        '#markup' => Markup::create(
+          '<div class="mt-2">'
+          . '<div class="mb-2"><strong>' . $this->t('Current document:') . '</strong> ' . htmlspecialchars($component_webdocument, ENT_QUOTES) . '</div>'
+          . '<a href="#" class="view-media-button btn btn-primary" data-view-url="' . $webdoc_view_url . '">' . $this->t('View Document') . '</a>'
+          . '</div>'
+        ),
+      ];
+    }
 
     $form['component_wrapper']['component_hasreviewnote'] = [
       '#type' => 'textarea',
@@ -447,6 +476,8 @@ class ReviewComponentForm extends FormBase {
     $triggering_element = $form_state->getTriggeringElement();
     $button_name = $triggering_element['#name'];
 
+    $preferred_component = \Drupal::config('rep.settings')->get('preferred_component') ?? 'component';
+
     if ($button_name != 'back') {
       // if ($button_name === 'review_reject') {
       //   if(strlen($form_state->getValue('component_hasreviewnote')) < 1) {
@@ -454,7 +485,7 @@ class ReviewComponentForm extends FormBase {
       //   }
       // }
       if(strlen($form_state->getValue('component_stem')) < 1) {
-        $form_state->setErrorByName('component_stem', $this->t('Please enter a valid component stem'));
+        $form_state->setErrorByName('component_stem', $this->t('Please enter a valid '.lcfirst($preferred_component).' stem'));
       }
     }
   }

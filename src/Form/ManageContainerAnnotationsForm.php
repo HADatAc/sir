@@ -287,15 +287,20 @@ class ManageContainerAnnotationsForm extends FormBase {
    */
   public function labelPreparation($annotation) {
 
+    $stemObj = (is_object($annotation) && isset($annotation->annotationStem) && is_object($annotation->annotationStem))
+      ? $annotation->annotationStem
+      : NULL;
+    $stemContent = is_object($stemObj) ? (string) ($stemObj->hasContent ?? '') : '';
+    $stemUri = is_object($stemObj) ? (string) ($stemObj->uri ?? '') : '';
+
     if ($annotation == NULL ||
         $annotation->uri == NULL || $annotation->uri == "" ||
-        $annotation->annotationStem == NULL ||
-        $annotation->annotationStem->hasContent == NULL ||
-        $annotation->annotationStem->hasContent == "") {
+        $stemObj == NULL ||
+        $stemContent == "") {
       return "";
     }
 
-    return Utils::trimAutoCompleteString($annotation->annotationStem->hasContent,$annotation->annotationStem->uri);
+    return Utils::trimAutoCompleteString($stemContent, $stemUri);
   }
 
   public function containerslotAjaxCallback(array &$form, FormStateInterface $form_state) {

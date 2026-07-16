@@ -10,6 +10,7 @@ use Drupal\rep\Entity\Tables;
 use Drupal\rep\Vocabulary\VSTOI;
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\REPGUI;
+use Drupal\Core\Render\Markup;
 
 class ReviewCodebookForm extends FormBase {
 
@@ -48,6 +49,13 @@ class ReviewCodebookForm extends FormBase {
     // ROOT URL
     $root_url = \Drupal::request()->getBaseUrl();
 
+    // Media viewer modal (images + PDFs).
+    $form['#attached']['library'][] = 'rep/pdfjs';
+    $form['#attached']['library'][] = 'rep/webdoc_modal';
+    $form['#attached']['drupalSettings']['webdoc_modal'] = [
+      'baseUrl' => \Drupal::request()->getSchemeAndHttpHost() . \Drupal::request()->getBaseUrl(),
+    ];
+
     $uri=$codebookuri ?? 'default';
     $uri_decode=base64_decode($uri);
     $this->setCodebookUri($uri_decode);
@@ -82,7 +90,7 @@ class ReviewCodebookForm extends FormBase {
     $form['codebook_information']['codebook_uri'] = [
       '#type' => 'item',
       '#title' => $this->t('URI: '),
-      '#markup' => t('<a class="pt-3" target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($this->getCodebookUri()).'">'.$this->getCodebookUri().'</a>'),
+      '#markup' => Markup::create('<span class="pt-3">' . Utils::describeAnchor((string) $this->getCodebookUri(), (string) $this->getCodebookUri()) . '</span>'),
     ];
 
     $form['codebook_information']['codebook_name'] = [
@@ -136,13 +144,12 @@ class ReviewCodebookForm extends FormBase {
 
       // Construção da URL
       $elementUri = Utils::namespaceUri($this->getCodebook()->wasDerivedFrom);
-      $elementUriEncoded = base64_encode($elementUri);
-      $url = Url::fromRoute('rep.describe_element', ['elementuri' => $elementUriEncoded], ['absolute' => TRUE])->toString();
+      $url = Utils::describeUrl((string) $elementUri, [], FALSE)->setAbsolute()->toString();
 
       // Botão para abrir nova janela
       $form['codebook_information']['codebook_wasderivedfrom_wrapper']['codebook_wasderivedfrom_button'] = [
         '#type' => 'markup',
-        '#markup' => '<a href="' . $url . '" target="_blank" class="btn btn-success text-nowrap" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
+        '#markup' => '<a href="' . $url . '" class="btn btn-success text-nowrap" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
       ];
 
     }
@@ -219,18 +226,10 @@ class ReviewCodebookForm extends FormBase {
       ],
     ];
 
-    // Attempt to load an existing file if the document is not a URL.
+    // Attempt to load an existing file if the image is not a URL.
     $existing_image_fid = NULL;
     if ($image_type === 'upload' && !empty($codebook_image)) {
-      // Build the expected file URI in the private filesystem.
-      $desired_uri = 'private://resources/' . $modUri . '/image/' . $codebook_image;
-      $files = \Drupal::entityTypeManager()
-        ->getStorage('file')
-        ->loadByProperties(['uri' => $desired_uri]);
-      $file = reset($files);
-      if ($file) {
-        $existing_image_fid = $file->id();
-      }
+      $existing_image_fid = Utils::resolvePrivateResourceFid($modUri, 'image', $codebook_image);
     }
 
     // 5. Managed file element for uploading a new document.
@@ -246,6 +245,21 @@ class ReviewCodebookForm extends FormBase {
       // If a file already exists, pass its ID so Drupal can display it.
       '#default_value' => $existing_image_fid ? [$existing_image_fid] : NULL,
     ];
+
+    // Existing image preview (thumbnail + modal viewer) for uploaded/private files.
+    if ($image_type === 'upload' && !empty($codebook_image) && !empty($modUri)) {
+      $image_file_uri = 'private://resources/' . $modUri . '/image/' . $codebook_image;
+      $image_view_url = \Drupal::service('file_url_generator')->generateAbsoluteString($image_file_uri);
+      $form['codebook_information']['codebook_information']['codebook_image_preview'] = [
+        '#type' => 'markup',
+        '#markup' => Markup::create(
+          '<div class="mt-2">'
+          . '<div class="mb-2"><img src="' . $image_view_url . '" alt="' . htmlspecialchars($codebook_image, ENT_QUOTES) . '" style="max-width: 180px; height: auto; border: 1px solid #ddd; padding: 2px;" /></div>'
+          . '<a href="#" class="view-media-button btn btn-primary" data-view-url="' . $image_view_url . '">' . $this->t('View Image') . '</a>'
+          . '</div>'
+        ),
+      ];
+    }
 
     // **** WEBDOCUMENT ****
     // Retrieve the current web document value.
@@ -303,15 +317,7 @@ class ReviewCodebookForm extends FormBase {
     // Attempt to load an existing file if the document is not a URL.
     $existing_fid = NULL;
     if ($webdocument_type === 'upload' && !empty($codebook_webdocument)) {
-      // Build the expected file URI in the private filesystem.
-      $desired_uri = 'private://resources/' . $modUri . '/webdoc/' . $codebook_webdocument;
-      $files = \Drupal::entityTypeManager()
-        ->getStorage('file')
-        ->loadByProperties(['uri' => $desired_uri]);
-      $file = reset($files);
-      if ($file) {
-        $existing_fid = $file->id();
-      }
+      $existing_fid = Utils::resolvePrivateResourceFid($modUri, 'webdoc', $codebook_webdocument, ['webdocument', 'image']);
     }
 
     // 5. Managed file element for uploading a new document.
@@ -326,6 +332,21 @@ class ReviewCodebookForm extends FormBase {
       // If a file already exists, pass its ID so Drupal can display it.
       '#default_value' => $existing_fid ? [$existing_fid] : NULL,
     ];
+
+    // Existing web document preview (filename + modal viewer) for uploaded/private files.
+    if ($webdocument_type === 'upload' && !empty($codebook_webdocument) && !empty($modUri)) {
+      $webdoc_file_uri = 'private://resources/' . $modUri . '/webdoc/' . $codebook_webdocument;
+      $webdoc_view_url = \Drupal::service('file_url_generator')->generateAbsoluteString($webdoc_file_uri);
+      $form['codebook_information']['codebook_information']['codebook_webdocument_preview'] = [
+        '#type' => 'markup',
+        '#markup' => Markup::create(
+          '<div class="mt-2">'
+          . '<div class="mb-2"><strong>' . $this->t('Current document:') . '</strong> ' . htmlspecialchars($codebook_webdocument, ENT_QUOTES) . '</div>'
+          . '<a href="#" class="view-media-button btn btn-primary" data-view-url="' . $webdoc_view_url . '">' . $this->t('View Document') . '</a>'
+          . '</div>'
+        ),
+      ];
+    }
 
     // RESPONSE OPTIONS TAB
 

@@ -4,14 +4,17 @@ namespace Drupal\sir\Entity;
 
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\REPGUI;
+use Drupal\Core\Render\Markup;
 
 class Annotation {
 
   public static function generateHeader() {
 
+    $preferred_instrument = \Drupal::config('rep.settings')->get('preferred_instrument') ?? 'instrument';
+
     return $header = [
       'element_uri' => t('URI'),
-      'element_container' => t('Instrument'),
+      'element_container' => t(ucfirst($preferred_instrument)),
       'element_position' => t('Position'),
       'element_annotationstem' => t('Content'),
     ];
@@ -54,7 +57,7 @@ class Annotation {
           }
         }
         $output[$uri] = [
-          'element_uri' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($uri).'">'.$uri.'</a>'),
+          'element_uri' => Markup::create(Utils::describeAnchor((string) ($element->uri ?? ''), (string) $uri)),
           'element_container' => $container,
           'element_position' => Utils::namespaceUri($position),
           'element_annotationstem' => html_entity_decode($content),

@@ -7,6 +7,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Drupal\Component\Utility\Xss;
 //use Drupal\Core\Entity\Element\EntityAutocomplete;
+use Drupal\rep\Utils;
 
 /**
  * Class JsonApiComponentController
@@ -47,7 +48,7 @@ class JsonApiComponentController extends ControllerBase{
       //   'label' => $component->componentStem->hasContent . '  -- CB: '  . $component->codebook->label,
       // ];
       $results[] = [
-          'value' => $component->label . ' [' . $component->uri . ']',
+          'value' => Utils::trimPreserveBracket(Utils::fieldToAutocomplete($component->uri, $component->label), 127),
           'label' => $component->label,
         ];
     }

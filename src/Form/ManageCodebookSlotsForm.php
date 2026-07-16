@@ -8,6 +8,7 @@ use Drupal\Core\Url;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\REPGUI;
+use Drupal\Core\Render\Markup;
 
 class ManageCodebookSlotsForm extends FormBase {
 
@@ -32,6 +33,10 @@ class ManageCodebookSlotsForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $codebookuri = NULL) {
+
+    // This is a list/selection form. Navigation to Describe links should not
+    // be blocked by unsaved-change prompts.
+    $form['#attributes']['data-rep-nav-guard-ignore'] = '1';
 
     # GET CONTENT
     $uri=$codebookuri ?? 'default';
@@ -89,6 +94,7 @@ class ManageCodebookSlotsForm extends FormBase {
       }
 
       $content = "";
+      $responseStatus = '';
       if ($slot->hasResponseOption != null) {
         $rawresponseoption = $api->getUri($slot->hasResponseOption);
         $objresponseoption = json_decode($rawresponseoption);
@@ -97,17 +103,20 @@ class ManageCodebookSlotsForm extends FormBase {
           if (isset($responseoption->hasContent)) {
             $content = $responseoption->hasContent;
           }
+          if (isset($responseoption->hasStatus)) {
+            $responseStatus = Utils::plainStatus($responseoption->hasStatus);
+          }
         }
       }
       $responseOptionUriStr = "";
       if ($slot->hasResponseOption != NULL && $slot->hasResponseOption != '') {
-        $responseOptionUriStr = t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($slot->hasResponseOption).'">' . Utils::namespaceUri($slot->hasResponseOption) . '</a>');
+        $responseOptionUriStr = Markup::create(Utils::describeAnchor((string) $slot->hasResponseOption, (string) Utils::namespaceUri($slot->hasResponseOption)));
       }
       $output[$slot->uri] = [
         'slot_priority' => $slot->hasPriority,
         'slot_content' => $content,
         'slot_response_option' => $responseOptionUriStr,
-        'slot_response_status' => Utils::plainStatus($responseoption->hasStatus) ?? '',
+        'slot_response_status' => $responseStatus,
       ];
     }
 
@@ -127,6 +136,15 @@ class ManageCodebookSlotsForm extends FormBase {
       '#name' => 'edit_slot',
       '#attributes' => [
         'class' => ['btn', 'btn-primary', 'edit-element-button'],
+      ],
+    ];
+    $form['delete_selected_slot'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Delete Selected Response Option Slot'),
+      '#name' => 'delete_selected_slot',
+      '#attributes' => [
+        'class' => ['btn', 'btn-primary', 'delete-element-button'],
+        'onclick' => 'if(!confirm("Really Delete?")){return false;}',
       ],
     ];
     $form['delete_slots'] = [
@@ -181,6 +199,108 @@ class ManageCodebookSlotsForm extends FormBase {
     }
   }
 
+  private function decodeApiObject($response) {
+    if ($response === NULL || $response === '') {
+      return NULL;
+    }
+
+    $obj = json_decode($response);
+    if ($obj === NULL || !isset($obj->isSuccessful) || !$obj->isSuccessful) {
+      return NULL;
+    }
+
+    return $obj;
+  }
+
+  private function sortSlotsByPriority(array $slots) {
+    usort($slots, static function ($a, $b) {
+      $pa = (int) ($a->hasPriority ?? 0);
+      $pb = (int) ($b->hasPriority ?? 0);
+      return $pa <=> $pb;
+    });
+
+    return $slots;
+  }
+
+  private function deleteSingleCodebookSlot($selectedSlotUri) {
+    $api = \Drupal::service('rep.api_connector');
+
+    $slot_obj = $this->decodeApiObject($api->codebookSlotList($this->getCodebookUri()));
+    if ($slot_obj === NULL || !isset($slot_obj->body) || !is_array($slot_obj->body)) {
+      \Drupal::messenger()->addError($this->t('Unable to read codebook slots. No slot was deleted.'));
+      return FALSE;
+    }
+
+    $slots = [];
+    foreach ($slot_obj->body as $slot) {
+      if (is_object($slot) && isset($slot->uri) && $slot->uri !== '') {
+        $slots[] = $slot;
+      }
+    }
+    $slots = $this->sortSlotsByPriority($slots);
+
+    $remainingResponseOptionUris = [];
+    $selectedFound = FALSE;
+    foreach ($slots as $slot) {
+      if ((string) $slot->uri === (string) $selectedSlotUri) {
+        $selectedFound = TRUE;
+        continue;
+      }
+      $remainingResponseOptionUris[] = (string) ($slot->hasResponseOption ?? '');
+    }
+
+    if (!$selectedFound) {
+      \Drupal::messenger()->addWarning($this->t('The selected slot could not be found. Refresh the page and try again.'));
+      return FALSE;
+    }
+
+    if ($api->codebookSlotDel($this->getCodebookUri()) === NULL) {
+      \Drupal::messenger()->addError($this->t('Unable to delete current slots. No slot was deleted.'));
+      return FALSE;
+    }
+
+    if (sizeof($remainingResponseOptionUris) === 0) {
+      return TRUE;
+    }
+
+    if ($api->codebookSlotAdd($this->getCodebookUri(), sizeof($remainingResponseOptionUris)) === NULL) {
+      \Drupal::messenger()->addError($this->t('Slots were cleared but could not be recreated.'));
+      return FALSE;
+    }
+
+    $new_slot_obj = $this->decodeApiObject($api->codebookSlotList($this->getCodebookUri()));
+    if ($new_slot_obj === NULL || !isset($new_slot_obj->body) || !is_array($new_slot_obj->body)) {
+      \Drupal::messenger()->addError($this->t('Slots were recreated but could not be read back for attachment restore.'));
+      return FALSE;
+    }
+
+    $newSlots = [];
+    foreach ($new_slot_obj->body as $slot) {
+      if (is_object($slot) && isset($slot->uri) && $slot->uri !== '') {
+        $newSlots[] = $slot;
+      }
+    }
+    $newSlots = $this->sortSlotsByPriority($newSlots);
+
+    $limit = min(sizeof($remainingResponseOptionUris), sizeof($newSlots));
+    for ($i = 0; $i < $limit; $i++) {
+      $responseOptionUri = $remainingResponseOptionUris[$i];
+      $slotUri = (string) ($newSlots[$i]->uri ?? '');
+      if ($responseOptionUri === '' || $slotUri === '') {
+        continue;
+      }
+      if ($api->responseOptionAttach($responseOptionUri, $slotUri) === NULL) {
+        \Drupal::messenger()->addWarning($this->t('A slot was deleted but at least one response option could not be reattached.'));
+      }
+    }
+
+    if (sizeof($remainingResponseOptionUris) !== sizeof($newSlots)) {
+      \Drupal::messenger()->addWarning($this->t('A slot was deleted but the number of recreated slots differs from expected.'));
+    }
+
+    return TRUE;
+  }
+
   /**
    * {@inheritdoc}
    */
@@ -216,6 +336,25 @@ class ManageCodebookSlotsForm extends FormBase {
         $url->setRouteParameter('codebooksloturi', base64_encode($first));
         $form_state->setRedirectUrl($url);
       }
+    }
+
+    // DELETE ONE RESPONSE OPTION SLOT
+    if ($button_name === 'delete_selected_slot') {
+      if (sizeof($rows) < 1) {
+        \Drupal::messenger()->addWarning(t("Select the exact response option slot to be deleted."));
+      }
+      else if (sizeof($rows) > 1) {
+        \Drupal::messenger()->addWarning(t("Select only one response option slot to delete."));
+      }
+      else {
+        $first = array_shift($rows);
+        if ($this->deleteSingleCodebookSlot($first)) {
+          \Drupal::messenger()->addMessage(t("Selected response option slot has been deleted successfully."));
+        }
+      }
+
+      $form_state->setRedirect('sir.manage_codebook_slots', ['codebookuri' => base64_encode($this->getCodebookUri())]);
+      return;
     }
 
     // DELETE RESPONSE OPTION SLOT

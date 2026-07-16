@@ -11,6 +11,7 @@ use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\VSTOI;
 use Drupal\rep\Vocabulary\REPGUI;
 use Drupal\Component\Serialization\Json;
+use Drupal\Core\Render\Markup;
 
 class ManageSlotElementsForm extends FormBase {
 
@@ -195,18 +196,18 @@ class ManageSlotElementsForm extends FormBase {
                   $type = Utils::namespaceUri($component->hascoTypeUri);
                   if (isset($component->uri)) {
                     // $componentUri = t('<b>'.$type.'</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($component->uri).'">' . $component->typeLabel . '</a>] ');
-                    $componentUri = t('<b>'.$type.'</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($component->uri).'">' . $component->typeLabel . '</a> ('.Utils::plainStatus($component->hasStatus).')]');
+                    $componentUri = '<b>' . $type . '</b>: [' . Utils::describeAnchor((string) $component->uri, (string) $component->typeLabel) . ' (' . Utils::plainStatus($component->hasStatus) . ')]';
                   }
                   if (isset($component->isAttributeOf)) {
                     // $content = '<b>Attribute Of</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode(Utils::uriFromAutocomplete($component->isAttributeOf)).'">'. Utils::namespaceUri($component->isAttributeOf) . "</a>]";
                     $attributOfStatus = $api->parseObjectResponse($api->getUri($component->isAttributeOf),'getUri');
-                    $content = '<b>Attribute Of</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode(Utils::uriFromAutocomplete($component->isAttributeOf)).'">'. Utils::namespaceUri($component->isAttributeOf) . "</a> (".(Utils::plainStatus($attributOfStatus->hasStatus)??"Current").")]";
+                    $content = '<b>Attribute Of</b>: [' . Utils::describeAnchor((string) Utils::uriFromAutocomplete($component->isAttributeOf), (string) Utils::namespaceUri($component->isAttributeOf)) . ' (' . (Utils::plainStatus($attributOfStatus->hasStatus) ?? 'Current') . ')]';
                   } else {
                     $content = '<b>Attribute Of</b>: [EMPTY]';
                   }
                   if (isset($component->codebook->label)) {
                     // $codebook = '<b>CB</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($component->codebook->uri).'">' . $component->codebook->label . "</a>]";
-                    $codebook = '<b>CB</b>: [<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($component->codebook->uri).'">' . $component->codebook->label . "</a> (".Utils::plainStatus($component->codebook->hasStatus).")]";
+                    $codebook = '<b>CB</b>: [' . Utils::describeAnchor((string) $component->codebook->uri, (string) $component->codebook->label) . ' (' . Utils::plainStatus($component->codebook->hasStatus) . ')]';
                   } else {
                     $codebook = '<b>CB</b>: [EMPTY]';
                   }
@@ -233,7 +234,7 @@ class ManageSlotElementsForm extends FormBase {
         }
         $label = " ";
         if (isset($slotElement->label)) {
-          $label = t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($slotElement->uri).'">' . $slotElement->label . '</a>');
+          $label = Markup::create(Utils::describeAnchor((string) ($slotElement->uri ?? ''), (string) $slotElement->label));
         }
         $output[$uri] = [
           'containerslot_up' => 'Up',
@@ -1042,12 +1043,16 @@ class ManageSlotElementsForm extends FormBase {
 
     //dpm($annotation);
 
+    $stemObj = (is_object($annotation) && isset($annotation->annotationStem) && is_object($annotation->annotationStem))
+      ? $annotation->annotationStem
+      : NULL;
+    $stemContent = is_object($stemObj) ? (string) ($stemObj->hasContent ?? '') : '';
+
     if ($annotation == NULL ||
         $annotation->uri == NULL ||
         $annotation->uri == "" ||
-        $annotation->annotationStem == NULL ||
-        $annotation->annotationStem->hasContent == NULL ||
-        $annotation->annotationStem->hasContent == ""
+        $stemObj == NULL ||
+        $stemContent == ""
       ){
       return "";
     }

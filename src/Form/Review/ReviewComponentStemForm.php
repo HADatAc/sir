@@ -12,6 +12,7 @@ use Drupal\rep\Constant;
 use Drupal\rep\Utils;
 use Drupal\rep\Vocabulary\VSTOI;
 use Drupal\rep\Vocabulary\REPGUI;
+use Drupal\Core\Render\Markup;
 
 class ReviewComponentStemForm extends FormBase {
 
@@ -64,6 +65,13 @@ class ReviewComponentStemForm extends FormBase {
     $form['#attached']['library'][] = 'rep/rep_modal';
     $form['#attached']['library'][] = 'core/drupal.dialog';
 
+    // Media viewer modal (images + PDFs).
+    $form['#attached']['library'][] = 'rep/pdfjs';
+    $form['#attached']['library'][] = 'rep/webdoc_modal';
+    $form['#attached']['drupalSettings']['webdoc_modal'] = [
+      'baseUrl' => \Drupal::request()->getSchemeAndHttpHost() . \Drupal::request()->getBaseUrl(),
+    ];
+
     $uri=$componentstemuri;
     $uri_decode=base64_decode($uri);
     $this->setComponentStemUri($uri_decode);
@@ -83,8 +91,8 @@ class ReviewComponentStemForm extends FormBase {
       $wasGeneratedBy = $this->getComponentStem()->wasGeneratedBy;
       if ($this->getComponentStem()->wasDerivedFrom != NULL) {
         $this->setSourceComponentStem($this->retrieveComponentStem($this->getComponentStem()->wasDerivedFrom));
-        if ($this->getSourceComponentStem() != NULL && $this->getSourceComponentStem()->hasContent != NULL) {
-          $sourceContent = Utils::fieldToAutocomplete($this->getSourceComponentStem()->uri,$this->getSourceComponentStem()->hasContent);
+        if ($this->getSourceComponentStem() != NULL && ($this->getSourceComponentStem()->hasContent ?? NULL) != NULL) {
+          $sourceContent = Utils::fieldToAutocomplete($this->getSourceComponentStem()->uri, (string) ($this->getSourceComponentStem()->hasContent ?? ''));
         }
       }
     }
@@ -101,7 +109,7 @@ class ReviewComponentStemForm extends FormBase {
     $form['componentstem_wrapper']['componentstem_uri'] = [
       '#type' => 'item',
       '#title' => $this->t('URI: '),
-      '#markup' => t('<a target="_new" href="'.$root_url.REPGUI::DESCRIBE_PAGE.base64_encode($this->getComponentStemUri()).'">'.$this->getComponentStemUri().'</a>'),
+      '#markup' => Markup::create(Utils::describeAnchor((string) $this->getComponentStemUri(), (string) $this->getComponentStemUri())),
     ];
 
     if ($this->getComponentStem()->superUri) {
@@ -140,7 +148,7 @@ class ReviewComponentStemForm extends FormBase {
     $form['componentstem_wrapper']['componentstem_content'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name'),
-      '#default_value' => $this->getComponentStem()->hasContent,
+      '#default_value' => (string) ($this->getComponentStem()->hasContent ?? ''),
       '#disabled' => TRUE,
     ];
     $form['componentstem_wrapper']['componentstem_language'] = [
@@ -195,12 +203,11 @@ class ReviewComponentStemForm extends FormBase {
         ];
 
         $elementUri = Utils::namespaceUri($this->getComponentStem()->wasDerivedFrom);
-        $elementUriEncoded = base64_encode($elementUri);
-        $url = Url::fromRoute('rep.describe_element', ['elementuri' => $elementUriEncoded], ['absolute' => TRUE])->toString();
+        $url = Utils::describeUrl((string) $elementUri, [], FALSE)->setAbsolute()->toString();
 
         $form['componentstem__df_wrapper']['componentstem__wasderivedfrom_button'] = [
           '#type' => 'markup',
-          '#markup' => '<a href="' . $url . '" target="_blank" class="btn btn-primary text-nowrap mt-2" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
+          '#markup' => '<a href="' . $url . '" class="btn btn-primary text-nowrap mt-2" style="min-width: 160px; height: 38px; display: flex; align-items: center; justify-content: center;">' . $this->t('Check Element') . '</a>',
         ];
       }
     }
@@ -287,18 +294,10 @@ class ReviewComponentStemForm extends FormBase {
       ],
     ];
 
-    // Attempt to load an existing file if the document is not a URL.
+    // Attempt to load an existing file if the image is not a URL.
     $existing_image_fid = NULL;
     if ($image_type === 'upload' && !empty($componentstem_image)) {
-      // Build the expected file URI in the private filesystem.
-      $desired_uri = 'private://resources/' . $modUri . '/image/' . $componentstem_image;
-      $files = \Drupal::entityTypeManager()
-        ->getStorage('file')
-        ->loadByProperties(['uri' => $desired_uri]);
-      $file = reset($files);
-      if ($file) {
-        $existing_image_fid = $file->id();
-      }
+      $existing_image_fid = Utils::resolvePrivateResourceFid($modUri, 'image', $componentstem_image);
     }
 
     // 5. Managed file element for uploading a new document.
@@ -314,6 +313,21 @@ class ReviewComponentStemForm extends FormBase {
       // If a file already exists, pass its ID so Drupal can display it.
       '#default_value' => $existing_image_fid ? [$existing_image_fid] : NULL,
     ];
+
+    // Existing image preview (thumbnail + modal viewer) for uploaded/private files.
+    if ($image_type === 'upload' && !empty($componentstem_image) && !empty($modUri)) {
+      $image_file_uri = 'private://resources/' . $modUri . '/image/' . $componentstem_image;
+      $image_view_url = \Drupal::service('file_url_generator')->generateAbsoluteString($image_file_uri);
+      $form['componentstem_wrapper']['componentstem_information']['componentstem_image_preview'] = [
+        '#type' => 'markup',
+        '#markup' => Markup::create(
+          '<div class="mt-2">'
+          . '<div class="mb-2"><img src="' . $image_view_url . '" alt="' . htmlspecialchars($componentstem_image, ENT_QUOTES) . '" style="max-width: 180px; height: auto; border: 1px solid #ddd; padding: 2px;" /></div>'
+          . '<a href="#" class="view-media-button btn btn-primary" data-view-url="' . $image_view_url . '">' . $this->t('View Image') . '</a>'
+          . '</div>'
+        ),
+      ];
+    }
 
     // **** WEBDOCUMENT ****
     // Retrieve the current web document value.
@@ -371,15 +385,7 @@ class ReviewComponentStemForm extends FormBase {
     // Attempt to load an existing file if the document is not a URL.
     $existing_fid = NULL;
     if ($webdocument_type === 'upload' && !empty($componentstem_webdocument)) {
-      // Build the expected file URI in the private filesystem.
-      $desired_uri = 'private://resources/' . $modUri . '/webdoc/' . $componentstem_webdocument;
-      $files = \Drupal::entityTypeManager()
-        ->getStorage('file')
-        ->loadByProperties(['uri' => $desired_uri]);
-      $file = reset($files);
-      if ($file) {
-        $existing_fid = $file->id();
-      }
+      $existing_fid = Utils::resolvePrivateResourceFid($modUri, 'webdoc', $componentstem_webdocument, ['webdocument', 'image']);
     }
 
     // 5. Managed file element for uploading a new document.
@@ -394,6 +400,21 @@ class ReviewComponentStemForm extends FormBase {
       // If a file already exists, pass its ID so Drupal can display it.
       '#default_value' => $existing_fid ? [$existing_fid] : NULL,
     ];
+
+    // Existing web document preview (filename + modal viewer) for uploaded/private files.
+    if ($webdocument_type === 'upload' && !empty($componentstem_webdocument) && !empty($modUri)) {
+      $webdoc_file_uri = 'private://resources/' . $modUri . '/webdoc/' . $componentstem_webdocument;
+      $webdoc_view_url = \Drupal::service('file_url_generator')->generateAbsoluteString($webdoc_file_uri);
+      $form['componentstem_wrapper']['componentstem_information']['componentstem_webdocument_preview'] = [
+        '#type' => 'markup',
+        '#markup' => Markup::create(
+          '<div class="mt-2">'
+          . '<div class="mb-2"><strong>' . $this->t('Current document:') . '</strong> ' . htmlspecialchars($componentstem_webdocument, ENT_QUOTES) . '</div>'
+          . '<a href="#" class="view-media-button btn btn-primary" data-view-url="' . $webdoc_view_url . '">' . $this->t('View Document') . '</a>'
+          . '</div>'
+        ),
+      ];
+    }
 
     $form['componentstem_wrapper']['componentstem_hasreviewnote'] = [
       '#type' => 'textarea',
@@ -494,7 +515,7 @@ class ReviewComponentStemForm extends FormBase {
           '"label":"'.$this->getComponentStem()->label.'",'.
           '"hascoTypeUri":"'.VSTOI::COMPONENT_STEM.'",'.
           '"hasStatus":"'.VSTOI::CURRENT.'",'.
-          '"hasContent":"'.$this->getComponentStem()->hasContent.'",'.
+          '"hasContent":"'.($this->getComponentStem()->hasContent ?? '').'",'.
           '"hasLanguage":"'.$this->getComponentStem()->hasLanguage.'",'.
           '"hasVersion":"'.$this->getComponentStem()->hasVersion.'",'.
           '"comment":"'.$this->getComponentStem()->comment.'",'.
@@ -522,7 +543,7 @@ class ReviewComponentStemForm extends FormBase {
           '"label":"'.$resultParent->label.'",'.
           '"hascoTypeUri":"'.VSTOI::COMPONENT_STEM.'",'.
           '"hasStatus":"'.VSTOI::DEPRECATED.'",'.
-          '"hasContent":"'.$resultParent->hasContent.'",'.
+          '"hasContent":"'.($resultParent->hasContent ?? '').'",'.
           '"hasLanguage":"'.$resultParent->hasLanguage.'",'.
           '"hasVersion":"'.$resultParent->hasVersion.'",'.
           '"comment":"'.$resultParent->comment.'",'.
@@ -548,7 +569,7 @@ class ReviewComponentStemForm extends FormBase {
           '"label":"'.$this->getComponentStem()->label.'",'.
           '"hascoTypeUri":"'.VSTOI::COMPONENT_STEM.'",'.
           '"hasStatus":"'.VSTOI::DRAFT.'",'.
-          '"hasContent":"'.$this->getComponentStem()->hasContent.'",'.
+          '"hasContent":"'.($this->getComponentStem()->hasContent ?? '').'",'.
           '"hasLanguage":"'.$this->getComponentStem()->hasLanguage.'",'.
           '"hasVersion":"'.$this->getComponentStem()->hasVersion.'",'.
           '"comment":"'.$this->getComponentStem()->comment.'",'.
