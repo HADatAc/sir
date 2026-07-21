@@ -291,9 +291,8 @@ std.manage_wkf_template:
     page: '1'
     pagesize: '9'
     studyuri: 'none'
-  parent: reviewer.uploadingest_review
   menu_name: main
-  weight: 15
+  weight: 50
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
