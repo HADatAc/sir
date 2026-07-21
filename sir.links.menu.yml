@@ -296,7 +296,7 @@ std.manage_wkf_template:
   weight: 15
   requirements:
     _permission: 'access content'
-    _role: 'content_editor'
+    _role: 'authenticated'
 
 reviewer.manage_ins_files_dp2:
   title: DP2 Templates
