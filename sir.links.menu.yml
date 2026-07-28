@@ -282,8 +282,8 @@ std.manage_sdd_template:
     _role: 'content_editor'
 
 std.manage_wkf_template:
-  title: WKF Templates
-  description: Manage WKF Templates
+  title: Study Management via WKF
+  description: Manage Study via WKF
   route_name: rep.select_mt_element
   route_parameters:
     elementtype: 'wkf'
@@ -292,7 +292,7 @@ std.manage_wkf_template:
     pagesize: '9'
     studyuri: 'none'
   menu_name: main
-  weight: 50
+  weight: 22
   requirements:
     _permission: 'access content'
     _role: 'authenticated'
