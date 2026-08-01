@@ -1,0 +1,713 @@
+<?php
+
+/**
+ * Implements hook_schema().
+ */
+function sir_schema() {
+  $schema['sir_anatomy_mapping'] = [
+    'description' => 'Coordinate-to-UBERON mappings for SIR Search by Anatomy.',
+    'fields' => [
+      'id' => [
+        'description' => 'Primary key.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'label' => [
+        'description' => 'Display label for the mapped anatomy.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'uberon_uri' => [
+        'description' => 'Mapped UBERON URI.',
+        'type' => 'varchar',
+        'length' => 512,
+        'not null' => TRUE,
+      ],
+      'x_min' => [
+        'description' => 'Minimum normalized X coordinate (0-100).',
+        'type' => 'float',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'x_max' => [
+        'description' => 'Maximum normalized X coordinate (0-100).',
+        'type' => 'float',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'y_min' => [
+        'description' => 'Minimum normalized Y coordinate (0-100).',
+        'type' => 'float',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'y_max' => [
+        'description' => 'Maximum normalized Y coordinate (0-100).',
+        'type' => 'float',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'description' => [
+        'description' => 'Optional free-text description.',
+        'type' => 'varchar',
+        'length' => 1024,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'status' => [
+        'description' => '1 for enabled mappings, 0 for disabled.',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 1,
+      ],
+      'weight' => [
+        'description' => 'Sort weight for deterministic ordering.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'created' => [
+        'description' => 'Unix timestamp when record was created.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'changed' => [
+        'description' => 'Unix timestamp when record was updated.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'uid' => [
+        'description' => 'User id that created the record.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+    ],
+    'primary key' => ['id'],
+    'indexes' => [
+      'status_weight' => ['status', 'weight'],
+      'uberon_uri' => ['uberon_uri'],
+    ],
+  ];
+
+  return $schema;
+}
+
+/**
+ * Creates anatomy mapping table for existing installs.
+ */
+function sir_update_8002() {
+  $schema = \Drupal::database()->schema();
+  if (!$schema->tableExists('sir_anatomy_mapping')) {
+    $definition = sir_schema();
+    $schema->createTable('sir_anatomy_mapping', $definition['sir_anatomy_mapping']);
+  }
+}
+
+/**
+ * Seeds default full-body coordinate mappings for common anatomy regions.
+ */
+function sir_update_8003() {
+  $schema = \Drupal::database()->schema();
+  if (!$schema->tableExists('sir_anatomy_mapping')) {
+    return;
+  }
+
+  $now = \Drupal::time()->getRequestTime();
+  $db = \Drupal::database();
+
+  // Coordinates are normalized percentages over full_body.png (0-100).
+  $mappings = [
+    [
+      'label' => 'head',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0000033',
+      'x_min' => 40.0,
+      'x_max' => 60.0,
+      'y_min' => 0.0,
+      'y_max' => 13.0,
+      'weight' => 10,
+    ],
+    [
+      'label' => 'eye',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0000970',
+      'x_min' => 44.0,
+      'x_max' => 56.0,
+      'y_min' => 3.0,
+      'y_max' => 9.0,
+      'weight' => 20,
+    ],
+    [
+      'label' => 'mouth',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0000166',
+      'x_min' => 45.0,
+      'x_max' => 55.0,
+      'y_min' => 8.0,
+      'y_max' => 12.0,
+      'weight' => 30,
+    ],
+    [
+      'label' => 'neck',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0000974',
+      'x_min' => 45.0,
+      'x_max' => 55.0,
+      'y_min' => 12.0,
+      'y_max' => 18.0,
+      'weight' => 40,
+    ],
+    [
+      'label' => 'heart',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0000948',
+      'x_min' => 45.0,
+      'x_max' => 55.0,
+      'y_min' => 20.0,
+      'y_max' => 31.0,
+      'weight' => 50,
+    ],
+    [
+      'label' => 'arm',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0001460',
+      'x_min' => 10.0,
+      'x_max' => 90.0,
+      'y_min' => 15.0,
+      'y_max' => 55.0,
+      'weight' => 60,
+    ],
+    [
+      'label' => 'right arm',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0001460',
+      'x_min' => 10.0,
+      'x_max' => 32.0,
+      'y_min' => 15.0,
+      'y_max' => 55.0,
+      'weight' => 70,
+    ],
+    [
+      'label' => 'left arm',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0001460',
+      'x_min' => 68.0,
+      'x_max' => 90.0,
+      'y_min' => 15.0,
+      'y_max' => 55.0,
+      'weight' => 80,
+    ],
+    [
+      'label' => 'hand',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0002398',
+      'x_min' => 4.0,
+      'x_max' => 96.0,
+      'y_min' => 46.0,
+      'y_max' => 70.0,
+      'weight' => 90,
+    ],
+    [
+      'label' => 'right hand',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0002398',
+      'x_min' => 4.0,
+      'x_max' => 20.0,
+      'y_min' => 46.0,
+      'y_max' => 70.0,
+      'weight' => 100,
+    ],
+    [
+      'label' => 'left hand',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0002398',
+      'x_min' => 80.0,
+      'x_max' => 96.0,
+      'y_min' => 46.0,
+      'y_max' => 70.0,
+      'weight' => 110,
+    ],
+    [
+      'label' => 'ledt hand',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0002398',
+      'x_min' => 80.0,
+      'x_max' => 96.0,
+      'y_min' => 46.0,
+      'y_max' => 70.0,
+      'weight' => 115,
+    ],
+    [
+      'label' => 'leg',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0000978',
+      'x_min' => 30.0,
+      'x_max' => 70.0,
+      'y_min' => 50.0,
+      'y_max' => 92.0,
+      'weight' => 120,
+    ],
+    [
+      'label' => 'right leg',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0000978',
+      'x_min' => 30.0,
+      'x_max' => 49.0,
+      'y_min' => 50.0,
+      'y_max' => 92.0,
+      'weight' => 130,
+    ],
+    [
+      'label' => 'left leg',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0000978',
+      'x_min' => 51.0,
+      'x_max' => 70.0,
+      'y_min' => 50.0,
+      'y_max' => 92.0,
+      'weight' => 140,
+    ],
+    [
+      'label' => 'foot',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0002387',
+      'x_min' => 28.0,
+      'x_max' => 72.0,
+      'y_min' => 90.0,
+      'y_max' => 100.0,
+      'weight' => 150,
+    ],
+    [
+      'label' => 'right foot',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0002387',
+      'x_min' => 28.0,
+      'x_max' => 49.0,
+      'y_min' => 90.0,
+      'y_max' => 100.0,
+      'weight' => 160,
+    ],
+    [
+      'label' => 'left foot',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0002387',
+      'x_min' => 51.0,
+      'x_max' => 72.0,
+      'y_min' => 90.0,
+      'y_max' => 100.0,
+      'weight' => 170,
+    ],
+  ];
+
+  foreach ($mappings as $mapping) {
+    $existing_id = $db->select('sir_anatomy_mapping', 'm')
+      ->fields('m', ['id'])
+      ->condition('label', $mapping['label'])
+      ->execute()
+      ->fetchField();
+
+    if ($existing_id) {
+      $db->update('sir_anatomy_mapping')
+        ->fields([
+          'uberon_uri' => $mapping['uberon_uri'],
+          'x_min' => $mapping['x_min'],
+          'x_max' => $mapping['x_max'],
+          'y_min' => $mapping['y_min'],
+          'y_max' => $mapping['y_max'],
+          'description' => 'Seeded default full-body mapping',
+          'status' => 1,
+          'weight' => $mapping['weight'],
+          'changed' => $now,
+        ])
+        ->condition('id', (int) $existing_id)
+        ->execute();
+      continue;
+    }
+
+    $db->insert('sir_anatomy_mapping')
+      ->fields([
+        'label' => $mapping['label'],
+        'uberon_uri' => $mapping['uberon_uri'],
+        'x_min' => $mapping['x_min'],
+        'x_max' => $mapping['x_max'],
+        'y_min' => $mapping['y_min'],
+        'y_max' => $mapping['y_max'],
+        'description' => 'Seeded default full-body mapping',
+        'status' => 1,
+        'weight' => $mapping['weight'],
+        'created' => $now,
+        'changed' => $now,
+        'uid' => 1,
+      ])
+      ->execute();
+  }
+}
+
+/**
+ * Adds additional default mappings and normalizes malformed legacy URIs.
+ */
+function sir_update_8004() {
+  $schema = \Drupal::database()->schema();
+  if (!$schema->tableExists('sir_anatomy_mapping')) {
+    return;
+  }
+
+  $now = \Drupal::time()->getRequestTime();
+  $db = \Drupal::database();
+
+  // Normalize legacy malformed UBERON URI for Lung rows.
+  $db->update('sir_anatomy_mapping')
+    ->fields([
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0002048',
+      'changed' => $now,
+    ])
+    ->condition('label', 'Lung')
+    ->condition('uberon_uri', 'http://purl.obolibrary.org/obo/UBERON_/0002048')
+    ->execute();
+
+  // Coordinates are normalized percentages over full_body.png (0-100).
+  $mappings = [
+    [
+      'label' => 'sholder',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0001467',
+      'x_min' => 25.0,
+      'x_max' => 75.0,
+      'y_min' => 14.0,
+      'y_max' => 24.0,
+      'weight' => 180,
+    ],
+    [
+      'label' => 'right shoulder',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0001467',
+      'x_min' => 25.0,
+      'x_max' => 42.0,
+      'y_min' => 14.0,
+      'y_max' => 24.0,
+      'weight' => 190,
+    ],
+    [
+      'label' => 'left shoulder',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0001467',
+      'x_min' => 58.0,
+      'x_max' => 75.0,
+      'y_min' => 14.0,
+      'y_max' => 24.0,
+      'weight' => 200,
+    ],
+    [
+      'label' => 'knee',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0001465',
+      'x_min' => 36.0,
+      'x_max' => 64.0,
+      'y_min' => 74.0,
+      'y_max' => 86.0,
+      'weight' => 210,
+    ],
+    [
+      'label' => 'right knee',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0001465',
+      'x_min' => 36.0,
+      'x_max' => 49.0,
+      'y_min' => 74.0,
+      'y_max' => 86.0,
+      'weight' => 220,
+    ],
+    [
+      'label' => 'left knee',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0001465',
+      'x_min' => 51.0,
+      'x_max' => 64.0,
+      'y_min' => 74.0,
+      'y_max' => 86.0,
+      'weight' => 230,
+    ],
+    [
+      'label' => 'uterus',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0000995',
+      'x_min' => 45.0,
+      'x_max' => 55.0,
+      'y_min' => 62.0,
+      'y_max' => 72.0,
+      'weight' => 240,
+    ],
+    [
+      'label' => 'stomach',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0000945',
+      'x_min' => 43.0,
+      'x_max' => 57.0,
+      'y_min' => 32.0,
+      'y_max' => 44.0,
+      'weight' => 250,
+    ],
+  ];
+
+  foreach ($mappings as $mapping) {
+    $existing_id = $db->select('sir_anatomy_mapping', 'm')
+      ->fields('m', ['id'])
+      ->condition('label', $mapping['label'])
+      ->execute()
+      ->fetchField();
+
+    if ($existing_id) {
+      $db->update('sir_anatomy_mapping')
+        ->fields([
+          'uberon_uri' => $mapping['uberon_uri'],
+          'x_min' => $mapping['x_min'],
+          'x_max' => $mapping['x_max'],
+          'y_min' => $mapping['y_min'],
+          'y_max' => $mapping['y_max'],
+          'description' => 'Seeded default full-body mapping',
+          'status' => 1,
+          'weight' => $mapping['weight'],
+          'changed' => $now,
+        ])
+        ->condition('id', (int) $existing_id)
+        ->execute();
+      continue;
+    }
+
+    $db->insert('sir_anatomy_mapping')
+      ->fields([
+        'label' => $mapping['label'],
+        'uberon_uri' => $mapping['uberon_uri'],
+        'x_min' => $mapping['x_min'],
+        'x_max' => $mapping['x_max'],
+        'y_min' => $mapping['y_min'],
+        'y_max' => $mapping['y_max'],
+        'description' => 'Seeded default full-body mapping',
+        'status' => 1,
+        'weight' => $mapping['weight'],
+        'created' => $now,
+        'changed' => $now,
+        'uid' => 1,
+      ])
+      ->execute();
+  }
+}
+
+/**
+ * Removes selected default mappings that should no longer be available.
+ */
+function sir_update_8005() {
+  $schema = \Drupal::database()->schema();
+  if (!$schema->tableExists('sir_anatomy_mapping')) {
+    return;
+  }
+
+  $labels_to_remove = [
+    'hand',
+    'right hand',
+    'left hand',
+    'ledt hand',
+    'foot',
+    'right foot',
+    'left foot',
+    'knee',
+    'right knee',
+    'left knee',
+    'shoulder',
+    'right shoulder',
+    'left shoulder',
+    'sholder',
+    'leg',
+    'right leg',
+    'left leg',
+  ];
+
+  \Drupal::database()->delete('sir_anatomy_mapping')
+    ->condition('label', $labels_to_remove, 'IN')
+    ->execute();
+}
+
+/**
+ * Removes generic labels and keeps/restores right/left side variants.
+ */
+function sir_update_8006() {
+  $schema = \Drupal::database()->schema();
+  if (!$schema->tableExists('sir_anatomy_mapping')) {
+    return;
+  }
+
+  $db = \Drupal::database();
+  $now = \Drupal::time()->getRequestTime();
+
+  // Remove only generic labels.
+  $db->delete('sir_anatomy_mapping')
+    ->condition('label', ['hand', 'foot', 'knee', 'shoulder', 'sholder', 'leg', 'arm'], 'IN')
+    ->execute();
+
+  // Restore side-specific labels if they were deleted previously.
+  $side_mappings = [
+    [
+      'label' => 'right hand',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0002398',
+      'x_min' => 4.0,
+      'x_max' => 20.0,
+      'y_min' => 46.0,
+      'y_max' => 70.0,
+      'weight' => 100,
+    ],
+    [
+      'label' => 'left hand',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0002398',
+      'x_min' => 80.0,
+      'x_max' => 96.0,
+      'y_min' => 46.0,
+      'y_max' => 70.0,
+      'weight' => 110,
+    ],
+    [
+      'label' => 'right foot',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0002387',
+      'x_min' => 28.0,
+      'x_max' => 49.0,
+      'y_min' => 90.0,
+      'y_max' => 100.0,
+      'weight' => 160,
+    ],
+    [
+      'label' => 'left foot',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0002387',
+      'x_min' => 51.0,
+      'x_max' => 72.0,
+      'y_min' => 90.0,
+      'y_max' => 100.0,
+      'weight' => 170,
+    ],
+    [
+      'label' => 'right knee',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0001465',
+      'x_min' => 36.0,
+      'x_max' => 49.0,
+      'y_min' => 74.0,
+      'y_max' => 86.0,
+      'weight' => 220,
+    ],
+    [
+      'label' => 'left knee',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0001465',
+      'x_min' => 51.0,
+      'x_max' => 64.0,
+      'y_min' => 74.0,
+      'y_max' => 86.0,
+      'weight' => 230,
+    ],
+    [
+      'label' => 'right shoulder',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0001467',
+      'x_min' => 25.0,
+      'x_max' => 42.0,
+      'y_min' => 14.0,
+      'y_max' => 24.0,
+      'weight' => 190,
+    ],
+    [
+      'label' => 'left shoulder',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0001467',
+      'x_min' => 58.0,
+      'x_max' => 75.0,
+      'y_min' => 14.0,
+      'y_max' => 24.0,
+      'weight' => 200,
+    ],
+    [
+      'label' => 'right leg',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0000978',
+      'x_min' => 30.0,
+      'x_max' => 49.0,
+      'y_min' => 50.0,
+      'y_max' => 92.0,
+      'weight' => 130,
+    ],
+    [
+      'label' => 'left leg',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0000978',
+      'x_min' => 51.0,
+      'x_max' => 70.0,
+      'y_min' => 50.0,
+      'y_max' => 92.0,
+      'weight' => 140,
+    ],
+    [
+      'label' => 'right arm',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0001460',
+      'x_min' => 10.0,
+      'x_max' => 32.0,
+      'y_min' => 15.0,
+      'y_max' => 55.0,
+      'weight' => 70,
+    ],
+    [
+      'label' => 'left arm',
+      'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0001460',
+      'x_min' => 68.0,
+      'x_max' => 90.0,
+      'y_min' => 15.0,
+      'y_max' => 55.0,
+      'weight' => 80,
+    ],
+  ];
+
+  foreach ($side_mappings as $mapping) {
+    $exists = $db->select('sir_anatomy_mapping', 'm')
+      ->fields('m', ['id'])
+      ->condition('label', $mapping['label'])
+      ->execute()
+      ->fetchField();
+
+    if ($exists) {
+      continue;
+    }
+
+    $db->insert('sir_anatomy_mapping')
+      ->fields([
+        'label' => $mapping['label'],
+        'uberon_uri' => $mapping['uberon_uri'],
+        'x_min' => $mapping['x_min'],
+        'x_max' => $mapping['x_max'],
+        'y_min' => $mapping['y_min'],
+        'y_max' => $mapping['y_max'],
+        'description' => 'Restored side-specific full-body mapping',
+        'status' => 1,
+        'weight' => $mapping['weight'],
+        'created' => $now,
+        'changed' => $now,
+        'uid' => 1,
+      ])
+      ->execute();
+  }
+}
+
+/**
+ * Expands lung mapping into a selectable chest region.
+ */
+function sir_update_8007() {
+  $schema = \Drupal::database()->schema();
+  if (!$schema->tableExists('sir_anatomy_mapping')) {
+    return;
+  }
+
+  $db = \Drupal::database();
+  $now = \Drupal::time()->getRequestTime();
+
+  // Ensure lung is selectable as an area rather than a single point.
+  // This region intentionally overlaps heart; the UI overlap chooser handles it.
+  $fields = [
+    'uberon_uri' => 'http://purl.obolibrary.org/obo/UBERON_0002048',
+    'x_min' => 39.0,
+    'x_max' => 61.0,
+    'y_min' => 17.0,
+    'y_max' => 34.0,
+    'description' => 'Normalized selectable lung chest region',
+    'status' => 1,
+    'weight' => 45,
+    'changed' => $now,
+  ];
+
+  $updated = $db->update('sir_anatomy_mapping')
+    ->fields($fields)
+    ->condition('label', ['lung', 'Lung'], 'IN')
+    ->execute();
+
+  if (!$updated) {
+    $db->insert('sir_anatomy_mapping')
+      ->fields($fields + [
+        'label' => 'lung',
+        'created' => $now,
+        'uid' => 1,
+      ])
+      ->execute();
+  }
+}

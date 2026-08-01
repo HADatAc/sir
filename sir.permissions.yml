@@ -2,3 +2,8 @@ access reviewer menu:
   title: 'Access Reviewer Menu'
   description: 'Allow access to the Reviewer menu link'
   restrict access: TRUE
+
+administer sir anatomy mappings:
+  title: 'Administer SIR anatomy mappings'
+  description: 'Create, update, and delete coordinate to UBERON mappings used by Search by Anatomy.'
+  restrict access: TRUE

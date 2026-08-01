@@ -4,6 +4,8 @@ use Drupal\Core\Path\AliasStorageInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Routing\RouteProviderInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 
 /**
  * Implements hook_theme
@@ -73,6 +75,100 @@ function sir_menu_links_discovered_alter(&$links) {
 function sir_page_attachments(array &$attachments) {
   $attachments['#attached']['library'][] = 'core/drupal.dialog';
   $attachments['#attached']['library'][] = 'rep/rep_js_css';
+}
+
+/**
+ * Implements hook_preprocess_page().
+ */
+function sir_preprocess_page(array &$variables) {
+    $route_name = \Drupal::routeMatch()->getRouteName();
+    if ($route_name !== 'sir.search') {
+        return;
+    }
+
+    $mode = \Drupal::routeMatch()->getParameter('mode');
+    if ($mode !== 'browse') {
+        return;
+    }
+
+    $elementtype = (string) \Drupal::routeMatch()->getParameter('elementtype');
+    if (strtolower($elementtype) !== 'instrument') {
+        return;
+    }
+
+    $target_region = 'sidebar_second';
+    if (!isset($variables['page'][$target_region]) || !is_array($variables['page'][$target_region])) {
+        $target_region = 'sidebar_first';
+    }
+    if (!isset($variables['page'][$target_region]) || !is_array($variables['page'][$target_region])) {
+        $variables['page'][$target_region] = [];
+    }
+
+    $variables['page'][$target_region]['sir_anatomy_sidebar_block'] = [
+        '#type' => 'container',
+        '#attributes' => [
+            'id' => 'sir-anatomy-sidebar-block',
+            'class' => ['block', 'block-sir', 'sir-anatomy-sidebar-block'],
+        ],
+        'title' => [
+            '#type' => 'markup',
+            '#markup' => '<h2>Search Simulators by Anathomy</h2>',
+        ],
+        'content' => [
+            '#type' => 'markup',
+            '#markup' => '<div id="sir-anatomy-panel-host"></div>',
+        ],
+        '#weight' => 100,
+    ];
+}
+
+/**
+ * Adds Search by Anatomy panel to the SIR tree page.
+ */
+function sir_form_tree_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+    $route_name = \Drupal::routeMatch()->getRouteName();
+    if ($route_name !== 'sir.search') {
+        return;
+    }
+
+    $mode = \Drupal::routeMatch()->getParameter('mode');
+    if ($mode !== 'browse') {
+        return;
+    }
+
+    $elementtype = (string) \Drupal::routeMatch()->getParameter('elementtype');
+    if (strtolower($elementtype) !== 'instrument') {
+        return;
+    }
+
+    $request = \Drupal::request();
+    $current_user = \Drupal::currentUser();
+    $is_admin = $current_user->hasPermission('administer sir anatomy mappings');
+    $config_mode = $is_admin && (string) $request->query->get('anatomy_config', '0') === '1';
+
+    $image_src = \Drupal::service('file_url_generator')->generateString('modules/custom/sir/images/body_map.svg');
+    $list_url = Url::fromRoute('sir.anatomy_mappings')->toString();
+    $resolve_url = Url::fromRoute('sir.anatomy_resolve')->toString();
+    $save_url = Url::fromRoute('sir.anatomy_mapping_save')->toString();
+    // Build delete URL as a literal template token; route generation enforces
+    // numeric constraints and cannot accept placeholder strings.
+    $delete_template = Url::fromUri('base:/sir/anatomy/mapping/__id__')->toString();
+    $toggle_query = $request->query->all();
+    $toggle_query['anatomy_config'] = $config_mode ? '0' : '1';
+    $config_toggle_url = Url::fromRoute('<current>', [], ['query' => $toggle_query])->toString();
+    $config_toggle_label = $config_mode ? t('Exit configuration mode') : t('Enter configuration mode');
+
+    $form['#attached']['library'][] = 'sir/sir_anatomy';
+    $form['#attached']['drupalSettings']['sirAnatomy'] = [
+        'listUrl' => $list_url,
+        'resolveUrl' => $resolve_url,
+        'saveUrl' => $save_url,
+        'deleteUrlTemplate' => $delete_template,
+        'configMode' => $config_mode,
+        'isAdmin' => $is_admin,
+        'configToggleUrl' => $config_toggle_url,
+        'configToggleLabel' => (string) $config_toggle_label,
+    ];
 }
 
 /**

@@ -310,13 +310,13 @@ class SIRListForm extends FormBase {
     ];
 
     foreach ($output as $key => $row) {
-        $row_status = strtolower($row['element_hasStatus']);
-        $row_language = strtolower($row['element_hasLanguage']);
+        $row_status = strtolower((string) ($row['element_hasStatus'] ?? ''));
+        $row_language = strtolower((string) ($row['element_hasLanguage'] ?? ''));
 
         if ($elementtype == 'instrument' || $elementtype == 'codebook')
-          $row_label = strtolower($row['element_name']);
+          $row_label = strtolower((string) ($row['element_name'] ?? ''));
         else if ($elementtype == 'component' || $elementtype == 'componentstem' || $elementtype == 'responseoption')
-          $row_label = strtolower($row['element_content']);
+          $row_label = strtolower((string) ($row['element_content'] ?? ''));
 
         // if ($status_filter !== 'all' && $row_status !== $status_filter) {
         //     continue;

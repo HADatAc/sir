@@ -35,3 +35,15 @@ sir_icons:
     theme:
       css/sir_icons.css: {}
 
+sir_anatomy:
+  version: 1.x
+  css:
+    theme:
+      css/sir.css: {}
+  js:
+    js/sir_anatomy.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+    - core/drupalSettings
+

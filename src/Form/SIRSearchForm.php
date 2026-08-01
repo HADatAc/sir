@@ -236,6 +236,15 @@ class SIRSearchForm extends FormBase {
       ];
     }
 
+    // Host container where the Search by Anatomy panel is rendered.
+    $form['search_by_anatomy_host'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'id' => 'sir-anatomy-panel-host',
+      ],
+      '#weight' => 90,
+    ];
+
     $form['node_comment_display'] = [
       '#type' => 'container',
       '#text' => '',

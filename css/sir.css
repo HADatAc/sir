@@ -111,3 +111,254 @@ div.vertical-tabs__panes {
     min-height: 50px;
   }
 }
+
+.sir-anatomy-sidebar-block {
+  margin-top: 1rem;
+}
+
+.sir-anatomy-panel {
+  width: 100%;
+  margin: 0;
+  overflow: visible;
+  background: #ffffff;
+  border: 1px solid #d8dee8;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(29, 41, 57, 0.12);
+  padding: 14px;
+}
+
+.sir-anatomy-title {
+  margin: 0;
+  color: #0c1f33;
+  font-size: 1.06rem;
+}
+
+.sir-anatomy-config-link {
+  font-size: 0.85rem;
+  display: inline-block;
+  margin-top: 2px;
+}
+
+.sir-anatomy-help {
+  margin: 10px 0;
+  font-size: 0.89rem;
+  color: #3e4c5b;
+}
+
+.sir-anatomy-tooltips-toggle {
+  margin-bottom: 8px;
+  font-size: 0.8rem;
+  padding: 4px 8px;
+}
+
+.sir-anatomy-map-wrap {
+  position: relative;
+  border: 1px solid #e1e8f0;
+  border-radius: 8px;
+  padding: 8px;
+  background: #f9fbff;
+}
+
+#sir-anatomy-map {
+  width: 100%;
+  height: auto;
+  cursor: crosshair;
+}
+
+.sir-anatomy-hover-tip {
+  display: none;
+  position: absolute;
+  z-index: 5;
+  max-width: 260px;
+  pointer-events: none;
+  background: rgba(12, 31, 51, 0.95);
+  color: #ffffff;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 0.76rem;
+  line-height: 1.25;
+  box-shadow: 0 8px 18px rgba(12, 31, 51, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.sir-anatomy-tips-layer {
+  position: absolute;
+  inset: 8px;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.sir-anatomy-tips-layer--config {
+  pointer-events: auto;
+}
+
+.sir-anatomy-region-tip {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  background: rgba(12, 31, 51, 0.82);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.68rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  box-shadow: 0 4px 10px rgba(8, 18, 28, 0.35);
+}
+
+.sir-anatomy-region-tip--draggable {
+  cursor: grab;
+  pointer-events: auto;
+  user-select: none;
+}
+
+.sir-anatomy-map-wrap--dragging .sir-anatomy-region-tip--draggable {
+  cursor: grabbing;
+}
+
+.sir-anatomy-selection {
+  margin-top: 8px;
+  border: 1px solid #e5edf6;
+  border-radius: 8px;
+  background: #f8fafc;
+  padding: 8px;
+  font-size: 0.86rem;
+  word-break: break-word;
+}
+
+.sir-anatomy-overlap-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.sir-anatomy-overlap-choice {
+  text-align: left;
+  white-space: normal;
+}
+
+.sir-anatomy-overlap-uri {
+  font-size: 0.75rem;
+  opacity: 0.9;
+}
+
+.sir-anatomy-mappings {
+  margin-top: 10px;
+  border-top: 1px solid #ebf0f6;
+  padding-top: 8px;
+  font-size: 0.85rem;
+}
+
+.sir-anatomy-mapping-item {
+  padding: 6px 0;
+  border-bottom: 1px dotted #dde5f0;
+}
+
+.sir-anatomy-mapping-item:last-child {
+  border-bottom: none;
+}
+
+.sir-anatomy-config {
+  margin-top: 12px;
+  border-top: 1px solid #ebf0f6;
+  padding-top: 10px;
+}
+
+.sir-anatomy-capture-help {
+  margin: 8px 0;
+  font-size: 0.8rem;
+  color: #304256;
+}
+
+.sir-anatomy-capture-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.sir-anatomy-capture-actions .btn {
+  font-size: 0.78rem;
+  padding: 4px 8px;
+}
+
+.sir-anatomy-capture-status {
+  margin-bottom: 8px;
+  font-size: 0.79rem;
+  color: #1f3550;
+  background: #edf4ff;
+  border: 1px solid #d6e4f7;
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+
+.sir-anatomy-map-wrap--capture {
+  box-shadow: 0 0 0 2px rgba(11, 94, 215, 0.25) inset;
+}
+
+.sir-anatomy-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.sir-anatomy-grid label {
+  display: block;
+  font-size: 0.8rem;
+  color: #243244;
+}
+
+.sir-anatomy-grid input,
+.sir-anatomy-grid select {
+  width: 100%;
+  margin-top: 3px;
+  border: 1px solid #cfd8e3;
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 0.84rem;
+}
+
+.sir-anatomy-config-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.sir-anatomy-config-actions .btn {
+  font-size: 0.82rem;
+  padding: 5px 9px;
+}
+
+#sir-anatomy-config-table {
+  margin-top: 10px;
+}
+
+#sir-anatomy-config-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.79rem;
+}
+
+#sir-anatomy-config-table th,
+#sir-anatomy-config-table td {
+  border: 1px solid #dbe3ef;
+  padding: 5px;
+  text-align: left;
+  vertical-align: top;
+}
+
+#sir-anatomy-config-table th {
+  background: #f3f7fb;
+}
+
+.sir-anatomy-row-actions {
+  display: flex;
+  gap: 4px;
+}
+
+@media (max-width: 1200px) {
+  .sir-anatomy-panel {
+    width: 100%;
+    margin: 0;
+  }
+}

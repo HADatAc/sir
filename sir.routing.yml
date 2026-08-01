@@ -12,6 +12,49 @@ sir.search:
   options:
     no_cache: 'TRUE'
 
+sir.anatomy_mappings:
+  path: 'sir/anatomy/mappings'
+  defaults:
+    _controller: '\Drupal\sir\Controller\AnatomyMapController::listMappings'
+    _format: json
+  requirements:
+    _permission: 'access content'
+  options:
+    no_cache: 'TRUE'
+
+sir.anatomy_resolve:
+  path: 'sir/anatomy/resolve'
+  defaults:
+    _controller: '\Drupal\sir\Controller\AnatomyMapController::resolveByCoordinate'
+    _format: json
+  requirements:
+    _permission: 'access content'
+  options:
+    no_cache: 'TRUE'
+
+sir.anatomy_mapping_save:
+  path: 'sir/anatomy/mapping/save'
+  defaults:
+    _controller: '\Drupal\sir\Controller\AnatomyMapController::saveMapping'
+    _format: json
+  methods: [POST]
+  requirements:
+    _permission: 'administer sir anatomy mappings'
+  options:
+    no_cache: 'TRUE'
+
+sir.anatomy_mapping_delete:
+  path: 'sir/anatomy/mapping/{id}'
+  defaults:
+    _controller: '\Drupal\sir\Controller\AnatomyMapController::deleteMapping'
+    _format: json
+  methods: [DELETE]
+  requirements:
+    _permission: 'administer sir anatomy mappings'
+    id: '\\d+'
+  options:
+    no_cache: 'TRUE'
+
 # Main menu options
 
 sir.list_element:
