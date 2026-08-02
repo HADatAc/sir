@@ -121,6 +121,48 @@ class AnatomyMapController extends ControllerBase {
   }
 
   /**
+   * Proxies instrument lookups by anatomy to HASCOAPI.
+   */
+  public function listInstrumentsByAnatomy(string $uberon, Request $request): JsonResponse {
+    $uberon = trim($uberon);
+    if ($uberon === '') {
+      return new JsonResponse([
+        'isSuccessful' => FALSE,
+        'message' => 'No UBERON URI token has been provided.',
+      ], 400);
+    }
+
+    $api = \Drupal::service('rep.api_connector');
+    $uberon_path = str_starts_with($uberon, 'b64:') ? $uberon : rawurlencode($uberon);
+    $endpoint = '/hascoapi/api/instrument/byanatomy/' . $uberon_path;
+
+    $organization_uri = trim((string) $request->query->get('organizationUri', ''));
+    if ($organization_uri !== '') {
+      $endpoint .= '?organizationUri=' . rawurlencode($organization_uri);
+    }
+
+    $url = rtrim((string) $api->getApiUrl(), '/') . $endpoint;
+    $raw = $api->perform_http_request('GET', $url, $api->getHeader());
+    if ($raw === NULL) {
+      return new JsonResponse([
+        'isSuccessful' => FALSE,
+        'message' => 'Failed to fetch instruments by anatomy from HASCOAPI.',
+        'details' => (string) $api->getErrorMessage(),
+      ], 502);
+    }
+
+    $decoded = json_decode((string) $raw, TRUE);
+    if (!is_array($decoded)) {
+      return new JsonResponse([
+        'isSuccessful' => FALSE,
+        'message' => 'Invalid JSON response from HASCOAPI.',
+      ], 502);
+    }
+
+    return new JsonResponse($decoded, 200);
+  }
+
+  /**
    * Creates or updates a mapping.
    */
   public function saveMapping(Request $request): JsonResponse {

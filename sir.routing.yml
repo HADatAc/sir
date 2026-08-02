@@ -32,6 +32,17 @@ sir.anatomy_resolve:
   options:
     no_cache: 'TRUE'
 
+sir.anatomy_instruments:
+  path: 'sir/anatomy/instruments/{uberon}'
+  defaults:
+    _controller: '\Drupal\sir\Controller\AnatomyMapController::listInstrumentsByAnatomy'
+    _format: json
+  requirements:
+    _permission: 'access content'
+    uberon: '.+'
+  options:
+    no_cache: 'TRUE'
+
 sir.anatomy_mapping_save:
   path: 'sir/anatomy/mapping/save'
   defaults:

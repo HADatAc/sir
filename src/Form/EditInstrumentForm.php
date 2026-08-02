@@ -220,6 +220,27 @@ class EditInstrumentForm extends FormBase {
         'disabled' => 'disabled',
       ],
     ];
+    $form['instrument_information']['instrument_parent_wrapper']['instrument_fidelity'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Fidelity'),
+      '#options' => [
+        '' => $this->t('Select fidelity (optional)'),
+        'high' => $this->t('High'),
+        'medium' => $this->t('Medium'),
+        'low' => $this->t('Low'),
+      ],
+      '#default_value' => $this->getInstrument()->hasFidelity ?? '',
+    ];
+    $form['instrument_information']['instrument_parent_wrapper']['instrument_anatomy'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Anatomy (UBERON URIs)'),
+      '#description' => $this->t('Structured list input: one UBERON URI per line, comma, or semicolon. It will be normalized to semicolon-separated values.'),
+      '#attributes' => [
+        'placeholder' => "http://purl.obolibrary.org/obo/UBERON_0002048\nhttp://purl.obolibrary.org/obo/UBERON_0002107",
+      ],
+      '#rows' => 4,
+      '#default_value' => $this->getInstrument()->hasAnatomy ?? '',
+    ];
     $form['instrument_information']['instrument_parent_wrapper']['instrument_description'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
@@ -529,6 +550,17 @@ class EditInstrumentForm extends FormBase {
       if(strlen($form_state->getValue('instrument_version')) < 1) {
         $form_state->setErrorByName('instrument_version', $this->t('Please enter a valid version'));
       }
+
+      $normalizedAnatomy = $this->normalizeAnatomyList((string) $form_state->getValue('instrument_anatomy'));
+      $invalidUris = $this->findInvalidUberonUris($normalizedAnatomy);
+      if (!empty($invalidUris)) {
+        $form_state->setErrorByName(
+          'instrument_anatomy',
+          $this->t('Invalid UBERON URI(s): @uris', ['@uris' => implode(', ', $invalidUris)])
+        );
+      }
+
+      $form_state->setValue('instrument_anatomy', $normalizedAnatomy);
     }
   }
 
@@ -556,19 +588,28 @@ class EditInstrumentForm extends FormBase {
       // CHECK if Status is CURRENT OR DEPRECATED FOR NEW CREATION
       if ($this->getInstrument()->hasStatus === VSTOI::CURRENT || $this->getInstrument()->hasStatus === VSTOI::DEPRECATED) {
 
-        $instrumentJson = '{"uri":"'.Utils::uriGen('instrument').'",'.
-        '"superUri":"'.Utils::uriFromAutocomplete($form_state->getValue('instrument_type')).'",'.
-        '"hascoTypeUri":"'.VSTOI::INSTRUMENT.'",'.
-        '"hasStatus":"'.VSTOI::DRAFT.'",'.
-        '"label":"'.$form_state->getValue('instrument_name').'",'.
-        '"hasShortName":"'.$form_state->getValue('instrument_abbreviation').'",'.
-        '"hasInformant":"'.$form_state->getValue('instrument_informant').'",'.
-        '"hasLanguage":"'.$form_state->getValue('instrument_language').'",'.
-        '"hasVersion":"'.$form_state->getValue('instrument_version').'",'.
-        '"hasWebDocument":"",'.
-        '"hasImageUri":"",' .
-        '"comment":"'.$form_state->getValue('instrument_description').'",'.
-        '"hasSIRManagerEmail":"'.$useremail.'"}';
+        $instrumentPayload = [
+          'uri' => Utils::uriGen('instrument'),
+          'superUri' => Utils::uriFromAutocomplete($form_state->getValue('instrument_type')),
+          'hascoTypeUri' => VSTOI::INSTRUMENT,
+          'hasStatus' => VSTOI::DRAFT,
+          'label' => $form_state->getValue('instrument_name'),
+          'hasShortName' => $form_state->getValue('instrument_abbreviation'),
+          'hasInformant' => $form_state->getValue('instrument_informant'),
+          'hasLanguage' => $form_state->getValue('instrument_language'),
+          'hasVersion' => $form_state->getValue('instrument_version'),
+          'hasFidelity' => trim((string) $form_state->getValue('instrument_fidelity')),
+          'hasAnatomy' => $this->normalizeAnatomyList((string) $form_state->getValue('instrument_anatomy')),
+          'hasWebDocument' => '',
+          'hasImageUri' => '',
+          'comment' => $form_state->getValue('instrument_description'),
+          'hasSIRManagerEmail' => $useremail,
+        ];
+
+        $instrumentJson = json_encode($instrumentPayload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if ($instrumentJson === false) {
+          throw new \RuntimeException('Failed to encode instrument payload as JSON.');
+        }
 
         // ADD NEW INSTRUMENT VERSION
         $api->elementAdd('instrument', $instrumentJson);
@@ -631,30 +672,36 @@ class EditInstrumentForm extends FormBase {
 
         // MUST PAY ATENTION TO CONTANINER ANS NEXT/PREVIOUS/ETC...
 
-        $instrumentJson = '{"uri":"'.$this->getInstrumentUri().'",'.
-        '"superUri":"'.Utils::uriFromAutocomplete($form_state->getValue('instrument_type')).'",'.
-        '"hascoTypeUri":"'.VSTOI::INSTRUMENT.'",'.
-        '"hasStatus":"'.VSTOI::DRAFT.'",'.
-        '"label":"'.$form_state->getValue('instrument_name').'",'.
-        '"hasShortName":"'.$form_state->getValue('instrument_abbreviation').'",'.
-        '"hasInformant":"'.$form_state->getValue('instrument_informant').'",'.
-        '"hasLanguage":"'.$form_state->getValue('instrument_language').'",'.
-        '"hasVersion":"'.$form_state->getValue('instrument_version').'",'.
-        '"hasWebDocument":"' . $instrument_webdocument . '",' .
-        '"hasImageUri":"' . $instrument_image . '",' .
-        '"comment":"'.$form_state->getValue('instrument_description').'",'.
+        $instrumentPayload = [
+          'uri' => $this->getInstrumentUri(),
+          'superUri' => Utils::uriFromAutocomplete($form_state->getValue('instrument_type')),
+          'hascoTypeUri' => VSTOI::INSTRUMENT,
+          'hasStatus' => VSTOI::DRAFT,
+          'label' => $form_state->getValue('instrument_name'),
+          'hasShortName' => $form_state->getValue('instrument_abbreviation'),
+          'hasInformant' => $form_state->getValue('instrument_informant'),
+          'hasLanguage' => $form_state->getValue('instrument_language'),
+          'hasVersion' => $form_state->getValue('instrument_version'),
+          'hasFidelity' => trim((string) $form_state->getValue('instrument_fidelity')),
+          'hasAnatomy' => $this->normalizeAnatomyList((string) $form_state->getValue('instrument_anatomy')),
+          'hasWebDocument' => $instrument_webdocument,
+          'hasImageUri' => $instrument_image,
+          'comment' => $form_state->getValue('instrument_description'),
+          'hasFirst' => $this->getInstrument()->hasFirst,
+          'belongsTo' => $this->getInstrument()->belongsTo,
+          'hasNext' => $this->getInstrument()->hasNext,
+          'hasPrevious' => $this->getInstrument()->hasPrevious,
+          'hasPriority' => $this->getInstrument()->hasPriority,
+          'hasMakerUri' => Utils::uriFromAutocomplete($form_state->getValue('instrument_maker')),
+          'hasReviewNote' => $this->getInstrument()->hasReviewNote,
+          'hasEditorEmail' => $this->getInstrument()->hasEditorEmail,
+          'hasSIRManagerEmail' => $useremail,
+        ];
 
-        '"hasFirst":"'.$this->getInstrument()->hasFirst.'",'.
-        '"belongsTo":"'.$this->getInstrument()->belongsTo.'",'.
-        '"hasNext":"'.$this->getInstrument()->hasNext.'",'.
-        '"hasPrevious":"'.$this->getInstrument()->hasPrevious.'",'.
-        '"hasPriority":"'.$this->getInstrument()->hasPriority.'",'.
-        '"hasMakerUri":"'.Utils::uriFromAutocomplete($form_state->getValue('instrument_maker')).'",'.
-        // '"annotations":"' . ($this->getInstrument()->annotations ?? null).'",'.
-
-        '"hasReviewNote":"'.$this->getInstrument()->hasReviewNote.'",'.
-        '"hasEditorEmail":"'.$this->getInstrument()->hasEditorEmail.'",'.
-        '"hasSIRManagerEmail":"'.$useremail.'"}';
+        $instrumentJson = json_encode($instrumentPayload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if ($instrumentJson === false) {
+          throw new \RuntimeException('Failed to encode instrument payload as JSON.');
+        }
 
         // dpm($instrumentJson);
         // return false;
@@ -685,6 +732,53 @@ class EditInstrumentForm extends FormBase {
       $response->send();
       return;
     }
+  }
+
+  private function normalizeAnatomyList(string $raw): string {
+    $raw = trim($raw);
+    if ($raw === '') {
+      return '';
+    }
+
+    $tokens = preg_split('/[;,\r\n]+/', $raw);
+    if ($tokens === false) {
+      return '';
+    }
+
+    $normalized = [];
+    foreach ($tokens as $token) {
+      $token = trim($token);
+      if ($token === '') {
+        continue;
+      }
+      if (!in_array($token, $normalized, true)) {
+        $normalized[] = $token;
+      }
+    }
+
+    return implode(';', $normalized);
+  }
+
+  private function findInvalidUberonUris(string $normalized): array {
+    if ($normalized === '') {
+      return [];
+    }
+
+    $invalid = [];
+    $tokens = explode(';', $normalized);
+    $pattern = '/^https?:\/\/purl\.obolibrary\.org\/obo\/UBERON_\d+$/';
+
+    foreach ($tokens as $token) {
+      $uri = trim($token);
+      if ($uri === '') {
+        continue;
+      }
+      if (!preg_match($pattern, $uri)) {
+        $invalid[] = $uri;
+      }
+    }
+
+    return $invalid;
   }
 
 

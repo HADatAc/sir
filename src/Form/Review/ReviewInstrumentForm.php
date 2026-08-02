@@ -219,6 +219,19 @@ class ReviewInstrumentForm extends FormBase {
         'disabled' => 'disabled',
       ],
     ];
+    $form['instrument_information']['instrument_fidelity'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Fidelity'),
+      '#default_value' => $this->getInstrument()->hasFidelity ?? '',
+      '#disabled' => TRUE,
+    ];
+    $form['instrument_information']['instrument_anatomy'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Anatomy (UBERON URIs)'),
+      '#description' => $this->t('Semicolon-separated list of UBERON class URIs.'),
+      '#default_value' => $this->getInstrument()->hasAnatomy ?? '',
+      '#disabled' => TRUE,
+    ];
     $form['instrument_information']['instrument_description'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
@@ -594,29 +607,35 @@ class ReviewInstrumentForm extends FormBase {
         $useremail = \Drupal::currentUser()->getEmail();
 
         // WE MUST ADD REVIEW NOTES TO INSTRUMENT
-        $instrumentJson = '{"uri":"'.$this->getInstrumentUri().'",'.
-        '"superUri":"'.$this->getInstrument()->superUri.'",'.
-        '"hascoTypeUri":"'.VSTOI::INSTRUMENT.'",'.
-        '"hasStatus":"'.VSTOI::DRAFT.'",'.
-        '"label":"'.$this->getInstrument()->label.'",'.
-        '"hasShortName":"'.$this->getInstrument()->hasShortName.'",'.
-        '"hasInformant":"'.$this->getInstrument()->hasInformant.'",'.
-        '"hasLanguage":"'.$this->getInstrument()->hasLanguage.'",'.
-        '"hasVersion":"'.$this->getInstrument()->hasVersion.'",'.
-        '"hasWebDocument":"' . $this->getInstrument()->hasWebDocument . '",' .
-        '"hasImageUri":"' . $this->getInstrument()->hasImageUri . '",' .
-        '"comment":"'.$this->getInstrument()->comment.'",'.
-        '"hasReviewNote":"'.$form_state->getValue('instrument_hasreviewnote').'",'.
-        '"hasEditorEmail":"'.$useremail.'",'.
+        $instrumentPayload = [
+          'uri' => $this->getInstrumentUri(),
+          'superUri' => $this->getInstrument()->superUri,
+          'hascoTypeUri' => VSTOI::INSTRUMENT,
+          'hasStatus' => VSTOI::DRAFT,
+          'label' => $this->getInstrument()->label,
+          'hasShortName' => $this->getInstrument()->hasShortName,
+          'hasInformant' => $this->getInstrument()->hasInformant,
+          'hasLanguage' => $this->getInstrument()->hasLanguage,
+          'hasVersion' => $this->getInstrument()->hasVersion,
+          'hasFidelity' => $this->getInstrument()->hasFidelity ?? '',
+          'hasAnatomy' => $this->normalizeAnatomyList((string) ($this->getInstrument()->hasAnatomy ?? '')),
+          'hasWebDocument' => $this->getInstrument()->hasWebDocument,
+          'hasImageUri' => $this->getInstrument()->hasImageUri,
+          'comment' => $this->getInstrument()->comment,
+          'hasReviewNote' => $form_state->getValue('instrument_hasreviewnote'),
+          'hasEditorEmail' => $useremail,
+          'hasFirst' => $this->getInstrument()->hasFirst,
+          'belongsTo' => $this->getInstrument()->belongsTo,
+          'hasNext' => $this->getInstrument()->hasNext,
+          'hasPrevious' => $this->getInstrument()->hasPrevious,
+          'hasPriority' => $this->getInstrument()->hasPriority,
+          'hasSIRManagerEmail' => $this->getInstrument()->hasSIRManagerEmail,
+        ];
 
-        '"hasFirst":"'.$this->getInstrument()->hasFirst.'",'.
-        '"belongsTo":"'.$this->getInstrument()->belongsTo.'",'.
-        '"hasNext":"'.$this->getInstrument()->hasNext.'",'.
-        '"hasPrevious":"'.$this->getInstrument()->hasPrevious.'",'.
-        '"hasPriority":"'.$this->getInstrument()->hasPriority.'",'.
-        // '"annotations":"' . ($this->getInstrument()->annotations ?? null).'",'.
-
-        '"hasSIRManagerEmail":"'.$this->getInstrument()->hasSIRManagerEmail.'"}';
+        $instrumentJson = json_encode($instrumentPayload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if ($instrumentJson === false) {
+          throw new \RuntimeException('Failed to encode instrument payload as JSON.');
+        }
 
         // Must Delete OLD Instrument and Create NEW Instrument
         $api->elementDel('instrument', $this->getInstrumentUri());
@@ -650,6 +669,31 @@ class ReviewInstrumentForm extends FormBase {
       $response->send();
       return;
     }
+  }
+
+  private function normalizeAnatomyList(string $raw): string {
+    $raw = trim($raw);
+    if ($raw === '') {
+      return '';
+    }
+
+    $tokens = preg_split('/[;,\r\n]+/', $raw);
+    if ($tokens === false) {
+      return '';
+    }
+
+    $normalized = [];
+    foreach ($tokens as $token) {
+      $token = trim($token);
+      if ($token === '') {
+        continue;
+      }
+      if (!in_array($token, $normalized, true)) {
+        $normalized[] = $token;
+      }
+    }
+
+    return implode(';', $normalized);
   }
 
 

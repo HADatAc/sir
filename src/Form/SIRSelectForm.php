@@ -164,6 +164,13 @@ class SIRSelectForm extends FormBase {
 
     $type = NULL;
     $manager_email = ManageOwnerFilter::resolveEffectiveOwner($this->manager_email, $manager_filter, $status_filter);
+
+    // Content editors can update selected SIR element types regardless of owner.
+    $contentEditorBypassTypes = ['instrument', 'component', 'codebook', 'responseoption', 'annotation', 'annotationstem'];
+    if (in_array($this->element_type, $contentEditorBypassTypes, TRUE)
+      && in_array('content_editor', \Drupal::currentUser()->getRoles(), TRUE)) {
+      $manager_email = '_';
+    }
     $form_state->set('effective_manager_email', $manager_email);
     $form_state->set('sir_select_filters', [
       'text_filter' => (string) $text_filter,

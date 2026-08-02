@@ -236,11 +236,11 @@ class SIRSearchForm extends FormBase {
       ];
     }
 
-    // Host container where the Search by Anatomy panel is rendered.
+    // Keep this inline placeholder ID distinct so the anatomy panel mounts in the sidebar block.
     $form['search_by_anatomy_host'] = [
       '#type' => 'container',
       '#attributes' => [
-        'id' => 'sir-anatomy-panel-host',
+        'id' => 'sir-anatomy-panel-host-inline',
       ],
       '#weight' => 90,
     ];

@@ -109,14 +109,15 @@ function sir_preprocess_page(array &$variables) {
         '#attributes' => [
             'id' => 'sir-anatomy-sidebar-block',
             'class' => ['block', 'block-sir', 'sir-anatomy-sidebar-block'],
+            'style' => 'height:1080px; max-height:1080px; width:640px; max-width:640px; overflow:hidden; display:flex; flex-direction:column;',
         ],
         'title' => [
             '#type' => 'markup',
-            '#markup' => '<h2>Search Simulators by Anathomy</h2>',
+            '#markup' => '<h2>Search Simulators by Anatomy</h2>',
         ],
         'content' => [
             '#type' => 'markup',
-            '#markup' => '<div id="sir-anatomy-panel-host"></div>',
+            '#markup' => '<div id="sir-anatomy-panel-host" style="flex:1 1 auto; min-height:0; overflow-y:auto;"></div>',
         ],
         '#weight' => 100,
     ];
@@ -150,6 +151,7 @@ function sir_form_tree_form_alter(array &$form, FormStateInterface $form_state, 
     $list_url = Url::fromRoute('sir.anatomy_mappings')->toString();
     $resolve_url = Url::fromRoute('sir.anatomy_resolve')->toString();
     $save_url = Url::fromRoute('sir.anatomy_mapping_save')->toString();
+    $instrument_by_anatomy_template = Url::fromUri('base:/sir/anatomy/instruments/__uberon__')->toString();
     // Build delete URL as a literal template token; route generation enforces
     // numeric constraints and cannot accept placeholder strings.
     $delete_template = Url::fromUri('base:/sir/anatomy/mapping/__id__')->toString();
@@ -163,6 +165,8 @@ function sir_form_tree_form_alter(array &$form, FormStateInterface $form_state, 
         'listUrl' => $list_url,
         'resolveUrl' => $resolve_url,
         'saveUrl' => $save_url,
+        'instrumentByAnatomyUrlTemplate' => $instrument_by_anatomy_template,
+        'organizationUri' => (string) $request->query->get('organizationUri', ''),
         'deleteUrlTemplate' => $delete_template,
         'configMode' => $config_mode,
         'isAdmin' => $is_admin,

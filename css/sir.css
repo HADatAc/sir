@@ -114,6 +114,19 @@ div.vertical-tabs__panes {
 
 .sir-anatomy-sidebar-block {
   margin-top: 1rem;
+  height: 1080px;
+  max-height: 1080px;
+  max-width: 640px;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+#sir-anatomy-panel-host {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .sir-anatomy-panel {
@@ -151,7 +164,20 @@ div.vertical-tabs__panes {
   padding: 4px 8px;
 }
 
+.sir-anatomy-summary-btn {
+  margin: 0 8px 8px 0;
+  font-size: 0.8rem;
+  padding: 4px 8px;
+}
+
+.sir-anatomy-main {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
 .sir-anatomy-map-wrap {
+  flex: 0 0 58%;
   position: relative;
   border: 1px solid #e1e8f0;
   border-radius: 8px;
@@ -162,6 +188,10 @@ div.vertical-tabs__panes {
 #sir-anatomy-map {
   width: 100%;
   height: auto;
+  max-height: 552px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
   cursor: crosshair;
 }
 
@@ -217,13 +247,15 @@ div.vertical-tabs__panes {
 }
 
 .sir-anatomy-selection {
-  margin-top: 8px;
+  flex: 0 0 42%;
   border: 1px solid #e5edf6;
   border-radius: 8px;
   background: #f8fafc;
   padding: 8px;
   font-size: 0.86rem;
   word-break: break-word;
+  max-height: 568px;
+  overflow-y: auto;
 }
 
 .sir-anatomy-overlap-list {
@@ -356,9 +388,156 @@ div.vertical-tabs__panes {
   gap: 4px;
 }
 
+.sir-anatomy-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(12, 25, 38, 0.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.sir-anatomy-modal.is-open {
+  display: flex;
+}
+
+.sir-anatomy-modal__dialog {
+  width: min(920px, 100%);
+  max-height: 85vh;
+  overflow: auto;
+  background: #ffffff;
+  border-radius: 10px;
+  border: 1px solid #d8e1ee;
+  box-shadow: 0 18px 42px rgba(8, 18, 28, 0.35);
+}
+
+.sir-anatomy-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid #e2e9f3;
+}
+
+.sir-anatomy-modal__title {
+  margin: 0;
+  font-size: 1rem;
+  color: #203245;
+}
+
+.sir-anatomy-modal__close {
+  white-space: nowrap;
+}
+
+.sir-anatomy-modal__content {
+  padding: 12px 14px 14px;
+}
+
+.sir-anatomy-modal__subtitle {
+  font-size: 0.86rem;
+  color: #31485d;
+  margin-bottom: 10px;
+}
+
+.sir-anatomy-modal__loading {
+  font-size: 0.88rem;
+  color: #2f465b;
+}
+
+.sir-anatomy-modal__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+
+.sir-anatomy-modal__table th,
+.sir-anatomy-modal__table td {
+  border: 1px solid #dbe3ef;
+  padding: 7px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.sir-anatomy-modal__table th {
+  background: #f4f7fb;
+}
+
+.sir-anatomy-results {
+  margin-top: 8px;
+}
+
+.sir-anatomy-results__meta {
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  color: #1f3550;
+  word-break: break-word;
+}
+
+.sir-anatomy-results__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.sir-anatomy-result-card {
+  background: #f3f6fb;
+  border: 1px solid #d6dfec;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 2px 6px rgba(24, 40, 60, 0.08);
+  font-size: 0.88rem;
+}
+
+.sir-anatomy-result-card__title {
+  margin-bottom: 8px;
+  color: #10263c;
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.3;
+}
+
+.sir-anatomy-result-card__field {
+  margin-bottom: 8px;
+  color: #1e354a;
+  word-break: break-word;
+}
+
+.sir-anatomy-result-card__field:last-child {
+  margin-bottom: 0;
+}
+
+.sir-anatomy-result-card__description {
+  color: #2f4357;
+  line-height: 1.35;
+  white-space: normal;
+}
+
+@media (max-width: 575.98px) {
+  .sir-anatomy-results__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 1200px) {
   .sir-anatomy-panel {
     width: 100%;
     margin: 0;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .sir-anatomy-main {
+    flex-direction: column;
+  }
+
+  .sir-anatomy-map-wrap,
+  .sir-anatomy-selection {
+    flex: 1 1 auto;
+  }
+
+  .sir-anatomy-selection {
+    max-height: none;
   }
 }

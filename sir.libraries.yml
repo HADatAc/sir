@@ -1,5 +1,5 @@
 sir_js_css:
-  version: 1.x
+  version: 1.2
   css:
     theme:
       css/sir.css: {}
@@ -36,7 +36,7 @@ sir_icons:
       css/sir_icons.css: {}
 
 sir_anatomy:
-  version: 1.x
+  version: 2.1
   css:
     theme:
       css/sir.css: {}

@@ -18,6 +18,7 @@
         panel = document.createElement('div');
         panel.id = 'sir-anatomy-panel';
         panel.className = 'sir-anatomy-panel';
+        panel.style.overflow = 'visible';
         panel.setAttribute('data-config-mode', cfg.configMode ? '1' : '0');
 
         var configLink = '';
@@ -26,11 +27,23 @@
         }
 
         var html = '';
-        html += '<h4 class="sir-anatomy-title">Search Simulators by Anathomy</h4>' + configLink;
+        html += configLink;
         html += '<p class="sir-anatomy-help">Click on the body map to resolve a coordinate to an UBERON anatomical class and search with it.</p>';
+        html += '<button type="button" id="sir-anatomy-summary-btn" class="btn btn-outline-primary sir-anatomy-summary-btn">Simulators by Anatomy</button>';
         html += '<button type="button" id="sir-anatomy-toggle-tooltips" class="btn btn-outline-secondary sir-anatomy-tooltips-toggle" aria-pressed="false">Show all tooltips</button>';
-        html += '<div class="sir-anatomy-map-wrap"><img id="sir-anatomy-map" src="/modules/custom/sir/images/full_body.png" alt="Human body map" /></div>';
-        html += '<div id="sir-anatomy-selection" class="sir-anatomy-selection">No anatomy selected yet.</div>';
+        html += '<div class="sir-anatomy-main">';
+        html += '  <div class="sir-anatomy-map-wrap"><img id="sir-anatomy-map" src="/modules/custom/sir/images/full_body.png" alt="Human body map" /></div>';
+        html += '  <div id="sir-anatomy-selection" class="sir-anatomy-selection">No anatomy selected yet.</div>';
+        html += '</div>';
+        html += '<div id="sir-anatomy-summary-modal" class="sir-anatomy-modal" aria-hidden="true">';
+        html += '  <div class="sir-anatomy-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="sir-anatomy-summary-title">';
+        html += '    <div class="sir-anatomy-modal__header">';
+        html += '      <h5 id="sir-anatomy-summary-title" class="sir-anatomy-modal__title">Simulators by Anatomy</h5>';
+        html += '      <button type="button" id="sir-anatomy-summary-close" class="btn btn-sm btn-outline-secondary sir-anatomy-modal__close">Close</button>';
+        html += '    </div>';
+        html += '    <div id="sir-anatomy-summary-content" class="sir-anatomy-modal__content">Loading...</div>';
+        html += '  </div>';
+        html += '</div>';
 
         if (cfg.configMode) {
           html += '<div id="sir-anatomy-config" class="sir-anatomy-config">';
@@ -63,10 +76,14 @@
 
         panel.innerHTML = html;
 
-        var host = document.getElementById('sir-anatomy-panel-host');
+        var host = document.querySelector('#sir-anatomy-sidebar-block #sir-anatomy-panel-host')
+          || document.getElementById('sir-anatomy-panel-host');
         if (!host) {
           return;
         }
+        host.style.flex = '1 1 auto';
+        host.style.minHeight = '0';
+        host.style.overflowY = 'auto';
         host.appendChild(panel);
       }
 
@@ -76,6 +93,10 @@
       var searchInput = document.getElementById('search_input');
       var mapWrap = mapImage ? mapImage.parentElement : null;
       var toggleTooltipsBtn = document.getElementById('sir-anatomy-toggle-tooltips');
+      var summaryBtn = document.getElementById('sir-anatomy-summary-btn');
+      var summaryModal = document.getElementById('sir-anatomy-summary-modal');
+      var summaryCloseBtn = document.getElementById('sir-anatomy-summary-close');
+      var summaryContent = document.getElementById('sir-anatomy-summary-content');
 
       var hoverTip = null;
       var tipsLayer = null;
@@ -582,6 +603,265 @@
         searchInput.dispatchEvent(new Event('keyup', { bubbles: true }));
       }
 
+      function parseApiBody(payload) {
+        if (!payload) {
+          return [];
+        }
+
+        var body = payload.body;
+        if (typeof body === 'string') {
+          try {
+            body = JSON.parse(body);
+          }
+          catch (e) {
+            body = [];
+          }
+        }
+
+        if (Array.isArray(body)) {
+          return body;
+        }
+
+        if (body && Array.isArray(body.items)) {
+          return body.items;
+        }
+
+        return [];
+      }
+
+      function getInstrumentByAnatomyUrl(uberonUri, includeOrganization) {
+        if (!uberonUri) {
+          return '';
+        }
+
+        var template = (cfg && cfg.instrumentByAnatomyUrlTemplate) || '/hascoapi/api/instrument/byanatomy/__uberon__';
+        var encodedUberon = '';
+        try {
+          // Use URL-safe base64 to keep path params single-segment through Apache.
+          encodedUberon = 'b64:' + btoa(unescape(encodeURIComponent(uberonUri)))
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=+$/g, '');
+        }
+        catch (e) {
+          encodedUberon = encodeURIComponent(uberonUri);
+        }
+
+        var endpoint = template.replace('__uberon__', encodedUberon);
+
+        var shouldIncludeOrg = (includeOrganization !== false);
+        var orgUri = (cfg && cfg.organizationUri && shouldIncludeOrg) ? String(cfg.organizationUri).trim() : '';
+        if (orgUri) {
+          endpoint += (endpoint.indexOf('?') >= 0 ? '&' : '?') + 'organizationUri=' + encodeURIComponent(orgUri);
+        }
+
+        return endpoint;
+      }
+
+      function fetchInstrumentsByAnatomyPayload(uberonUri) {
+        var endpoint = getInstrumentByAnatomyUrl(uberonUri, true);
+        if (!endpoint) {
+          return Promise.resolve([]);
+        }
+
+        var hasOrgScope = !!((cfg && cfg.organizationUri) ? String(cfg.organizationUri).trim() : '');
+
+        return fetch(endpoint, {
+          credentials: 'same-origin'
+        }).then(function (response) {
+          return response.json();
+        }).then(function (payload) {
+          var instruments = parseApiBody(payload);
+          if (!hasOrgScope || (Array.isArray(instruments) && instruments.length > 0)) {
+            return instruments;
+          }
+
+          // Fallback: if org-scoped result is empty, retry without org filter.
+          return fetch(getInstrumentByAnatomyUrl(uberonUri, false), {
+            credentials: 'same-origin'
+          }).then(function (response) {
+            return response.json();
+          }).then(function (retryPayload) {
+            return parseApiBody(retryPayload);
+          }).catch(function () {
+            return instruments;
+          });
+        });
+      }
+
+      function fetchInstrumentTotalByAnatomyGlobal(uberonUri) {
+        var endpoint = getInstrumentByAnatomyUrl(uberonUri, false);
+        if (!endpoint) {
+          return Promise.resolve(0);
+        }
+
+        return fetch(endpoint, {
+          credentials: 'same-origin'
+        }).then(function (response) {
+          return response.json();
+        }).then(function (payload) {
+          var instruments = parseApiBody(payload);
+          return Array.isArray(instruments) ? instruments.length : 0;
+        }).catch(function () {
+          return 0;
+        });
+      }
+
+      function renderInstrumentCards(instruments, anatomyRow) {
+        var detailsHost = document.getElementById('node-comment-display');
+        if (!detailsHost) {
+          return;
+        }
+
+        var selectedLabel = anatomyRow && anatomyRow.label ? anatomyRow.label : 'Unknown';
+        var selectedUri = anatomyRow && anatomyRow.uberon_uri ? anatomyRow.uberon_uri : '';
+        var total = Array.isArray(instruments) ? instruments.length : 0;
+
+        var html = '';
+        html += '<div class="sir-anatomy-results">';
+        html += '<div class="sir-anatomy-results__meta"><strong>Selected anatomy:</strong> ' + escapeHtml(selectedLabel) + '</div>';
+        if (selectedUri) {
+          html += '<div class="sir-anatomy-results__meta"><strong>URI:</strong> ' + escapeHtml(selectedUri) + '</div>';
+        }
+        html += '<div class="sir-anatomy-results__meta"><strong>Simulators found:</strong> ' + total + '</div>';
+
+        if (!total) {
+          html += '<div class="alert alert-info mb-0">No simulator models were found for this anatomical element.</div>';
+          html += '</div>';
+          detailsHost.innerHTML = html;
+          detailsHost.style.display = 'block';
+          return;
+        }
+
+        html += '<div class="sir-anatomy-results__grid">';
+
+        for (var i = 0; i < instruments.length; i++) {
+          var item = instruments[i] || {};
+          var label = item.label || item.hasShortName || item.uri || ('Simulator ' + (i + 1));
+          var uri = item.uri || '';
+          var comment = item.comment || item.description || '';
+
+          html += '<article class="sir-anatomy-result-card">';
+          html += '<div class="sir-anatomy-result-card__title">' + escapeHtml(label) + '</div>';
+          html += '<div class="sir-anatomy-result-card__field"><strong>URI:</strong> ';
+          if (uri) {
+            var encodedUri = encodeURIComponent(btoa(unescape(encodeURIComponent(uri))));
+            html += '<a href="' + (Drupal.url ? Drupal.url('rep/uri/' + encodedUri) : '#') + '" target="_blank">'
+              + escapeHtml(uri)
+              + '</a>';
+          }
+          else {
+            html += '-';
+          }
+          html += '</div>';
+
+          if (comment) {
+            html += '<div class="sir-anatomy-result-card__field"><strong>Description:</strong></div>';
+            html += '<div class="sir-anatomy-result-card__description">' + escapeHtml(comment) + '</div>';
+          }
+
+          html += '</article>';
+        }
+
+        html += '</div>';
+        html += '</div>';
+
+        detailsHost.innerHTML = html;
+        detailsHost.style.display = 'block';
+      }
+
+      function fetchInstrumentsByAnatomy(row) {
+        if (!row || !row.uberon_uri) {
+          return;
+        }
+
+        if (!row.uberon_uri) {
+          return;
+        }
+
+        updateSelection('Resolving simulators for ' + escapeHtml(row.label || row.uberon_uri) + '...', false);
+
+        fetchInstrumentsByAnatomyPayload(row.uberon_uri).then(function (instruments) {
+          renderInstrumentCards(instruments, row);
+        }).catch(function () {
+          renderInstrumentCards([], row);
+          updateSelection('Failed to retrieve simulators for selected anatomy.', true);
+        });
+      }
+
+      function closeSummaryModal() {
+        if (!summaryModal) {
+          return;
+        }
+        summaryModal.classList.remove('is-open');
+        summaryModal.setAttribute('aria-hidden', 'true');
+      }
+
+      function openSummaryModal() {
+        if (!summaryModal || !summaryContent) {
+          return;
+        }
+
+        summaryModal.classList.add('is-open');
+        summaryModal.setAttribute('aria-hidden', 'false');
+
+        var rows = [];
+        for (var i = 0; i < state.mappings.length; i++) {
+          if (isMappingEnabled(state.mappings[i])) {
+            rows.push(state.mappings[i]);
+          }
+        }
+
+        if (!rows.length) {
+          summaryContent.innerHTML = '<div class="alert alert-info mb-0">No full_body anatomy mappings are currently configured.</div>';
+          return;
+        }
+
+        summaryContent.innerHTML = '<div class="sir-anatomy-modal__loading">Loading simulator counts...</div>';
+
+        var uriRequestMap = {};
+        for (var j = 0; j < rows.length; j++) {
+          var uri = (rows[j].uberon_uri || '').trim();
+          if (!uri || uriRequestMap[uri]) {
+            continue;
+          }
+          uriRequestMap[uri] = fetchInstrumentTotalByAnatomyGlobal(uri);
+        }
+
+        var uris = Object.keys(uriRequestMap);
+        Promise.all(uris.map(function (uriKey) {
+          return uriRequestMap[uriKey].then(function (count) {
+            return { uri: uriKey, count: count };
+          });
+        })).then(function (countRows) {
+          var countsByUri = {};
+          for (var k = 0; k < countRows.length; k++) {
+            countsByUri[countRows[k].uri] = countRows[k].count;
+          }
+
+          var html = '';
+          html += '<div class="sir-anatomy-modal__subtitle">Anatomy parts configured on <strong>full_body</strong> and associated simulator totals.</div>';
+          html += '<table class="sir-anatomy-modal__table">';
+          html += '<thead><tr><th>Anatomy Part</th><th>UBERON URI</th><th>Simulators</th></tr></thead><tbody>';
+
+          for (var m = 0; m < rows.length; m++) {
+            var item = rows[m];
+            var itemUri = (item.uberon_uri || '').trim();
+            var count = itemUri && typeof countsByUri[itemUri] !== 'undefined' ? countsByUri[itemUri] : 0;
+            html += '<tr>';
+            html += '<td>' + escapeHtml(item.label || 'Unnamed') + '</td>';
+            html += '<td>' + escapeHtml(itemUri) + '</td>';
+            html += '<td>' + escapeHtml(String(count)) + '</td>';
+            html += '</tr>';
+          }
+
+          html += '</tbody></table>';
+          summaryContent.innerHTML = html;
+        }).catch(function () {
+          summaryContent.innerHTML = '<div class="alert alert-danger mb-0">Failed to load simulator counts by anatomy.</div>';
+        });
+      }
+
       function resolveCoordinates(x, y) {
         function applyMappingSelection(row) {
           var text = '<strong>Selected:</strong> ' + escapeHtml(row.label || 'Unnamed') + '<br />'
@@ -589,6 +869,7 @@
             + '<strong>Coordinate:</strong> x=' + x.toFixed(2) + ', y=' + y.toFixed(2);
           updateSelection(text, false);
           updateSearchInput(row.uberon_uri || row.label || '');
+          fetchInstrumentsByAnatomy(row);
         }
 
         function showOverlapChooser(matches) {
@@ -732,6 +1013,32 @@
           renderAllTooltips();
         });
       }
+
+      if (summaryBtn) {
+        summaryBtn.addEventListener('click', function () {
+          openSummaryModal();
+        });
+      }
+
+      if (summaryCloseBtn) {
+        summaryCloseBtn.addEventListener('click', function () {
+          closeSummaryModal();
+        });
+      }
+
+      if (summaryModal) {
+        summaryModal.addEventListener('click', function (event) {
+          if (event.target === summaryModal) {
+            closeSummaryModal();
+          }
+        });
+      }
+
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+          closeSummaryModal();
+        }
+      });
 
       setTooltipsButtonState();
 
