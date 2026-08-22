@@ -104,7 +104,7 @@ class SIRSearchForm extends FormBase {
     $pathInfo = $request->getPathInfo();
     $pathElements = (explode('/', $pathInfo));
 
-    $this->setElementType('instrument');
+    $this->setElementType('anatomicalpart');
     $this->setKeyword('');
     $this->setLanguage('');
     $this->setPage(1);
@@ -162,6 +162,8 @@ class SIRSearchForm extends FormBase {
       'instrument'      => ['label' => $this->t($preferred_instrument . 's'),          'image' => 'white/instrument_placeholder.png'],
       'componentstem'   => ['label' => $this->t('Component Stems'),                    'image' => 'white/component_stem_placeholder.png'],
       'component'       => ['label' => $this->t('Components'),                         'image' => 'white/component_placeholder.png'],
+      'uberon'          => ['label' => $this->t('Anatomical Categories'),              'image' => 'white/entity_placeholder.png'],
+      'anatomicalpart'  => ['label' => $this->t('Anatomical Parts'),                   'image' => 'white/entity_placeholder.png'],
       'codebook'        => ['label' => $this->t('Codebooks'),                          'image' => 'white/codebook_placeholder.png'],
       'responseoption'  => ['label' => $this->t('Response Options'),                   'image' => 'white/responseoption_placeholder.png'],
       'annotationstem'  => ['label' => $this->t('Annotation Stems'),                   'image' => 'white/annotation_stem_placeholder.png'],

@@ -654,6 +654,31 @@ class SIRSelectForm extends FormBase {
         $this->plural_class_name = "Annotation Stems";
         break;
 
+      case "uberon":
+        $this->single_class_name = "Anatomical Category";
+        $this->plural_class_name = "Anatomical Categories";
+        break;
+
+      case "anatomicalpart":
+        $this->single_class_name = "Anatomical Part";
+        $this->plural_class_name = "Anatomical Parts";
+        break;
+
+      case "ncit":
+        $this->single_class_name = "Procedure Type";
+        $this->plural_class_name = "Procedure Types";
+        break;
+
+      case "medicaldevice":
+        $this->single_class_name = "Medical Device";
+        $this->plural_class_name = "Medical Devices";
+        break;
+
+      case "process":
+        $this->single_class_name = "Process";
+        $this->plural_class_name = "Processes";
+        break;
+
       default:
         $this->single_class_name = "Object of Unknown Type";
         $this->plural_class_name = "Objects of Unknown Types";
@@ -1372,7 +1397,7 @@ class SIRSelectForm extends FormBase {
       case "task":
         return Task::generateHeader();
       default:
-        return [];
+        return $this->generateGenericHeader();
     }
   }
 
@@ -1396,8 +1421,55 @@ class SIRSelectForm extends FormBase {
       case "task":
         return Task::generateOutput($this->getList());
       default:
-        return [];
+        return $this->generateGenericOutput($this->getList());
     }
+  }
+
+  /**
+   * Fallback header for element types without dedicated entity table builders.
+   */
+  protected function generateGenericHeader() {
+    return [
+      'element_label' => $this->t('Label'),
+      'element_uri' => $this->t('URI'),
+      'element_hasStatus' => $this->t('Status'),
+      'element_hasLanguage' => $this->t('Language'),
+    ];
+  }
+
+  /**
+   * Fallback output for element types without dedicated entity table builders.
+   */
+  protected function generateGenericOutput($list) {
+    $rows = [];
+    if (!is_array($list)) {
+      return ['output' => $rows];
+    }
+
+    foreach ($list as $item) {
+      if (!is_object($item)) {
+        continue;
+      }
+
+      $uri = (string) ($item->uri ?? '');
+      if ($uri === '') {
+        continue;
+      }
+
+      $label = (string) ($item->label ?? ($item->name ?? ''));
+      if ($label === '') {
+        $label = Utils::namespaceUri($uri);
+      }
+
+      $rows[] = [
+        'element_label' => '<a href="' . Url::fromRoute('sir.describe_element', ['elementuri' => base64_encode($uri)])->toString() . '">' . $label . '</a>',
+        'element_uri' => $uri,
+        'element_hasStatus' => (string) ($item->hasStatus ?? ''),
+        'element_hasLanguage' => (string) ($item->hasLanguage ?? ''),
+      ];
+    }
+
+    return ['output' => $rows];
   }
 
   /**

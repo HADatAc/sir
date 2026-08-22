@@ -5,7 +5,7 @@ sir.search:
   defaults:
     _form: '\Drupal\rep\Form\TreeForm'
     mode: 'browse'
-    elementtype: 'instrument'
+    elementtype: 'anatomicalpart'
   requirements:
     _permission: 'access content'
     _custom_access_check: 'TRUE'

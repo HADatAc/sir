@@ -19,6 +19,13 @@ class AnatomyMapController extends ControllerBase {
    * Lists mappings. By default returns enabled records only.
    */
   public function listMappings(Request $request): JsonResponse {
+    if (!$this->mappingTableExists()) {
+      return new JsonResponse([
+        'isSuccessful' => TRUE,
+        'body' => [],
+      ]);
+    }
+
     $all = (string) $request->query->get('all', '0') === '1';
     $is_admin = $this->currentUser()->hasPermission('administer sir anatomy mappings');
 
@@ -59,6 +66,14 @@ class AnatomyMapController extends ControllerBase {
    * Resolves a normalized coordinate x/y (0-100) to a mapped UBERON URI.
    */
   public function resolveByCoordinate(Request $request): JsonResponse {
+    if (!$this->mappingTableExists()) {
+      return new JsonResponse([
+        'isSuccessful' => TRUE,
+        'body' => NULL,
+        'matches' => [],
+      ]);
+    }
+
     $x = (float) $request->query->get('x', -1);
     $y = (float) $request->query->get('y', -1);
 
@@ -166,6 +181,13 @@ class AnatomyMapController extends ControllerBase {
    * Creates or updates a mapping.
    */
   public function saveMapping(Request $request): JsonResponse {
+    if (!$this->mappingTableExists()) {
+      return new JsonResponse([
+        'isSuccessful' => FALSE,
+        'message' => 'Anatomy mapping storage is not initialized.',
+      ], 503);
+    }
+
     if (!$this->currentUser()->hasPermission('administer sir anatomy mappings')) {
       return new JsonResponse([
         'isSuccessful' => FALSE,
@@ -259,6 +281,13 @@ class AnatomyMapController extends ControllerBase {
    * Deletes a mapping by id.
    */
   public function deleteMapping(int $id): JsonResponse {
+    if (!$this->mappingTableExists()) {
+      return new JsonResponse([
+        'isSuccessful' => FALSE,
+        'message' => 'Anatomy mapping storage is not initialized.',
+      ], 503);
+    }
+
     if (!$this->currentUser()->hasPermission('administer sir anatomy mappings')) {
       return new JsonResponse([
         'isSuccessful' => FALSE,
@@ -421,6 +450,13 @@ class AnatomyMapController extends ControllerBase {
       'weight' => isset($row['weight']) ? (int) $row['weight'] : 0,
       'changed' => isset($row['changed']) ? (int) $row['changed'] : 0,
     ];
+  }
+
+  /**
+   * Returns whether anatomy mapping table exists.
+   */
+  private function mappingTableExists(): bool {
+    return \Drupal::database()->schema()->tableExists(self::TABLE);
   }
 
 }
