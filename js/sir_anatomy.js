@@ -869,6 +869,15 @@
             + '<strong>Coordinate:</strong> x=' + x.toFixed(2) + ', y=' + y.toFixed(2);
           updateSelection(text, false);
           updateSearchInput(row.uberon_uri || row.label || '');
+          document.dispatchEvent(new CustomEvent('sir:anatomy-selected', {
+            detail: {
+              label: row.label || '',
+              uberonUri: row.uberon_uri || '',
+              x: x,
+              y: y,
+              mapping: row,
+            },
+          }));
           fetchInstrumentsByAnatomy(row);
         }
 

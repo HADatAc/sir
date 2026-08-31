@@ -36,7 +36,7 @@ sir_icons:
       css/sir_icons.css: {}
 
 sir_anatomy:
-  version: 2.1
+  version: 2.2
   css:
     theme:
       css/sir.css: {}
