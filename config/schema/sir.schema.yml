@@ -1,0 +1,13 @@
+sir.settings:
+  type: config_object
+  label: 'SIR settings'
+  mapping:
+    sir_home:
+      type: boolean
+      label: 'Use SIR as homepage'
+    api_url:
+      type: string
+      label: 'SIR API URL'
+    sir_gui_version:
+      type: string
+      label: 'SIR GUI version'
